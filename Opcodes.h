@@ -21,6 +21,28 @@ See README.md for details.
 
 Each opcode is one byte optionally followed by zero or more bytes
 
+Classes
+
+The system is made up of classes. To start execution you instantiate the main class and
+call its constructor.
+
+To instantiate a class you specify the index of the prototype. When instantiated the class
+instance is put on the stack and is the size specified in the prototype. Each member
+variable is accessed by giving the address of the instance on the stack and the offset
+of the variable in that instance.
+
+To access a constant in a class prototype you specify the index of the prototype and the 
+offset of the constant in that prototype.
+
+Addressing
+
+Values are pushed as one of the supported datatypes. There is no type checking done at runtime.
+It's expected that the right type is determined at compile time. Class prototype constants 
+are pushed on the stack by specifying the offset of the constant in the executable, determined
+at compile time. When a function is entered the bp is set to the start of the passed params. 
+These are followed by local variables needed by the function. Params and locals are both 
+addresses in the same space, using the bp as the base.
+
 Opcodes:
     Param nomenclature:
         
@@ -33,128 +55,121 @@ Opcodes:
         float   - 4 bytes after opcode. Floating point number in Float class format
         str     - Byte after opcode is length, followed by length bytes
 
-    // The opcodes deal with variable references. LoadRef simply places
-    // the address of the passed id in the passed register. It can later
-    // be used by LoadDeref and StoreDeref. LoadRefX is passed a source
-    // register and numeric value. The value is the number of words per
-    // entry in the array. The register value is multiplied by the passed
-    // value and the result is added to the address of the passed id which
-    // is stored in the destination register.
-    //
-    // LoadDeref is passed the register with the address previous set above
-    // along with a numeric value to access the given element of the entry.
-    // The source register address is added to the passed value, then the
-    // memory at that address is loaded into the destination register.
-    // StoreDeref does the same but the value in the source register is
-    // stored at the address.
-    
-    PushRef id              - stack[sp++] = id
-    PushDeref               - t = stack[--sp], stack[sp++] = mem[t]
-    PopDeref                - v = stack[--sp], mem[stack[--sp]] = v
-    
-    Offset i                - stack[sp-1] += i
-    Index x                 - i = stack[--sp], stack[sp-1] += i * n
-    
-    Push id                 - stack[sp++] = const or global or local variable
-    Pop id                  - global or local variable = stack[--sp]
-    
-    PushIntConst const      - stack[sp++] = const
-    PushIntConstS constS    - stack[sp++] = constS
+        p       - Byte after opcode. Num params passed to function.
+        l       - Byte after opcode. Num locals in function.
 
+    Load and store values on the stack
+    ==================================
+    
+    PushRef uint8           - stack[sp++] = uint8
+    PushDeref               - tmp = stack[--sp], stack[sp++] = mem[tmp]
+    PopDeref                - tmp = stack[--sp], mem[stack[--sp]] = tmp
+    
+    PushC uint16            - stack[sp++] = executable[uint16]
+    PushF uint16            - stack[sp++] = bp[uint16]
+    PopF uint16             - bp = stack[--sp]
+    
+
+    Stack manuipulation
+    ===================
+    
     Dup                     - stack[sp++] = stack[sp]
     Drop                    - --sp
-    Swap                    - t = stack[sp]; stack[sp] = stack[sp-1]; stack[sp-1[ = t;
+    Swap                    - tmp = stack[sp]; stack[sp] = stack[sp-1]; stack[sp-1[ = tmp;
 
-    If relTarg              - If stack[--sp] is non-zero execute statements in first clause. 
-                              If zero skip the statements. Number of bytes to skip is 
-                              in sz.
+
+    Flow control
+    ============
     
-    Jump relTarg            - Jump size bytes (target is -2048 to 2047)
+    If int16                - If stack[--sp] is non-zero continue execution. 
+                              If zero jump to int16.
     
-    Call absTarg            - Call function [target], params on stack
+    Jump int16              - Jump size bytes (target is -2048 to 2047)
+    
+    Call uint16             - Call function at int16 address in executable, params on stack
     CallNative nativeId     - Call native function
     Return                  - Return from function, return value on TOS
     SetFrame p l            - Set the local frame with number of formal
                               params (p) and locals (l). This must be the 
                               first instruction of every function.
-                              
-    Log n len <str>         - n is the number of args passed on the stack.
-                              Opcode is followed by len character format
-                              string. Output formatted string to console.
 
-The following opcodes expect 1 value on stack (a = tos). Value
-is popped, the operation is performed and the result is pushed.
 
-    Not                     - stack[sp++] = ~a (assumes int32_t)
-    LNot                    - stack[sp++] = !a (assumes int32_t)
-    NegInt                  - stack[sp++] = -a (assumes int32_t, result is int32_t)
-    NegFloat                - stack[sp++] = -a (assumes float, result is float)
+    Unary Operations - expect 1 value on stack (a = tos), pop before operation
+    ================
 
-The following opcodes expect 2 values on stack (a = tos-1, b = tos). Values
-are popped, the operation is performed and the result is pushed.
+    Not                     - stack[sp++] = ~stack[--sp] (assumes int32_t)
+    LNot                    - stack[sp++] = !stack[--sp] (assumes int32_t)
+    NegI                    - stack[sp++] = -stack[--sp] (assumes int32_t, result is int32_t)
+    NegF                    - stack[sp++] = -stack[--sp] (assumes float, result is float)
+
+
+    Binary Operations - expect 2 values on stack (a = tos-1, b = tos), pop before operation
+    =================
 
     Or                      - stack[sp++] = a | b (assumes int32_t)
     XOr                     - stack[sp++] = a ^ b (assumes int32_t)
     And                     - stack[sp++] = a & b (assumes int32_t)
     
-    LOr                     - stack[sp++] = a || b (assumes int32_t)
-    LAnd                    - stack[sp++] = a && b (assumes int32_t)
-    LTInt                   - stack[sp++] = a < b (assumes int32_t, result is int32_t)
-    LTFloat                 - stack[sp++] = a < b (assumes float, result is int32_t)
-    LEInt                   - stack[sp++] = a <= b (assumes int32_t, result is int32_t)
-    LEFloat                 - stack[sp++] = a <= b (assumes float, result is int32_t)
-    EQInt                   - stack[sp++] = a == b (assumes int32_t, result is int32_t)
-    EQFloat                 - stack[sp++] = a == b (assumes float, result is int32_t)
-    NEInt                   - stack[sp++] = a != b (assumes int32_t, result is int32_t)
-    NEFloat                 - stack[sp++] = a != b (assumes float, result is int32_t)
-    GEInt                   - stack[sp++] = a >= b (assumes int32_t, result is int32_t)
-    GEFloat                 - stack[sp++] = a >= b (assumes float, result is int32_t)
-    GTInt                   - stack[sp++] = a > b (assumes int32_t, result is int32_t)
-    GTFloat                 - stack[sp++] = a > b (assumes float, result is int32_t)
+    LTI                     - stack[sp++] = a < b (assumes int32_t, result is int32_t)
+    LTF                     - stack[sp++] = a < b (assumes float, result is int32_t)
+    LEI                     - stack[sp++] = a <= b (assumes int32_t, result is int32_t)
+    LEF                     - stack[sp++] = a <= b (assumes float, result is int32_t)
+    EQI                     - stack[sp++] = a == b (assumes int32_t, result is int32_t)
+    EQF                     - stack[sp++] = a == b (assumes float, result is int32_t)
+    NEI                     - stack[sp++] = a != b (assumes int32_t, result is int32_t)
+    NEF                     - stack[sp++] = a != b (assumes float, result is int32_t)
+    GEI                     - stack[sp++] = a >= b (assumes int32_t, result is int32_t)
+    GEF                     - stack[sp++] = a >= b (assumes float, result is int32_t)
+    GTI                     - stack[sp++] = a > b (assumes int32_t, result is int32_t)
+    GTF                     - stack[sp++] = a > b (assumes float, result is int32_t)
     
-    AddInt                  - stack[sp++] = a + b (assumes int32_t, result is int32_t)
-    AddFloat                - stack[sp++] = a + b (assumes float, result is float)
-    SubInt                  - stack[sp++] = a - b (assumes int32_t, result is int32_t)
-    SubFloat                - stack[sp++] = a - b (assumes float, result is float)
-    MulInt                  - stack[sp++] = a * b (assumes int32_t, result is int32_t)
-    MulFloat                - stack[sp++] = a * b (assumes float, result is float)
-    DivInt                  - stack[sp++] = a / b (assumes int32_t, result is int32_t)
-    DivFloat                - stack[sp++] = a / b (assumes float, result is float)
+    AddI                    - stack[sp++] = a + b (assumes int32_t, result is int32_t)
+    AddF                    - stack[sp++] = a + b (assumes float, result is float)
+    SubI                    - stack[sp++] = a - b (assumes int32_t, result is int32_t)
+    SubF                    - stack[sp++] = a - b (assumes float, result is float)
+    MulI                    - stack[sp++] = a * b (assumes int32_t, result is int32_t)
+    MulF                    - stack[sp++] = a * b (assumes float, result is float)
+    DivI                    - stack[sp++] = a / b (assumes int32_t, result is int32_t)
+    DivF                    - stack[sp++] = a / b (assumes float, result is float)
+    ModI                    - stack[sp++] = a % b (assumes int32_t, result is int32_t)
+    ModF                    - stack[sp++] = a % b (assumes float, result is float)
 
-Increment and decrement ops expect a ref on TOS which is popped. The "pre" 
-versions will load the value, increment or decrement, store the new value 
-and push that value. The "post" versions will load the value, push that value, 
-then increment or decrement and store the result. There are Int and Float 
-versions for all. The end result is one value left on the stack, which is 
-either incremented or decremented or not and one value at the location of the 
-ref which is either incremented or decremented.
+
+    Increment/Decrement Operations
+    ==============================
+    Increment and decrement ops expect a ref on TOS which is popped. The "pre" 
+    versions will load the value, increment or decrement, store the new value 
+    and push that value. The "post" versions will load the value, push that value, 
+    then increment or decrement and store the result. There are Int and Float 
+    versions for all. The end result is one value left on the stack, which is 
+    either incremented or decremented or not and one value at the location of the 
+    ref which is either incremented or decremented.
      
-    PreIncInt
-    PreIncFloat
-    PreDecInt
-    PreDecFloat
-    PostIncInt
-    PostIncFloat
-    PostDecInt
-    PostDecFloat
+    PreIncI
+    PreIncF
+    PreDecI
+    PreDecF
+    PostIncI
+    PostIncF
+    PostDecI
+    PostDecF
     
     
     Executable format
     
-    Format Id           - 4 bytes: 'arly'
-    Constants size      - 2 bytes: size in 4 byte units of Constants area
-    Global size         - 2 bytes: size in 4 byte units needed for global vars
-    Stack size          - 2 bytes: size in 4 byte units needed for the stack
-    Constants area      - n 4 byte entries: ends after size 4 byte units
-    Command entries     - Each entry has:
-                            7 byte command (Unused trailing bytes are set to '\0')
-                            1 byte number of param bytes
-                            2 bytes start of init instructions, in bytes
-                            2 bytes start of loop instructions, in bytes
-                            
-                          entries end when a byte of 0 is seen
-                          
-    Commands            - List of init and loop instructions for each command
+    Format Id           - 4 bytes: 'lucd'
+    Class proto psize   - 2 bytes, size in 16 bit entries of class prototype offsets
+    Class proto table   - psize entries of 2 bytes each, absolute offset of each class
+    Class protos        - list of class prototypes. Each prototype consists of:
+    
+                            Class size      - 2 bytes, size of a class instance
+                            Constant size   - 2 bytes, size of constants
+                            Constants       - list of each constant in the prototype
+                            Function table  - array of indexes to each function
+                                              Each function consists of:
+                                              
+                                                  Local size    - 2 bytes, size needed for params and locals
+                                                  Code          executable code for function
 */
 
 static constexpr uint16_t MaxIdSize = 4096;
