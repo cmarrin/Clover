@@ -19,30 +19,6 @@ Machine Code for LucidVM
 
 See README.md for details.
 
-Each opcode is one byte optionally followed by zero or more bytes
-
-Classes
-
-The system is made up of classes. To start execution you instantiate the main class and
-call its constructor.
-
-To instantiate a class you specify the index of the prototype. When instantiated the class
-instance is put on the stack and is the size specified in the prototype. Each member
-variable is accessed by giving the address of the instance on the stack and the offset
-of the variable in that instance.
-
-To access a constant in a class prototype you specify the index of the prototype and the 
-offset of the constant in that prototype.
-
-Addressing
-
-Values are pushed as one of the supported datatypes. There is no type checking done at runtime.
-It's expected that the right type is determined at compile time. Class prototype constants 
-are pushed on the stack by specifying the offset of the constant in the executable, determined
-at compile time. When a function is entered the bp is set to the start of the passed params. 
-These are followed by local variables needed by the function. Params and locals are both 
-addresses in the same space, using the bp as the base.
-
 Opcodes:
     Param nomenclature:
         
@@ -54,6 +30,8 @@ Opcodes:
         uint32  - Byte after opcode. Int constant (0 to 255)
         float   - 4 bytes after opcode. Floating point number in Float class format
         str     - Byte after opcode is length, followed by length bytes
+        
+        ref     - Reference to a value on the stack or a constant.
 
         p       - Byte after opcode. Num params passed to function.
         l       - Byte after opcode. Num locals in function.

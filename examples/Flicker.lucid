@@ -1,0 +1,99 @@
+// Flicker Lucid example
+
+// The native code gets the Command object from the Flicker prototype. If the
+// cmd matches the requested command and nparams matches the passed param
+// count the Flicker prototype is instantiated, its ctor is called and the
+// Loop method is repeatedly called, delayed by the delay value (in ms) from
+// Loop.
+
+import System;
+import LedUtils;
+
+class Effect
+{
+    struct Command { string cmd, uint8 nparams };
+    
+    const int NumPixels         8;
+    const float BrightestMin    0.6;
+    const float BrightestMax    1.0;
+    const int Delay             25; // in ms
+
+    struct LedEntry
+    {
+        float cur;
+        float inc;
+        float min;
+        float max;
+    }
+
+    LedEntry leds[NumPixels];
+    LedEntry* led;
+};
+
+class Flicker : LedEntry
+{
+    const Command = { "f", 4 };
+    
+    const float FlickerMin      0.2;
+
+    struct FlickerSpeedEntry
+    {
+        float min;
+        float max;
+    }
+
+    const FlickerSpeedEntry FlickerSpeedTable[ ]
+    {
+        { 0.004 0.008 },
+        { 0.008 0.016 },
+        { 0.016 0.024 },
+        { 0.024 0.032 },
+        { 0.032 0.040 },
+        { 0.040 0.048 },
+        { 0.048 0.056 },
+        { 0.056 0.064 },
+    }
+
+    float flickerStepsMin;
+    float flickerStepsMax;
+    float brightnessMod;
+
+  public:
+    Flicker(uint8 h, uint8 s, uint8 v, uint8 speed)
+    {
+        LEDUtils::SetColor(0, h, s, v);
+        LEDUtils::InitArray(&leds, 0, NumPixels * 4);
+
+        flickerStepsMin = FlickerSpeedTable[speed].min;
+        flickerStepsMax = FlickerSpeedTable[speed].max;
+        
+        // Modify the brightness to make it between 0.5 and 1.0
+        brightnessMod = LEDUtils::LoadColorComp(0, 2) / 2.0 + 0.5;
+    }
+    
+    int Loop()
+    {
+        int i;
+        for (i = 0; i < NumPixels; ++i) {
+            led = &leds[i];
+            if (LEDUtils::Animate(led) == -1) {
+                // We are done with the throb. We always start at BrightnessMin.
+                // Select a new inc (how fast it pulses), and  max (how bright it
+                // gets) based on the speed value.
+                led.cur = FlickerMin;
+                led.min = FlickerMin;
+                
+                led.inc = System::RandomFloat(flickerStepsMin, flickerStepsMax);
+                
+                // Adjust max by brightness
+                led.max = System::RandomFloat(BrightestMin, BrightestMax);
+                led.max  *= brightnessMod;
+            }
+
+            LEDUtils::StoreColorComp(0, 2, led.cur);
+            LEDUtils::SetLight(i, 0);
+        }
+        
+        return Delay;
+    }
+};
