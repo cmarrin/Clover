@@ -1,0 +1,49 @@
+// This is the main Effects example for the Post Light Controller
+//
+// The Main class is instantiated and then the run method is called
+// witb a string command and an array of string args.
+
+import Flicker;
+
+class Main
+{
+    const class Commands[ ] =
+    {
+        Flicker,
+    };
+    
+    class* currentCommand = null;
+    
+  public:
+    int run(string cmd, string[ ] args)
+    {
+        if (cmd == "init") {
+            if (args.length < 2 || args[0].length != 1) {
+                return -10;
+            }
+            
+            for (class p in Commands) {
+                if p.cmd == args[0]) {
+                    uint8_t nparams = uint8(args[1]);
+                    
+                    if (args.length != nparams = 2) {
+                        return -11;
+                    }
+                    
+                    currentCommand = new p(args);
+                    return 0;
+                }
+            }
+            
+            return -12;
+        }
+        
+        if (cmd == "loop") {
+            if (!currentCommand) {
+                return -20;
+            }
+            return currentCommand.loop();
+        }
+        return -1;
+    }
+};
