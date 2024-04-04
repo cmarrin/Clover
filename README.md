@@ -14,6 +14,16 @@ To access a constant in a class prototype you specify the address of the constan
 
 ## Addressing
 
+A value containing an address is 32 bits. The upper 4 bits is the address type. Supported types are:
+
+| Type (4 bits) | Layout | Description |
+|---------------|--------|------------ |
+| Constant      |  8: proto id<br>20: offset | A constant in a class proto |
+| Heap          | 28: Heap address | A value on the heap (if supported) |
+| Stack         | 28: Stack offset | A value in the stack               |
+
+Addresses appear in 3 opcodes: PushRef, Push and Pop. There are 3 variations of each, one for each address type. For each variation there are 4 opcode, one for each address length. For instance, the PushS8 opcode specifies a stack address where the address is the following byte (address from 0-255). And PushS32 has the address in the next 4 bytes.
+
 Values are pushed as one of the supported datatypes. There is no type checking done at runtime. It's expected that the right type is determined at compile time. Class prototype constants are pushed on the stack by specifying the address of the constant in the executable, determined at compile time. When a function is entered the bp is set to the start of the passed params. These are followed by local variables needed by the function. Params and locals are both addresses in the same space, using the bp as the base.
 
 When a address is specified, either in the PushRef, Push or Pop opcodes it is a single integer value. Negative values are reserved for constants in class prototypes. The address of the constant is determined by negating the address value. Non-negative values are for variables on the stack, relative to the bp.
