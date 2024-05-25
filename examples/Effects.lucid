@@ -3,7 +3,7 @@
 // The Main class is instantiated and then the run method is called
 // witb a string command and an array of string args.
 
-import Flicker;
+import from Flicker;
 
 class Main
 {
