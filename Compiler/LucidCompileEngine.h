@@ -25,50 +25,63 @@
 
 namespace lucid {
 
-//////////////////////////////////////////////////////////////////////////////
+//*********************************
 //
 //  Class: LucidCompileEngine
 //
-//////////////////////////////////////////////////////////////////////////////
+//*********************************
 
 /*
+
+A program consists of zero or more imports followed by
+zero or more structs, optionally followed by an
+instantiation of a struct. There can only be one
+such instantiation in a program but it can appear in
+the main module or any imported module. On start this
+struct is instantiated and its ctor is called.
 
 BNF:
 
 program:
-    { import } { classes } ;
+    { import } { struct } [ <type> <id> ] ;
 
-element:
-    constant | table | struct | varStatement | function | command ;
+import:
+    'import' [ <id> { ',' <id> } ] 'from' <id> ;
     
+struct:
+    'struct' <id> '{' { structEntry ';' } '}' ;
+    
+structEntry:
+    constant | varStatement | function | ctor | dtor ;
+
 constant:
     'const' type <id> value ';' ;
     
-table:
-    'table' type <id> '{' values '}' ;
+varStatement:
+    type [ '*' ] var ';' ;
 
-struct:
-    'struct' <id> '{' { structEntry } '}' ;
-    
 var:
-    <id> [ '[' <integer> ']' ] [ '=' arithmeticExpression ] ;
+    <id> [ '[' <integer> ']' ] [ '=' initializer ] ;
+    
+initializer:
+    arithmeticExpression | '{' [ initializer { ',' initializer } ] '}'
 
 function:
     'function' [ <type> ] <id> '( formalParameterList ')' '{' { statement } '}' ;
 
-command:
-    'command' <id> <integer> <id> <id> ';' ;
-
-structEntry:
-    type <id> ';' ;
-
 // <id> is a struct name
 type:
-    'float' | 'int' | <id> 
-
-value:
-    ['-'] <float> | ['-'] <integer>
-
+      'float'
+    | 'hfloat'
+    | 'int8_t'
+    | 'uint8_t'
+    | 'int16_t'
+    | 'uint16_t'
+    | 'int32_t'
+    | 'uint32_t'
+    | <id>
+    ;
+    
 statement:
       compoundStatement
     | ifStatement
@@ -89,7 +102,8 @@ ifStatement:
     'if' '(' arithmeticExpression ')' statement ['else' statement ] ;
 
 forStatement:
-    'for' '(' [ [ <type> ] identifier '=' arithmeticExpression ] ';' [ arithmeticExpression ] ';' [ arithmeticExpression ] ')' statement ;
+    'for' '(' [ [ <type> ] identifier '=' arithmeticExpression ] ';'
+            [ arithmeticExpression ] ';' [ arithmeticExpression ] ')' statement ;
     
 whileStatement:
     'while' '(' arithmeticExpression ')' statement ;
@@ -100,16 +114,16 @@ loopStatement:
 returnStatement:
       'return' [ arithmeticExpression ] ';' ;
       
+switchStatement:
+    'switch' '(' arithmeticExpression ')' '{' { caseClause } '}' ;
+
+caseClause:
+    ('case' arithmeticExpression | 'default) ':' statement ;
+
 jumpStatement:
       'break' ';'
     | 'continue' ';'
     ;
-
-logStatement:
-    'log' '(' <string> { ',' arithmeticExpression } ')' ';' ;
-
-varStatement:
-    type [ '*' ] var { ',' var } ';' ;
 
 expressionStatement:
     arithmeticExpression ';' ;

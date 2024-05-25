@@ -24,10 +24,11 @@ Opcodes:
         
         int8    - Byte after opcode. Int constant (-128 to 127)
         uint8   - Byte after opcode. Int constant (0 to 255)
-        int16   - Byte after opcode. Int constant (-128 to 127)
-        uint16  - Byte after opcode. Int constant (0 to 255)
-        int32   - Byte after opcode. Int constant (-128 to 127)
-        uint32  - Byte after opcode. Int constant (0 to 255)
+        int16   - 2 bytes after opcode. Int constant (-32768 to 32767)
+        uint16  - 2 bytes after opcode. Int constant (0 to 65535)
+        int32   - 4 bytes after opcode. Int constant (-2^31 to 2^31-1)
+        uint32  - 4 bytes after opcode. Int constant (0 to 2^32-1)
+        half    - 2 bytes after opcode. 16 bit fixed point number (8:8 - +/-127.99)
         float   - 4 bytes after opcode. Floating point number in Float class format
         str     - Byte after opcode is length, followed by length bytes
         
@@ -36,24 +37,47 @@ Opcodes:
         p       - Byte after opcode. Num params passed to function.
         l       - Byte after opcode. Num locals in function.
 
+    Stack is 8 bit. 16 and 32 bit values are stored in consecutive locations (HI to LO)
+    
     Load and store values on the stack
     ==================================
     
-    PushRef uint8           - stack[sp++] = uint8
-    PushDeref               - tmp = stack[--sp], stack[sp++] = mem[tmp]
-    PopDeref                - tmp = stack[--sp], mem[stack[--sp]] = tmp
+    PushDeref1              - uint16 tmp = pop16(), push1(mem1(tmp))
+    PushDeref2              - uint16 tmp = pop16(), push2(mem2(tmp))
+    PushDeref4              - uint16 tmp = pop16(), push4(mem4(tmp))
+    PopDeref1               - uint16 tmp = pop16(), setmem1(tmp, pop1())
+    PopDeref2               - uint16 tmp = pop16(), setmem2(tmp, pop2())
+    PopDeref4               - uint16 tmp = pop16(), setmem4(tmp, pop4())
     
-    PushC uint16            - stack[sp++] = executable[uint16]
-    PushF uint16            - stack[sp++] = bp[uint16]
-    PopF uint16             - bp = stack[--sp]
+    PushF1 uint16           - push1(bp1(uint16))
+    PushF2 uint16           - push2(bp2(uint16))
+    PushF4 uint16           - push4(bp4(uint16))
+    PopF1 uint16            - setbp1(uint16, pop1())
+    PopF2 uint16            - setbp2(uint16, pop2())
+    PopF4 uint16            - setbp4(uint16, pop4())
+    
+    PushC1 uint8            - push1(uint8)
+    PushC2 uint8            - push2(uint8)
+    PushC4 uint8            - push4(uint8)
     
 
     Stack manuipulation
     ===================
     
-    Dup                     - stack[sp++] = stack[sp]
-    Drop                    - --sp
-    Swap                    - tmp = stack[sp]; stack[sp] = stack[sp-1]; stack[sp-1[ = tmp;
+    Dup1                    - stack[sp] = stack[sp-1]; sp += 1
+    Dup2                    - stack[sp] = stack[sp-2]; stack[sp+1] = stack[sp-1]; sp += 2
+    Dup4                    - stack[sp] = stack[sp-4]; stack[sp+1] = stack[sp-3];
+                              stack[sp+2] = stack[sp-2]; stack[sp+3] = stack[sp-1]; sp += 4
+    Drop1                   - sp -= 1
+    Drop2                   - sp -= 2
+    Drop4                   - sp -= 4
+    Swap1                   - tmp = stack[sp-1]; stack[sp-1] = stack[sp-2]; stack[sp-2] = tmp;
+    Swap2                   - tmp = stack[sp-1]; stack[sp-1] = stack[sp-3]; stack[sp-3] = tmp;
+                              tmp = stack[sp-2]; stack[sp-2] = stack[sp-4]; stack[sp-4] = tmp;
+    Swap4                   - tmp = stack[sp-1]; stack[sp-1] = stack[sp-5]; stack[sp-5] = tmp;
+                              tmp = stack[sp-2]; stack[sp-2] = stack[sp-6]; stack[sp-6] = tmp;
+                              tmp = stack[sp-3]; stack[sp-3] = stack[sp-7]; stack[sp-7] = tmp;
+                              tmp = stack[sp-4]; stack[sp-4] = stack[sp-8]; stack[sp-8] = tmp;
 
 
     Flow control
@@ -75,21 +99,39 @@ Opcodes:
     Unary Operations - expect 1 value on stack (a = tos), pop before operation
     ================
 
-    Not                     - stack[sp++] = ~stack[--sp] (assumes int32_t)
-    LNot                    - stack[sp++] = !stack[--sp] (assumes int32_t)
-    NegI                    - stack[sp++] = -stack[--sp] (assumes int32_t, result is int32_t)
-    NegF                    - stack[sp++] = -stack[--sp] (assumes float, result is float)
+    Not1                    - push1(~pop1())
+    Not2                    - push2(~pop2())
+    Not4                    - push4(~pop4())
+    Neg1                    - push1(-pop1())
+    Neg2                    - push2(-pop2())
+    Neg4                    - push4(-pop4())
+    NegF                    - pushF(-popF())  (float)
+    NegH                    - pushH(-popH())  (half float)
 
 
     Binary Operations - expect 2 values on stack (a = tos-1, b = tos), pop before operation
     =================
 
-    Or                      - stack[sp++] = a | b (assumes int32_t)
-    XOr                     - stack[sp++] = a ^ b (assumes int32_t)
-    And                     - stack[sp++] = a & b (assumes int32_t)
+    Or1                     - push1(pop1() | pop1())
+    Or2                     - push2(pop2() | pop2())
+    Or4                     - push4(pop4() | pop4())
+    XOr1                    - push1(pop1() ^ pop1())
+    XOr2                    - push2(pop2() ^ pop2())
+    XOr4                    - push4(pop4() ^ pop4())
+    And1                    - push1(pop1() & pop1())
+    And2                    - push2(pop2() & pop2())
+    And4                    - push4(pop4() & pop4())
     
-    LTI                     - stack[sp++] = a < b (assumes int32_t, result is int32_t)
-    LTF                     - stack[sp++] = a < b (assumes float, result is int32_t)
+    LTI1                    - push1(pop1() < pop1()) (signed, result is uint8 0 if false, 1 if true
+    LTU1                    - push1(pop1() < pop1()) (unsigned, result is uint8 0 if false, 1 if true
+    LTI2                    - push1(pop2() < pop2()) (signed, result is uint8 0 if false, 1 if true
+    LTU2                    - push1(pop2() < pop2()) (unsigned, result is uint8 0 if false, 1 if true
+    LTI4                    - push1(pop4() < pop4()) (signed, result is uint8 0 if false, 1 if true
+    LTU4                    - push1(pop4() < pop4()) (unsigned, result is uint8 0 if false, 1 if true
+    LTF                     - push1(popF() < popF()) (float, result is uint8 0 if false, 1 if true
+    LTH                     - push1(popH() < popH()) (half float, result is uint8 0 if false, 1 if true
+    
+    
     LEI                     - stack[sp++] = a <= b (assumes int32_t, result is int32_t)
     LEF                     - stack[sp++] = a <= b (assumes float, result is int32_t)
     EQI                     - stack[sp++] = a == b (assumes int32_t, result is int32_t)
@@ -100,19 +142,82 @@ Opcodes:
     GEF                     - stack[sp++] = a >= b (assumes float, result is int32_t)
     GTI                     - stack[sp++] = a > b (assumes int32_t, result is int32_t)
     GTF                     - stack[sp++] = a > b (assumes float, result is int32_t)
+
+    Add1                    - push1(pop1() + pop1())
+    Add2                    - push2(pop2() + pop2())
+    Add4                    - push4(pop4() + pop4())
+    AddF                    - push4(popF() + popF())
+    AddH                    - push4(popH() + popH())
+    Sub1                    - push1(pop1() - pop1())
+    Sub2                    - push2(pop2() - pop2())
+    Sub4                    - push4(pop4() - pop4())
+    SubF                    - push4(pop4() - pop4()) (float)
+    SubH                    - push4(pop2() - pop2()) (half float)
+    MulS1                   - push1(pop1() * pop1()) (signed multiply)
+    MulU1                   - push1(pop1() * pop1()) (unsigned multiply)
+    MulS2                   - push2(pop2() * pop2()) (signed multiply)
+    MulU2                   - push2(pop2() * pop2()) (unsigned multiply)
+    MulS4                   - push4(pop4() * pop4()) (signed multiply)
+    MulU4                   - push4(pop4() * pop4()) (unsigned multiply)
+    MulF                    - push4(pop4() * pop4()) (float multiply)
+    MulH                    - push2(pop2() * pop2()) (half float multiply)
+    DivS1                   - push1(pop1() / pop1()) (signed divide)
+    DivU1                   - push1(pop1() / pop1()) (unsigned divide)
+    DivS2                   - push2(pop2() / pop2()) (signed divide)
+    DivU2                   - push2(pop2() / pop2()) (unsigned divide)
+    DivS4                   - push4(pop4() / pop4()) (signed divide)
+    DivU4                   - push4(pop4() / pop4()) (unsigned divide)
+    DivF                    - push4(pop4() / pop4()) (float divide)
+    DivH                    - push2(pop2() / pop2()) (half float divide)
+    ModU1                   - push1(pop1() % pop1()) (unsigned mod)
+    ModS2                   - push2(pop2() % pop2()) (signed mod)
+    ModU2                   - push2(pop2() % pop2()) (unsigned mod)
+    ModS4                   - push4(pop4() % pop4()) (signed mod)
+    ModU4                   - push4(pop4() % pop4()) (unsigned mod)
+    ModF                    - push4(pop4() % pop4()) (float mod)
+    ModH                    - push2(pop2() % pop2()) (half float mod)
+
+
+
+Add1: (a + b, stack has b, a)
+    LDA 2,S
+    ADDA 1,S
+    LEAS 2,S
+    PSHS A
+
+Add2:
+    LDD 2,S
+    ADDD ,S
+    LEAS 4,S
+    PSHS D
     
-    AddI                    - stack[sp++] = a + b (assumes int32_t, result is int32_t)
-    AddF                    - stack[sp++] = a + b (assumes float, result is float)
-    SubI                    - stack[sp++] = a - b (assumes int32_t, result is int32_t)
-    SubF                    - stack[sp++] = a - b (assumes float, result is float)
-    MulI                    - stack[sp++] = a * b (assumes int32_t, result is int32_t)
-    MulF                    - stack[sp++] = a * b (assumes float, result is float)
-    DivI                    - stack[sp++] = a / b (assumes int32_t, result is int32_t)
-    DivF                    - stack[sp++] = a / b (assumes float, result is float)
-    ModI                    - stack[sp++] = a % b (assumes int32_t, result is int32_t)
-    ModF                    - stack[sp++] = a % b (assumes float, result is float)
+Add4:
+    JSR Add4
 
+void Add4() // stack has b, a (4 bytes each)
+{
+    uint32_t b = pop4();
+    uint32_t a = pop4();
+    push4(a + b);
+}
 
+MulU1:
+    PULS A,B
+    MUL
+    PSHS B
+
+MulS1:
+    JSR MulS1
+    
+void MulS1()
+{
+    int8_t b = pop1();
+    int8_t a = pop1();
+    push1(a * b);
+}
+    
+    
+    
     Increment/Decrement Operations
     ==============================
     Increment and decrement ops expect a ref on TOS which is popped. The "pre" 
@@ -122,17 +227,26 @@ Opcodes:
     versions for all. The end result is one value left on the stack, which is 
     either incremented or decremented or not and one value at the location of the 
     ref which is either incremented or decremented.
-     
-    PreIncI
-    PreIncF
-    PreDecI
-    PreDecF
-    PostIncI
-    PostIncF
-    PostDecI
-    PostDecF
-    
-    
+
+
+PreInc1:
+        Dup2
+        Dup2
+        PushDeref1
+        Inc1
+        PopDeref1
+        PushDeref1
+
+PreInc1: (X has Ref)
+        LDA ,X
+        INCA
+        STA ,X
+
+PreInc2: (X has Ref)
+        LDD ,X
+        ADDD #1
+        STD ,X
+
     Executable format
     
     Format Id           - 4 bytes: 'lucd'
@@ -167,12 +281,18 @@ enum class Op: uint8_t {
     PushDeref       = 0x02,
     PopDeref        = 0x03,
     
-    Dup             = 0x04,
-    Drop            = 0x05,
-    Swap            = 0x06,
+    Dup1            = 0x04,
+    Dup2            = 0x05,
+    Dup4            = 0x06,
+    Drop1           = 0x07,
+    Drop2           = 0x08,
+    Drop4           = 0x09,
+    Swap1           = 0x0a,
+    Swap2           = 0x0b,
+    Swap4           = 0x0c,
     
-    CallNative      = 0x0a,
-    Return          = 0x0b,
+    CallNative      = 0x0e,
+    Return          = 0x0f,
     
 // 0x0c to 0x0f unused
 
@@ -231,7 +351,7 @@ enum class Op: uint8_t {
     Index           = ExtOpcodeStart + 0x50,
     PushIntConstS   = ExtOpcodeStart + 0x60,
     Log             = ExtOpcodeStart + 0x70,
-    SetFrame        = ExtOpcodeStart + 0x80,
+    SetFrameS       = ExtOpcodeStart + 0x80,    // p and l are each 2 bits (0-3)
     Jump            = ExtOpcodeStart + 0x90,
     If              = ExtOpcodeStart + 0xa0,
 };
