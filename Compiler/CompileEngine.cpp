@@ -12,7 +12,7 @@
 #include <cmath>
 #include <map>
 
-using namespace clvr;
+using namespace lucid;
 
 static std::vector<OpData> _opcodes = {
     { "Push",           Op::Push            , OpParams::Id },
@@ -24,16 +24,16 @@ static std::vector<OpData> _opcodes = {
     { "PushDeref",      Op::PushDeref       , OpParams::None },
     { "PopDeref",       Op::PopDeref        , OpParams::None },
 
-    { "Dup",            Op::Dup             , OpParams::None },
-    { "Drop",           Op::Drop            , OpParams::None },
-    { "Swap",           Op::Swap            , OpParams::None },
+//    { "Dup",            Op::Dup             , OpParams::None },
+//    { "Drop",           Op::Drop            , OpParams::None },
+//    { "Swap",           Op::Swap            , OpParams::None },
     
     { "if",             Op::If              , OpParams::RelTarg },
 
     { "Call",           Op::Call            , OpParams::AbsTarg },
     { "CallNative",     Op::CallNative      , OpParams::Const },
     { "Return",         Op::Return          , OpParams::None },
-    { "SetFrame",       Op::SetFrame        , OpParams::P_L },
+    { "SetFrame",       Op::SetFrameS       , OpParams::P_L },
 
     { "Jump",           Op::Jump            , OpParams::RelTarg },
     { "log",            Op::Log             , OpParams::Idx_Len_S },

@@ -12,13 +12,13 @@
 #pragma once
 
 #include "Compiler.h"
-#include "Interpreter.h"
+#include "ExecutionUnit.h"
 #include "Scanner.h"
 #include <cstdint>
 #include <istream>
 #include <vector>
 
-namespace clvr {
+namespace lucid {
 
 class CompileEngine
 {

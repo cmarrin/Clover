@@ -182,9 +182,9 @@ operator: (* operator   precedence   association *)
     
 */
 
-class CloverCompileEngine : public CompileEngine {
+class LucidCompileEngine : public CompileEngine {
 public:
-  	CloverCompileEngine(std::istream* stream, std::vector<std::pair<int32_t, std::string>>* annotations)
+  	LucidCompileEngine(std::istream* stream, std::vector<std::pair<int32_t, std::string>>* annotations)
         : CompileEngine(stream, annotations)
     { }
   	

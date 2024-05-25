@@ -14,7 +14,7 @@
 
 #include "Compiler.h"
 
-namespace clvr {
+namespace lucid {
 
 class Decompiler
 {

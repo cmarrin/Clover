@@ -9,14 +9,14 @@
 
 #pragma once
 
-#include "Interpreter.h"
+#include "ExecutionUnit.h"
 #include "Opcodes.h"
 #include "Scanner.h"
 #include <cstdint>
 #include <istream>
 #include <vector>
 
-namespace clvr {
+namespace lucid {
 
 struct OpData
 {

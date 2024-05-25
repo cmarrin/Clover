@@ -9,13 +9,12 @@
 
 #include "Compiler.h"
 
-#include "CloverCompileEngine.h"
-#include "NativeCore.h"
+#include "LucidCompileEngine.h"
 
 #include <map>
 #include <vector>
 
-using namespace clvr;
+using namespace lucid;
 
 bool Compiler::compile(std::istream* istream, Language lang,
                        std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
@@ -28,7 +27,7 @@ bool Compiler::compile(std::istream* istream, Language lang,
         default:
             break;
         case Language::Clover:
-            engine = new CloverCompileEngine(istream, annotations);
+            engine = new LucidCompileEngine(istream, annotations);
             break;
     }
     
@@ -39,8 +38,6 @@ bool Compiler::compile(std::istream* istream, Language lang,
     
     // Install the modules in the engine
     // First add the core
-    NativeCore().addFunctions(engine);
-    
     for (const auto& it : modules) {
         it->addFunctions(engine);
     }

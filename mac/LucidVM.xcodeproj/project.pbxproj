@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4941A0F32BB6F59900CE3C9E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A0F22BB6F59900CE3C9E /* main.cpp */; };
+		49279C062C0148A100294992 /* interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49279C052C0148A100294992 /* interp.cpp */; };
+		4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A0F22BB6F59900CE3C9E /* compile.cpp */; };
 		4941A1072BBA28F000CE3C9E /* ExecutionUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* ExecutionUnit.cpp */; };
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
 		4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
@@ -29,8 +30,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		49279C052C0148A100294992 /* interp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = interp.cpp; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* LucidVM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LucidVM; sourceTree = BUILT_PRODUCTS_DIR; };
-		4941A0F22BB6F59900CE3C9E /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
 		4941A1012BBA1D2800CE3C9E /* Flicker.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.lucid; path = ../examples/Flicker.lucid; sourceTree = "<group>"; };
 		4941A1042BBA28F000CE3C9E /* Opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Opcodes.h; path = ../Runtime/Opcodes.h; sourceTree = "<group>"; };
 		4941A1052BBA28F000CE3C9E /* ExecutionUnit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ExecutionUnit.cpp; path = ../Runtime/ExecutionUnit.cpp; sourceTree = "<group>"; };
@@ -81,9 +83,10 @@
 		4941A0F12BB6F59900CE3C9E /* mac */ = {
 			isa = PBXGroup;
 			children = (
-				4941A0F22BB6F59900CE3C9E /* main.cpp */,
+				4941A0F22BB6F59900CE3C9E /* compile.cpp */,
+				49279C052C0148A100294992 /* interp.cpp */,
 			);
-			path = mac;
+			name = mac;
 			sourceTree = "<group>";
 		};
 		4941A1002BBA1CF300CE3C9E /* examples */ = {
@@ -181,9 +184,10 @@
 			files = (
 				4941A1152BBA290B00CE3C9E /* LucidCompileEngine.cpp in Sources */,
 				4941A1072BBA28F000CE3C9E /* ExecutionUnit.cpp in Sources */,
-				4941A0F32BB6F59900CE3C9E /* main.cpp in Sources */,
+				4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
 				4941A1142BBA290B00CE3C9E /* Compiler.cpp in Sources */,
+				49279C062C0148A100294992 /* interp.cpp in Sources */,
 				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
 				4941A1162BBA290B00CE3C9E /* CompileEngine.cpp in Sources */,
 			);
@@ -311,6 +315,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -319,6 +324,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

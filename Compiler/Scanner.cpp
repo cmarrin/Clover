@@ -11,7 +11,7 @@
 
 #include <map>
 
-using namespace clvr;
+using namespace lucid;
 
 Token Scanner::scanString(char terminal)
 {    

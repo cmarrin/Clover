@@ -11,7 +11,7 @@
 
 #include "CompileEngine.h"
 
-using namespace clvr;
+using namespace lucid;
 
 bool Decompiler::decompile()
 {

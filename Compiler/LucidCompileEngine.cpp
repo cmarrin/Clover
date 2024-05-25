@@ -7,15 +7,15 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include "CloverCompileEngine.h"
+#include "LucidCompileEngine.h"
 
 #include <map>
 #include <vector>
 
-using namespace clvr;
+using namespace lucid;
 
 bool
-CloverCompileEngine::opInfo(Token token, OpInfo& op) const
+LucidCompileEngine::opInfo(Token token, OpInfo& op) const
 {
     static std::vector<OpInfo> opInfo = {
         { Token::Equal,     1, Op::Pop,     Op::Pop,      OpInfo::Assign::Only , Type::None },
@@ -53,7 +53,7 @@ CloverCompileEngine::opInfo(Token token, OpInfo& op) const
 }
 
 bool
-CloverCompileEngine::program()
+LucidCompileEngine::program()
 {
     _scanner.setIgnoreNewlines(true);
     
@@ -69,7 +69,7 @@ CloverCompileEngine::program()
 }
 
 bool
-CloverCompileEngine::element()
+LucidCompileEngine::element()
 {
     if (constant()) {
         expect(Token::Semicolon);
@@ -89,7 +89,7 @@ CloverCompileEngine::element()
 }
 
 bool
-CloverCompileEngine::table()
+LucidCompileEngine::table()
 {
     if (!match(Reserved::Table)) {
         return false;
@@ -110,7 +110,7 @@ CloverCompileEngine::table()
 }
 
 bool
-CloverCompileEngine::strucT()
+LucidCompileEngine::strucT()
 {
     if (!match(Reserved::Struct)) {
         return false;
@@ -131,7 +131,7 @@ CloverCompileEngine::strucT()
 }
 
 bool
-CloverCompileEngine::varStatement()
+LucidCompileEngine::varStatement()
 {
     Type t;
     
@@ -164,7 +164,7 @@ CloverCompileEngine::varStatement()
 }
 
 bool
-CloverCompileEngine::var(Type type, bool isPointer)
+LucidCompileEngine::var(Type type, bool isPointer)
 {
     std::string id;
     expect(identifier(id), Compiler::Error::ExpectedIdentifier);
@@ -208,7 +208,7 @@ CloverCompileEngine::var(Type type, bool isPointer)
 }
 
 bool
-CloverCompileEngine::type(Type& t)
+LucidCompileEngine::type(Type& t)
 {
     if (CompileEngine::type(t)) {
         return true;
@@ -233,7 +233,7 @@ CloverCompileEngine::type(Type& t)
 }
 
 bool
-CloverCompileEngine::function()
+LucidCompileEngine::function()
 {
     if (!match(Reserved::Function)) {
         return false;
@@ -262,7 +262,7 @@ CloverCompileEngine::function()
     // SetFrame has to be the first instruction in the Function. Pass Params and
     // set Locals byte to 0 and remember it's location so we can fix it at the
     // end of the function
-    addOpSingleByteIndex(Op::SetFrame, currentFunction().args());
+    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
     auto localsIndex = _rom8.size();
     addInt(0);
 
@@ -292,7 +292,7 @@ CloverCompileEngine::function()
 }
 
 bool
-CloverCompileEngine::structEntry()
+LucidCompileEngine::structEntry()
 {
     Type t;
     std::string id;
@@ -310,7 +310,7 @@ CloverCompileEngine::structEntry()
 }
 
 bool
-CloverCompileEngine::statement()
+LucidCompileEngine::statement()
 {
     if (compoundStatement()) return true;
     if (ifStatement()) return true;
@@ -326,7 +326,7 @@ CloverCompileEngine::statement()
 }
 
 bool
-CloverCompileEngine::compoundStatement()
+LucidCompileEngine::compoundStatement()
 {
     if (!match(Token::OpenBrace)) {
         return false;
@@ -351,7 +351,7 @@ CloverCompileEngine::compoundStatement()
 }
 
 bool
-CloverCompileEngine::ifStatement()
+LucidCompileEngine::ifStatement()
 {
     if (!match(Reserved::If)) {
         return false;
@@ -394,7 +394,7 @@ CloverCompileEngine::ifStatement()
 }
 
 bool
-CloverCompileEngine::forStatement()
+LucidCompileEngine::forStatement()
 {
     if (!match(Reserved::For)) {
         return false;
@@ -478,7 +478,7 @@ CloverCompileEngine::forStatement()
         // a leftover expr on the stack that we need to get rid of
         expect(_exprStack.size() == 1, Compiler::Error::InternalError);
         _exprStack.pop_back();
-        addOp(Op::Drop);
+//        addOp(Op::Drop);
         expect(Token::CloseParen);
         
         // Move the iteration code into the iterBuf.
@@ -510,7 +510,7 @@ CloverCompileEngine::forStatement()
 }
 
 bool
-CloverCompileEngine::whileStatement()
+LucidCompileEngine::whileStatement()
 {
     if (!match(Reserved::While)) {
         return false;
@@ -542,7 +542,7 @@ CloverCompileEngine::whileStatement()
 }
 
 bool
-CloverCompileEngine::loopStatement()
+LucidCompileEngine::loopStatement()
 {
     if (!match(Reserved::Loop)) {
         return false;
@@ -564,7 +564,7 @@ CloverCompileEngine::loopStatement()
 }
 
 bool
-CloverCompileEngine::returnStatement()
+LucidCompileEngine::returnStatement()
 {
     if (!match(Reserved::Return)) {
         return false;
@@ -587,7 +587,7 @@ CloverCompileEngine::returnStatement()
 }
 
 bool
-CloverCompileEngine::jumpStatement()
+LucidCompileEngine::jumpStatement()
 {
     JumpEntry::Type type;
     
@@ -609,7 +609,7 @@ CloverCompileEngine::jumpStatement()
 }
 
 bool
-CloverCompileEngine::logStatement()
+LucidCompileEngine::logStatement()
 {
     if (!match(Reserved::Log)) {
         return false;
@@ -645,7 +645,7 @@ CloverCompileEngine::logStatement()
 }
 
 bool
-CloverCompileEngine::expressionStatement()
+LucidCompileEngine::expressionStatement()
 {
     if (!assignmentExpression()) {
         return false;
@@ -660,7 +660,7 @@ CloverCompileEngine::expressionStatement()
     if (!_exprStack.empty()) {
         expect(_exprStack.size() == 1, Compiler::Error::InternalError);
         _exprStack.pop_back();
-        addOp(Op::Drop);
+//        addOp(Op::Drop);
     }
     
     expect(Token::Semicolon);
@@ -668,7 +668,7 @@ CloverCompileEngine::expressionStatement()
 }
 
 bool
-CloverCompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
+LucidCompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
 {
     if (!unaryExpression()) {
         return false;
@@ -699,7 +699,7 @@ CloverCompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
         if (info.assign() == OpInfo::Assign::Op) {
             // The ref is on TOS, dup and get the value. That will
             // leave the value, then the ref to that value on the stack.
-            addOp(Op::Dup);
+//            addOp(Op::Dup);
             addOp(Op::PushDeref);
         }
         
@@ -740,7 +740,7 @@ CloverCompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
 }
 
 bool
-CloverCompileEngine::unaryExpression()
+LucidCompileEngine::unaryExpression()
 {
     if (postfixExpression()) {
         return true;
@@ -844,7 +844,7 @@ CloverCompileEngine::unaryExpression()
 }
 
 bool
-CloverCompileEngine::postfixExpression()
+LucidCompileEngine::postfixExpression()
 {
     if (!primaryExpression()) {
         return false;
@@ -916,7 +916,7 @@ CloverCompileEngine::postfixExpression()
 }
 
 bool
-CloverCompileEngine::primaryExpression()
+LucidCompileEngine::primaryExpression()
 {
     if (match(Token::OpenParen)) {
         expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
@@ -951,7 +951,7 @@ CloverCompileEngine::primaryExpression()
 }
 
 bool
-CloverCompileEngine::formalParameterList()
+LucidCompileEngine::formalParameterList()
 {
     Type t;
     while (true) {
@@ -977,7 +977,7 @@ CloverCompileEngine::formalParameterList()
 }
 
 bool
-CloverCompileEngine::argumentList(const Function& fun)
+LucidCompileEngine::argumentList(const Function& fun)
 {
     int i = 0;
     while (true) {
@@ -1008,7 +1008,7 @@ CloverCompileEngine::argumentList(const Function& fun)
 }
 
 bool
-CloverCompileEngine::isReserved(Token token, const std::string str, Reserved& r)
+LucidCompileEngine::isReserved(Token token, const std::string str, Reserved& r)
 {
     static std::map<std::string, Reserved> reserved = {
         { "struct",        Reserved::Struct },
@@ -1037,7 +1037,7 @@ CloverCompileEngine::isReserved(Token token, const std::string str, Reserved& r)
 }
 
 uint8_t
-CloverCompileEngine::findInt(int32_t i)
+LucidCompileEngine::findInt(int32_t i)
 {
     // Try to find an existing int const. If found, return
     // its address. If not found, create one and return 
@@ -1053,7 +1053,7 @@ CloverCompileEngine::findInt(int32_t i)
 }
 
 uint8_t
-CloverCompileEngine::findFloat(float f)
+LucidCompileEngine::findFloat(float f)
 {
     // Try to find an existing fp const. If found, return
     // its address. If not found, create one and return 
@@ -1070,7 +1070,7 @@ CloverCompileEngine::findFloat(float f)
 }
 
 CompileEngine::Type
-CloverCompileEngine::bakeExpr(ExprAction action, Type matchingType)
+LucidCompileEngine::bakeExpr(ExprAction action, Type matchingType)
 {
     expect(!_exprStack.empty(), Compiler::Error::InternalError);
     
@@ -1204,9 +1204,9 @@ CloverCompileEngine::bakeExpr(ExprAction action, Type matchingType)
                     // If the ref is a pointer, we need to get the value at the
                     // ref and use that as the ref for the PopDeref.
                     if (ref._ptr && matchingType != Type::Ptr) {
-                        addOp(Op::Swap);
+//                        addOp(Op::Swap);
                         addOp(Op::PushDeref);
-                        addOp(Op::Swap);
+//                        addOp(Op::Swap);
                         type = ref._type;
                     } else {
                         type = ref._ptr ? Type::Ptr : ref._type;
@@ -1233,7 +1233,7 @@ CloverCompileEngine::bakeExpr(ExprAction action, Type matchingType)
 }
         
 bool
-CloverCompileEngine::isExprFunction()
+LucidCompileEngine::isExprFunction()
 {
     expect(!_exprStack.empty(), Compiler::Error::InternalError);
     
@@ -1242,7 +1242,7 @@ CloverCompileEngine::isExprFunction()
 }
 
 bool
-CloverCompileEngine::structFromType(Type type, Struct& s)
+LucidCompileEngine::structFromType(Type type, Struct& s)
 {
     if (uint8_t(type) < 0x80) {
         return false;
@@ -1255,7 +1255,7 @@ CloverCompileEngine::structFromType(Type type, Struct& s)
 }
 
 void
-CloverCompileEngine::findStructElement(Type type, const std::string& id, uint8_t& index, Type& elementType)
+LucidCompileEngine::findStructElement(Type type, const std::string& id, uint8_t& index, Type& elementType)
 {
     Struct s;
     expect(structFromType(type, s), Compiler::Error::ExpectedStructType);
@@ -1272,7 +1272,7 @@ CloverCompileEngine::findStructElement(Type type, const std::string& id, uint8_t
 }
 
 uint8_t
-CloverCompileEngine::elementSize(Type type)
+LucidCompileEngine::elementSize(Type type)
 {
     if (uint8_t(type) < 0x80) {
         return 1;
@@ -1284,7 +1284,7 @@ CloverCompileEngine::elementSize(Type type)
 }
 
 void
-CloverCompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr)
+LucidCompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr)
 {
     expect(!_jumpList.empty(), Compiler::Error::InternalError);
 
@@ -1313,7 +1313,7 @@ CloverCompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint
 }
 
 void
-CloverCompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
+LucidCompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
 {
     expect(!_jumpList.empty(), Compiler::Error::InternalError);
     

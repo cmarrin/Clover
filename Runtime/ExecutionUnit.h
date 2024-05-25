@@ -50,7 +50,7 @@
     static inline String to_string(float v) { return std::to_string(v); }
 #endif
 
-namespace clvr {
+namespace lucid {
 
 static constexpr uint8_t MaxStackSize = 128;    // Could be 255 but let's avoid excessive 
                                                 // memory usage
@@ -79,7 +79,7 @@ static inline uint32_t floatToInt(float f)
 // Core Native Functions
 //
 
-class Interpreter;
+class ExecutionUnit;
 
 class CompileEngine;
 
@@ -90,14 +90,14 @@ public:
     
     virtual bool hasId(uint8_t id) const = 0;
     virtual uint8_t numParams(uint8_t id) const = 0;
-    virtual int32_t call(Interpreter*, uint8_t id) = 0;
+    virtual int32_t call(ExecutionUnit*, uint8_t id) = 0;
     
 #ifndef ARDUINO
     virtual void addFunctions(CompileEngine*) = 0;
 #endif
 };
 
-class Interpreter
+class ExecutionUnit
 {
 public:
     enum class Error {
@@ -117,8 +117,8 @@ public:
         StackOutOfRange,
     };
 
-    Interpreter(NativeModule** mod = nullptr, uint32_t modSize = 0);
-    ~Interpreter();
+    ExecutionUnit(NativeModule** mod = nullptr, uint32_t modSize = 0);
+    ~ExecutionUnit();
     
     bool init(const char* cmd, const uint8_t* buf, uint8_t size);
     int32_t loop();
@@ -462,7 +462,7 @@ private:
     
     bool isNextOpcodeSetFrame() const
     {
-        return Op(getUInt8ROM(_pc) & 0xf0) == Op::SetFrame;
+        return Op(getUInt8ROM(_pc) & 0xf0) == Op::SetFrameS;
     }
     
     Error _error = Error::None;

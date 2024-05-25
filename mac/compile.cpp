@@ -1,5 +1,5 @@
 //
-//  main.cpp
+//  compile.cpp
 //  LucidVM
 //
 //  Created by Chris Marrin on 3/29/24.

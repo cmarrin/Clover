@@ -7,29 +7,26 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include "Interpreter.h"
+#include "ExecutionUnit.h"
 
-#include "NativeCore.h"
+using namespace lucid;
 
-using namespace clvr;
-
-Interpreter::Interpreter(NativeModule** mod, uint32_t modSize)
+ExecutionUnit::ExecutionUnit(NativeModule** mod, uint32_t modSize)
 {
     // Just in case they don't match
     if (mod == nullptr) {
         modSize = 0;
     }
     
-    _nativeModules = new NativeModule*[modSize + 1];
-    _nativeModulesSize = modSize + 1;
+    _nativeModules = new NativeModule*[modSize];
+    _nativeModulesSize = modSize;
     
-    _nativeModules[0] = new NativeCore();
     for (int i = 0; i < modSize; ++i) {
-        _nativeModules[i + 1] = mod[i];
+        _nativeModules[i] = mod[i];
     }
 }
 
-Interpreter::~Interpreter()
+ExecutionUnit::~ExecutionUnit()
 {
     // We own the NativeCore, which is the first module
     if (!_nativeModules) {
@@ -39,7 +36,7 @@ Interpreter::~Interpreter()
 }
 
 void
-Interpreter::initArray(uint32_t index, uint32_t value, uint32_t count)
+ExecutionUnit::initArray(uint32_t index, uint32_t value, uint32_t count)
 {
     // index is actually an Address
     Address addr = Address::fromVar(index);
@@ -68,7 +65,7 @@ Interpreter::initArray(uint32_t index, uint32_t value, uint32_t count)
 }
 
 bool
-Interpreter::init(const char* cmd, const uint8_t* buf, uint8_t size)
+ExecutionUnit::init(const char* cmd, const uint8_t* buf, uint8_t size)
 {
     memcpy(_params, buf, size);
     _paramsSize = size;
@@ -154,7 +151,7 @@ Interpreter::init(const char* cmd, const uint8_t* buf, uint8_t size)
 }
 
 int32_t
-Interpreter::loop()
+ExecutionUnit::loop()
 {
     _pc = _loopStart;
     if (!isNextOpcodeSetFrame()) {
@@ -168,7 +165,7 @@ Interpreter::loop()
 }
 
 int32_t
-Interpreter::execute(uint16_t addr)
+ExecutionUnit::execute(uint16_t addr)
 {
     _pc = addr;
     
@@ -234,15 +231,15 @@ Interpreter::execute(uint16_t addr)
                 _stack.top() += value * index;
                 break;
 
-            case Op::Dup:
-                _stack.push(_stack.top());
-                break;
-            case Op::Drop:
-                _stack.pop();
-                break;
-            case Op::Swap:
-                _stack.swap();
-                break;
+//            case Op::Dup:
+//                _stack.push(_stack.top());
+//                break;
+//            case Op::Drop:
+//                _stack.pop();
+//                break;
+//            case Op::Swap:
+//                _stack.swap();
+//                break;
 
             case Op::If: {
                 int16_t relTarg = getRelTarg(index);
@@ -331,7 +328,7 @@ Interpreter::execute(uint16_t addr)
                 }
                 break;
             }
-            case Op::SetFrame:
+            case Op::SetFrameS:
                 numParams = index;
                 numLocals = getSz();
                 if (!_stack.setFrame(numParams, numLocals)) {
@@ -475,7 +472,7 @@ Interpreter::execute(uint16_t addr)
 // Return -1 if we just finished going down, or 1 
 // if we just finished going up. Otherwise return 0.
 int32_t
-Interpreter::animate(uint32_t index)
+ExecutionUnit::animate(uint32_t index)
 {
     // index is actually an Address
     Address addr = Address::fromVar(index);
@@ -508,7 +505,7 @@ Interpreter::animate(uint32_t index)
 }
 
 bool
-Interpreter::log(const char* fmt, uint8_t numArgs)
+ExecutionUnit::log(const char* fmt, uint8_t numArgs)
 {
     // This is a very simplified version of printf. It
     // handles '%i' and '%f'
