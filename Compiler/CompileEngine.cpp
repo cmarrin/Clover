@@ -102,10 +102,10 @@ CompileEngine::emit(std::vector<uint8_t>& executable)
     uint32_t stackSize = uint32_t(_localHighWaterMark) + StackOverhead;
     expect(stackSize <= MaxStackSize, Compiler::Error::StackTooBig);
     
-    executable.push_back('a');
-    executable.push_back('r');
     executable.push_back('l');
-    executable.push_back('y');
+    executable.push_back('u');
+    executable.push_back('c');
+    executable.push_back('d');
     emitUInt16(executable, _rom32.size());
     emitUInt16(executable, _globalSize);
     emitUInt16(executable, stackSize);
