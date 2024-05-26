@@ -257,18 +257,10 @@ PreInc2: (X has Ref)
     Executable format
     
     Format Id           - 4 bytes: 'lucd'
-    Class proto psize   - 2 bytes, size in 16 bit entries of class prototype offsets
-    Class proto table   - psize entries of 2 bytes each, absolute offset of each class
-    Class protos        - list of class prototypes. Each prototype consists of:
-    
-                            Class size      - 2 bytes, size of a class instance
-                            Constant size   - 2 bytes, size of constants
-                            Constants       - list of each constant in the prototype
-                            Function table  - array of indexes to each function
-                                              Each function consists of:
-                                              
-                                                  Local size    - 2 bytes, size needed for params and locals
-                                                  Code          executable code for function
+    Main struct size    - 2 bytes: size in bytes of main struct to be allocated in low memory
+    Main init function  - 2 bytes: offset from start of code of the main struct initialize function
+    Code                - Code for all functions. 
+    Checksum            - 1 byte: checksum of entire file, including Format Id
 */
 
 static constexpr uint16_t MaxIdSize = 4096;
