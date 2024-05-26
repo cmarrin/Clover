@@ -20,11 +20,30 @@
 
 namespace lucid {
 
+static constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
+
 class CompileEngine
 {
 public:
-    // Built-in types are 0x00-0x7f, custom types are 0x80-0xff
-    enum class Type : uint8_t { None = 0, Float = 1, Int = 2, UInt8 = 3, Ptr = 5 };
+    // Built-in types are 0x00-StructTypeStart-1, custom types are StructTypeStart-0xff
+    enum class Type : uint8_t {
+        None = 0,
+        Float = 1,
+        Fixed = 2,
+        
+        Int8 = 10,
+        UInt8 = 11,
+        Int16 = 12,
+        UInt16 = 13,
+        Int32 = 14,
+        UInt32 = 15,
+        Int = 16, // Unspecified size
+        UInt = 17, // Unspecified size
+        
+        Struct = 20,
+        
+        Ptr = 30
+    };
 
     class Symbol
     {
@@ -90,8 +109,10 @@ protected:
         None,
         Struct,
         Const,
-        Table,
+        Import,
+        From,
         Function,
+        Initialize,
         Return,
         Break,
         Continue,
@@ -104,14 +125,17 @@ protected:
         If,
         Else,
         Float,
-        Int,
-        R0, R1, R2, R3,
-        C0, C1, C2, C3,
+        Fixed,
+        Int8,
+        UInt8,
+        Int16,
+        UInt16,
+        Int32,
+        UInt32,
     };
     
     virtual bool statement() = 0;
     virtual bool function() = 0;
-    virtual bool table() = 0;
     virtual bool type(Type& t);
     
     bool constant();
@@ -197,17 +221,6 @@ protected:
     const Function& handleFunctionName();
 
     static bool opDataFromString(const std::string str, OpData& data);
-
-    bool addGlobal(const std::string& name, uint8_t addr, Type type, Symbol::Storage storage, bool ptr = false, uint8_t size = 1)
-    {
-        // Check for duplicates
-        Symbol sym;
-        if (findSymbol(name, sym)) {
-            return false;
-        }
-        _globals.emplace_back(name, addr, type, storage, ptr, size);
-        return true;
-    }
 
     struct Def
     {
@@ -326,10 +339,7 @@ protected:
     
     Function& currentFunction()
     {
-        if (_functions.empty()) {
-            _error = Compiler::Error::InternalError;
-            throw true;
-        }
+        expect(!_functions.empty(), Compiler::Error::InternalError);
         return _functions.back();
     }
     
@@ -342,7 +352,6 @@ protected:
     
     uint8_t allocNativeId() { return _nextNativeId++; }
         
-    bool findSymbol(const std::string&, Symbol&);
     bool findDef(const std::string&, Def&);
     bool findFunction(const std::string&, Function&);
 

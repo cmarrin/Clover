@@ -58,7 +58,15 @@ LucidCompileEngine::program()
     _scanner.setIgnoreNewlines(true);
     
     try {
-        while(element()) { }
+        while(import()) { }
+        while(strucT()) { }
+        
+        Type t;
+        std::string id;
+        if (type(t)) {
+            expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+        }
+        expect(Token::Semicolon);
         expect(Token::EndOfFile);
     }
     catch(...) {
@@ -69,43 +77,21 @@ LucidCompileEngine::program()
 }
 
 bool
-LucidCompileEngine::element()
+LucidCompileEngine::import()
 {
-    if (constant()) {
-        expect(Token::Semicolon);
-        return true;
-    }
-    
-    if (varStatement()) return true;    
-    if (table()) return true;
-    if (strucT()) return true;
-    if (function()) return true;
-    
-    if (command()) {
-        expect(Token::Semicolon);
-        return true;
-    }
-    return false;
-}
-
-bool
-LucidCompileEngine::table()
-{
-    if (!match(Reserved::Table)) {
+    if (!match(Reserved::Import)) {
         return false;
     }
     
-    Type t;
     std::string id;
-    expect(type(t), Compiler::Error::ExpectedType);
+    if (identifier(id)) {
+        while (match(Token::Comma)) {
+            expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+        }
+        expect(match(Reserved::From), Compiler::Error::ExpectedKeyword);
+    }
+    
     expect(identifier(id), Compiler::Error::ExpectedIdentifier);
-    expect(Token::OpenBrace);
-    
-    // Set the start address of the table. tableEntries() will fill them in
-    expect(addGlobal(id, _rom32.size(), t, Symbol::Storage::Const), Compiler::Error::DuplicateIdentifier);
-    
-    values(t);
-    expect(Token::CloseBrace);
     return true;
 }
 
@@ -121,24 +107,55 @@ LucidCompileEngine::strucT()
 
     // Add a struct entry
     _structs.emplace_back(id);
+    _structStack.push_back(uint32_t(_structs.size() - 1));
     
     expect(Token::OpenBrace);
     
     while(structEntry()) { }
     
     expect(Token::CloseBrace);
+    expect(Token::Semicolon);
+    _structStack.pop_back();
     return true;
+}
+
+// structEntry:
+//     constant | varStatement | function | ctor | dtor ;
+//
+bool
+LucidCompileEngine::structEntry()
+{
+    // FIXME: Handle ctor and dtor
+    if (constant() || varStatement() || function() || init()) {
+        return true;
+    }
+    
+    return false;
+}
+
+// constant:
+//     'const' type <id> value ';' ;
+bool
+LucidCompileEngine::constant()
+{
+    return false;
 }
 
 bool
 LucidCompileEngine::varStatement()
 {
-    Type t;
+    Type t = Type::None;
+    std::string id;
     
     if (!type(t)) {
+        // Wasn't any of the built-in types. See if it's a struct definition
+        if (strucT()) {
+            t = Type::Struct;
+            return true;
+        }
         return false;
     }
-    
+
     bool isPointer = false;
     if (match(Token::Mul)) {
         isPointer = true;
@@ -183,7 +200,10 @@ LucidCompileEngine::var(Type type, bool isPointer)
     if (_inFunction) {
         expect(currentFunction().addLocal(id, type, isPointer, size), Compiler::Error::DuplicateIdentifier);
     } else {
-        expect(addGlobal(id, _nextMem, type, Symbol::Storage::Global, isPointer, size), Compiler::Error::DuplicateIdentifier);
+        expect(!_structStack.empty(), Compiler::Error::InternalError);
+        
+        // FIXME: Need to deal with ptr and size
+        expect(currentStruct().addLocal(id, type, false, 1), Compiler::Error::DuplicateIdentifier);
 
         // There is only enough room for GlobalSize values
         expect(_nextMem + size <= GlobalSize, Compiler::Error::TooManyVars);
@@ -194,14 +214,26 @@ LucidCompileEngine::var(Type type, bool isPointer)
     
     // Check for an initializer. We only allow initializers on Int and Float
     if (match(Token::Equal)) {
-        expect(type == Type::Int || type == Type::Float, Compiler::Error::InitializerNotAllowed);
-
-        // Generate an assignment expression
-        _exprStack.emplace_back(id);
-        bakeExpr(ExprAction::Ref);
-        expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
-        expect(bakeExpr(ExprAction::Right, type) == type, Compiler::Error::WrongType);
-        expect(bakeExpr(ExprAction::Left, type) == type, Compiler::Error::MismatchedType);
+        if (uint8_t(type) < StructTypeStart) {
+            // Built-in type. Generate an assignment expression
+            _exprStack.emplace_back(id);
+            bakeExpr(ExprAction::Ref);
+            expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
+            expect(bakeExpr(ExprAction::Right, type) == type, Compiler::Error::WrongType);
+            expect(bakeExpr(ExprAction::Left, type) == type, Compiler::Error::MismatchedType);
+        } else {
+            // Struct type, collect initializers
+            expect(Token::OpenBrace);
+            if (arithmeticExpression()) {
+                // FIXME: For now ignore the initializers
+                _exprStack.pop_back();
+                while (match(Token::Comma)) {
+                    expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
+                    _exprStack.pop_back();
+                }
+            }
+            expect(Token::CloseBrace);
+        }
     }
     
     return true;
@@ -223,9 +255,9 @@ LucidCompileEngine::type(Type& t)
     auto it = find_if(_structs.begin(), _structs.end(),
                     [id](const Struct s) { return s.name() == id; });
     if (it != _structs.end()) {
-        // Types from 0x80 - 0xff are structs. Make the enum the struct
-        // index + 0x80
-        t = Type(0x80 + (it - _structs.begin()));
+        // Types from StructTypeStart - 0xff are structs. Make the enum the struct
+        // index + StructTypeStart
+        t = Type(StructTypeStart + (it - _structs.begin()));
         _scanner.retireToken();
         return true;
     }
@@ -292,20 +324,53 @@ LucidCompileEngine::function()
 }
 
 bool
-LucidCompileEngine::structEntry()
+LucidCompileEngine::init()
 {
-    Type t;
-    std::string id;
-    
-    if (!type(t)) {
+    if (!match(Reserved::Initialize)) {
         return false;
     }
     
-    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+    // Remember the function
+    // FIXME: probably don't save a string as the function name
+    _functions.emplace_back("initialize", uint16_t(_rom8.size()), Type::None);
+    _inFunction = true;
     
-    expect(Token::Semicolon);
+    expect(Token::OpenParen);
     
-    _structs.back().addEntry(id, t);
+    expect(formalParameterList(), Compiler::Error::ExpectedFormalParams);
+    
+    expect(Token::CloseParen);
+    expect(Token::OpenBrace);
+
+    // SetFrame has to be the first instruction in the Function. Pass Params and
+    // set Locals byte to 0 and remember it's location so we can fix it at the
+    // end of the function
+    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
+    auto localsIndex = _rom8.size();
+    addInt(0);
+
+    // Remember the rom addr so we can check to see if we've emitted any code
+    uint16_t size = romSize();
+    
+    while(statement()) { }
+    
+    expect(Token::CloseBrace);
+
+    // Update locals size
+    _rom8[localsIndex] = currentFunction().localSize();
+
+    // Set the high water mark
+    if (_nextMem > _localHighWaterMark) {
+        _localHighWaterMark = _nextMem;
+    }
+    
+    // Emit Return at the end if there's not already one
+    if (size == romSize() || lastOp() != Op::Return) {
+        addOpSingleByteIndex(Op::PushIntConstS, 0);
+        addOp(Op::Return);
+    }
+    
+    _inFunction = false;
     return true;
 }
 
@@ -1069,6 +1134,17 @@ LucidCompileEngine::findFloat(float f)
     return _rom32.size() - 1;
 }
 
+bool
+LucidCompileEngine::findSymbol(const std::string& s, Symbol& sym)
+{
+    // First look in the current function and then in the parent struct
+    if (currentFunction().findLocal(s, sym)) {
+        return true;
+    }
+    
+    return currentStruct().findLocal(s, sym);
+}
+
 CompileEngine::Type
 LucidCompileEngine::bakeExpr(ExprAction action, Type matchingType)
 {
@@ -1244,10 +1320,10 @@ LucidCompileEngine::isExprFunction()
 bool
 LucidCompileEngine::structFromType(Type type, Struct& s)
 {
-    if (uint8_t(type) < 0x80) {
+    if (uint8_t(type) < StructTypeStart) {
         return false;
     }
-    uint8_t index = uint8_t(type) - 0x80;
+    uint8_t index = uint8_t(type) - StructTypeStart;
     expect(index < _structs.size(), Compiler::Error::InternalError);
     
     s = _structs[index];
@@ -1260,21 +1336,21 @@ LucidCompileEngine::findStructElement(Type type, const std::string& id, uint8_t&
     Struct s;
     expect(structFromType(type, s), Compiler::Error::ExpectedStructType);
     
-    const std::vector<ParamEntry>& entries = s.entries();
+    const std::vector<Symbol>& locals = s.locals();
 
-    auto it = find_if(entries.begin(), entries.end(),
-                    [id](const ParamEntry& ent) { return ent._name == id; });
-    expect(it != entries.end(), Compiler::Error::InvalidStructId);
+    auto it = find_if(locals.begin(), locals.end(),
+                    [id](const Symbol& sym) { return sym.name() == id; });
+    expect(it != locals.end(), Compiler::Error::InvalidStructId);
     
     // FIXME: For now assume structs can only have 1 word entries. If we ever support Structs with Structs this is not true
-    index = it - entries.begin();
-    elementType = it->_type;
+    index = it - locals.begin();
+    elementType = it->type();
 }
 
 uint8_t
 LucidCompileEngine::elementSize(Type type)
 {
-    if (uint8_t(type) < 0x80) {
+    if (uint8_t(type) < StructTypeStart) {
         return 1;
     }
     

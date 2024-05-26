@@ -42,6 +42,13 @@ Opcodes:
     Load and store values on the stack
     ==================================
     
+    
+    // Load and store rather than push/pop
+    ex., a.b = c.d
+    
+    // With push/pop this is 
+    
+    
     PushDeref1              - uint16 tmp = pop16(), push1(mem1(tmp))
     PushDeref2              - uint16 tmp = pop16(), push2(mem2(tmp))
     PushDeref4              - uint16 tmp = pop16(), push4(mem4(tmp))
@@ -49,12 +56,12 @@ Opcodes:
     PopDeref2               - uint16 tmp = pop16(), setmem2(tmp, pop2())
     PopDeref4               - uint16 tmp = pop16(), setmem4(tmp, pop4())
     
-    PushF1 uint16           - push1(bp1(uint16))
-    PushF2 uint16           - push2(bp2(uint16))
-    PushF4 uint16           - push4(bp4(uint16))
-    PopF1 uint16            - setbp1(uint16, pop1())
-    PopF2 uint16            - setbp2(uint16, pop2())
-    PopF4 uint16            - setbp4(uint16, pop4())
+    PushL1 uint16           - push1(bp1(uint16))
+    PushL2 uint16           - push2(bp2(uint16))
+    PushL4 uint16           - push4(bp4(uint16))
+    PopL1 uint16            - setbp1(uint16, pop1())
+    PopL2 uint16            - setbp2(uint16, pop2())
+    PopL4 uint16            - setbp4(uint16, pop4())
     
     PushC1 uint8            - push1(uint8)
     PushC2 uint8            - push2(uint8)

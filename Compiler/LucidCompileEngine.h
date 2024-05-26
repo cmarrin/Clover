@@ -46,13 +46,13 @@ program:
     { import } { struct } [ <type> <id> ] ;
 
 import:
-    'import' [ <id> { ',' <id> } ] 'from' <id> ;
+    'import' [ <id> { ',' <id> } 'from' ] <id> ;
     
 struct:
     'struct' <id> '{' { structEntry ';' } '}' ;
     
 structEntry:
-    constant | varStatement | function | ctor | dtor ;
+    constant | varStatement | function | init  ;
 
 constant:
     'const' type <id> value ';' ;
@@ -67,8 +67,11 @@ initializer:
     arithmeticExpression | '{' [ initializer { ',' initializer } ] '}'
 
 function:
-    'function' [ <type> ] <id> '( formalParameterList ')' '{' { statement } '}' ;
+    'function' [ <type> ] <id> '(' formalParameterList ')' '{' { statement } '}' ;
 
+init:
+    'initialize' '(' ')' '{' { statement } '}' ;
+    
 // <id> is a struct name
 type:
       'float'
@@ -207,11 +210,11 @@ public:
 protected:
     virtual bool statement() override;
     virtual bool function() override;
-    virtual bool table() override;
     virtual bool type(Type&) override;
   
     bool varStatement();
     bool var(Type, bool isPointer);
+    bool init();
 
 private:
     class OpInfo {
@@ -242,7 +245,7 @@ private:
         Op floatOp() const { return _floatOp; }
         Assign assign() const { return _assign; }
         Type resultType() const { return _resultType; }
-
+        
     private:
         Token _token;
         Op _intOp;
@@ -252,11 +255,12 @@ private:
         Type _resultType;
     };
     
-    bool element();
+    bool import();
     bool strucT();
     
     bool structEntry();
-
+    bool constant();
+    
     bool compoundStatement();
     bool ifStatement();
     bool forStatement();
@@ -281,6 +285,7 @@ private:
 
     virtual bool isReserved(Token token, const std::string str, Reserved&) override;
 
+    bool findSymbol(const std::string&, Symbol&);
     uint8_t findInt(int32_t);
     uint8_t findFloat(float);
     
@@ -330,23 +335,40 @@ private:
             : _name(name)
         { }
         
-        void addEntry(const std::string& name, Type type)
-        {
-            _entries.emplace_back(name, type);
-            
-            // FIXME: For now assume all 1 word types. Will we support Structs in Structs?
-            // FIXME: Max size is 16, check that
-            _size++;
-        }
-        
-        const std::vector<ParamEntry>& entries() const { return _entries; }
+        const std::vector<Symbol>& locals() const { return _locals; }
         
         const std::string& name() const { return _name; }
-        uint8_t size() const { return _size; }
+        uint8_t size() const { return _localSize; }
         
+        bool addLocal(const std::string& name, Type type, bool ptr, uint8_t size)
+        {
+            // Check for duplicates
+            Symbol sym;
+            if (findLocal(name, sym)) {
+                return false;
+            }
+            _locals.emplace_back(name, _localSize, type, Symbol::Storage::Local, ptr, size);
+            _localSize += size;
+            return true;
+        }
+
+        bool findLocal(const std::string& s, Symbol& sym)
+        {
+            const auto& it = find_if(_locals.begin(), _locals.end(),
+                    [s](const Symbol& p) { return p.name() == s; });
+
+            if (it != _locals.end()) {
+                sym = *it;
+                return true;
+            }
+            return false;
+        }
+
     private:
         std::string _name;
-        std::vector<ParamEntry> _entries;
+        std::vector<Symbol> _locals;
+        std::vector<Function> _functions;
+        uint8_t _localSize = 0;
         uint8_t _size = 0;
     };
 
@@ -425,6 +447,12 @@ private:
     bool structFromType(Type, Struct&);
     void findStructElement(Type, const std::string& id, uint8_t& index, Type&);
 
+    Struct& currentStruct()
+    {
+        expect(!_structStack.empty(), Compiler::Error::InternalError);
+        return _structs[_structStack.back()];
+    }
+
     struct JumpEntry
     {
         enum class Type { Start, Continue, Break };
@@ -440,6 +468,7 @@ private:
     void addJumpEntry(Op, JumpEntry::Type);
     
     std::vector<Struct> _structs;
+    std::vector<uint32_t> _structStack;
     std::vector<ExprEntry> _exprStack;
     std::vector<Symbol> _builtins;
     

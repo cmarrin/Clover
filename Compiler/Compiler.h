@@ -34,6 +34,7 @@ public:
         None,
         UnrecognizedLanguage,
         ExpectedToken,
+        ExpectedKeyword,
         ExpectedType,
         ExpectedValue,
         ExpectedString,

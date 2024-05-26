@@ -150,12 +150,14 @@ CompileEngine::constant()
     // If the constant is an int between -127 and 128, then put it in the
     // Def list. It will be emitted as a PushConst or PushConstS to avoid
     // taking up constant space
-    if (t == Type::Int && val >= -128 && val <= 127) {
-        _defs.emplace_back(id, val);
-    } else {
-        expect(addGlobal(id, _rom32.size(), t, Symbol::Storage::Const), Compiler::Error::DuplicateIdentifier);
-        _rom32.push_back(val);
-    }
+    
+// FIXME: What do we do with constants?
+//    if (t == Type::Int8 && val >= -128 && val <= 127) {
+//        _defs.emplace_back(id, val);
+//    } else {
+//        expect(addGlobal(id, _rom32.size(), t, Symbol::Storage::Const), Compiler::Error::DuplicateIdentifier);
+//        _rom32.push_back(val);
+//    }
     
     return true;
 }
@@ -199,12 +201,34 @@ CompileEngine::type(Type& t)
         t = Type::Float;
         return true;
     }
-    if (match(Reserved::Int)) {
-        t = Type::Int;
+    if (match(Reserved::Fixed)) {
+        t = Type::Fixed;
         return true;
     }
-    
-    // See if it's a struct
+    if (match(Reserved::Int8)) {
+        t = Type::Int8;
+        return true;
+    }
+    if (match(Reserved::UInt8)) {
+        t = Type::Int8;
+        return true;
+    }
+    if (match(Reserved::Int16)) {
+        t = Type::Int16;
+        return true;
+    }
+    if (match(Reserved::UInt16)) {
+        t = Type::Int16;
+        return true;
+    }
+    if (match(Reserved::Int32)) {
+        t = Type::Int32;
+        return true;
+    }
+    if (match(Reserved::UInt32)) {
+        t = Type::Int32;
+        return true;
+    }
     
     return false;
 }
@@ -241,7 +265,7 @@ CompileEngine::value(int32_t& i, Type t)
         }
 
         // If we're expecting an Integer, convert it
-        if (t == Type::Int) {
+        if (t == Type::Int8) {
             i = roundf(f);
         } else {
             i = *(reinterpret_cast<int32_t*>(&f));
@@ -447,14 +471,22 @@ CompileEngine::isReserved(Token token, const std::string str, Reserved& r)
 {
     static std::map<std::string, Reserved> reserved = {
         { "const",      Reserved::Const },
-        { "table",      Reserved::Table },
+        { "import",     Reserved::Import },
+        { "from",       Reserved::From },
         { "function",   Reserved::Function },
+        { "initialize", Reserved::Initialize },
         { "command",    Reserved::Command },
         { "for",        Reserved::For },
         { "if",         Reserved::If },
         { "else",       Reserved::Else },
         { "float",      Reserved::Float },
-        { "int",        Reserved::Int },
+        { "fixed",      Reserved::Fixed },
+        { "int8",       Reserved::Int8 },
+        { "uint8",      Reserved::UInt8 },
+        { "int16",      Reserved::Int16 },
+        { "uint16",     Reserved::UInt16 },
+        { "int32",      Reserved::Int32 },
+        { "uint32",     Reserved::UInt32 },
     };
 
     if (token != Token::Identifier) {
@@ -467,21 +499,6 @@ CompileEngine::isReserved(Token token, const std::string str, Reserved& r)
         return true;
     }
     return false;
-}
-
-bool
-CompileEngine::findSymbol(const std::string& s, Symbol& sym)
-{
-    const auto& it = find_if(_globals.begin(), _globals.end(),
-                    [s](const Symbol& sym) { return sym.name() == s; });
-
-    if (it != _globals.end()) {
-        sym = *it;
-        return true;
-    }
-    
-    // Not found. See if it's a local to the current function (param or var)
-    return currentFunction().findLocal(s, sym);
 }
 
 bool

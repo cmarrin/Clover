@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		49279C062C0148A100294992 /* interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49279C052C0148A100294992 /* interp.cpp */; };
 		4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A0F22BB6F59900CE3C9E /* compile.cpp */; };
 		4941A1072BBA28F000CE3C9E /* ExecutionUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* ExecutionUnit.cpp */; };
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
@@ -15,6 +14,8 @@
 		4941A1142BBA290B00CE3C9E /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10B2BBA290B00CE3C9E /* Compiler.cpp */; };
 		4941A1152BBA290B00CE3C9E /* LucidCompileEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* LucidCompileEngine.cpp */; };
 		4941A1162BBA290B00CE3C9E /* CompileEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1112BBA290B00CE3C9E /* CompileEngine.cpp */; };
+		49C164B02C02981300981AD1 /* interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49279C052C0148A100294992 /* interp.cpp */; };
+		49C164B12C0298CE00981AD1 /* ExecutionUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* ExecutionUnit.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,11 +28,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		49C164A72C0297FB00981AD1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		49279C052C0148A100294992 /* interp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = interp.cpp; sourceTree = "<group>"; };
-		4941A0EF2BB6F59900CE3C9E /* LucidVM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LucidVM; sourceTree = BUILT_PRODUCTS_DIR; };
+		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
 		4941A1012BBA1D2800CE3C9E /* Flicker.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.lucid; path = ../examples/Flicker.lucid; sourceTree = "<group>"; };
 		4941A1042BBA28F000CE3C9E /* Opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Opcodes.h; path = ../Runtime/Opcodes.h; sourceTree = "<group>"; };
@@ -48,10 +58,19 @@
 		4941A1102BBA290B00CE3C9E /* LucidCompileEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LucidCompileEngine.h; path = ../Compiler/LucidCompileEngine.h; sourceTree = "<group>"; };
 		4941A1112BBA290B00CE3C9E /* CompileEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CompileEngine.cpp; path = ../Compiler/CompileEngine.cpp; sourceTree = "<group>"; };
 		4941A1172BBB0B1200CE3C9E /* Effects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.lucid; path = ../examples/Effects.lucid; sourceTree = "<group>"; };
+		49C164A42C025CD500981AD1 /* simple.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = simple.lucid; path = ../examples/simple.lucid; sourceTree = "<group>"; };
+		49C164A92C0297FB00981AD1 /* interp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = interp; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		4941A0EC2BB6F59900CE3C9E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49C164A62C0297FB00981AD1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -75,7 +94,8 @@
 		4941A0F02BB6F59900CE3C9E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4941A0EF2BB6F59900CE3C9E /* LucidVM */,
+				4941A0EF2BB6F59900CE3C9E /* compile */,
+				49C164A92C0297FB00981AD1 /* interp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -94,6 +114,7 @@
 			children = (
 				4941A1012BBA1D2800CE3C9E /* Flicker.lucid */,
 				4941A1172BBB0B1200CE3C9E /* Effects.lucid */,
+				49C164A42C025CD500981AD1 /* simple.lucid */,
 			);
 			name = examples;
 			sourceTree = "<group>";
@@ -128,9 +149,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4941A0EE2BB6F59900CE3C9E /* LucidVM */ = {
+		4941A0EE2BB6F59900CE3C9E /* compile */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4941A0F62BB6F59900CE3C9E /* Build configuration list for PBXNativeTarget "LucidVM" */;
+			buildConfigurationList = 4941A0F62BB6F59900CE3C9E /* Build configuration list for PBXNativeTarget "compile" */;
 			buildPhases = (
 				4941A0EB2BB6F59900CE3C9E /* Sources */,
 				4941A0EC2BB6F59900CE3C9E /* Frameworks */,
@@ -140,9 +161,26 @@
 			);
 			dependencies = (
 			);
-			name = LucidVM;
+			name = compile;
 			productName = LucidVM;
-			productReference = 4941A0EF2BB6F59900CE3C9E /* LucidVM */;
+			productReference = 4941A0EF2BB6F59900CE3C9E /* compile */;
+			productType = "com.apple.product-type.tool";
+		};
+		49C164A82C0297FB00981AD1 /* interp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49C164AD2C0297FB00981AD1 /* Build configuration list for PBXNativeTarget "interp" */;
+			buildPhases = (
+				49C164A52C0297FB00981AD1 /* Sources */,
+				49C164A62C0297FB00981AD1 /* Frameworks */,
+				49C164A72C0297FB00981AD1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = interp;
+			productName = interp;
+			productReference = 49C164A92C0297FB00981AD1 /* interp */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -155,6 +193,9 @@
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
 					4941A0EE2BB6F59900CE3C9E = {
+						CreatedOnToolsVersion = 15.2;
+					};
+					49C164A82C0297FB00981AD1 = {
 						CreatedOnToolsVersion = 15.2;
 					};
 				};
@@ -172,7 +213,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4941A0EE2BB6F59900CE3C9E /* LucidVM */,
+				4941A0EE2BB6F59900CE3C9E /* compile */,
+				49C164A82C0297FB00981AD1 /* interp */,
 			);
 		};
 /* End PBXProject section */
@@ -187,9 +229,17 @@
 				4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
 				4941A1142BBA290B00CE3C9E /* Compiler.cpp in Sources */,
-				49279C062C0148A100294992 /* interp.cpp in Sources */,
 				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
 				4941A1162BBA290B00CE3C9E /* CompileEngine.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49C164A52C0297FB00981AD1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49C164B12C0298CE00981AD1 /* ExecutionUnit.cpp in Sources */,
+				49C164B02C02981300981AD1 /* interp.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -329,6 +379,22 @@
 			};
 			name = Release;
 		};
+		49C164AE2C0297FB00981AD1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		49C164AF2C0297FB00981AD1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -341,11 +407,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4941A0F62BB6F59900CE3C9E /* Build configuration list for PBXNativeTarget "LucidVM" */ = {
+		4941A0F62BB6F59900CE3C9E /* Build configuration list for PBXNativeTarget "compile" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4941A0F72BB6F59900CE3C9E /* Debug */,
 				4941A0F82BB6F59900CE3C9E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		49C164AD2C0297FB00981AD1 /* Build configuration list for PBXNativeTarget "interp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49C164AE2C0297FB00981AD1 /* Debug */,
+				49C164AF2C0297FB00981AD1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
