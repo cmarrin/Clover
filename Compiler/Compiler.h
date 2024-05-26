@@ -77,9 +77,7 @@ public:
     
     Compiler() { }
     
-    enum class Language { Arly, Clover };
-    
-    bool compile(std::istream*, Language, 
+    bool compile(std::istream*, 
                  std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
                  const std::vector<NativeModule*>&,
                  std::vector<std::pair<int32_t, std::string>>* annotations = nullptr);

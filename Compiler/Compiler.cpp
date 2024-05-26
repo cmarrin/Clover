@@ -16,25 +16,12 @@
 
 using namespace lucid;
 
-bool Compiler::compile(std::istream* istream, Language lang,
+bool Compiler::compile(std::istream* istream,
                        std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
                        const std::vector<NativeModule*>& modules,
                        std::vector<std::pair<int32_t, std::string>>* annotations)
 {
-    CompileEngine* engine = nullptr;
-    
-    switch(lang) {
-        default:
-            break;
-        case Language::Clover:
-            engine = new LucidCompileEngine(istream, annotations);
-            break;
-    }
-    
-    if (!engine) {
-        _error = Error::UnrecognizedLanguage;
-        return false;
-    }
+    CompileEngine* engine = new LucidCompileEngine(istream, annotations);
     
     // Install the modules in the engine
     // First add the core

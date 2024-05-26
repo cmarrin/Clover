@@ -124,6 +124,7 @@ int main(int argc, char * const argv[]) {
     }
     
     std::vector<std::pair<int32_t, std::string>> annotations;
+    std::vector<std::pair<int32_t, std::string>> functions;
 
     for (const auto& it : inputFiles) {
         lucid::Compiler compiler;
@@ -138,20 +139,9 @@ int main(int argc, char * const argv[]) {
         
         std::vector<uint8_t> executable;
         
-        lucid::Compiler::Language lang;
-        std::string suffix = it.substr(it.find_last_of('.'));
-        if (suffix == ".lucid") {
-            lang = lucid::Compiler::Language::Clover;
-        } else if (suffix == ".arly") {
-            lang = lucid::Compiler::Language::Arly;
-        } else {
-            std::cout << "*** suffix '" << suffix << "' not recognized\n";
-            return -1;
-        }
-        
         randomSeed(uint32_t(clock()));
 
-        compiler.compile(&stream, lang, executable, MaxExecutableSize, { }, &annotations);
+        compiler.compile(&stream, executable, MaxExecutableSize, { }, &annotations);
         if (compiler.error() != lucid::Compiler::Error::None) {
             showError(compiler.error(), compiler.expectedToken(), compiler.expectedString(), compiler.lineno(), compiler.charno());
             std::cout << "          Executable size=" << std::to_string(executable.size()) << "\n";
@@ -168,75 +158,55 @@ int main(int argc, char * const argv[]) {
         std::string name = path + ".h";
         remove(name.c_str());
 
-        name = path + ".arlx";
+        name = path + ".lcdx";
         remove(name.c_str());
 
-        for (int i = 0; ; ++i) {
-            char buf[3];
-            snprintf(buf, 3, "%02u", i);
-            name = path + buf + ".arlx";
-            if (remove(name.c_str()) != 0) {
-                break;
-            }
-        }
-        
         std::cout << "\nEmitting executable to '" << path << "'\n";
         std::fstream outStream;
-        
-        // If segmented break it up into 64 byte chunks, prefix each file with start addr byte
-        size_t sizeRemaining = executable.size();
-        
-        for (uint8_t i = 0; ; i++) {
-            if (headerFile) {
-                name = path + ".h";
-            } else {
-                name = path + ".lcdx";
-            }
-        
-            std::ios_base::openmode mode = std::fstream::out;
-            if (!headerFile) {
-                mode|= std::fstream::binary;
-            }
-            
-            outStream.open(name.c_str(), mode);
-            if (outStream.fail()) {
-                std::cout << "Can't open '" << name << "'\n";
-                return 0;
-            } else {
-                char* buf = reinterpret_cast<char*>(&(executable[i * 64]));
-                size_t sizeToWrite = sizeRemaining;
-                
-                if (!headerFile) {
-                    // Write the buffer
-                    outStream.write(buf, sizeToWrite);
-                    if (outStream.fail()) {
-                        std::cout << "Save failed\n";
-                        return 0;
-                    } else {
-                        sizeRemaining -= sizeToWrite;
-                        outStream.close();
-                        std::cout << "    Saved " << name << "\n";
-                        if (sizeRemaining == 0) {
-                            break;
-                        }
-                    }
-                } else {
-                    std::string name = path.substr(path.find_last_of('/') + 1);
-                    outStream << "static const uint8_t PROGMEM EEPROM_Upload_" << name << "[ ] = {\n";
-                    
-                    for (size_t i = 0; i < sizeRemaining; ++i) {
-                        char hexbuf[5];
-                        snprintf(hexbuf, 5, "0x%02x", executable[i]);
-                        outStream << hexbuf << ", ";
-                        if (i % 8 == 7) {
-                            outStream << std::endl;
-                        }
-                    }
 
-                    outStream << "};\n";
-                    
-                    break;
+        if (headerFile) {
+            name = path + ".h";
+        } else {
+            name = path + ".lcdx";
+        }
+    
+        std::ios_base::openmode mode = std::fstream::out;
+        if (!headerFile) {
+            mode|= std::fstream::binary;
+        }
+        
+        outStream.open(name.c_str(), mode);
+        if (outStream.fail()) {
+            std::cout << "Can't open '" << name << "'\n";
+            return 0;
+        } else {
+            char* buf = reinterpret_cast<char*>(&(executable[0]));
+            
+            if (!headerFile) {
+                // Write the buffer
+                outStream.write(buf, executable.size());
+                if (outStream.fail()) {
+                    std::cout << "Save failed\n";
+                    return 0;
+                } else {
+                    outStream.close();
+                    std::cout << "    Saved " << name << "\n";
                 }
+            } else {
+                // Write out as a header file
+                std::string name = path.substr(path.find_last_of('/') + 1);
+                outStream << "static const uint8_t PROGMEM EEPROM_Upload_" << name << "[ ] = {\n";
+                
+                for (size_t i = 0; i < executable.size(); ++i) {
+                    char hexbuf[5];
+                    snprintf(hexbuf, 5, "0x%02x", executable[i]);
+                    outStream << hexbuf << ", ";
+                    if (i % 8 == 7) {
+                        outStream << std::endl;
+                    }
+                }
+
+                outStream << "};\n";
             }
         }
         std::cout << "Executables saved\n";
