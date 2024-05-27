@@ -140,6 +140,7 @@ LucidCompileEngine::program()
         while(import()) { }
         while(strucT()) { }
         
+        // Handle top level struct if it exists
         Type t;
         std::string id;
         if (type(t)) {
@@ -1366,12 +1367,12 @@ LucidCompileEngine::isReserved(Token token, const std::string str, Reserved& r)
         { "for",        Reserved::For },
         { "if",         Reserved::If },
         { "else",       Reserved::Else },
-        { "struct",        Reserved::Struct },
-        { "return",        Reserved::Return },
-        { "break",         Reserved::Break },
-        { "continue",      Reserved::Continue },
-        { "while",         Reserved::While },
-        { "loop",          Reserved::Loop },
+        { "struct",     Reserved::Struct },
+        { "return",     Reserved::Return },
+        { "break",      Reserved::Break },
+        { "continue",   Reserved::Continue },
+        { "while",      Reserved::While },
+        { "loop",       Reserved::Loop },
         { "float",      Reserved::Float },
         { "fixed",      Reserved::Fixed },
         { "int8",       Reserved::Int8 },
