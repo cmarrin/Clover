@@ -9,12 +9,13 @@
 
 #pragma once
 
-#include "ExecutionUnit.h"
-#include "Opcodes.h"
-#include "Scanner.h"
 #include <cstdint>
 #include <istream>
 #include <vector>
+
+#include "NativeModule.h"
+#include "Opcodes.h"
+#include "Scanner.h"
 
 namespace lucid {
 
@@ -80,7 +81,7 @@ public:
     bool compile(std::istream*, 
                  std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
                  const std::vector<NativeModule*>&,
-                 std::vector<std::pair<int32_t, std::string>>* annotations = nullptr);
+                 AnnotationList* annotations = nullptr);
 
     Error error() const { return _error; }
     Token expectedToken() const { return _expectedToken; }

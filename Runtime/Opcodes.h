@@ -13,6 +13,54 @@
 
 namespace lucid {
 
+#ifdef ARDUINO
+    #include <Arduino.h>
+    static inline String to_string(int32_t v) { return String(v); }
+    static inline String to_string(float v) { return String(v); }
+#else
+    #include <string>
+    
+    static inline void randomSeed(uint32_t s) { srand(s); }
+    static inline int32_t random(int32_t min, int32_t max)
+    {
+        if (min >= max) {
+            return max;
+        }
+        int r = rand() % (max - min);
+        return r + min;
+    }
+    
+    template<class T> 
+    const T& min(const T& a, const T& b)
+    {
+        return (b < a) ? b : a;
+    }
+
+    template<class T> 
+    const T& max(const T& a, const T& b)
+    {
+        return (b > a) ? b : a;
+    }
+    
+    using String = std::string;
+    static inline String to_string(int32_t v) { return std::to_string(v); }
+    static inline String to_string(float v) { return std::to_string(v); }
+#endif
+
+static inline float intToFloat(uint32_t i)
+{
+    float f;
+    memcpy(&f, &i, sizeof(float));
+    return f;
+}
+
+static inline uint32_t floatToInt(float f)
+{
+    uint32_t i;
+    memcpy(&i, &f, sizeof(float));
+    return i;
+}
+
 /*
 
 Machine Code for LucidVM
@@ -369,4 +417,50 @@ enum class OpParams : uint8_t {
     Idx_Len_S, // b[3:0] = <int> (0-15), b+1 = <int>, followed by Sz string bytes
 };
 
+    // Built-in types are 0x00-StructTypeStart-1, custom types are StructTypeStart-0xff
+    enum class Type : uint8_t {
+        None = 0,
+        Float = 1,
+        Fixed = 2,
+        
+        Int8 = 10,
+        UInt8 = 11,
+        Int16 = 12,
+        UInt16 = 13,
+        Int32 = 14,
+        UInt32 = 15,
+        Int = 16, // Unspecified size
+        UInt = 17, // Unspecified size
+        
+        Struct = 20,
+        
+        Ptr = 30
+    };
+
+    enum class Reserved {
+        None,
+        Struct,
+        Const,
+        Import,
+        From,
+        Function,
+        Initialize,
+        Return,
+        Break,
+        Continue,
+        End,
+        Loop,
+        While,
+        For,
+        If,
+        Else,
+        Float,
+        Fixed,
+        Int8,
+        UInt8,
+        Int16,
+        UInt16,
+        Int32,
+        UInt32,
+    };
 }

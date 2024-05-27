@@ -8,6 +8,7 @@
 -------------------------------------------------------------------------*/
 
 #include "ExecutionUnit.h"
+#include "NativeModule.h"
 
 using namespace lucid;
 

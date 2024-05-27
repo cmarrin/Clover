@@ -16,40 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef ARDUINO
-    #include <Arduino.h>
-    static inline String to_string(int32_t v) { return String(v); }
-    static inline String to_string(float v) { return String(v); }
-#else
-    #include <string>
-    
-    static inline void randomSeed(uint32_t s) { srand(s); }
-    static inline int32_t random(int32_t min, int32_t max)
-    {
-        if (min >= max) {
-            return max;
-        }
-        int r = rand() % (max - min);
-        return r + min;
-    }
-    
-    template<class T> 
-    const T& min(const T& a, const T& b)
-    {
-        return (b < a) ? b : a;
-    }
-
-    template<class T> 
-    const T& max(const T& a, const T& b)
-    {
-        return (b > a) ? b : a;
-    }
-    
-    using String = std::string;
-    static inline String to_string(int32_t v) { return std::to_string(v); }
-    static inline String to_string(float v) { return std::to_string(v); }
-#endif
-
 namespace lucid {
 
 static constexpr uint8_t MaxStackSize = 128;    // Could be 255 but let's avoid excessive 
@@ -61,20 +27,6 @@ static constexpr uint8_t MaxTempSize = 32;      // Allocator uses a uint32_t map
 static constexpr uint8_t ParamsSize = 16;       // Constrained by the 4 bit field with the index
 static constexpr uint16_t ConstOffset = 10;
 
-static inline float intToFloat(uint32_t i)
-{
-    float f;
-    memcpy(&f, &i, sizeof(float));
-    return f;
-}
-
-static inline uint32_t floatToInt(float f)
-{
-    uint32_t i;
-    memcpy(&i, &f, sizeof(float));
-    return i;
-}
-
 //
 // Core Native Functions
 //
@@ -82,20 +34,6 @@ static inline uint32_t floatToInt(float f)
 class ExecutionUnit;
 
 class CompileEngine;
-
-class NativeModule
-{
-public:
-    virtual ~NativeModule() { }
-    
-    virtual bool hasId(uint8_t id) const = 0;
-    virtual uint8_t numParams(uint8_t id) const = 0;
-    virtual int32_t call(ExecutionUnit*, uint8_t id) = 0;
-    
-#ifndef ARDUINO
-    virtual void addFunctions(CompileEngine*) = 0;
-#endif
-};
 
 class ExecutionUnit
 {

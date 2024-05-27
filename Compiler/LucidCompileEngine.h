@@ -16,9 +16,10 @@
 #pragma once
 
 #include "Compiler.h"
-#include "CompileEngine.h"
+#include "Function.h"
 #include "Opcodes.h"
 #include "Scanner.h"
+#include "Symbol.h"
 #include <cstdint>
 #include <istream>
 #include <variant>
@@ -55,7 +56,7 @@ structEntry:
     constant | varStatement | function | init  ;
 
 constant:
-    'const' type <id> value ';' ;
+    'const' type <id> '=' value ';' ;
     
 varStatement:
     type [ '*' ] var ';' ;
@@ -93,7 +94,6 @@ statement:
     | loopStatement
     | returnStatement
     | jumpStatement
-    | logStatement
     | varStatement
     | expressionStatement
     ;
@@ -199,22 +199,41 @@ operator: (* operator   precedence   association *)
     
 */
 
-class LucidCompileEngine : public CompileEngine {
+static constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
+
+class LucidCompileEngine : public Compiler {
 public:
-  	LucidCompileEngine(std::istream* stream, std::vector<std::pair<int32_t, std::string>>* annotations)
-        : CompileEngine(stream, annotations)
+  	LucidCompileEngine(std::istream* stream, AnnotationList* annotations)
+        : _scanner(stream, annotations)
     { }
   	
-    virtual bool program() override;
+    void emit(std::vector<uint8_t>& executable);
+
+    static bool opDataFromOp(const Op op, OpData& data);
+
+    void addNative(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
+    {
+        _functions.emplace_back(name, nativeId, type, locals);
+    }
+
+    bool program();
+
+    Compiler::Error error() const { return _error; }
+    Token expectedToken() const { return _expectedToken; }
+    const std::string& expectedString() const { return _expectedString; }
+    uint32_t lineno() const { return _scanner.lineno(); }
+    uint32_t charno() const { return _scanner.charno(); }
 
 protected:
-    virtual bool statement() override;
-    virtual bool function() override;
-    virtual bool type(Type&) override;
+    bool statement();
+    bool function();
+    bool type(Type&);
   
     bool varStatement();
     bool var(Type, bool isPointer);
     bool init();
+
+    bool value(int32_t& i, Type);
 
 private:
     class OpInfo {
@@ -268,7 +287,6 @@ private:
     bool loopStatement();
     bool returnStatement();
     bool jumpStatement();
-    bool logStatement();
     bool expressionStatement();
     
     enum class ArithType { Assign, Op };
@@ -283,11 +301,116 @@ private:
     
     bool opInfo(Token token, OpInfo&) const;
 
-    virtual bool isReserved(Token token, const std::string str, Reserved&) override;
+    virtual bool isReserved(Token token, const std::string str, Reserved&);
 
     bool findSymbol(const std::string&, Symbol&);
     uint8_t findInt(int32_t);
     uint8_t findFloat(float);
+
+    // The expect methods validate the passed param and if
+    // there is no match, the passed error is saved and
+    // throw is called. The first version also retires the
+    // current token.
+    void expect(Token token, const char* str = nullptr);
+    void expect(bool passed, Compiler::Error error);
+    void expectWithoutRetire(Token token);
+    bool match(Reserved r);
+    bool match(Token r);
+    void ignoreNewLines();
+    
+    // These methods check to see if the next token is of the
+    // appropriate type. Some versions just return true or
+    // false, others also return details about the token
+    bool identifier(std::string& id, bool retire = true);
+    bool integerValue(int32_t& i);
+    bool floatValue(float& f);
+    bool stringValue(std::string&);
+    bool reserved();
+    bool reserved(Reserved &r);
+    
+    // This assumes the last op is a single byte op
+    Op lastOp() const { return _rom8.size() ? Op(_rom8.back()) : Op::None; }
+    uint16_t romSize() const { return _rom8.size(); }
+    
+    void addOp(Op op) { annotate(); _rom8.push_back(uint8_t(op)); }
+    
+    void addOpSingleByteIndex(Op op, uint8_t i)
+    {
+        annotate();
+        _rom8.push_back(uint8_t(op) | (i & 0x0f));
+    }
+
+    void addOpTarg(Op op, uint16_t targ)
+    {
+        annotate();
+        _rom8.push_back(uint8_t(op) | ((targ >> 8) & 0x0f));
+        _rom8.push_back(uint8_t(targ));
+    }
+    
+    void addOpIdI(Op op, uint8_t id, uint8_t i)
+    {
+        addOp(op);
+        _rom8.push_back(id);
+        _rom8.push_back(uint8_t(i & 0x0f));
+    }
+
+    void addOpInt(Op op, uint8_t i)
+    {
+        addOp(op);
+        _rom8.push_back(i);
+    }
+    
+    void addInt(uint8_t i) { _rom8.push_back(i); }
+    
+    void addOpI(Op op, uint8_t i) { addOpInt(op, i); }
+    void addOpConst(Op op, uint8_t c) { addOpInt(op, c); }
+    void addOpPL(Op op, uint8_t p, uint8_t l)
+    {
+        addOpSingleByteIndex(op, p);
+        _rom8.push_back(l);
+    }
+
+    void addOpId(Op op, uint16_t id)
+    {
+        addOpSingleByteIndex(op, uint8_t(id >> 8));
+        _rom8.push_back(uint8_t(id));
+    }
+    
+    const Function& handleFunctionName();
+
+    static bool opDataFromString(const std::string str, OpData& data);
+
+    struct Def
+    {
+        Def() { }
+        Def(std::string name, uint8_t value)
+            : _name(name)
+            , _value(value)
+        { }
+        std::string _name;
+        uint8_t _value;
+    };
+    
+    Function& currentFunction()
+    {
+        expect(!_functions.empty(), Compiler::Error::InternalError);
+        return _functions.back();
+    }
+    
+    void annotate()
+    {
+        if (_scanner.annotation() == -1) {
+            _scanner.setAnnotation(int32_t(_rom8.size()));
+        }
+    }
+    
+    uint8_t allocNativeId() { return _nextNativeId++; }
+        
+    bool findFunction(const std::string&, Function&);
+
+    Compiler::Error _error = Compiler::Error::None;
+    Token _expectedToken = Token::None;
+    std::string _expectedString;
     
     // The ExprStack
     //
@@ -467,16 +590,27 @@ private:
     void exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr);
     void addJumpEntry(Op, JumpEntry::Type);
     
+    Scanner _scanner;
+
+    bool _inFunction = false;
+
+    std::vector<Function> _functions;
     std::vector<Struct> _structs;
     std::vector<uint32_t> _structStack;
     std::vector<ExprEntry> _exprStack;
     std::vector<Symbol> _builtins;
+
+    std::vector<uint8_t> _rom8;
     
     // The jump list is an array of arrays of JumpEntries. The outermost array
     // is a stack of active looping statements (for, loop, etc.). Each of these
     // has an array of break or continue statements that need to be resolved
     // when the looping statement ends.
     std::vector<std::vector<JumpEntry>> _jumpList;
+
+    uint8_t _nextNativeId = 0;
+    uint16_t _nextMem = 0; // next available location in mem
+    uint16_t _localHighWaterMark = 0;
 };
 
 }

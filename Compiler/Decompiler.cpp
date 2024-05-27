@@ -9,7 +9,7 @@
 
 #include "Decompiler.h"
 
-#include "CompileEngine.h"
+#include "LucidCompileEngine.h"
 
 using namespace lucid;
 
@@ -185,7 +185,7 @@ Decompiler::statement()
     }
     
     OpData opData;
-    if (!CompileEngine::opDataFromOp(Op(opInt), opData)) {
+    if (!LucidCompileEngine::opDataFromOp(Op(opInt), opData)) {
         _error = Error::InvalidOp;
         throw true;
     }

@@ -18,6 +18,9 @@ namespace lucid {
 
 static constexpr uint8_t MAX_ID_LENGTH = 32;
 
+using AnnotationList = std::vector<std::pair<int32_t, std::string>>;
+
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Class: Scanner
@@ -114,7 +117,7 @@ public:
         const char*     str;
     } TokenType;
 
-  	Scanner(std::istream* stream = nullptr, std::vector<std::pair<int32_t, std::string>>* annotations = nullptr)
+  	Scanner(std::istream* stream = nullptr, AnnotationList* annotations = nullptr)
   	 : _lastChar(0xff)
   	 , _stream(stream)
      , _lineno(1)
@@ -171,7 +174,7 @@ public:
         }
     }
     
-    const std::vector<std::pair<int32_t, std::string>>* annotations() const { return _annotations; }
+    const AnnotationList* annotations() const { return _annotations; }
 
 private:
   	Token getToken(TokenType& token);
@@ -203,7 +206,7 @@ private:
     
     bool _ignoreNewlines = false;
     
-    std::vector<std::pair<int32_t, std::string>>* _annotations;
+    AnnotationList* _annotations;
 };
 
 }

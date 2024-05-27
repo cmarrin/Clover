@@ -14,6 +14,73 @@
 
 using namespace lucid;
 
+static std::vector<OpData> _opcodes = {
+    { "Push",           Op::Push            , OpParams::Id },
+    { "Pop",            Op::Pop             , OpParams::Id },
+    { "PushIntConst",   Op::PushIntConst    , OpParams::Const },
+    { "PushIntConstS",  Op::PushIntConstS   , OpParams::Index },
+
+    { "PushRef",        Op::PushRef         , OpParams::Id },
+    { "PushDeref",      Op::PushDeref       , OpParams::None },
+    { "PopDeref",       Op::PopDeref        , OpParams::None },
+
+//    { "Dup",            Op::Dup             , OpParams::None },
+//    { "Drop",           Op::Drop            , OpParams::None },
+//    { "Swap",           Op::Swap            , OpParams::None },
+    
+    { "if",             Op::If              , OpParams::RelTarg },
+
+    { "Call",           Op::Call            , OpParams::AbsTarg },
+    { "CallNative",     Op::CallNative      , OpParams::Const },
+    { "Return",         Op::Return          , OpParams::None },
+    { "SetFrame",       Op::SetFrameS       , OpParams::P_L },
+
+    { "Jump",           Op::Jump            , OpParams::RelTarg },
+    { "log",            Op::Log             , OpParams::Idx_Len_S },
+    
+    { "Or",             Op::Or              , OpParams::None },
+    { "Xor",            Op::Xor             , OpParams::None },
+    { "And",            Op::And             , OpParams::None },
+    { "Not",            Op::Not             , OpParams::None },
+    { "LOr",            Op::LOr             , OpParams::None },
+    { "LAnd",           Op::LAnd            , OpParams::None },
+    { "LNot",           Op::LNot            , OpParams::None },
+    { "LTInt",          Op::LTInt           , OpParams::None },
+    { "LTFloat",        Op::LTFloat         , OpParams::None },
+    { "LEInt",          Op::LEInt           , OpParams::None },
+    { "LEFloat",        Op::LEFloat         , OpParams::None },
+    { "EQInt",          Op::EQInt           , OpParams::None },
+    { "EQFloat",        Op::EQFloat         , OpParams::None },
+    { "NEInt",          Op::NEInt           , OpParams::None },
+    { "NEFloat",        Op::NEFloat         , OpParams::None },
+    { "GEInt",          Op::GEInt           , OpParams::None },
+    { "GEFloat",        Op::GEFloat         , OpParams::None },
+    { "GTInt",          Op::GTInt           , OpParams::None },
+    { "GTFloat",        Op::GTFloat         , OpParams::None },
+    { "AddInt",         Op::AddInt          , OpParams::None },
+    { "AddFloat",       Op::AddFloat        , OpParams::None },
+    { "SubInt",         Op::SubInt          , OpParams::None },
+    { "SubFloat",       Op::SubFloat        , OpParams::None },
+    { "MulInt",         Op::MulInt          , OpParams::None },
+    { "MulFloat",       Op::MulFloat        , OpParams::None },
+    { "DivInt",         Op::DivInt          , OpParams::None },
+    { "DivFloat",       Op::DivFloat        , OpParams::None },
+    { "NegInt",         Op::NegInt          , OpParams::None },
+    { "NegFloat",       Op::NegFloat        , OpParams::None },
+
+    { "PreIncInt",      Op::PreIncInt       , OpParams::None },
+    { "PreIncFloat",    Op::PreIncFloat     , OpParams::None },
+    { "PreDecInt",      Op::PreDecInt       , OpParams::None },
+    { "PreDecFloat",    Op::PreDecFloat     , OpParams::None },
+    { "PostIncInt",     Op::PostIncInt      , OpParams::None },
+    { "PostIncFloat",   Op::PostIncFloat    , OpParams::None },
+    { "PostDecInt",     Op::PostDecInt      , OpParams::None },
+    { "PostDecFloat",   Op::PostDecFloat    , OpParams::None },
+    
+    { "Offset",         Op::Offset          , OpParams::Index },
+    { "Index",          Op::Index           , OpParams::Index },
+};
+
 bool
 LucidCompileEngine::opInfo(Token token, OpInfo& op) const
 {
@@ -50,6 +117,18 @@ LucidCompileEngine::opInfo(Token token, OpInfo& op) const
         return true;
     }
     return false;
+}
+
+void
+LucidCompileEngine::emit(std::vector<uint8_t>& executable)
+{
+    executable.push_back('l');
+    executable.push_back('u');
+    executable.push_back('c');
+    executable.push_back('d');
+
+    char* buf = reinterpret_cast<char*>(&(_rom8[0]));
+    executable.insert(executable.end(), buf, buf + _rom8.size());
 }
 
 bool
@@ -133,11 +212,68 @@ LucidCompileEngine::structEntry()
     return false;
 }
 
-// constant:
-//     'const' type <id> value ';' ;
 bool
 LucidCompileEngine::constant()
 {
+    if (!match(Reserved::Const)) {
+        return false;
+    }
+    
+    Type t;
+    std::string id;
+    int32_t val;
+    
+    expect(type(t), Compiler::Error::ExpectedType);
+    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+    expect(Token::Semicolon);
+    expect(value(val, t), Compiler::Error::ExpectedValue);
+    
+// FIXME: What do we do with constants?
+//    if (t == Type::Int8 && val >= -128 && val <= 127) {
+//        _defs.emplace_back(id, val);
+//    } else {
+//        expect(addGlobal(id, _rom32.size(), t, Symbol::Storage::Const), Compiler::Error::DuplicateIdentifier);
+//        _rom32.push_back(val);
+//    }
+    
+    return true;
+}
+
+bool
+LucidCompileEngine::value(int32_t& i, Type t)
+{
+    bool neg = false;
+    if (match(Token::Minus)) {
+        neg = true;
+    }
+    
+    float f;
+    if (floatValue(f)) {
+        if (neg) {
+            f = -f;
+        }
+
+        // If we're expecting an Integer, convert it
+        if (t == Type::Int8) {
+            i = roundf(f);
+        } else {
+            i = *(reinterpret_cast<int32_t*>(&f));
+        }
+        return true;
+    }
+    
+    if (integerValue(i)) {
+        if (neg) {
+            i = -i;
+        }
+        
+        // If we're expecting a float, convert it
+        if (t == Type::Float) {
+            f = float(i);
+            i = *(reinterpret_cast<int32_t*>(&f));
+        }
+        return true;
+    }
     return false;
 }
 
@@ -196,7 +332,7 @@ LucidCompileEngine::var(Type type, bool isPointer)
     
     size *= elementSize(type);
 
-    // Put the var in _globals unless we're in a function, then put it in _locals
+    // Put the var in the current struct unless we're in a function, then put it in _locals
     if (_inFunction) {
         expect(currentFunction().addLocal(id, type, isPointer, size), Compiler::Error::DuplicateIdentifier);
     } else {
@@ -204,13 +340,7 @@ LucidCompileEngine::var(Type type, bool isPointer)
         
         // FIXME: Need to deal with ptr and size
         expect(currentStruct().addLocal(id, type, false, 1), Compiler::Error::DuplicateIdentifier);
-
-        // There is only enough room for GlobalSize values
-        expect(_nextMem + size <= GlobalSize, Compiler::Error::TooManyVars);
-        _globalSize = _nextMem + size;
     }
-    
-    _nextMem += size;
     
     // Check for an initializer. We only allow initializers on Int and Float
     if (match(Token::Equal)) {
@@ -242,10 +372,39 @@ LucidCompileEngine::var(Type type, bool isPointer)
 bool
 LucidCompileEngine::type(Type& t)
 {
-    if (CompileEngine::type(t)) {
+    if (match(Reserved::Float)) {
+        t = Type::Float;
         return true;
     }
-    
+    if (match(Reserved::Fixed)) {
+        t = Type::Fixed;
+        return true;
+    }
+    if (match(Reserved::Int8)) {
+        t = Type::Int8;
+        return true;
+    }
+    if (match(Reserved::UInt8)) {
+        t = Type::Int8;
+        return true;
+    }
+    if (match(Reserved::Int16)) {
+        t = Type::Int16;
+        return true;
+    }
+    if (match(Reserved::UInt16)) {
+        t = Type::Int16;
+        return true;
+    }
+    if (match(Reserved::Int32)) {
+        t = Type::Int32;
+        return true;
+    }
+    if (match(Reserved::UInt32)) {
+        t = Type::Int32;
+        return true;
+    }
+        
     // See if it's a struct
     std::string id;
     if (!identifier(id, false)) {
@@ -384,7 +543,6 @@ LucidCompileEngine::statement()
     if (loopStatement()) return true;
     if (returnStatement()) return true;
     if (jumpStatement()) return true;
-    if (logStatement()) return true;
     if (varStatement()) return true;
     if (expressionStatement()) return true;
     return false;
@@ -674,42 +832,6 @@ LucidCompileEngine::jumpStatement()
 }
 
 bool
-LucidCompileEngine::logStatement()
-{
-    if (!match(Reserved::Log)) {
-        return false;
-    }
-    
-    expect(Token::OpenParen);
-    
-    std::string str;
-    expect(stringValue(str), Compiler::Error::ExpectedString);
-    expect(str.length() < 256, Compiler::Error::StringTooLong);
-    
-    int i = 0;
-    while (match(Token::Comma)) {
-        expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);        
-        expect(++i < 16, Compiler::Error::TooManyVars);
-        
-        Type type = bakeExpr(ExprAction::Right);
-        expect(type == Type::Float || type == Type::Int, Compiler::Error::WrongType);
-    }
-
-    // Emit op. Lower 4 bits are num args. String length is next byte,
-    // followed by string
-    addOpSingleByteIndex(Op::Log, i);
-    addInt(str.length());
-    for (auto it : str) {
-        addInt(uint8_t(it));
-    }
-
-    expect(Token::CloseParen);
-    expect(Token::Semicolon);
-
-    return true;
-}
-
-bool
 LucidCompileEngine::expressionStatement()
 {
     if (!assignmentExpression()) {
@@ -992,12 +1114,7 @@ LucidCompileEngine::primaryExpression()
     std::string id;
     if (identifier(id)) {
         // See if this is a def
-        Def def;
-        if (findDef(id, def)) {
-            _exprStack.emplace_back(int32_t(def._value));
-        } else {
-            _exprStack.emplace_back(id);
-        }
+        _exprStack.emplace_back(id);
         return true;
     }
         
@@ -1073,21 +1190,197 @@ LucidCompileEngine::argumentList(const Function& fun)
 }
 
 bool
+LucidCompileEngine::identifier(std::string& id, bool retire)
+{
+    if (_scanner.getToken() != Token::Identifier) {
+        return false;
+    }
+    
+    if (reserved()) {
+        return false;
+    }
+    
+    id = _scanner.getTokenString();
+    
+    if (retire) {
+        _scanner.retireToken();
+    }
+    return true;
+}
+
+bool
+LucidCompileEngine::integerValue(int32_t& i)
+{
+    if (_scanner.getToken() != Token::Integer) {
+        return false;
+    }
+    
+    i = _scanner.getTokenValue().integer;
+    _scanner.retireToken();
+    return true;
+}
+
+bool
+LucidCompileEngine::floatValue(float& f)
+{
+    if (_scanner.getToken() != Token::Float) {
+        return false;
+    }
+    
+    f = _scanner.getTokenValue().number;
+    _scanner.retireToken();
+    return true;
+}
+
+bool
+LucidCompileEngine::stringValue(std::string& str)
+{
+    if (_scanner.getToken() != Token::String) {
+        return false;
+    }
+    
+    str = _scanner.getTokenString();
+    _scanner.retireToken();
+    return true;
+}
+
+void
+LucidCompileEngine::expect(Token token, const char* str)
+{
+    bool err = false;
+    if (_scanner.getToken() != token) {
+        _error = Compiler::Error::ExpectedToken;
+        err = true;
+    }
+    
+    if (str && _scanner.getTokenString() != str) {
+        _error = Compiler::Error::ExpectedToken;
+        err = true;
+    }
+    
+    if (err) {
+        _expectedToken = token;
+        if (str) {
+            _expectedString = str;
+        } else if (uint8_t(token) < 0x80) {
+            _expectedString = char(token);
+        } else {
+            _expectedString = "";
+        }
+        throw true;
+    }
+
+    _scanner.retireToken();
+}
+
+void
+LucidCompileEngine::expect(bool passed, Compiler::Error error)
+{
+    if (!passed) {
+        _error = error;
+        throw true;
+    }
+}
+
+void
+LucidCompileEngine::expectWithoutRetire(Token token)
+{
+    if (_scanner.getToken() != token) {
+        _expectedToken = token;
+        _expectedString = "";
+        _error = Compiler::Error::ExpectedToken;
+        throw true;
+    }
+}
+
+bool
+LucidCompileEngine::match(Reserved r)
+{
+    Reserved rr;
+    if (!isReserved(_scanner.getToken(), _scanner.getTokenString(), rr)) {
+        return false;
+    }
+    if (r != rr) {
+        return false;
+    }
+    _scanner.retireToken();
+    return true;
+}
+
+bool
+LucidCompileEngine::match(Token t)
+{
+    if (_scanner.getToken() != t) {
+        return false;
+    }
+    _scanner.retireToken();
+    return true;
+}
+
+bool
+LucidCompileEngine::reserved()
+{
+    Reserved r;
+    return isReserved(_scanner.getToken(), _scanner.getTokenString(), r);
+}
+
+bool
+LucidCompileEngine::reserved(Reserved &r)
+{
+    return isReserved(_scanner.getToken(), _scanner.getTokenString(), r);
+}
+
+bool
+LucidCompileEngine::opDataFromString(const std::string str, OpData& data)
+{
+    auto it = find_if(_opcodes.begin(), _opcodes.end(),
+                    [str](const OpData& opData) { return opData._str == str; });
+    if (it != _opcodes.end()) {
+        data = *it;
+        return true;
+    }
+    return false;
+}
+
+bool
+LucidCompileEngine::opDataFromOp(const Op op, OpData& data)
+{
+    auto it = find_if(_opcodes.begin(), _opcodes.end(),
+                    [op](const OpData& opData) { return opData._op == op; });
+    if (it != _opcodes.end()) {
+        data = *it;
+        return true;
+    }
+    return false;
+}
+
+bool
 LucidCompileEngine::isReserved(Token token, const std::string str, Reserved& r)
 {
     static std::map<std::string, Reserved> reserved = {
+        { "const",      Reserved::Const },
+        { "import",     Reserved::Import },
+        { "from",       Reserved::From },
+        { "function",   Reserved::Function },
+        { "initialize", Reserved::Initialize },
+        { "for",        Reserved::For },
+        { "if",         Reserved::If },
+        { "else",       Reserved::Else },
         { "struct",        Reserved::Struct },
         { "return",        Reserved::Return },
         { "break",         Reserved::Break },
         { "continue",      Reserved::Continue },
-        { "log",           Reserved::Log },
         { "while",         Reserved::While },
         { "loop",          Reserved::Loop },
+        { "float",      Reserved::Float },
+        { "fixed",      Reserved::Fixed },
+        { "int8",       Reserved::Int8 },
+        { "uint8",      Reserved::UInt8 },
+        { "int16",      Reserved::Int16 },
+        { "uint16",     Reserved::UInt16 },
+        { "int32",      Reserved::Int32 },
+        { "uint32",     Reserved::UInt32 },
     };
-
-    if (CompileEngine::isReserved(token, str, r)) {
-        return true;
-    }
 
     if (token != Token::Identifier) {
         return false;
@@ -1107,14 +1400,32 @@ LucidCompileEngine::findInt(int32_t i)
     // Try to find an existing int const. If found, return
     // its address. If not found, create one and return 
     // that address.
-    auto it = find_if(_rom32.begin(), _rom32.end(),
-                    [i](uint32_t v) { return uint32_t(i) == v; });
-    if (it != _rom32.end()) {
-        return it - _rom32.begin();
-    }
     
-    _rom32.push_back(uint32_t(i));
-    return _rom32.size() - 1;
+// FIXME: How do we deal with constants
+//    auto it = find_if(_rom32.begin(), _rom32.end(),
+//                    [i](uint32_t v) { return uint32_t(i) == v; });
+//    if (it != _rom32.end()) {
+//        return it - _rom32.begin();
+//    }
+//    
+//    _rom32.push_back(uint32_t(i));
+//    return _rom32.size() - 1;
+
+    return 0;
+}
+
+const
+Function&
+LucidCompileEngine::handleFunctionName()
+{
+    std::string targ;
+    expect(identifier(targ), Compiler::Error::ExpectedIdentifier);
+    
+    auto it = find_if(_functions.begin(), _functions.end(),
+                    [targ](const Function& fun) { return fun.name() == targ; });
+    expect(it != _functions.end(), Compiler::Error::UndefinedIdentifier);
+
+    return *it;
 }
 
 uint8_t
@@ -1124,14 +1435,33 @@ LucidCompileEngine::findFloat(float f)
     // its address. If not found, create one and return 
     // that address.
     uint32_t i = floatToInt(f);
-    auto it = find_if(_rom32.begin(), _rom32.end(),
-                    [i](uint32_t v) { return i == v; });
-    if (it != _rom32.end()) {
-        return it - _rom32.begin();
+    (void) i;
+//    auto it = find_if(_rom32.begin(), _rom32.end(),
+//                    [i](uint32_t v) { return i == v; });
+//    if (it != _rom32.end()) {
+//        return it - _rom32.begin();
+//    }
+//    
+//    _rom32.push_back(i);
+//    return _rom32.size() - 1;
+
+// FIXME: How do we deal with constants
+
+    return 0;
+}
+
+bool
+LucidCompileEngine::findFunction(const std::string& s, Function& fun)
+{
+    auto it = find_if(_functions.begin(), _functions.end(),
+                    [s](const Function& fun) { return fun.name() == s; });
+
+    if (it != _functions.end()) {
+        fun = *it;
+        return true;
     }
     
-    _rom32.push_back(i);
-    return _rom32.size() - 1;
+    return false;
 }
 
 bool
@@ -1145,7 +1475,7 @@ LucidCompileEngine::findSymbol(const std::string& s, Symbol& sym)
     return currentStruct().findLocal(s, sym);
 }
 
-CompileEngine::Type
+Type
 LucidCompileEngine::bakeExpr(ExprAction action, Type matchingType)
 {
     expect(!_exprStack.empty(), Compiler::Error::InternalError);

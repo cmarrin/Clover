@@ -12,6 +12,7 @@
 
 #include "Compiler.h"
 #include "Decompiler.h"
+#include "Opcodes.h"
 
 static constexpr uint32_t MaxExecutableSize = 65536;
 
@@ -123,7 +124,7 @@ int main(int argc, char * const argv[]) {
         }
     }
     
-    std::vector<std::pair<int32_t, std::string>> annotations;
+    lucid::AnnotationList annotations;
     std::vector<std::pair<int32_t, std::string>> functions;
 
     for (const auto& it : inputFiles) {
@@ -139,7 +140,7 @@ int main(int argc, char * const argv[]) {
         
         std::vector<uint8_t> executable;
         
-        randomSeed(uint32_t(clock()));
+        lucid::randomSeed(uint32_t(clock()));
 
         compiler.compile(&stream, executable, MaxExecutableSize, { }, &annotations);
         if (compiler.error() != lucid::Compiler::Error::None) {

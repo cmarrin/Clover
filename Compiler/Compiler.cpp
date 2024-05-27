@@ -19,9 +19,9 @@ using namespace lucid;
 bool Compiler::compile(std::istream* istream,
                        std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
                        const std::vector<NativeModule*>& modules,
-                       std::vector<std::pair<int32_t, std::string>>* annotations)
+                       AnnotationList* annotations)
 {
-    CompileEngine* engine = new LucidCompileEngine(istream, annotations);
+    LucidCompileEngine* engine = new LucidCompileEngine(istream, annotations);
     
     // Install the modules in the engine
     // First add the core
