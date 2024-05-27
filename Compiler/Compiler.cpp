@@ -9,7 +9,7 @@
 
 #include "Compiler.h"
 
-#include "LucidCompileEngine.h"
+#include "CompileEngine.h"
 
 #include <map>
 #include <vector>
@@ -21,7 +21,7 @@ bool Compiler::compile(std::istream* istream,
                        const std::vector<NativeModule*>& modules,
                        AnnotationList* annotations)
 {
-    LucidCompileEngine* engine = new LucidCompileEngine(istream, annotations);
+    CompileEngine* engine = new CompileEngine(istream, annotations);
     
     // Install the modules in the engine
     // First add the core

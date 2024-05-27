@@ -7,7 +7,7 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include "LucidCompileEngine.h"
+#include "CompileEngine.h"
 
 #include <map>
 #include <vector>
@@ -82,7 +82,7 @@ static std::vector<OpData> _opcodes = {
 };
 
 bool
-LucidCompileEngine::opInfo(Token token, OpInfo& op) const
+CompileEngine::opInfo(Token token, OpInfo& op) const
 {
     static std::vector<OpInfo> opInfo = {
         { Token::Equal,     1, Op::Pop,     Op::Pop,      OpInfo::Assign::Only , Type::None },
@@ -120,7 +120,7 @@ LucidCompileEngine::opInfo(Token token, OpInfo& op) const
 }
 
 void
-LucidCompileEngine::emit(std::vector<uint8_t>& executable)
+CompileEngine::emit(std::vector<uint8_t>& executable)
 {
     executable.push_back('l');
     executable.push_back('u');
@@ -132,7 +132,7 @@ LucidCompileEngine::emit(std::vector<uint8_t>& executable)
 }
 
 bool
-LucidCompileEngine::program()
+CompileEngine::program()
 {
     _scanner.setIgnoreNewlines(true);
     
@@ -157,7 +157,7 @@ LucidCompileEngine::program()
 }
 
 bool
-LucidCompileEngine::import()
+CompileEngine::import()
 {
     if (!match(Reserved::Import)) {
         return false;
@@ -176,7 +176,7 @@ LucidCompileEngine::import()
 }
 
 bool
-LucidCompileEngine::strucT()
+CompileEngine::strucT()
 {
     if (!match(Reserved::Struct)) {
         return false;
@@ -203,7 +203,7 @@ LucidCompileEngine::strucT()
 //     constant | varStatement | function | ctor | dtor ;
 //
 bool
-LucidCompileEngine::structEntry()
+CompileEngine::structEntry()
 {
     // FIXME: Handle ctor and dtor
     if (constant() || varStatement() || function() || init()) {
@@ -214,7 +214,7 @@ LucidCompileEngine::structEntry()
 }
 
 bool
-LucidCompileEngine::constant()
+CompileEngine::constant()
 {
     if (!match(Reserved::Const)) {
         return false;
@@ -241,7 +241,7 @@ LucidCompileEngine::constant()
 }
 
 bool
-LucidCompileEngine::value(int32_t& i, Type t)
+CompileEngine::value(int32_t& i, Type t)
 {
     bool neg = false;
     if (match(Token::Minus)) {
@@ -279,7 +279,7 @@ LucidCompileEngine::value(int32_t& i, Type t)
 }
 
 bool
-LucidCompileEngine::varStatement()
+CompileEngine::varStatement()
 {
     Type t = Type::None;
     std::string id;
@@ -318,7 +318,7 @@ LucidCompileEngine::varStatement()
 }
 
 bool
-LucidCompileEngine::var(Type type, bool isPointer)
+CompileEngine::var(Type type, bool isPointer)
 {
     std::string id;
     expect(identifier(id), Compiler::Error::ExpectedIdentifier);
@@ -371,7 +371,7 @@ LucidCompileEngine::var(Type type, bool isPointer)
 }
 
 bool
-LucidCompileEngine::type(Type& t)
+CompileEngine::type(Type& t)
 {
     if (match(Reserved::Float)) {
         t = Type::Float;
@@ -425,7 +425,7 @@ LucidCompileEngine::type(Type& t)
 }
 
 bool
-LucidCompileEngine::function()
+CompileEngine::function()
 {
     if (!match(Reserved::Function)) {
         return false;
@@ -484,7 +484,7 @@ LucidCompileEngine::function()
 }
 
 bool
-LucidCompileEngine::init()
+CompileEngine::init()
 {
     if (!match(Reserved::Initialize)) {
         return false;
@@ -535,7 +535,7 @@ LucidCompileEngine::init()
 }
 
 bool
-LucidCompileEngine::statement()
+CompileEngine::statement()
 {
     if (compoundStatement()) return true;
     if (ifStatement()) return true;
@@ -550,7 +550,7 @@ LucidCompileEngine::statement()
 }
 
 bool
-LucidCompileEngine::compoundStatement()
+CompileEngine::compoundStatement()
 {
     if (!match(Token::OpenBrace)) {
         return false;
@@ -575,7 +575,7 @@ LucidCompileEngine::compoundStatement()
 }
 
 bool
-LucidCompileEngine::ifStatement()
+CompileEngine::ifStatement()
 {
     if (!match(Reserved::If)) {
         return false;
@@ -618,7 +618,7 @@ LucidCompileEngine::ifStatement()
 }
 
 bool
-LucidCompileEngine::forStatement()
+CompileEngine::forStatement()
 {
     if (!match(Reserved::For)) {
         return false;
@@ -734,7 +734,7 @@ LucidCompileEngine::forStatement()
 }
 
 bool
-LucidCompileEngine::whileStatement()
+CompileEngine::whileStatement()
 {
     if (!match(Reserved::While)) {
         return false;
@@ -766,7 +766,7 @@ LucidCompileEngine::whileStatement()
 }
 
 bool
-LucidCompileEngine::loopStatement()
+CompileEngine::loopStatement()
 {
     if (!match(Reserved::Loop)) {
         return false;
@@ -788,7 +788,7 @@ LucidCompileEngine::loopStatement()
 }
 
 bool
-LucidCompileEngine::returnStatement()
+CompileEngine::returnStatement()
 {
     if (!match(Reserved::Return)) {
         return false;
@@ -811,7 +811,7 @@ LucidCompileEngine::returnStatement()
 }
 
 bool
-LucidCompileEngine::jumpStatement()
+CompileEngine::jumpStatement()
 {
     JumpEntry::Type type;
     
@@ -833,7 +833,7 @@ LucidCompileEngine::jumpStatement()
 }
 
 bool
-LucidCompileEngine::expressionStatement()
+CompileEngine::expressionStatement()
 {
     if (!assignmentExpression()) {
         return false;
@@ -856,7 +856,7 @@ LucidCompileEngine::expressionStatement()
 }
 
 bool
-LucidCompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
+CompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
 {
     if (!unaryExpression()) {
         return false;
@@ -928,7 +928,7 @@ LucidCompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
 }
 
 bool
-LucidCompileEngine::unaryExpression()
+CompileEngine::unaryExpression()
 {
     if (postfixExpression()) {
         return true;
@@ -1032,7 +1032,7 @@ LucidCompileEngine::unaryExpression()
 }
 
 bool
-LucidCompileEngine::postfixExpression()
+CompileEngine::postfixExpression()
 {
     if (!primaryExpression()) {
         return false;
@@ -1104,7 +1104,7 @@ LucidCompileEngine::postfixExpression()
 }
 
 bool
-LucidCompileEngine::primaryExpression()
+CompileEngine::primaryExpression()
 {
     if (match(Token::OpenParen)) {
         expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
@@ -1134,7 +1134,7 @@ LucidCompileEngine::primaryExpression()
 }
 
 bool
-LucidCompileEngine::formalParameterList()
+CompileEngine::formalParameterList()
 {
     Type t;
     while (true) {
@@ -1160,7 +1160,7 @@ LucidCompileEngine::formalParameterList()
 }
 
 bool
-LucidCompileEngine::argumentList(const Function& fun)
+CompileEngine::argumentList(const Function& fun)
 {
     int i = 0;
     while (true) {
@@ -1191,7 +1191,7 @@ LucidCompileEngine::argumentList(const Function& fun)
 }
 
 bool
-LucidCompileEngine::identifier(std::string& id, bool retire)
+CompileEngine::identifier(std::string& id, bool retire)
 {
     if (_scanner.getToken() != Token::Identifier) {
         return false;
@@ -1210,7 +1210,7 @@ LucidCompileEngine::identifier(std::string& id, bool retire)
 }
 
 bool
-LucidCompileEngine::integerValue(int32_t& i)
+CompileEngine::integerValue(int32_t& i)
 {
     if (_scanner.getToken() != Token::Integer) {
         return false;
@@ -1222,7 +1222,7 @@ LucidCompileEngine::integerValue(int32_t& i)
 }
 
 bool
-LucidCompileEngine::floatValue(float& f)
+CompileEngine::floatValue(float& f)
 {
     if (_scanner.getToken() != Token::Float) {
         return false;
@@ -1234,7 +1234,7 @@ LucidCompileEngine::floatValue(float& f)
 }
 
 bool
-LucidCompileEngine::stringValue(std::string& str)
+CompileEngine::stringValue(std::string& str)
 {
     if (_scanner.getToken() != Token::String) {
         return false;
@@ -1246,7 +1246,7 @@ LucidCompileEngine::stringValue(std::string& str)
 }
 
 void
-LucidCompileEngine::expect(Token token, const char* str)
+CompileEngine::expect(Token token, const char* str)
 {
     bool err = false;
     if (_scanner.getToken() != token) {
@@ -1275,7 +1275,7 @@ LucidCompileEngine::expect(Token token, const char* str)
 }
 
 void
-LucidCompileEngine::expect(bool passed, Compiler::Error error)
+CompileEngine::expect(bool passed, Compiler::Error error)
 {
     if (!passed) {
         _error = error;
@@ -1284,7 +1284,7 @@ LucidCompileEngine::expect(bool passed, Compiler::Error error)
 }
 
 void
-LucidCompileEngine::expectWithoutRetire(Token token)
+CompileEngine::expectWithoutRetire(Token token)
 {
     if (_scanner.getToken() != token) {
         _expectedToken = token;
@@ -1295,7 +1295,7 @@ LucidCompileEngine::expectWithoutRetire(Token token)
 }
 
 bool
-LucidCompileEngine::match(Reserved r)
+CompileEngine::match(Reserved r)
 {
     Reserved rr;
     if (!isReserved(_scanner.getToken(), _scanner.getTokenString(), rr)) {
@@ -1309,7 +1309,7 @@ LucidCompileEngine::match(Reserved r)
 }
 
 bool
-LucidCompileEngine::match(Token t)
+CompileEngine::match(Token t)
 {
     if (_scanner.getToken() != t) {
         return false;
@@ -1319,20 +1319,20 @@ LucidCompileEngine::match(Token t)
 }
 
 bool
-LucidCompileEngine::reserved()
+CompileEngine::reserved()
 {
     Reserved r;
     return isReserved(_scanner.getToken(), _scanner.getTokenString(), r);
 }
 
 bool
-LucidCompileEngine::reserved(Reserved &r)
+CompileEngine::reserved(Reserved &r)
 {
     return isReserved(_scanner.getToken(), _scanner.getTokenString(), r);
 }
 
 bool
-LucidCompileEngine::opDataFromString(const std::string str, OpData& data)
+CompileEngine::opDataFromString(const std::string str, OpData& data)
 {
     auto it = find_if(_opcodes.begin(), _opcodes.end(),
                     [str](const OpData& opData) { return opData._str == str; });
@@ -1344,7 +1344,7 @@ LucidCompileEngine::opDataFromString(const std::string str, OpData& data)
 }
 
 bool
-LucidCompileEngine::opDataFromOp(const Op op, OpData& data)
+CompileEngine::opDataFromOp(const Op op, OpData& data)
 {
     auto it = find_if(_opcodes.begin(), _opcodes.end(),
                     [op](const OpData& opData) { return opData._op == op; });
@@ -1356,7 +1356,7 @@ LucidCompileEngine::opDataFromOp(const Op op, OpData& data)
 }
 
 bool
-LucidCompileEngine::isReserved(Token token, const std::string str, Reserved& r)
+CompileEngine::isReserved(Token token, const std::string str, Reserved& r)
 {
     static std::map<std::string, Reserved> reserved = {
         { "const",      Reserved::Const },
@@ -1396,7 +1396,7 @@ LucidCompileEngine::isReserved(Token token, const std::string str, Reserved& r)
 }
 
 uint8_t
-LucidCompileEngine::findInt(int32_t i)
+CompileEngine::findInt(int32_t i)
 {
     // Try to find an existing int const. If found, return
     // its address. If not found, create one and return 
@@ -1417,7 +1417,7 @@ LucidCompileEngine::findInt(int32_t i)
 
 const
 Function&
-LucidCompileEngine::handleFunctionName()
+CompileEngine::handleFunctionName()
 {
     std::string targ;
     expect(identifier(targ), Compiler::Error::ExpectedIdentifier);
@@ -1430,7 +1430,7 @@ LucidCompileEngine::handleFunctionName()
 }
 
 uint8_t
-LucidCompileEngine::findFloat(float f)
+CompileEngine::findFloat(float f)
 {
     // Try to find an existing fp const. If found, return
     // its address. If not found, create one and return 
@@ -1452,7 +1452,7 @@ LucidCompileEngine::findFloat(float f)
 }
 
 bool
-LucidCompileEngine::findFunction(const std::string& s, Function& fun)
+CompileEngine::findFunction(const std::string& s, Function& fun)
 {
     auto it = find_if(_functions.begin(), _functions.end(),
                     [s](const Function& fun) { return fun.name() == s; });
@@ -1466,7 +1466,7 @@ LucidCompileEngine::findFunction(const std::string& s, Function& fun)
 }
 
 bool
-LucidCompileEngine::findSymbol(const std::string& s, Symbol& sym)
+CompileEngine::findSymbol(const std::string& s, Symbol& sym)
 {
     // First look in the current function and then in the parent struct
     if (currentFunction().findLocal(s, sym)) {
@@ -1477,7 +1477,7 @@ LucidCompileEngine::findSymbol(const std::string& s, Symbol& sym)
 }
 
 Type
-LucidCompileEngine::bakeExpr(ExprAction action, Type matchingType)
+CompileEngine::bakeExpr(ExprAction action, Type matchingType)
 {
     expect(!_exprStack.empty(), Compiler::Error::InternalError);
     
@@ -1640,7 +1640,7 @@ LucidCompileEngine::bakeExpr(ExprAction action, Type matchingType)
 }
         
 bool
-LucidCompileEngine::isExprFunction()
+CompileEngine::isExprFunction()
 {
     expect(!_exprStack.empty(), Compiler::Error::InternalError);
     
@@ -1649,7 +1649,7 @@ LucidCompileEngine::isExprFunction()
 }
 
 bool
-LucidCompileEngine::structFromType(Type type, Struct& s)
+CompileEngine::structFromType(Type type, Struct& s)
 {
     if (uint8_t(type) < StructTypeStart) {
         return false;
@@ -1662,7 +1662,7 @@ LucidCompileEngine::structFromType(Type type, Struct& s)
 }
 
 void
-LucidCompileEngine::findStructElement(Type type, const std::string& id, uint8_t& index, Type& elementType)
+CompileEngine::findStructElement(Type type, const std::string& id, uint8_t& index, Type& elementType)
 {
     Struct s;
     expect(structFromType(type, s), Compiler::Error::ExpectedStructType);
@@ -1679,7 +1679,7 @@ LucidCompileEngine::findStructElement(Type type, const std::string& id, uint8_t&
 }
 
 uint8_t
-LucidCompileEngine::elementSize(Type type)
+CompileEngine::elementSize(Type type)
 {
     if (uint8_t(type) < StructTypeStart) {
         return 1;
@@ -1691,7 +1691,7 @@ LucidCompileEngine::elementSize(Type type)
 }
 
 void
-LucidCompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr)
+CompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr)
 {
     expect(!_jumpList.empty(), Compiler::Error::InternalError);
 
@@ -1720,7 +1720,7 @@ LucidCompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint1
 }
 
 void
-LucidCompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
+CompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
 {
     expect(!_jumpList.empty(), Compiler::Error::InternalError);
     

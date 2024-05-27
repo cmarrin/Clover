@@ -29,7 +29,7 @@ namespace lucid {
 
 //*********************************
 //
-//  Class: LucidCompileEngine
+//  Class: CompileEngine
 //
 //*********************************
 
@@ -202,9 +202,9 @@ operator: (* operator   precedence   association *)
 
 static constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
 
-class LucidCompileEngine : public Compiler {
+class CompileEngine : public Compiler {
 public:
-  	LucidCompileEngine(std::istream* stream, AnnotationList* annotations)
+  	CompileEngine(std::istream* stream, AnnotationList* annotations)
         : _scanner(stream, annotations)
     { }
   	
