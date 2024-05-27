@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "NativeModule.h"
-#include "Opcodes.h"
+#include "Defines.h"
 #include "Scanner.h"
 
 namespace lucid {

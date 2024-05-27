@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "Opcodes.h"
+#include "Defines.h"
 #include "Symbol.h"
 
 namespace lucid {

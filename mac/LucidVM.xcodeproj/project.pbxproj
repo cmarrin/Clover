@@ -42,10 +42,9 @@
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
 		4941A1012BBA1D2800CE3C9E /* Flicker.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.lucid; path = ../examples/Flicker.lucid; sourceTree = "<group>"; };
-		4941A1042BBA28F000CE3C9E /* Opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Opcodes.h; path = ../Runtime/Opcodes.h; sourceTree = "<group>"; };
+		4941A1042BBA28F000CE3C9E /* Defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Defines.h; path = ../Runtime/Defines.h; sourceTree = "<group>"; };
 		4941A1052BBA28F000CE3C9E /* ExecutionUnit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ExecutionUnit.cpp; path = ../Runtime/ExecutionUnit.cpp; sourceTree = "<group>"; };
 		4941A1062BBA28F000CE3C9E /* ExecutionUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ExecutionUnit.h; path = ../Runtime/ExecutionUnit.h; sourceTree = "<group>"; };
-		4941A1082BBA290B00CE3C9E /* CompileEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CompileEngine.h; path = ../Compiler/CompileEngine.h; sourceTree = "<group>"; };
 		4941A1092BBA290B00CE3C9E /* Decompiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Decompiler.cpp; path = ../Compiler/Decompiler.cpp; sourceTree = "<group>"; };
 		4941A10A2BBA290B00CE3C9E /* Scanner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Scanner.cpp; path = ../Compiler/Scanner.cpp; sourceTree = "<group>"; };
 		4941A10B2BBA290B00CE3C9E /* Compiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Compiler.cpp; path = ../Compiler/Compiler.cpp; sourceTree = "<group>"; };
@@ -54,13 +53,13 @@
 		4941A10E2BBA290B00CE3C9E /* Decompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Decompiler.h; path = ../Compiler/Decompiler.h; sourceTree = "<group>"; };
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Compiler/Scanner.h; sourceTree = "<group>"; };
 		4941A1102BBA290B00CE3C9E /* LucidCompileEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LucidCompileEngine.h; path = ../Compiler/LucidCompileEngine.h; sourceTree = "<group>"; };
-		4941A1112BBA290B00CE3C9E /* CompileEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CompileEngine.cpp; path = ../Compiler/CompileEngine.cpp; sourceTree = "<group>"; };
 		4941A1172BBB0B1200CE3C9E /* Effects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.lucid; path = ../examples/Effects.lucid; sourceTree = "<group>"; };
 		49C164A42C025CD500981AD1 /* simple.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = simple.lucid; path = ../examples/simple.lucid; sourceTree = "<group>"; };
 		49C164A92C0297FB00981AD1 /* interp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = interp; sourceTree = BUILT_PRODUCTS_DIR; };
 		49C164B22C03E84700981AD1 /* Function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Function.h; path = ../Compiler/Function.h; sourceTree = "<group>"; };
 		49C164B32C03E90400981AD1 /* Symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Symbol.h; path = ../Compiler/Symbol.h; sourceTree = "<group>"; };
 		49C164B42C0409D700981AD1 /* NativeModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeModule.h; path = ../Runtime/NativeModule.h; sourceTree = "<group>"; };
+		49C164B52C04463000981AD1 /* OpInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OpInfo.h; path = ../Compiler/OpInfo.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -125,7 +124,7 @@
 			children = (
 				4941A1052BBA28F000CE3C9E /* ExecutionUnit.cpp */,
 				4941A1062BBA28F000CE3C9E /* ExecutionUnit.h */,
-				4941A1042BBA28F000CE3C9E /* Opcodes.h */,
+				4941A1042BBA28F000CE3C9E /* Defines.h */,
 				49C164B42C0409D700981AD1 /* NativeModule.h */,
 			);
 			name = Runtime;
@@ -138,14 +137,13 @@
 				4941A1102BBA290B00CE3C9E /* LucidCompileEngine.h */,
 				49C164B22C03E84700981AD1 /* Function.h */,
 				49C164B32C03E90400981AD1 /* Symbol.h */,
-				4941A1112BBA290B00CE3C9E /* CompileEngine.cpp */,
-				4941A1082BBA290B00CE3C9E /* CompileEngine.h */,
 				4941A10B2BBA290B00CE3C9E /* Compiler.cpp */,
 				4941A10C2BBA290B00CE3C9E /* Compiler.h */,
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
 				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
 				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
 				4941A10F2BBA290B00CE3C9E /* Scanner.h */,
+				49C164B52C04463000981AD1 /* OpInfo.h */,
 			);
 			name = Compiler;
 			sourceTree = "<group>";

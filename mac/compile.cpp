@@ -12,7 +12,7 @@
 
 #include "Compiler.h"
 #include "Decompiler.h"
-#include "Opcodes.h"
+#include "Defines.h"
 
 static constexpr uint32_t MaxExecutableSize = 65536;
 

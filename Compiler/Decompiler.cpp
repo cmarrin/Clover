@@ -27,8 +27,8 @@ bool Decompiler::decompile()
     }
     
     try {
-        // Make sure we start with 'arly'
-        if (getUInt8() != 'a' || getUInt8() != 'r' || getUInt8() != 'l' || getUInt8() != 'y') {
+        // Make sure we start with 'lucd'
+        if (getUInt8() != 'l' || getUInt8() != 'u' || getUInt8() != 'c' || getUInt8() != 'd') {
             _error = Error::InvalidSignature;
             return false;
         }
