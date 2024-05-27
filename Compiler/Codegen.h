@@ -20,7 +20,7 @@
 #include "Defines.h"
 #include "Scanner.h"
 #include "Symbol.h"
-#include "AST.h"
+#include "OpInfo.h"
 #include <cstdint>
 #include <istream>
 #include <variant>
@@ -48,7 +48,7 @@ program:
     { import } { struct } [ <type> <id> ] ;
 
 import:
-    'import' <id> [ 'as' <id> ] ;
+    'import' [ <id> { ',' <id> } 'from' ] <id> ;
     
 struct:
     'struct' <id> '{' { structEntry ';' } '}' ;
@@ -207,6 +207,10 @@ public:
   	CompileEngine(std::istream* stream, AnnotationList* annotations)
         : _scanner(stream, annotations)
     { }
+  	
+    void emit(std::vector<uint8_t>& executable);
+
+    static bool opDataFromOp(const Op op, OpData& data);
 
     void addNative(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
     {
@@ -258,6 +262,8 @@ private:
     bool formalParameterList();
     bool argumentList(const Function& fun);
     
+    bool opInfo(Token token, OpInfo&) const;
+
     virtual bool isReserved(Token token, const std::string str, Reserved&);
 
     bool findSymbol(const std::string&, Symbol&);
@@ -285,25 +291,57 @@ private:
     bool reserved();
     bool reserved(Reserved &r);
     
-    bool addASTNode(std::shared_ptr<ASTNode> node)
+    // This assumes the last op is a single byte op
+    Op lastOp() const { return _rom8.size() ? Op(_rom8.back()) : Op::None; }
+    uint16_t romSize() const { return _rom8.size(); }
+    
+    void addOp(Op op) { annotate(); _rom8.push_back(uint8_t(op)); }
+    
+    void addOpSingleByteIndex(Op op, uint8_t i)
     {
-        if (!_currentNodeStack.back()->addNode(node)) {
-            return false;
-        }
-        _currentNodeStack.push_back(node);
-        return true;
+        annotate();
+        _rom8.push_back(uint8_t(op) | (i & 0x0f));
+    }
+
+    void addOpTarg(Op op, uint16_t targ)
+    {
+        annotate();
+        _rom8.push_back(uint8_t(op) | ((targ >> 8) & 0x0f));
+        _rom8.push_back(uint8_t(targ));
     }
     
-    bool popASTNode()
+    void addOpIdI(Op op, uint8_t id, uint8_t i)
     {
-        if (_currentNodeStack.empty()) {
-            return false;
-        }
-        _currentNodeStack.pop_back();
-        return true;
+        addOp(op);
+        _rom8.push_back(id);
+        _rom8.push_back(uint8_t(i & 0x0f));
+    }
+
+    void addOpInt(Op op, uint8_t i)
+    {
+        addOp(op);
+        _rom8.push_back(i);
+    }
+    
+    void addInt(uint8_t i) { _rom8.push_back(i); }
+    
+    void addOpI(Op op, uint8_t i) { addOpInt(op, i); }
+    void addOpConst(Op op, uint8_t c) { addOpInt(op, c); }
+    void addOpPL(Op op, uint8_t p, uint8_t l)
+    {
+        addOpSingleByteIndex(op, p);
+        _rom8.push_back(l);
+    }
+
+    void addOpId(Op op, uint16_t id)
+    {
+        addOpSingleByteIndex(op, uint8_t(id >> 8));
+        _rom8.push_back(uint8_t(id));
     }
     
     const Function& handleFunctionName();
+
+    static bool opDataFromString(const std::string str, OpData& data);
 
     struct Def
     {
@@ -325,7 +363,7 @@ private:
     void annotate()
     {
         if (_scanner.annotation() == -1) {
-            //_scanner.setAnnotation(int32_t(_rom8.size()));
+            _scanner.setAnnotation(int32_t(_rom8.size()));
         }
     }
     
@@ -525,7 +563,7 @@ private:
     std::vector<ExprEntry> _exprStack;
     std::vector<Symbol> _builtins;
 
-    std::vector<std::shared_ptr<ASTNode>> _currentNodeStack;
+    std::vector<uint8_t> _rom8;
     
     // The jump list is an array of arrays of JumpEntries. The outermost array
     // is a stack of active looping statements (for, loop, etc.). Each of these

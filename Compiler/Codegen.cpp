@@ -12,15 +12,129 @@
 #include <map>
 #include <vector>
 
-#include "AST.h"
-
 using namespace lucid;
+
+static std::vector<OpData> _opcodes = {
+    { "Push",           Op::Push            , OpParams::Id },
+    { "Pop",            Op::Pop             , OpParams::Id },
+    { "PushIntConst",   Op::PushIntConst    , OpParams::Const },
+    { "PushIntConstS",  Op::PushIntConstS   , OpParams::Index },
+
+    { "PushRef",        Op::PushRef         , OpParams::Id },
+    { "PushDeref",      Op::PushDeref       , OpParams::None },
+    { "PopDeref",       Op::PopDeref        , OpParams::None },
+
+//    { "Dup",            Op::Dup             , OpParams::None },
+//    { "Drop",           Op::Drop            , OpParams::None },
+//    { "Swap",           Op::Swap            , OpParams::None },
+    
+    { "if",             Op::If              , OpParams::RelTarg },
+
+    { "Call",           Op::Call            , OpParams::AbsTarg },
+    { "CallNative",     Op::CallNative      , OpParams::Const },
+    { "Return",         Op::Return          , OpParams::None },
+    { "SetFrame",       Op::SetFrameS       , OpParams::P_L },
+
+    { "Jump",           Op::Jump            , OpParams::RelTarg },
+    { "log",            Op::Log             , OpParams::Idx_Len_S },
+    
+    { "Or",             Op::Or              , OpParams::None },
+    { "Xor",            Op::Xor             , OpParams::None },
+    { "And",            Op::And             , OpParams::None },
+    { "Not",            Op::Not             , OpParams::None },
+    { "LOr",            Op::LOr             , OpParams::None },
+    { "LAnd",           Op::LAnd            , OpParams::None },
+    { "LNot",           Op::LNot            , OpParams::None },
+    { "LTInt",          Op::LTInt           , OpParams::None },
+    { "LTFloat",        Op::LTFloat         , OpParams::None },
+    { "LEInt",          Op::LEInt           , OpParams::None },
+    { "LEFloat",        Op::LEFloat         , OpParams::None },
+    { "EQInt",          Op::EQInt           , OpParams::None },
+    { "EQFloat",        Op::EQFloat         , OpParams::None },
+    { "NEInt",          Op::NEInt           , OpParams::None },
+    { "NEFloat",        Op::NEFloat         , OpParams::None },
+    { "GEInt",          Op::GEInt           , OpParams::None },
+    { "GEFloat",        Op::GEFloat         , OpParams::None },
+    { "GTInt",          Op::GTInt           , OpParams::None },
+    { "GTFloat",        Op::GTFloat         , OpParams::None },
+    { "AddInt",         Op::AddInt          , OpParams::None },
+    { "AddFloat",       Op::AddFloat        , OpParams::None },
+    { "SubInt",         Op::SubInt          , OpParams::None },
+    { "SubFloat",       Op::SubFloat        , OpParams::None },
+    { "MulInt",         Op::MulInt          , OpParams::None },
+    { "MulFloat",       Op::MulFloat        , OpParams::None },
+    { "DivInt",         Op::DivInt          , OpParams::None },
+    { "DivFloat",       Op::DivFloat        , OpParams::None },
+    { "NegInt",         Op::NegInt          , OpParams::None },
+    { "NegFloat",       Op::NegFloat        , OpParams::None },
+
+    { "PreIncInt",      Op::PreIncInt       , OpParams::None },
+    { "PreIncFloat",    Op::PreIncFloat     , OpParams::None },
+    { "PreDecInt",      Op::PreDecInt       , OpParams::None },
+    { "PreDecFloat",    Op::PreDecFloat     , OpParams::None },
+    { "PostIncInt",     Op::PostIncInt      , OpParams::None },
+    { "PostIncFloat",   Op::PostIncFloat    , OpParams::None },
+    { "PostDecInt",     Op::PostDecInt      , OpParams::None },
+    { "PostDecFloat",   Op::PostDecFloat    , OpParams::None },
+    
+    { "Offset",         Op::Offset          , OpParams::Index },
+    { "Index",          Op::Index           , OpParams::Index },
+};
+
+bool
+CompileEngine::opInfo(Token token, OpInfo& op) const
+{
+    static std::vector<OpInfo> opInfo = {
+        { Token::Equal,     1, Op::Pop,     Op::Pop,      OpInfo::Assign::Only , Type::None },
+        { Token::AddSto,    1, Op::AddInt,  Op::AddFloat, OpInfo::Assign::Op   , Type::None },
+        { Token::SubSto,    1, Op::SubInt,  Op::SubFloat, OpInfo::Assign::Op   , Type::None },
+        { Token::MulSto,    1, Op::MulInt,  Op::MulFloat, OpInfo::Assign::Op   , Type::None },
+        { Token::DivSto,    1, Op::DivInt,  Op::DivFloat, OpInfo::Assign::Op   , Type::None },
+        { Token::AndSto,    1, Op::And,     Op::None,     OpInfo::Assign::Op   , Type::Int },
+        { Token::OrSto,     1, Op::Or,      Op::None,     OpInfo::Assign::Op   , Type::Int },
+        { Token::XorSto,    1, Op::Xor,     Op::None,     OpInfo::Assign::Op   , Type::Int },
+        { Token::LOr,       6, Op::LOr,     Op::None,     OpInfo::Assign::None , Type::Int },
+        { Token::LAnd,      7, Op::LAnd,    Op::None,     OpInfo::Assign::None , Type::Int },
+        { Token::Or,        8, Op::Or,      Op::None,     OpInfo::Assign::None , Type::Int },
+        { Token::Xor,       9, Op::Xor,     Op::None,     OpInfo::Assign::None , Type::Int },
+        { Token::And,      10, Op::And,     Op::None,     OpInfo::Assign::None , Type::Int },
+        { Token::EQ,       11, Op::EQInt,   Op::EQFloat,  OpInfo::Assign::None , Type::Int },
+        { Token::NE,       11, Op::NEInt,   Op::NEFloat,  OpInfo::Assign::None , Type::Int },
+        { Token::LT,       12, Op::LTInt,   Op::LTFloat,  OpInfo::Assign::None , Type::Int },
+        { Token::GT,       12, Op::GTInt,   Op::GTFloat,  OpInfo::Assign::None , Type::Int },
+        { Token::GE,       12, Op::GEInt,   Op::GEFloat,  OpInfo::Assign::None , Type::Int },
+        { Token::LE,       12, Op::LEInt,   Op::LEFloat,  OpInfo::Assign::None , Type::Int },
+        { Token::Plus,     14, Op::AddInt,  Op::AddFloat, OpInfo::Assign::None , Type::None },
+        { Token::Minus,    14, Op::SubInt,  Op::SubFloat, OpInfo::Assign::None , Type::None },
+        { Token::Mul,      15, Op::MulInt,  Op::MulFloat, OpInfo::Assign::None , Type::None },
+        { Token::Div,      15, Op::DivInt,  Op::DivFloat, OpInfo::Assign::None , Type::None },
+    };
+
+    auto it = find_if(opInfo.begin(), opInfo.end(),
+                    [token](const OpInfo& op) { return op.token() == token; });
+    if (it != opInfo.end()) {
+        op = *it;
+        return true;
+    }
+    return false;
+}
+
+void
+CompileEngine::emit(std::vector<uint8_t>& executable)
+{
+    executable.push_back('l');
+    executable.push_back('u');
+    executable.push_back('c');
+    executable.push_back('d');
+
+    char* buf = reinterpret_cast<char*>(&(_rom8[0]));
+    executable.insert(executable.end(), buf, buf + _rom8.size());
+}
 
 bool
 CompileEngine::program()
 {
     _scanner.setIgnoreNewlines(true);
-    _currentNodeStack.push_back(std::make_shared<ProgramNode>());
     
     try {
         while(import()) { }
@@ -49,15 +163,15 @@ CompileEngine::import()
         return false;
     }
     
-    std::string id, idAs;
-    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
-
-    if (match(Reserved::As)) {
-        expect(identifier(idAs), Compiler::Error::ExpectedIdentifier);
+    std::string id;
+    if (identifier(id)) {
+        while (match(Token::Comma)) {
+            expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+        }
+        expect(match(Reserved::From), Compiler::Error::ExpectedKeyword);
     }
     
-    addASTNode(std::make_shared<ImportNode>(id, idAs));
-    popASTNode();
+    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
     return true;
 }
 
@@ -327,7 +441,7 @@ CompileEngine::function()
     expect(identifier(id), Compiler::Error::ExpectedIdentifier);
 
     // Remember the function
-//    _functions.emplace_back(id, uint16_t(_rom8.size()), t);
+    _functions.emplace_back(id, uint16_t(_rom8.size()), t);
     _inFunction = true;
     
     expect(Token::OpenParen);
@@ -340,19 +454,19 @@ CompileEngine::function()
     // SetFrame has to be the first instruction in the Function. Pass Params and
     // set Locals byte to 0 and remember it's location so we can fix it at the
     // end of the function
-//    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
-//    auto localsIndex = _rom8.size();
-//    addInt(0);
+    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
+    auto localsIndex = _rom8.size();
+    addInt(0);
 
     // Remember the rom addr so we can check to see if we've emitted any code
-//    uint16_t size = romSize();
+    uint16_t size = romSize();
     
     while(statement()) { }
     
     expect(Token::CloseBrace);
 
     // Update locals size
-//    _rom8[localsIndex] = currentFunction().localSize();
+    _rom8[localsIndex] = currentFunction().localSize();
 
     // Set the high water mark
     if (_nextMem > _localHighWaterMark) {
@@ -360,10 +474,10 @@ CompileEngine::function()
     }
     
     // Emit Return at the end if there's not already one
-//    if (size == romSize() || lastOp() != Op::Return) {
-//        addOpSingleByteIndex(Op::PushIntConstS, 0);
-//        addOp(Op::Return);
-//    }
+    if (size == romSize() || lastOp() != Op::Return) {
+        addOpSingleByteIndex(Op::PushIntConstS, 0);
+        addOp(Op::Return);
+    }
     
     _inFunction = false;
     return true;
@@ -378,7 +492,7 @@ CompileEngine::init()
     
     // Remember the function
     // FIXME: probably don't save a string as the function name
-//    _functions.emplace_back("initialize", uint16_t(_rom8.size()), Type::None);
+    _functions.emplace_back("initialize", uint16_t(_rom8.size()), Type::None);
     _inFunction = true;
     
     expect(Token::OpenParen);
@@ -391,19 +505,19 @@ CompileEngine::init()
     // SetFrame has to be the first instruction in the Function. Pass Params and
     // set Locals byte to 0 and remember it's location so we can fix it at the
     // end of the function
-//    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
-//    auto localsIndex = _rom8.size();
-//    addInt(0);
+    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
+    auto localsIndex = _rom8.size();
+    addInt(0);
 
     // Remember the rom addr so we can check to see if we've emitted any code
-//    uint16_t size = romSize();
+    uint16_t size = romSize();
     
     while(statement()) { }
     
     expect(Token::CloseBrace);
 
     // Update locals size
-//    _rom8[localsIndex] = currentFunction().localSize();
+    _rom8[localsIndex] = currentFunction().localSize();
 
     // Set the high water mark
     if (_nextMem > _localHighWaterMark) {
@@ -411,10 +525,10 @@ CompileEngine::init()
     }
     
     // Emit Return at the end if there's not already one
-//    if (size == romSize() || lastOp() != Op::Return) {
-//        addOpSingleByteIndex(Op::PushIntConstS, 0);
-//        addOp(Op::Return);
-//    }
+    if (size == romSize() || lastOp() != Op::Return) {
+        addOpSingleByteIndex(Op::PushIntConstS, 0);
+        addOp(Op::Return);
+    }
     
     _inFunction = false;
     return true;
@@ -473,32 +587,32 @@ CompileEngine::ifStatement()
     expect(bakeExpr(ExprAction::Right) == Type::Int, Compiler::Error::WrongType);
     expect(Token::CloseParen);
 
-//    auto ifJumpAddr = _rom8.size();
-//    addOpTarg(Op::If, 0);
+    auto ifJumpAddr = _rom8.size();
+    addOpTarg(Op::If, 0);
 
     statement();
     
     // This ifTargetAddr will be used if there is no else
-//    uint16_t ifTargetAddr = _rom8.size();
+    uint16_t ifTargetAddr = _rom8.size();
     
     if (match(Reserved::Else)) {
-//        auto elseJumpAddr = _rom8.size();
-//        addOpTarg(Op::Jump, 0);
-//        
-//        // Set ifTargetAddr to jump to else clause
-//        ifTargetAddr = _rom8.size();
+        auto elseJumpAddr = _rom8.size();
+        addOpTarg(Op::Jump, 0);
+        
+        // Set ifTargetAddr to jump to else clause
+        ifTargetAddr = _rom8.size();
         statement();
 
         // Resolve the else address
-//        uint16_t offset = _rom8.size() - elseJumpAddr - 2;
-//        _rom8[elseJumpAddr] |= uint8_t((offset >> 8) & 0x0f);
-//        _rom8[elseJumpAddr + 1] = uint8_t(offset);
+        uint16_t offset = _rom8.size() - elseJumpAddr - 2;
+        _rom8[elseJumpAddr] |= uint8_t((offset >> 8) & 0x0f);
+        _rom8[elseJumpAddr + 1] = uint8_t(offset);
     }
     
     // Resolve the if address
-//    uint16_t offset = ifTargetAddr - ifJumpAddr - 2;
-//    _rom8[ifJumpAddr] |= uint8_t((offset >> 8) & 0x0f);
-//    _rom8[ifJumpAddr + 1] = uint8_t(offset);
+    uint16_t offset = ifTargetAddr - ifJumpAddr - 2;
+    _rom8[ifJumpAddr] |= uint8_t((offset >> 8) & 0x0f);
+    _rom8[ifJumpAddr + 1] = uint8_t(offset);
 
     return true;
 }
@@ -561,7 +675,7 @@ CompileEngine::forStatement()
     //                  Jump startAddr
     //      breakAddr:
     //
-//    uint16_t startAddr = _rom8.size();
+    uint16_t startAddr = _rom8.size();
 
     if (!match(Token::Semicolon)) {
         arithmeticExpression();
@@ -573,14 +687,14 @@ CompileEngine::forStatement()
     }
     
     // If we don't have an iteration, contAddr is just the startAddr
-//    uint16_t contAddr = startAddr;
+    uint16_t contAddr = startAddr;
     
     // Handle iteration
-//    uint8_t* iterBuf = nullptr;
-//    uint16_t iterSize = 0;
+    uint8_t* iterBuf = nullptr;
+    uint16_t iterSize = 0;
     
     if (!match(Token::CloseParen)) {
-//        uint16_t iterAddr = _rom8.size();
+        uint16_t iterAddr = _rom8.size();
 
         arithmeticExpression();
         
@@ -592,30 +706,30 @@ CompileEngine::forStatement()
         expect(Token::CloseParen);
         
         // Move the iteration code into the iterBuf.
-//        iterSize = _rom8.size() - iterAddr;
-//        if (iterSize > 0) {
-//            iterBuf = new uint8_t[iterSize];
-//            memcpy(iterBuf, &(_rom8[iterAddr]), iterSize);
-//            _rom8.resize(iterAddr);
-//        }
+        iterSize = _rom8.size() - iterAddr;
+        if (iterSize > 0) {
+            iterBuf = new uint8_t[iterSize];
+            memcpy(iterBuf, &(_rom8[iterAddr]), iterSize);
+            _rom8.resize(iterAddr);
+        }
     }
 
     statement();
     
     // Retore the iteration code, if any
-//    if (iterSize > 0) {
-//        contAddr = _rom8.size();
-//        _rom8.resize(_rom8.size() + iterSize);
-//        memcpy(&_rom8[contAddr], iterBuf, iterSize);
-//        delete [ ] iterBuf;
-//    }
+    if (iterSize > 0) {
+        contAddr = _rom8.size();
+        _rom8.resize(_rom8.size() + iterSize);
+        memcpy(&_rom8[contAddr], iterBuf, iterSize);
+        delete [ ] iterBuf;
+    }
 
     addJumpEntry(Op::Jump, JumpEntry::Type::Start);
 
-//    uint16_t breakAddr = _rom8.size();
+    uint16_t breakAddr = _rom8.size();
 
     // Now resolve all the jumps
-//    exitJumpContext(startAddr, contAddr, breakAddr);
+    exitJumpContext(startAddr, contAddr, breakAddr);
     return true;
 }
 
@@ -631,7 +745,7 @@ CompileEngine::whileStatement()
     expect(Token::OpenParen);
 
     // Loop starts with an if test of expr
-//    uint16_t loopAddr = _rom8.size();
+    uint16_t loopAddr = _rom8.size();
     
     arithmeticExpression();
     expect(bakeExpr(ExprAction::Right) == Type::Int, Compiler::Error::WrongType);
@@ -646,7 +760,7 @@ CompileEngine::whileStatement()
     addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
         
     // Now resolve all the jumps (stmtAddr will never be used so just reuse loopAddr)
-//    exitJumpContext(loopAddr, loopAddr, _rom8.size());
+    exitJumpContext(loopAddr, loopAddr, _rom8.size());
 
     return true;
 }
@@ -660,7 +774,7 @@ CompileEngine::loopStatement()
 
     enterJumpContext();
 
-//    uint16_t loopAddr = _rom8.size();
+    uint16_t loopAddr = _rom8.size();
     
     statement();
 
@@ -668,7 +782,7 @@ CompileEngine::loopStatement()
     addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
     
     // Now resolve all the jumps (stmtAddr will never be used so just reuse loopAddr)
-//    exitJumpContext(loopAddr, loopAddr, _rom8.size());
+    exitJumpContext(loopAddr, loopAddr, _rom8.size());
 
     return true;
 }
@@ -688,10 +802,10 @@ CompileEngine::returnStatement()
         expect(currentFunction().type() == Type::None, Compiler::Error::MismatchedType);
         
         // No return value, push a zero
-//        addOpSingleByteIndex(Op::PushIntConstS, 0);
+        addOpSingleByteIndex(Op::PushIntConstS, 0);
     }
     
-//    addOp(Op::Return);
+    addOp(Op::Return);
     expect(Token::Semicolon);
     return true;
 }
@@ -749,65 +863,65 @@ CompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
     }
     
     while(1) {
-//        OpInfo info;
-//        if (!opInfo(_scanner.getToken(), info) || info.prec() < minPrec) {
-//            return true;
-//        }
+        OpInfo info;
+        if (!opInfo(_scanner.getToken(), info) || info.prec() < minPrec) {
+            return true;
+        }
         
         // If this is an assignment operator, we only allow one so handle it separately
-//        uint8_t nextMinPrec = info.prec() + 1;
+        uint8_t nextMinPrec = info.prec() + 1;
         _scanner.retireToken();
                 
-//        expect(!(arithType != ArithType::Assign && info.assign() != OpInfo::Assign::None), Compiler::Error::AssignmentNotAllowedHere);
+        expect(!(arithType != ArithType::Assign && info.assign() != OpInfo::Assign::None), Compiler::Error::AssignmentNotAllowedHere);
         
         Type leftType = Type::None;
         Type rightType = Type::None;
         
-//        if (info.assign() != OpInfo::Assign::None) {
-//            // Turn TOS into Ref
-//            leftType = bakeExpr(ExprAction::Ref);
-//        } else {
-//            leftType = bakeExpr(ExprAction::Right);
-//        }
-//        
-//        if (info.assign() == OpInfo::Assign::Op) {
-//            // The ref is on TOS, dup and get the value. That will
-//            // leave the value, then the ref to that value on the stack.
-////            addOp(Op::Dup);
-//            addOp(Op::PushDeref);
-//        }
+        if (info.assign() != OpInfo::Assign::None) {
+            // Turn TOS into Ref
+            leftType = bakeExpr(ExprAction::Ref);
+        } else {
+            leftType = bakeExpr(ExprAction::Right);
+        }
         
-//        expect(arithmeticExpression(nextMinPrec), Compiler::Error::ExpectedExpr);
+        if (info.assign() == OpInfo::Assign::Op) {
+            // The ref is on TOS, dup and get the value. That will
+            // leave the value, then the ref to that value on the stack.
+//            addOp(Op::Dup);
+            addOp(Op::PushDeref);
+        }
+        
+        expect(arithmeticExpression(nextMinPrec), Compiler::Error::ExpectedExpr);
 
         rightType = bakeExpr(ExprAction::Right, leftType);
 
-//        switch(info.assign()) {
-//            case OpInfo::Assign::Only: {
-//                break;
-//            }
-//            case OpInfo::Assign::Op:
-//                expect(leftType == rightType, Compiler::Error::MismatchedType);
-//                addOp((leftType == Type::Int) ? info.intOp() : info.floatOp());
-//                break;
-//            case OpInfo::Assign::None: {
-//                expect(leftType == rightType, Compiler::Error::MismatchedType);
-//                
-//                Op op = (leftType == Type::Int) ? info.intOp() : info.floatOp();
-//                expect(op != Op::None, Compiler::Error::WrongType);
-//                addOp(op);
-//
-//                if (info.resultType() != Type::None) {
-//                    leftType = info.resultType();
-//                }
-//                _exprStack.push_back(ExprEntry::Value(leftType));
-//                break;
-//            }
-//            default: break;
-//        }
-//        
-//        if (info.assign() != OpInfo::Assign::None) {
-//            expect(bakeExpr(ExprAction::Left, rightType) == rightType, Compiler::Error::MismatchedType);
-//        }
+        switch(info.assign()) {
+            case OpInfo::Assign::Only: {
+                break;
+            }
+            case OpInfo::Assign::Op:
+                expect(leftType == rightType, Compiler::Error::MismatchedType);
+                addOp((leftType == Type::Int) ? info.intOp() : info.floatOp());
+                break;
+            case OpInfo::Assign::None: {
+                expect(leftType == rightType, Compiler::Error::MismatchedType);
+                
+                Op op = (leftType == Type::Int) ? info.intOp() : info.floatOp();
+                expect(op != Op::None, Compiler::Error::WrongType);
+                addOp(op);
+
+                if (info.resultType() != Type::None) {
+                    leftType = info.resultType();
+                }
+                _exprStack.push_back(ExprEntry::Value(leftType));
+                break;
+            }
+            default: break;
+        }
+        
+        if (info.assign() != OpInfo::Assign::None) {
+            expect(bakeExpr(ExprAction::Left, rightType) == rightType, Compiler::Error::MismatchedType);
+        }
     }
     
     return true;
@@ -859,12 +973,12 @@ CompileEngine::unaryExpression()
             _exprStack.pop_back();
             _exprStack.push_back(ExprEntry::Value(type));
 
-//            if (type == Type::Float) {
-//                addOp((token == Token::Inc) ? Op::PreIncFloat : Op::PreDecFloat);
-//            } else {
-//                expect(type == Type::Int, Compiler::Error::MismatchedType);
-//                addOp((token == Token::Inc) ? Op::PreIncInt : Op::PreDecInt);
-//            }
+            if (type == Type::Float) {
+                addOp((token == Token::Inc) ? Op::PreIncFloat : Op::PreDecFloat);
+            } else {
+                expect(type == Type::Int, Compiler::Error::MismatchedType);
+                addOp((token == Token::Inc) ? Op::PreIncInt : Op::PreDecInt);
+            }
             break;
         case Token::Minus:
         case Token::Twiddle:
@@ -900,17 +1014,17 @@ CompileEngine::unaryExpression()
             type = bakeExpr(ExprAction::Right);
             _exprStack.push_back(ExprEntry::Value(type));
 
-//            if (token == Token::Minus) {
-//                if (type == Type::Float) {
-//                    addOp(Op::NegFloat);
-//                } else {
-//                    expect(type == Type::Int, Compiler::Error::MismatchedType);
-//                    addOp(Op::NegInt);
-//                }
-//            } else {
-//                expect(type == Type::Int, Compiler::Error::WrongType);
-//                addOp((token == Token::Twiddle) ? Op::Not : Op::LNot);
-//            }
+            if (token == Token::Minus) {
+                if (type == Type::Float) {
+                    addOp(Op::NegFloat);
+                } else {
+                    expect(type == Type::Int, Compiler::Error::MismatchedType);
+                    addOp(Op::NegInt);
+                }
+            } else {
+                expect(type == Type::Int, Compiler::Error::WrongType);
+                addOp((token == Token::Twiddle) ? Op::Not : Op::LNot);
+            }
             break;
     }
     
@@ -937,11 +1051,11 @@ CompileEngine::postfixExpression()
             
             _exprStack.push_back(ExprEntry::Value(fun.type()));
             
-//            if (fun.isNative()) {
-//                addOpId(Op::CallNative, uint16_t(fun.nativeId()));
-//            } else { 
-//                addOpTarg(Op::Call, fun.addr());
-//            }
+            if (fun.isNative()) {
+                addOpId(Op::CallNative, uint16_t(fun.nativeId()));
+            } else { 
+                addOpTarg(Op::Call, fun.addr());
+            }
         } else if (match(Token::OpenBracket)) {
             bakeExpr(ExprAction::Ref);
             expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
@@ -966,23 +1080,23 @@ CompileEngine::postfixExpression()
             _exprStack.pop_back();
             _exprStack.push_back(ExprEntry::Value(type));
 
-//            if (type == Type::Float) {
-//                addOp(Op::PostIncFloat);
-//            } else {
-//                expect(type == Type::Int, Compiler::Error::MismatchedType);
-//                addOp(Op::PostIncInt);
-//            }
+            if (type == Type::Float) {
+                addOp(Op::PostIncFloat);
+            } else {
+                expect(type == Type::Int, Compiler::Error::MismatchedType);
+                addOp(Op::PostIncInt);
+            }
         } else if (match(Token::Dec)) {
             Type type = bakeExpr(ExprAction::Ref);
             _exprStack.pop_back();
             _exprStack.push_back(ExprEntry::Value(type));
 
-//            if (type == Type::Float) {
-//                addOp(Op::PostDecFloat);
-//            } else {
-//                expect(type == Type::Int, Compiler::Error::MismatchedType);
-//                addOp(Op::PostDecInt);
-//            }
+            if (type == Type::Float) {
+                addOp(Op::PostDecFloat);
+            } else {
+                expect(type == Type::Int, Compiler::Error::MismatchedType);
+                addOp(Op::PostDecInt);
+            }
         } else {
             return true;
         }
@@ -1218,6 +1332,30 @@ CompileEngine::reserved(Reserved &r)
 }
 
 bool
+CompileEngine::opDataFromString(const std::string str, OpData& data)
+{
+    auto it = find_if(_opcodes.begin(), _opcodes.end(),
+                    [str](const OpData& opData) { return opData._str == str; });
+    if (it != _opcodes.end()) {
+        data = *it;
+        return true;
+    }
+    return false;
+}
+
+bool
+CompileEngine::opDataFromOp(const Op op, OpData& data)
+{
+    auto it = find_if(_opcodes.begin(), _opcodes.end(),
+                    [op](const OpData& opData) { return opData._op == op; });
+    if (it != _opcodes.end()) {
+        data = *it;
+        return true;
+    }
+    return false;
+}
+
+bool
 CompileEngine::isReserved(Token token, const std::string str, Reserved& r)
 {
     static std::map<std::string, Reserved> reserved = {
@@ -1354,39 +1492,39 @@ CompileEngine::bakeExpr(ExprAction action, Type matchingType)
                 default:
                     expect(false, Compiler::Error::InternalError);
                 case ExprEntry::Type::Int: {
-//                    uint32_t i = uint32_t(int32_t(entry));
+                    uint32_t i = uint32_t(int32_t(entry));
                     
                     if (matchingType == Type::Float) {
                         // Promote to float
-//                        float f = float(int32_t(i));
-//                        addOpInt(Op::Push, findFloat(f));
+                        float f = float(int32_t(i));
+                        addOpInt(Op::Push, findFloat(f));
                         type = Type::Float;
                         break;
                     }
                     
-//                    if (i <= 15) {
-//                        addOpSingleByteIndex(Op::PushIntConstS, i);
-//                    } else if (i <= 255) {
-//                        addOpInt(Op::PushIntConst, i);
-//                    } else {
-//                        // Add an int const
-//                        addOpInt(Op::Push, findInt(i));
-//                    }
+                    if (i <= 15) {
+                        addOpSingleByteIndex(Op::PushIntConstS, i);
+                    } else if (i <= 255) {
+                        addOpInt(Op::PushIntConst, i);
+                    } else {
+                        // Add an int const
+                        addOpInt(Op::Push, findInt(i));
+                    }
                     type = Type::Int;
                     break;
                 }
                 case ExprEntry::Type::Float:
                     // Use an fp constant
-//                    addOpInt(Op::Push, findFloat(entry));
+                    addOpInt(Op::Push, findFloat(entry));
                     type = Type::Float;
                     break;
                 case ExprEntry::Type::Id:
                     // Push the value
                     expect(findSymbol(entry, sym), Compiler::Error::UndefinedIdentifier);
-//                    addOpId(Op::Push, sym.addr());
+                    addOpId(Op::Push, sym.addr());
                     
                     if (sym.isPointer() && matchingType != Type::Ptr) {
-//                        addOp(Op::PushDeref);
+                        addOp(Op::PushDeref);
                         type = sym.type();
                         break;
                     }
@@ -1400,7 +1538,7 @@ CompileEngine::bakeExpr(ExprAction action, Type matchingType)
                     const ExprEntry::Ref& ref = entry;
                     type = ref._type;
                     if (!ref._ptr) {
-//                        addOp(Op::PushDeref);
+                        addOp(Op::PushDeref);
                     } else {
                         type = Type::Ptr;
                     }
@@ -1433,7 +1571,7 @@ CompileEngine::bakeExpr(ExprAction action, Type matchingType)
             }
             
             Struct s;
-//            addOpSingleByteIndex(Op::Index, structFromType(type, s) ? s.size() : 1);
+            addOpSingleByteIndex(Op::Index, structFromType(type, s) ? s.size() : 1);
             return type;
         }
         case ExprAction::Offset: {
@@ -1446,7 +1584,7 @@ CompileEngine::bakeExpr(ExprAction action, Type matchingType)
             
             // If the Ref is a Ptr then we need to deref
             if (ref._ptr) {
-//                addOp(Op::PushDeref);
+                addOp(Op::PushDeref);
             }
             uint8_t index;
             Type elementType;
@@ -1455,7 +1593,7 @@ CompileEngine::bakeExpr(ExprAction action, Type matchingType)
             _exprStack.pop_back();
             _exprStack.push_back(ExprEntry::Ref(elementType));
             
-//            addOpSingleByteIndex(Op::Offset, index);
+            addOpSingleByteIndex(Op::Offset, index);
             return elementType;
         }
         case ExprAction::Left:
@@ -1474,13 +1612,13 @@ CompileEngine::bakeExpr(ExprAction action, Type matchingType)
                     // ref and use that as the ref for the PopDeref.
                     if (ref._ptr && matchingType != Type::Ptr) {
 //                        addOp(Op::Swap);
-//                        addOp(Op::PushDeref);
+                        addOp(Op::PushDeref);
 //                        addOp(Op::Swap);
                         type = ref._type;
                     } else {
                         type = ref._ptr ? Type::Ptr : ref._type;
                     }
-//                    addOp(Op::PopDeref);
+                    addOp(Op::PopDeref);
                     break;
                 }
                 return type;
@@ -1493,7 +1631,7 @@ CompileEngine::bakeExpr(ExprAction action, Type matchingType)
             _exprStack.pop_back();
             _exprStack.push_back(ExprEntry::Ref(sym.type(), sym.isPointer()));
             
-//            addOpId(Op::PushRef, sym.addr());
+            addOpId(Op::PushRef, sym.addr());
             return sym.isPointer() ? Type::Ptr : sym.type();
     }
     
@@ -1570,12 +1708,12 @@ CompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t b
             case JumpEntry::Type::Break: addr = breakAddr; break;
         }         
          
-//        int16_t offset = int16_t(addr) - int16_t(it._addr) - 2;
+        int16_t offset = int16_t(addr) - int16_t(it._addr) - 2;
          
-//        expect(_rom8[it._addr + 1] == 0, Compiler::Error::InternalError);
-//        
-//        _rom8[it._addr] |= (offset >> 8) & 0x0f;
-//        _rom8[it._addr + 1] = uint8_t(offset);
+        expect(_rom8[it._addr + 1] == 0, Compiler::Error::InternalError);
+        
+        _rom8[it._addr] |= (offset >> 8) & 0x0f;
+        _rom8[it._addr + 1] = uint8_t(offset);
     }
     
     _jumpList.pop_back();
@@ -1586,7 +1724,7 @@ CompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
 {
     expect(!_jumpList.empty(), Compiler::Error::InternalError);
     
-//    uint16_t addr = _rom8.size();
-//    addOpTarg(op, 0);
-//    _jumpList.back().emplace_back(type, addr);
+    uint16_t addr = _rom8.size();
+    addOpTarg(op, 0);
+    _jumpList.back().emplace_back(type, addr);
 }

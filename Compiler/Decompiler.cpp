@@ -184,94 +184,94 @@ Decompiler::statement()
         opInt &= 0xf0;
     }
     
-    OpData opData;
-    if (!CompileEngine::opDataFromOp(Op(opInt), opData)) {
-        _error = Error::InvalidOp;
-        throw true;
-    }
-
-    // Add blank like before if
-    if (opData._op == Op::If) {
-        _out->append("\n");
-    }
-
-    doIndent();
-
-    outputAddr();
-    _out->append(opData._str);
-    _out->append(" ");
-    
-    // Get params
-    uint8_t id;
-    uint8_t rdrsi;
-    
-    switch(opData._par) {
-        case OpParams::None:
-            break;
-        case OpParams::Id:
-            _out->append("[");
-            _out->append(std::to_string((uint16_t(index) << 8) | uint16_t(getUInt8())));
-            _out->append("]");
-            break;
-        case OpParams::I:
-            rdrsi = getUInt8();
-            _out->append(std::to_string(rdrsi & 0x0f));
-            break;
-        case OpParams::Index:
-            _out->append(std::to_string(index));
-            break;
-        case OpParams::Const:
-            _out->append(std::to_string(getUInt8()));
-            break;
-        case OpParams::AbsTarg: {
-            uint16_t targ = (uint16_t(index) << 8) | uint16_t(getUInt8());
-            _out->append("[");
-            _out->append(std::to_string(targ + _codeOffset));
-            _out->append("]");
-            break;
-        }
-        case OpParams::RelTarg: {
-            int16_t targ = (int16_t(index) << 8) | int16_t(getUInt8());
-            if (targ & 0x800) {
-                targ |= 0xf000;
-            }
-            _out->append("[");
-            _out->append(std::to_string(targ));
-            _out->append("]");
-            break;
-        }
-        case OpParams::P_L:
-            id = getUInt8();
-            _out->append(std::to_string(index));
-            _out->append(" ");
-            _out->append(std::to_string(id));
-            break;
-        case OpParams::Idx_Len_S: {
-            _out->append(std::to_string(index));
-            _out->append(" \"");
-            
-            uint8_t len = getUInt8();
-            while(len-- > 0) {
-                uint8_t c = getUInt8();
-                if (c >= 0x20) {
-                    (*_out) += char(c);
-                } else {
-                    (*_out) += '\\';
-                    if (c == '\n') {
-                        (*_out) += 'n';
-                    } else {
-                        (*_out) += 'x';
-                        uint8_t d = c >> 4;
-                        (*_out) += char((d > 9) ? (d + 'a' - 10) : (d + '0'));
-                        d = c & 0x0f;
-                        (*_out) += char((d > 9) ? (d + 'a' - 10) : (d + '0'));
-                    }
-                }
-            }
-            _out->append("\"");
-            break;
-        }
-    }
+//    OpData opData;
+//    if (!CompileEngine::opDataFromOp(Op(opInt), opData)) {
+//        _error = Error::InvalidOp;
+//        throw true;
+//    }
+//
+//    // Add blank like before if
+//    if (opData._op == Op::If) {
+//        _out->append("\n");
+//    }
+//
+//    doIndent();
+//
+//    outputAddr();
+//    _out->append(opData._str);
+//    _out->append(" ");
+//    
+//    // Get params
+//    uint8_t id;
+//    uint8_t rdrsi;
+//    
+//    switch(opData._par) {
+//        case OpParams::None:
+//            break;
+//        case OpParams::Id:
+//            _out->append("[");
+//            _out->append(std::to_string((uint16_t(index) << 8) | uint16_t(getUInt8())));
+//            _out->append("]");
+//            break;
+//        case OpParams::I:
+//            rdrsi = getUInt8();
+//            _out->append(std::to_string(rdrsi & 0x0f));
+//            break;
+//        case OpParams::Index:
+//            _out->append(std::to_string(index));
+//            break;
+//        case OpParams::Const:
+//            _out->append(std::to_string(getUInt8()));
+//            break;
+//        case OpParams::AbsTarg: {
+//            uint16_t targ = (uint16_t(index) << 8) | uint16_t(getUInt8());
+//            _out->append("[");
+//            _out->append(std::to_string(targ + _codeOffset));
+//            _out->append("]");
+//            break;
+//        }
+//        case OpParams::RelTarg: {
+//            int16_t targ = (int16_t(index) << 8) | int16_t(getUInt8());
+//            if (targ & 0x800) {
+//                targ |= 0xf000;
+//            }
+//            _out->append("[");
+//            _out->append(std::to_string(targ));
+//            _out->append("]");
+//            break;
+//        }
+//        case OpParams::P_L:
+//            id = getUInt8();
+//            _out->append(std::to_string(index));
+//            _out->append(" ");
+//            _out->append(std::to_string(id));
+//            break;
+//        case OpParams::Idx_Len_S: {
+//            _out->append(std::to_string(index));
+//            _out->append(" \"");
+//            
+//            uint8_t len = getUInt8();
+//            while(len-- > 0) {
+//                uint8_t c = getUInt8();
+//                if (c >= 0x20) {
+//                    (*_out) += char(c);
+//                } else {
+//                    (*_out) += '\\';
+//                    if (c == '\n') {
+//                        (*_out) += 'n';
+//                    } else {
+//                        (*_out) += 'x';
+//                        uint8_t d = c >> 4;
+//                        (*_out) += char((d > 9) ? (d + 'a' - 10) : (d + '0'));
+//                        d = c & 0x0f;
+//                        (*_out) += char((d > 9) ? (d + 'a' - 10) : (d + '0'));
+//                    }
+//                }
+//            }
+//            _out->append("\"");
+//            break;
+//        }
+//    }
     
     _out->append("\n");
 }

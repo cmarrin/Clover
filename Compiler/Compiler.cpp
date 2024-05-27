@@ -36,14 +36,6 @@ bool Compiler::compile(std::istream* istream,
     _lineno = engine->lineno();
     _charno = engine->charno();
     
-    try {
-        if (_error == Error::None) {
-            engine->emit(executable);
-        }
-    }
-    catch(...) {
-    }
-    
     if (_error == Error::None && executable.size() > maxExecutableSize) {
         _error = Error::ExecutableTooBig;
     }

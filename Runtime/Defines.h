@@ -442,7 +442,7 @@ enum class OpParams : uint8_t {
         Struct,
         Const,
         Import,
-        From,
+        As,
         Function,
         Initialize,
         Return,
