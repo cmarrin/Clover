@@ -32,6 +32,10 @@ CompileEngine::program()
         if (type(t)) {
             expect(identifier(id), Compiler::Error::ExpectedIdentifier);
         }
+
+        addASTNode(std::make_shared<StructInstanceNode>(t, id));
+        popASTNode();
+        
         expect(Token::Semicolon);
         expect(Token::EndOfFile);
     }
@@ -85,14 +89,10 @@ CompileEngine::strucT()
     return true;
 }
 
-// structEntry:
-//     constant | varStatement | function | ctor | dtor ;
-//
 bool
 CompileEngine::structEntry()
 {
-    // FIXME: Handle ctor and dtor
-    if (constant() || varStatement() || function() || init()) {
+    if (constant() || strucT() || varStatement() || function() || init()) {
         return true;
     }
     
@@ -111,17 +111,16 @@ CompileEngine::constant()
     int32_t val;
     
     expect(type(t), Compiler::Error::ExpectedType);
-    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
-    expect(Token::Semicolon);
-    expect(value(val, t), Compiler::Error::ExpectedValue);
     
-// FIXME: What do we do with constants?
-//    if (t == Type::Int8 && val >= -128 && val <= 127) {
-//        _defs.emplace_back(id, val);
-//    } else {
-//        expect(addGlobal(id, _rom32.size(), t, Symbol::Storage::Const), Compiler::Error::DuplicateIdentifier);
-//        _rom32.push_back(val);
-//    }
+    // Only built-in types allowed for types
+    expect(uint8_t(t) < StructTypeStart, Compiler::Error::ConstMustBeSimpleType);
+    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+    expect(value(val, t), Compiler::Error::ExpectedValue);
+    expect(Token::Semicolon);
+
+    expect(findConstant(id, val), Compiler::Error::DuplicateIdentifier);
+    
+    _constants.emplace_back(t, id, val);
     
     return true;
 }
@@ -171,11 +170,6 @@ CompileEngine::varStatement()
     std::string id;
     
     if (!type(t)) {
-        // Wasn't any of the built-in types. See if it's a struct definition
-        if (strucT()) {
-            t = Type::Struct;
-            return true;
-        }
         return false;
     }
 
@@ -233,20 +227,14 @@ CompileEngine::var(Type type, bool isPointer)
     if (match(Token::Equal)) {
         if (uint8_t(type) < StructTypeStart) {
             // Built-in type. Generate an assignment expression
-            _exprStack.emplace_back(id);
-            bakeExpr(ExprAction::Ref);
             expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
-            expect(bakeExpr(ExprAction::Right, type) == type, Compiler::Error::WrongType);
-            expect(bakeExpr(ExprAction::Left, type) == type, Compiler::Error::MismatchedType);
         } else {
             // Struct type, collect initializers
             expect(Token::OpenBrace);
             if (arithmeticExpression()) {
                 // FIXME: For now ignore the initializers
-                _exprStack.pop_back();
                 while (match(Token::Comma)) {
                     expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
-                    _exprStack.pop_back();
                 }
             }
             expect(Token::CloseBrace);
@@ -470,7 +458,6 @@ CompileEngine::ifStatement()
     expect(Token::OpenParen);
     
     arithmeticExpression();
-    expect(bakeExpr(ExprAction::Right) == Type::Int, Compiler::Error::WrongType);
     expect(Token::CloseParen);
 
 //    auto ifJumpAddr = _rom8.size();
@@ -531,11 +518,7 @@ CompileEngine::forStatement()
             expect(currentFunction().addLocal(id, t, false, 1), Compiler::Error::DuplicateIdentifier);
             _nextMem += 1;
 
-            _exprStack.emplace_back(id);
-            bakeExpr(ExprAction::Ref);
             expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
-            expect(bakeExpr(ExprAction::Right, t) == t, Compiler::Error::WrongType);
-            expect(bakeExpr(ExprAction::Left, t) == t, Compiler::Error::MismatchedType);
         } else {
             expect(assignmentExpression(), Compiler::Error::ExpectedExpr);
         }
@@ -565,7 +548,6 @@ CompileEngine::forStatement()
 
     if (!match(Token::Semicolon)) {
         arithmeticExpression();
-        expect(bakeExpr(ExprAction::Right) == Type::Int, Compiler::Error::WrongType);
 
         // At this point the expresssion has been executed and the result is on TOS
         addJumpEntry(Op::If, JumpEntry::Type::Break);
@@ -580,15 +562,10 @@ CompileEngine::forStatement()
 //    uint16_t iterSize = 0;
     
     if (!match(Token::CloseParen)) {
-//        uint16_t iterAddr = _rom8.size();
-
         arithmeticExpression();
         
         // This must not be an assignment expression, so it must have
         // a leftover expr on the stack that we need to get rid of
-        expect(_exprStack.size() == 1, Compiler::Error::InternalError);
-        _exprStack.pop_back();
-//        addOp(Op::Drop);
         expect(Token::CloseParen);
         
         // Move the iteration code into the iterBuf.
@@ -634,7 +611,6 @@ CompileEngine::whileStatement()
 //    uint16_t loopAddr = _rom8.size();
     
     arithmeticExpression();
-    expect(bakeExpr(ExprAction::Right) == Type::Int, Compiler::Error::WrongType);
 
     addJumpEntry(Op::If, JumpEntry::Type::Break);
 
@@ -682,16 +658,11 @@ CompileEngine::returnStatement()
     
     if (arithmeticExpression()) {
         // Push the return value
-        expect(bakeExpr(ExprAction::Right) == currentFunction().type(), Compiler::Error::MismatchedType);
     } else {
         // If the function return type not None, we need a return value
         expect(currentFunction().type() == Type::None, Compiler::Error::MismatchedType);
-        
-        // No return value, push a zero
-//        addOpSingleByteIndex(Op::PushIntConstS, 0);
     }
     
-//    addOp(Op::Return);
     expect(Token::Semicolon);
     return true;
 }
@@ -731,11 +702,6 @@ CompileEngine::expressionStatement()
     // return value from a function. If not it means
     // the expression ended in an assignment. Do 
     // what's needed.
-    if (!_exprStack.empty()) {
-        expect(_exprStack.size() == 1, Compiler::Error::InternalError);
-        _exprStack.pop_back();
-//        addOp(Op::Drop);
-    }
     
     expect(Token::Semicolon);
     return true;
@@ -748,7 +714,7 @@ CompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
         return false;
     }
     
-    while(1) {
+//    while(1) {
 //        OpInfo info;
 //        if (!opInfo(_scanner.getToken(), info) || info.prec() < minPrec) {
 //            return true;
@@ -756,59 +722,17 @@ CompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
         
         // If this is an assignment operator, we only allow one so handle it separately
 //        uint8_t nextMinPrec = info.prec() + 1;
-        _scanner.retireToken();
+//        _scanner.retireToken();
                 
 //        expect(!(arithType != ArithType::Assign && info.assign() != OpInfo::Assign::None), Compiler::Error::AssignmentNotAllowedHere);
         
-        Type leftType = Type::None;
-        Type rightType = Type::None;
+//        Type leftType = Type::None;
+//        Type rightType = Type::None;
         
-//        if (info.assign() != OpInfo::Assign::None) {
-//            // Turn TOS into Ref
-//            leftType = bakeExpr(ExprAction::Ref);
-//        } else {
-//            leftType = bakeExpr(ExprAction::Right);
-//        }
-//        
-//        if (info.assign() == OpInfo::Assign::Op) {
-//            // The ref is on TOS, dup and get the value. That will
-//            // leave the value, then the ref to that value on the stack.
-////            addOp(Op::Dup);
-//            addOp(Op::PushDeref);
-//        }
         
 //        expect(arithmeticExpression(nextMinPrec), Compiler::Error::ExpectedExpr);
 
-        rightType = bakeExpr(ExprAction::Right, leftType);
-
-//        switch(info.assign()) {
-//            case OpInfo::Assign::Only: {
-//                break;
-//            }
-//            case OpInfo::Assign::Op:
-//                expect(leftType == rightType, Compiler::Error::MismatchedType);
-//                addOp((leftType == Type::Int) ? info.intOp() : info.floatOp());
-//                break;
-//            case OpInfo::Assign::None: {
-//                expect(leftType == rightType, Compiler::Error::MismatchedType);
-//                
-//                Op op = (leftType == Type::Int) ? info.intOp() : info.floatOp();
-//                expect(op != Op::None, Compiler::Error::WrongType);
-//                addOp(op);
-//
-//                if (info.resultType() != Type::None) {
-//                    leftType = info.resultType();
-//                }
-//                _exprStack.push_back(ExprEntry::Value(leftType));
-//                break;
-//            }
-//            default: break;
-//        }
-//        
-//        if (info.assign() != OpInfo::Assign::None) {
-//            expect(bakeExpr(ExprAction::Left, rightType) == rightType, Compiler::Error::MismatchedType);
-//        }
-    }
+//    }
     
     return true;
 }
@@ -841,7 +765,6 @@ CompileEngine::unaryExpression()
     expect(unaryExpression(), Compiler::Error::ExpectedExpr);
     
     // If this is ampersand, make it into a pointer, otherwise bake it into a value
-    Type type;
 
     switch(token) {
         default:
@@ -849,22 +772,9 @@ CompileEngine::unaryExpression()
         case Token::And:
             // Bake this as a Ref. That means there will be a Ref to
             // a var on the stack. Change the ref into a ref ptr
-            type = bakeExpr(ExprAction::Ref);
-            _exprStack.pop_back();
-            _exprStack.push_back(ExprEntry::Ref(type, true));
             break;
         case Token::Inc:
         case Token::Dec:
-            type = bakeExpr(ExprAction::Ref);
-            _exprStack.pop_back();
-            _exprStack.push_back(ExprEntry::Value(type));
-
-//            if (type == Type::Float) {
-//                addOp((token == Token::Inc) ? Op::PreIncFloat : Op::PreDecFloat);
-//            } else {
-//                expect(type == Type::Int, Compiler::Error::MismatchedType);
-//                addOp((token == Token::Inc) ? Op::PreIncInt : Op::PreDecInt);
-//            }
             break;
         case Token::Minus:
         case Token::Twiddle:
@@ -873,32 +783,19 @@ CompileEngine::unaryExpression()
             // to that value rather than generating an Op. It avoids an
             // unnecessary instruction and in the case of minus, allows an
             // implicit conversion to float when needed.
-            expect(!_exprStack.empty(), Compiler::Error::InternalError);
-            ExprEntry::Type exprType = _exprStack.back().type();
-            if (exprType == ExprEntry::Type::Float && token == Token::Minus) {
-                float f = _exprStack.back();
-                f = -f;
-                _exprStack.pop_back();
-                _exprStack.push_back(f);
                 break;
             }
             
-            if (exprType == ExprEntry::Type::Int) {
-                int32_t i = _exprStack.back();
-                if (token == Token::Minus) {
-                    i = -i;
-                } else if (token == Token::Twiddle) {
-                    i = ~i;
-                } else if (token == Token::Bang) {
-                    i = !i;
-                }
-                _exprStack.pop_back();
-                _exprStack.push_back(i);
-                break;
-            }
-            
-            type = bakeExpr(ExprAction::Right);
-            _exprStack.push_back(ExprEntry::Value(type));
+//            if (exprType == ExprEntry::Type::Int) {
+//                if (token == Token::Minus) {
+//                    i = -i;
+//                } else if (token == Token::Twiddle) {
+//                    i = ~i;
+//                } else if (token == Token::Bang) {
+//                    i = !i;
+//                }
+//                break;
+//            }
 
 //            if (token == Token::Minus) {
 //                if (type == Type::Float) {
@@ -911,8 +808,8 @@ CompileEngine::unaryExpression()
 //                expect(type == Type::Int, Compiler::Error::WrongType);
 //                addOp((token == Token::Twiddle) ? Op::Not : Op::LNot);
 //            }
-            break;
-    }
+//            break;
+
     
     return true;
 }
@@ -928,14 +825,11 @@ CompileEngine::postfixExpression()
         if (match(Token::OpenParen)) {
             // Top of exprStack must be a function id
             Function fun;
-            expect(findFunction(_exprStack.back(), fun), Compiler::Error::ExpectedFunction);
+//            expect(findFunction(_exprStack.back(), fun), Compiler::Error::ExpectedFunction);
             expect(argumentList(fun), Compiler::Error::ExpectedArgList);
             expect(Token::CloseParen);
             
             // Replace the top of the exprStack with the function return value
-            _exprStack.pop_back();
-            
-            _exprStack.push_back(ExprEntry::Value(fun.type()));
             
 //            if (fun.isNative()) {
 //                addOpId(Op::CallNative, uint16_t(fun.nativeId()));
@@ -943,29 +837,13 @@ CompileEngine::postfixExpression()
 //                addOpTarg(Op::Call, fun.addr());
 //            }
         } else if (match(Token::OpenBracket)) {
-            bakeExpr(ExprAction::Ref);
             expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
             expect(Token::CloseBracket);
-            
-            // Bake the contents of the brackets, leaving the result on TOS
-            expect(bakeExpr(ExprAction::Right) == Type::Int, Compiler::Error::WrongType);
-
-            // TOS now has the index.
-            // Index the Ref
-            bakeExpr(ExprAction::Index);
         } else if (match(Token::Dot)) {
             std::string id;
             expect(identifier(id), Compiler::Error::ExpectedIdentifier);
-            bakeExpr(ExprAction::Ref);
-            
-            _exprStack.emplace_back(id);
-            bakeExpr(ExprAction::Offset);
             return true;
         } else if (match(Token::Inc)) {
-            Type type = bakeExpr(ExprAction::Ref);
-            _exprStack.pop_back();
-            _exprStack.push_back(ExprEntry::Value(type));
-
 //            if (type == Type::Float) {
 //                addOp(Op::PostIncFloat);
 //            } else {
@@ -973,10 +851,6 @@ CompileEngine::postfixExpression()
 //                addOp(Op::PostIncInt);
 //            }
         } else if (match(Token::Dec)) {
-            Type type = bakeExpr(ExprAction::Ref);
-            _exprStack.pop_back();
-            _exprStack.push_back(ExprEntry::Value(type));
-
 //            if (type == Type::Float) {
 //                addOp(Op::PostDecFloat);
 //            } else {
@@ -1001,19 +875,19 @@ CompileEngine::primaryExpression()
     std::string id;
     if (identifier(id)) {
         // See if this is a def
-        _exprStack.emplace_back(id);
+//        _exprStack.emplace_back(id);
         return true;
     }
         
     float f;
     if (floatValue(f)) {
-        _exprStack.emplace_back(f);
+//        _exprStack.emplace_back(f);
         return true;
     }
         
     int32_t i;
     if (integerValue(i)) {
-        _exprStack.emplace_back(i);
+//        _exprStack.emplace_back(i);
         return true;
     }
     return false;
@@ -1063,9 +937,6 @@ CompileEngine::argumentList(const Function& fun)
     
         // Bake the arithmeticExpression, leaving the result in r0.
         // Make sure the type matches the formal argument and push
-        const Symbol& sym = fun.local(i - 1);
-        Type t = sym.isPointer() ? Type::Ptr : sym.type();
-        expect(bakeExpr(ExprAction::Right, t) == t, Compiler::Error::MismatchedType);
 
         if (!match(Token::Comma)) {
             break;
@@ -1338,176 +1209,13 @@ CompileEngine::findSymbol(const std::string& s, Symbol& sym)
     return currentStruct().findLocal(s, sym);
 }
 
-Type
-CompileEngine::bakeExpr(ExprAction action, Type matchingType)
-{
-    expect(!_exprStack.empty(), Compiler::Error::InternalError);
-    
-    Type type = Type::None;
-    ExprEntry entry = _exprStack.back();   
-    Symbol sym;
-     
-    switch(action) {
-        default: break;
-        case ExprAction::Right:
-            switch(entry.type()) {
-                default:
-                    expect(false, Compiler::Error::InternalError);
-                case ExprEntry::Type::Int: {
-//                    uint32_t i = uint32_t(int32_t(entry));
-                    
-                    if (matchingType == Type::Float) {
-                        // Promote to float
-//                        float f = float(int32_t(i));
-//                        addOpInt(Op::Push, findFloat(f));
-                        type = Type::Float;
-                        break;
-                    }
-                    
-//                    if (i <= 15) {
-//                        addOpSingleByteIndex(Op::PushIntConstS, i);
-//                    } else if (i <= 255) {
-//                        addOpInt(Op::PushIntConst, i);
-//                    } else {
-//                        // Add an int const
-//                        addOpInt(Op::Push, findInt(i));
-//                    }
-                    type = Type::Int;
-                    break;
-                }
-                case ExprEntry::Type::Float:
-                    // Use an fp constant
-//                    addOpInt(Op::Push, findFloat(entry));
-                    type = Type::Float;
-                    break;
-                case ExprEntry::Type::Id:
-                    // Push the value
-                    expect(findSymbol(entry, sym), Compiler::Error::UndefinedIdentifier);
-//                    addOpId(Op::Push, sym.addr());
-                    
-                    if (sym.isPointer() && matchingType != Type::Ptr) {
-//                        addOp(Op::PushDeref);
-                        type = sym.type();
-                        break;
-                    }
-                    
-                    type = sym.isPointer() ? Type::Ptr : sym.type();
-                    break;
-                case ExprEntry::Type::Ref: {
-                    // FIXME: ???
-                    // If this is a ptr and the matchingType is not Ptr
-                    // then we want to leave the ref on TOS, not the value
-                    const ExprEntry::Ref& ref = entry;
-                    type = ref._type;
-                    if (!ref._ptr) {
-//                        addOp(Op::PushDeref);
-                    } else {
-                        type = Type::Ptr;
-                    }
-                    break;
-                }
-                case ExprEntry::Type::Value: {
-                    // Nothing to do, this just indicates that TOS is a value
-                    const ExprEntry::Value& value = entry;
-                    type = value._type;
-                    break;
-                }
-            }
-            break;
-        case ExprAction::Index: {
-            // TOS has an index, get the sym for the var so 
-            // we know the size of each element
-            if (entry.type() == ExprEntry::Type::Ref) {
-                // This is a ref, get the size from the type
-                const ExprEntry::Ref& ref = entry;
-                type = ref._type;
-            } else {
-                expect(entry.type() == ExprEntry::Type::Id, Compiler::Error::ExpectedIdentifier);
-                expect(findSymbol(entry, sym), Compiler::Error::UndefinedIdentifier);
-                expect(sym.storage() == Symbol::Storage::Local || 
-                       sym.storage() == Symbol::Storage::Global, Compiler::Error::ExpectedVar);
-
-                type = sym.type();
-                _exprStack.pop_back();
-                _exprStack.push_back(ExprEntry::Ref(type));
-            }
-            
-            Struct s;
-//            addOpSingleByteIndex(Op::Index, structFromType(type, s) ? s.size() : 1);
-            return type;
-        }
-        case ExprAction::Offset: {
-            // Prev entry has a Ref. Get the type so we can get an element index
-            // we know the size of each element
-            expect(_exprStack.size() >= 2, Compiler::Error::InternalError);
-            const ExprEntry& prevEntry = _exprStack.end()[-2];            
-            expect(prevEntry.type() == ExprEntry::Type::Ref, Compiler::Error::InternalError);
-            const ExprEntry::Ref& ref = prevEntry;
-            
-            // If the Ref is a Ptr then we need to deref
-            if (ref._ptr) {
-//                addOp(Op::PushDeref);
-            }
-            uint8_t index;
-            Type elementType;
-            findStructElement(ref._type, entry, index, elementType);
-            _exprStack.pop_back();
-            _exprStack.pop_back();
-            _exprStack.push_back(ExprEntry::Ref(elementType));
-            
-//            addOpSingleByteIndex(Op::Offset, index);
-            return elementType;
-        }
-        case ExprAction::Left:
-        case ExprAction::Ref:
-            if (entry.type() == ExprEntry::Type::Ref) {
-                // Already have a ref
-                const ExprEntry::Ref& ref = entry;
-                type = ref._type;
-                
-                // If this is a Ptr action, we want to say that we want the stack to have 
-                // a reference to a value rather than the value. So add the _ptr value
-                // to the Ref
-                if (action == ExprAction::Left) {
-                    // If the matching type is a Ptr then we just assign as usual.
-                    // If the ref is a pointer, we need to get the value at the
-                    // ref and use that as the ref for the PopDeref.
-                    if (ref._ptr && matchingType != Type::Ptr) {
-//                        addOp(Op::Swap);
-//                        addOp(Op::PushDeref);
-//                        addOp(Op::Swap);
-                        type = ref._type;
-                    } else {
-                        type = ref._ptr ? Type::Ptr : ref._type;
-                    }
-//                    addOp(Op::PopDeref);
-                    break;
-                }
-                return type;
-            }
-            
-            expect(entry.type() == ExprEntry::Type::Id, Compiler::Error::ExpectedIdentifier);
-
-            // Turn this into a Ref
-            expect(findSymbol(entry, sym), Compiler::Error::UndefinedIdentifier);
-            _exprStack.pop_back();
-            _exprStack.push_back(ExprEntry::Ref(sym.type(), sym.isPointer()));
-            
-//            addOpId(Op::PushRef, sym.addr());
-            return sym.isPointer() ? Type::Ptr : sym.type();
-    }
-    
-    _exprStack.pop_back();
-    return type;
-}
-        
 bool
 CompileEngine::isExprFunction()
 {
-    expect(!_exprStack.empty(), Compiler::Error::InternalError);
+//    expect(!_exprStack.empty(), Compiler::Error::InternalError);
     
     Function fun;
-    return findFunction(_exprStack.back(), fun);
+    return true; //findFunction(_exprStack.back(), fun);
 }
 
 bool

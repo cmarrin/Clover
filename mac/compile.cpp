@@ -62,6 +62,7 @@ static void showError(lucid::Compiler::Error error, lucid::Token token, const st
         case lucid::Compiler::Error::DuplicateIdentifier: err = "duplicate identifier"; break;
         case lucid::Compiler::Error::ExecutableTooBig: err = "executable too big"; break;
         case lucid::Compiler::Error::InitializerNotAllowed: err = "initializer not allowed for this type"; break;
+        case lucid::Compiler::Error::ConstMustBeSimpleType: err = "const must be simple type"; break;
     }
     
     if (token == lucid::Token::EndOfFile) {

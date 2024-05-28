@@ -19,6 +19,7 @@
 #include "Function.h"
 #include "Defines.h"
 #include "Scanner.h"
+#include "Struct.h"
 #include "Symbol.h"
 #include "AST.h"
 #include <cstdint>
@@ -54,7 +55,7 @@ struct:
     'struct' <id> '{' { structEntry ';' } '}' ;
     
 structEntry:
-    constant | varStatement | function | init  ;
+    constant | struct | varStatement | function | init  ;
 
 constant:
     'const' type <id> '=' value ';' ;
@@ -360,9 +361,29 @@ private:
     //                    pop the two 
     //
     enum class ExprAction { Left, Right, Ref, Index, Offset };
-    Type bakeExpr(ExprAction, Type matchingType = Type::None);
     bool isExprFunction();
     uint8_t elementSize(Type);
+
+    struct Constant
+    {
+        Constant(Type t, const std::string& id, int32_t value) : _type(t), _id(id), _value(value) { }
+        
+        Type _type = Type::None;
+        std::string _id;
+        int32_t _value = 0;        // Value can be float, fixed, signed or unsigned int. Cast as needed
+    };
+    
+    bool findConstant(const std::string& id, int32_t& value)
+    {
+        const auto& it = find_if(_constants.begin(), _constants.end(),
+                [id](const Constant& c) { return c._id == id; });
+
+        if (it != _constants.end()) {
+            value = it->_value;
+            return true;
+        }
+        return false;
+    }
     
     struct ParamEntry
     {
@@ -372,124 +393,6 @@ private:
         { }
         std::string _name;
         Type _type;
-    };
-    
-    class Struct
-    {
-    public:
-        Struct() { }
-        
-        Struct(const std::string& name)
-            : _name(name)
-        { }
-        
-        const std::vector<Symbol>& locals() const { return _locals; }
-        
-        const std::string& name() const { return _name; }
-        uint8_t size() const { return _localSize; }
-        
-        bool addLocal(const std::string& name, Type type, bool ptr, uint8_t size)
-        {
-            // Check for duplicates
-            Symbol sym;
-            if (findLocal(name, sym)) {
-                return false;
-            }
-            _locals.emplace_back(name, _localSize, type, Symbol::Storage::Local, ptr, size);
-            _localSize += size;
-            return true;
-        }
-
-        bool findLocal(const std::string& s, Symbol& sym)
-        {
-            const auto& it = find_if(_locals.begin(), _locals.end(),
-                    [s](const Symbol& p) { return p.name() == s; });
-
-            if (it != _locals.end()) {
-                sym = *it;
-                return true;
-            }
-            return false;
-        }
-
-    private:
-        std::string _name;
-        std::vector<Symbol> _locals;
-        std::vector<Function> _functions;
-        uint8_t _localSize = 0;
-        uint8_t _size = 0;
-    };
-
-    class ExprEntry
-    {
-    public:
-        struct Ref
-        {
-            Ref(Type type, bool ptr = false) : _type(type), _ptr(ptr) { }
-            
-            Type _type;
-            bool _ptr;
-        };
-        
-        struct Function
-        {
-            Function(const std::string& s) : _name(s) { }
-            std::string _name;
-        };
-        
-        struct Dot
-        {
-            Dot(uint8_t index) : _index(index) { }
-            
-            uint8_t _index;
-        };
-        
-        struct Value
-        {
-            Value(Type type) : _type(type) { }
-            
-            Type _type;
-        };
-        
-        enum class Type {
-            None = 0,
-            Id = 1,
-            Float = 2, 
-            Int = 3, 
-            Ref = 4, 
-            Function = 5, 
-            Dot = 6, 
-            Value = 7
-        };
-        
-        ExprEntry() { _variant = std::monostate(); }
-        ExprEntry(const std::string& s) { _variant = s; }
-        ExprEntry(float f) { _variant = f; }
-        ExprEntry(int32_t i) { _variant = i; }
-        ExprEntry(const Ref& ref) { _variant = ref; }
-        ExprEntry(const Function& fun) { _variant = fun; }
-        ExprEntry(const Dot& dot) { _variant = dot; }
-        ExprEntry(const Value& val) { _variant = val; }
-                
-        operator const std::string&() const { return std::get<std::string>(_variant); }
-        operator float() const { return std::get<float>(_variant); }
-        operator int32_t() const { return std::get<int32_t>(_variant); }
-        operator const Ref&() const { return std::get<Ref>(_variant); }
-        operator const Dot&() const { return std::get<Dot>(_variant); }
-        operator const Value&() const { return std::get<Value>(_variant); }
-        
-        Type type() const { return Type(_variant.index()); }
-
-    private:
-        std::variant<std::monostate
-                     , std::string
-                     , float
-                     , int32_t
-                     , Ref
-                     , Function
-                     , Dot
-                     , Value
-                     > _variant;
     };
     
     bool structFromType(Type, Struct&);
@@ -519,10 +422,10 @@ private:
 
     bool _inFunction = false;
 
+    std::vector<Constant> _constants;
     std::vector<Function> _functions;
     std::vector<Struct> _structs;
     std::vector<uint32_t> _structStack;
-    std::vector<ExprEntry> _exprStack;
     std::vector<Symbol> _builtins;
 
     std::vector<std::shared_ptr<ASTNode>> _currentNodeStack;

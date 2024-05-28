@@ -74,6 +74,7 @@ public:
         DuplicateIdentifier,
         ExecutableTooBig,
         InitializerNotAllowed,
+        ConstMustBeSimpleType,
     };
     
     Compiler() { }

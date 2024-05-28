@@ -65,6 +65,7 @@
 		49C164B72C04EC1E00981AD1 /* Codegen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Codegen.h; path = ../Compiler/Codegen.h; sourceTree = "<group>"; };
 		49C164B82C04EC6400981AD1 /* AST.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AST.cpp; path = ../Compiler/AST.cpp; sourceTree = "<group>"; };
 		49C164B92C04EC6400981AD1 /* AST.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AST.h; path = ../Compiler/AST.h; sourceTree = "<group>"; };
+		49C164BC2C0545D100981AD1 /* Struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Struct.h; path = ../Compiler/Struct.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -153,6 +154,7 @@
 				49C164B72C04EC1E00981AD1 /* Codegen.h */,
 				49C164B82C04EC6400981AD1 /* AST.cpp */,
 				49C164B92C04EC6400981AD1 /* AST.h */,
+				49C164BC2C0545D100981AD1 /* Struct.h */,
 			);
 			name = Compiler;
 			sourceTree = "<group>";

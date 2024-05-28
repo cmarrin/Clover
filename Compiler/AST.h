@@ -19,6 +19,8 @@
 #include <vector>
 #include <string>
 
+#include "Defines.h"
+
 namespace lucid {
 
 // Classes to represent AST
@@ -41,7 +43,7 @@ class ASTNode
     virtual ~ASTNode() { }
     
     virtual ASTNodeType type() const = 0;
-    virtual bool addNode(const std::shared_ptr<ASTNode>&) = 0;
+    virtual bool addNode(const std::shared_ptr<ASTNode>&) { return false; }
 };
 
 class ProgramNode : public ASTNode
@@ -93,11 +95,23 @@ class ImportNode : public ASTNode
     
     virtual ASTNodeType type() const override{ return ASTNodeType::Import; }
 
-    // Nothing to add to import
+  private:
+    std::string _id, _idAs;
+};
+
+class StructInstanceNode : public ASTNode
+{
+  public:
+    StructInstanceNode(Type type, const std::string& id) : _type(type), _id(id) { }
+    
+    virtual ASTNodeType type() const override{ return ASTNodeType::StructInstance; }
+
+    // Nothing to add
     virtual bool addNode(const std::shared_ptr<ASTNode>& node) override { return false; }
 
   private:
-    std::string _id, _idAs;
+    Type _type;
+    std::string _id;
 };
 
 }
