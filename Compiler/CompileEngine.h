@@ -20,7 +20,6 @@
 #include "Defines.h"
 #include "Scanner.h"
 #include "Struct.h"
-#include "Symbol.h"
 #include "AST.h"
 #include <cstdint>
 #include <istream>
@@ -46,7 +45,7 @@ struct is instantiated and its ctor is called.
 BNF:
 
 program:
-    { import } { struct } [ <type> <id> ] ;
+    { import } { constant } { struct } [ <type> <id> ] ;
 
 import:
     'import' <id> [ 'as' <id> ] ;
@@ -55,7 +54,7 @@ struct:
     'struct' <id> '{' { structEntry ';' } '}' ;
     
 structEntry:
-    constant | struct | varStatement | function | init  ;
+    struct | varStatement | function | init  ;
 
 constant:
     'const' type <id> '=' value ';' ;
@@ -70,10 +69,10 @@ initializer:
     arithmeticExpression | '{' [ initializer { ',' initializer } ] '}'
 
 function:
-    'function' [ <type> ] <id> '(' formalParameterList ')' '{' { statement } '}' ;
+    'function' [ <type> ] <id> '(' formalParameterList ')' compoundStatement ;
 
 init:
-    'initialize' '(' ')' '{' { statement } '}' ;
+    'initialize' '(' ')' compoundStatement ;
     
 // <id> is a struct name
 type:
@@ -197,6 +196,7 @@ operator: (* operator   precedence   association *)
     |          '-'     (*   10         Left     *)
     |          '*'     (*   11         Left     *)
     |          '/'     (*   11         Left     *)
+    |          '%'     (*   11         Left     *)
     ;
     
 */
@@ -209,10 +209,10 @@ public:
         : _scanner(stream, annotations)
     { }
 
-    void addNative(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
-    {
-        _functions.emplace_back(name, nativeId, type, locals);
-    }
+//    void addNative(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
+//    {
+//        _functions.emplace_back(name, nativeId, type, locals);
+//    }
 
     bool program();
 
@@ -231,7 +231,7 @@ protected:
     bool var(Type, bool isPointer);
     bool init();
 
-    bool value(int32_t& i, Type);
+    bool value(uint32_t& i, Type);
 
 private:
     bool import();
@@ -250,18 +250,21 @@ private:
     bool expressionStatement();
     
     enum class ArithType { Assign, Op };
-    bool assignmentExpression() { return arithmeticExpression(1, ArithType::Assign); }
-    bool arithmeticExpression(uint8_t minPrec = 1, ArithType = ArithType::Op);
-    bool unaryExpression();
-    bool postfixExpression();
-    bool primaryExpression();
+    
+    ASTPtr expression();
+    ASTPtr assignmentExpression();
+    ASTPtr arithmeticExpression(const ASTPtr& lhs, uint8_t minPrec = 1);
+    ASTPtr unaryExpression();
+    ASTPtr postfixExpression();
+    ASTPtr primaryExpression();
 
     bool formalParameterList();
     bool argumentList(const Function& fun);
     
     virtual bool isReserved(Token token, const std::string str, Reserved&);
 
-    bool findSymbol(const std::string&, Symbol&);
+    bool findStruct(const std::string&, uint32_t& structIndex);
+    bool findSymbol(const std::string&, uint32_t& symbolIndex);
     uint8_t findInt(int32_t);
     uint8_t findFloat(float);
 
@@ -280,17 +283,18 @@ private:
     // appropriate type. Some versions just return true or
     // false, others also return details about the token
     bool identifier(std::string& id, bool retire = true);
-    bool integerValue(int32_t& i);
+    bool integerValue(uint32_t& i);
     bool floatValue(float& f);
     bool stringValue(std::string&);
     bool reserved();
     bool reserved(Reserved &r);
     
+    uint16_t sizeInBytes(Type type) const;
+    
     bool addASTNode(std::shared_ptr<ASTNode> node)
     {
-        if (!_currentNodeStack.back()->addNode(node)) {
-            return false;
-        }
+        assert(!_currentNodeStack.empty());
+        _currentNodeStack.back()->addNode(node);
         _currentNodeStack.push_back(node);
         return true;
     }
@@ -362,7 +366,6 @@ private:
     //
     enum class ExprAction { Left, Right, Ref, Index, Offset };
     bool isExprFunction();
-    uint8_t elementSize(Type);
 
     struct Constant
     {
@@ -373,13 +376,14 @@ private:
         int32_t _value = 0;        // Value can be float, fixed, signed or unsigned int. Cast as needed
     };
     
-    bool findConstant(const std::string& id, int32_t& value)
+    bool findConstant(const std::string& id, Type& t, uint32_t& v)
     {
         const auto& it = find_if(_constants.begin(), _constants.end(),
                 [id](const Constant& c) { return c._id == id; });
 
         if (it != _constants.end()) {
-            value = it->_value;
+            t = it->_type;
+            v = it->_value;
             return true;
         }
         return false;
@@ -396,7 +400,6 @@ private:
     };
     
     bool structFromType(Type, Struct&);
-    void findStructElement(Type, const std::string& id, uint8_t& index, Type&);
 
     Struct& currentStruct()
     {
@@ -422,11 +425,12 @@ private:
 
     bool _inFunction = false;
 
+    uint32_t _entryStructIndex;
+    
     std::vector<Constant> _constants;
     std::vector<Function> _functions;
     std::vector<Struct> _structs;
     std::vector<uint32_t> _structStack;
-    std::vector<Symbol> _builtins;
 
     std::vector<std::shared_ptr<ASTNode>> _currentNodeStack;
     

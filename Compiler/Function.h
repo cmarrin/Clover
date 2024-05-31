@@ -16,34 +16,43 @@
 
 namespace lucid {
 
+// The Function class contains the name and return type, if any.
+// It also has a list of the symbols for each arg and local.
+// These are in the same list, first args then locals. When the
+// function is called the args are pushed followed by the return
+// address. On entry the function executes the setFrame instruction,
+// which must be the first instruction of every function. This
+// pushes the current BP and then computes the new BP to be the
+// start of the args. Since there are 2 pointers between the
+// end of the args and the locals, the addresses of each local
+// is adjusted to account for this. The size of a pointer is
+// available in the PointerSize const in Defines.h.
+
 class Function
 {
 public:
+    // Default ctor is used for initialize method. If the name is empty and type is None, it's initialize
     Function() { }
     
-    Function(const std::string& name, uint16_t addr, Type type = Type::None)
+    Function(const std::string& name, Type returnType = Type::None)
         : _name(name)
-        , _addr(addr)
-        , _type(type)
+        , _returnType(returnType)
         , _native(false)
     { }
 
     // Used to create built-in native functions
-    Function(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
-        : _name(name)
-        , _addr(int16_t(nativeId))
-        , _locals(locals)
-        , _args(locals.size())
-        , _type(type)
-        , _native(true)
-    { }
+//    Function(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
+//        : _name(name)
+//        , _locals(locals)
+//        , _args(locals.size())
+//        , _type(type)
+//        , _native(true)
+//    { }
 
     const std::string& name() const { return _name; }
-    int16_t addr() const { return _addr; }
-    uint8_t& args() { return _args; }
-    const uint8_t& args() const { return _args; }
-    Type type() const { return _type; }
-    uint8_t localSize() const { return _localHighWaterMark; }
+    Type returnType() const { return _returnType; }
+    uint16_t argSize() const { return _argSize; }
+    uint16_t localSize() const { return _localHighWaterMark; }
     const Symbol& local(uint8_t i) const { return _locals[i]; }
 
     uint32_t numLocals() const { return uint32_t(_locals.size()); }
@@ -57,24 +66,24 @@ public:
     }
     
     bool isNative() const { return _native; }
-    int16_t nativeId() const { return _addr; }
 
-    // Args are always 1 word and will always come before locals. So the
-    // addr is the current locals size.
-    void addArg(const std::string& name, Type type, bool isPtr)
+    bool addArg(const std::string& name, Type type, uint16_t size, bool isPtr)
     {
-        _locals.emplace_back(name, _locals.size(), type, Symbol::Storage::Local, isPtr);
-        _args++;
-    }
-    
-    bool addLocal(const std::string& name, Type type, bool ptr, uint8_t size)
-    {
-        // Check for duplicates
-        Symbol sym;
-        if (findLocal(name, sym)) {
+        if (!addLocal(name, type, size, isPtr)) {
             return false;
         }
-        _locals.emplace_back(name, _localSize + _args, type, Symbol::Storage::Local, ptr, size);
+        _argSize += size;
+        return true;
+    }
+    
+    bool addLocal(const std::string& name, Type type, uint16_t size, bool ptr)
+    {
+        // Check for duplicates
+        uint32_t symbolIndex;
+        if (findLocal(name, symbolIndex)) {
+            return false;
+        }
+        _locals.emplace_back(name, type, size, _localSize, ptr);
         _localSize += size;
         if (_localHighWaterMark < _localSize) {
             _localHighWaterMark = _localSize;
@@ -82,13 +91,13 @@ public:
         return true;
     }
 
-    bool findLocal(const std::string& s, Symbol& sym)
+    bool findLocal(const std::string& s, uint32_t& symbolIndex)
     {
         const auto& it = find_if(_locals.begin(), _locals.end(),
                 [s](const Symbol& p) { return p.name() == s; });
 
         if (it != _locals.end()) {
-            sym = *it;
+            symbolIndex = uint32_t(it - _locals.begin());
             return true;
         }
         return false;
@@ -96,12 +105,11 @@ public:
     
 private:
     std::string _name;
-    int16_t _addr = 0;
     std::vector<Symbol> _locals;
-    uint8_t _args = 0;
-    Type _type;
+    uint16_t _argSize = 0;// Size in bytes of all args
+    uint16_t _localSize = 0; // Size in bytes of all locals, including args
+    Type _returnType = Type::None;
     bool _native = false;
-    uint8_t _localSize = 0;
     uint8_t _localHighWaterMark = 0;
 };
 

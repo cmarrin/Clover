@@ -11,8 +11,10 @@
 
 #include <map>
 #include <vector>
+#include <cmath>
 
 #include "AST.h"
+#include "OpInfo.h"
 
 using namespace lucid;
 
@@ -20,22 +22,20 @@ bool
 CompileEngine::program()
 {
     _scanner.setIgnoreNewlines(true);
-    _currentNodeStack.push_back(std::make_shared<ProgramNode>());
     
     try {
         while(import()) { }
+        while(constant()) { }
         while(strucT()) { }
         
         // Handle top level struct if it exists
-        Type t;
+        uint32_t structIndex;
         std::string id;
-        if (type(t)) {
+        if (identifier(id)) {
+            expect(findStruct(id, structIndex), Compiler::Error::ExpectedStructType);
             expect(identifier(id), Compiler::Error::ExpectedIdentifier);
         }
 
-        addASTNode(std::make_shared<StructInstanceNode>(t, id));
-        popASTNode();
-        
         expect(Token::Semicolon);
         expect(Token::EndOfFile);
     }
@@ -60,8 +60,12 @@ CompileEngine::import()
         expect(identifier(idAs), Compiler::Error::ExpectedIdentifier);
     }
     
-    addASTNode(std::make_shared<ImportNode>(id, idAs));
-    popASTNode();
+    // FIXME: Compile the import inline.
+    // An import is a regular Lucid program but only the first struct is
+    // used. What about imports in the imported file? Are there warnings
+    // if there are more structs? What about an entry struct?
+    // Need to rename struct if there is an idAs. How do we deal with
+    // duplicate struct names?
     return true;
 }
 
@@ -77,6 +81,12 @@ CompileEngine::strucT()
 
     // Add a struct entry
     _structs.emplace_back(id);
+    
+    if (!_structStack.empty()) {
+        // This is a child of another struct
+        currentStruct().addStruct(uint32_t(_structs.size()) - 1);
+    }
+    
     _structStack.push_back(uint32_t(_structs.size() - 1));
     
     expect(Token::OpenBrace);
@@ -92,7 +102,7 @@ CompileEngine::strucT()
 bool
 CompileEngine::structEntry()
 {
-    if (constant() || strucT() || varStatement() || function() || init()) {
+    if (strucT() || varStatement() || function() || init()) {
         return true;
     }
     
@@ -108,7 +118,7 @@ CompileEngine::constant()
     
     Type t;
     std::string id;
-    int32_t val;
+    uint32_t val;
     
     expect(type(t), Compiler::Error::ExpectedType);
     
@@ -118,7 +128,7 @@ CompileEngine::constant()
     expect(value(val, t), Compiler::Error::ExpectedValue);
     expect(Token::Semicolon);
 
-    expect(findConstant(id, val), Compiler::Error::DuplicateIdentifier);
+    expect(findConstant(id, t, val), Compiler::Error::DuplicateIdentifier);
     
     _constants.emplace_back(t, id, val);
     
@@ -126,7 +136,7 @@ CompileEngine::constant()
 }
 
 bool
-CompileEngine::value(int32_t& i, Type t)
+CompileEngine::value(uint32_t& i, Type t)
 {
     bool neg = false;
     if (match(Token::Minus)) {
@@ -203,38 +213,40 @@ CompileEngine::var(Type type, bool isPointer)
     std::string id;
     expect(identifier(id), Compiler::Error::ExpectedIdentifier);
     
-    int32_t size = 1;
+    uint32_t size = 1;
 
     if (match(Token::OpenBracket)) {
         expect(integerValue(size), Compiler::Error::ExpectedValue);
         expect(Token::CloseBracket);
-
     }
     
-    size *= elementSize(type);
+    size *= sizeInBytes(type);
 
     // Put the var in the current struct unless we're in a function, then put it in _locals
     if (_inFunction) {
-        expect(currentFunction().addLocal(id, type, isPointer, size), Compiler::Error::DuplicateIdentifier);
+        expect(currentFunction().addLocal(id, type, size, isPointer), Compiler::Error::DuplicateIdentifier);
     } else {
         expect(!_structStack.empty(), Compiler::Error::InternalError);
         
         // FIXME: Need to deal with ptr and size
-        expect(currentStruct().addLocal(id, type, false, 1), Compiler::Error::DuplicateIdentifier);
+        expect(currentStruct().addLocal(id, type, size, false), Compiler::Error::DuplicateIdentifier);
     }
     
     // Check for an initializer. We only allow initializers on Int and Float
     if (match(Token::Equal)) {
         if (uint8_t(type) < StructTypeStart) {
-            // Built-in type. Generate an assignment expression
-            expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
+            // Built-in type. Generate an expression
+            ASTPtr ast = expression();
+            expect(ast != nullptr, Compiler::Error::ExpectedExpr);
         } else {
             // Struct type, collect initializers
             expect(Token::OpenBrace);
-            if (arithmeticExpression()) {
+            ASTPtr ast = expression();
+            if (ast) {
                 // FIXME: For now ignore the initializers
                 while (match(Token::Comma)) {
-                    expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
+                    ast = expression();
+                    expect(ast != nullptr, Compiler::Error::ExpectedExpr);
                 }
             }
             expect(Token::CloseBrace);
@@ -315,7 +327,7 @@ CompileEngine::function()
     expect(identifier(id), Compiler::Error::ExpectedIdentifier);
 
     // Remember the function
-//    _functions.emplace_back(id, uint16_t(_rom8.size()), t);
+    _functions.emplace_back(id, t);
     _inFunction = true;
     
     expect(Token::OpenParen);
@@ -365,8 +377,7 @@ CompileEngine::init()
     }
     
     // Remember the function
-    // FIXME: probably don't save a string as the function name
-//    _functions.emplace_back("initialize", uint16_t(_rom8.size()), Type::None);
+    _functions.emplace_back();
     _inFunction = true;
     
     expect(Token::OpenParen);
@@ -457,7 +468,7 @@ CompileEngine::ifStatement()
     
     expect(Token::OpenParen);
     
-    arithmeticExpression();
+    expression();
     expect(Token::CloseParen);
 
 //    auto ifJumpAddr = _rom8.size();
@@ -506,6 +517,8 @@ CompileEngine::forStatement()
         
         // If we have a type this is a var declaration and must be an assignment
         // expression. Otherwise it can be a general arithmeticExpression
+        ASTPtr ast;
+        
         if (t != Type::None) {
             expect(t == Type::Int || t == Type::Float, Compiler::Error::WrongType);
 
@@ -513,14 +526,17 @@ CompileEngine::forStatement()
             expect(identifier(id), Compiler::Error::ExpectedIdentifier);
             expect(Token::Equal);
 
-            // Generate an assignment expression
+            // Generate an expression
             expect(_inFunction, Compiler::Error::InternalError);
-            expect(currentFunction().addLocal(id, t, false, 1), Compiler::Error::DuplicateIdentifier);
+            expect(currentFunction().addLocal(id, t, sizeInBytes(t), false), Compiler::Error::DuplicateIdentifier);
             _nextMem += 1;
 
-            expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
+            // FIXME: This needs to be an arithmeticExpression?
+            ast = expression();
+            expect(ast != nullptr, Compiler::Error::ExpectedExpr);
         } else {
-            expect(assignmentExpression(), Compiler::Error::ExpectedExpr);
+            ast = expression();
+            expect(ast != nullptr, Compiler::Error::ExpectedExpr);
         }
         expect(Token::Semicolon);
     }
@@ -547,7 +563,7 @@ CompileEngine::forStatement()
 //    uint16_t startAddr = _rom8.size();
 
     if (!match(Token::Semicolon)) {
-        arithmeticExpression();
+        expression();
 
         // At this point the expresssion has been executed and the result is on TOS
         addJumpEntry(Op::If, JumpEntry::Type::Break);
@@ -562,7 +578,7 @@ CompileEngine::forStatement()
 //    uint16_t iterSize = 0;
     
     if (!match(Token::CloseParen)) {
-        arithmeticExpression();
+        expression();
         
         // This must not be an assignment expression, so it must have
         // a leftover expr on the stack that we need to get rid of
@@ -610,7 +626,7 @@ CompileEngine::whileStatement()
     // Loop starts with an if test of expr
 //    uint16_t loopAddr = _rom8.size();
     
-    arithmeticExpression();
+    expression();
 
     addJumpEntry(Op::If, JumpEntry::Type::Break);
 
@@ -656,11 +672,12 @@ CompileEngine::returnStatement()
         return false;
     }
     
-    if (arithmeticExpression()) {
+    ASTPtr ast = expression();
+    if (ast) {
         // Push the return value
     } else {
         // If the function return type not None, we need a return value
-        expect(currentFunction().type() == Type::None, Compiler::Error::MismatchedType);
+        expect(currentFunction().returnType() == Type::None, Compiler::Error::MismatchedType);
     }
     
     expect(Token::Semicolon);
@@ -707,190 +724,147 @@ CompileEngine::expressionStatement()
     return true;
 }
 
-bool
-CompileEngine::arithmeticExpression(uint8_t minPrec, ArithType arithType)
+ASTPtr
+CompileEngine::expression()
 {
-    if (!unaryExpression()) {
-        return false;
-    }
-    
-//    while(1) {
-//        OpInfo info;
-//        if (!opInfo(_scanner.getToken(), info) || info.prec() < minPrec) {
-//            return true;
-//        }
-        
-        // If this is an assignment operator, we only allow one so handle it separately
-//        uint8_t nextMinPrec = info.prec() + 1;
-//        _scanner.retireToken();
-                
-//        expect(!(arithType != ArithType::Assign && info.assign() != OpInfo::Assign::None), Compiler::Error::AssignmentNotAllowedHere);
-        
-//        Type leftType = Type::None;
-//        Type rightType = Type::None;
-        
-        
-//        expect(arithmeticExpression(nextMinPrec), Compiler::Error::ExpectedExpr);
-
-//    }
-    
-    return true;
+    return arithmeticExpression(primaryExpression(), 1);
 }
 
-bool
-CompileEngine::unaryExpression()
+ASTPtr
+CompileEngine::assignmentExpression()
 {
-    if (postfixExpression()) {
-        return true;
-    }
+    return arithmeticExpression(unaryExpression(), 1);
+}
 
-    Token token;
+ASTPtr
+CompileEngine::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
+{
+    ASTPtr lhs = node;
     
-    if (match(Token::Minus)) {
-        token = Token::Minus;
-    } else if (match(Token::Twiddle)) {
-        token = Token::Twiddle;
-    } else if (match(Token::Bang)) {
-        token = Token::Bang;
-    } else if (match(Token::Inc)) {
-        token = Token::Inc;
-    } else if (match(Token::Dec)) {
-        token = Token::Dec;
-    } else if (match(Token::And)) {
-        token = Token::And;
-    } else {
-        return false;
-    }
-    
-    expect(unaryExpression(), Compiler::Error::ExpectedExpr);
-    
-    // If this is ampersand, make it into a pointer, otherwise bake it into a value
-
-    switch(token) {
-        default:
-            break;
-        case Token::And:
-            // Bake this as a Ref. That means there will be a Ref to
-            // a var on the stack. Change the ref into a ref ptr
-            break;
-        case Token::Inc:
-        case Token::Dec:
-            break;
-        case Token::Minus:
-        case Token::Twiddle:
-        case Token::Bang:
-            // if the exprStack has an Int or Float constant, apply the operator
-            // to that value rather than generating an Op. It avoids an
-            // unnecessary instruction and in the case of minus, allows an
-            // implicit conversion to float when needed.
+    while(1) {
+        OpInfo opInfo;
+        if (!findOpInfo(Operator(_scanner.getToken()), opInfo) || opInfo.prec() < minPrec) {
+            return lhs;
+        }
+        
+        _scanner.retireToken();
+        
+        ASTPtr rhs = unaryExpression();
+        
+        while (true) {
+            OpInfo nextOpInfo;
+            if (!findOpInfo(Operator(_scanner.getToken()), nextOpInfo) || nextOpInfo.prec() < minPrec) {
                 break;
             }
             
-//            if (exprType == ExprEntry::Type::Int) {
-//                if (token == Token::Minus) {
-//                    i = -i;
-//                } else if (token == Token::Twiddle) {
-//                    i = ~i;
-//                } else if (token == Token::Bang) {
-//                    i = !i;
-//                }
-//                break;
-//            }
-
-//            if (token == Token::Minus) {
-//                if (type == Type::Float) {
-//                    addOp(Op::NegFloat);
-//                } else {
-//                    expect(type == Type::Int, Compiler::Error::MismatchedType);
-//                    addOp(Op::NegInt);
-//                }
-//            } else {
-//                expect(type == Type::Int, Compiler::Error::WrongType);
-//                addOp((token == Token::Twiddle) ? Op::Not : Op::LNot);
-//            }
-//            break;
-
+            rhs = arithmeticExpression(rhs, nextOpInfo.prec());
+        }
+        
+        // Generate an ASTNode
+        lhs = std::make_shared<BinaryOpNode>(opInfo.oper(), lhs, rhs);
+    }
     
-    return true;
+    return lhs;
 }
 
-bool
+ASTPtr
+CompileEngine::unaryExpression()
+{
+    ASTPtr node = postfixExpression();
+    if (node) {
+        return node;
+    }
+
+    Operator oper;
+    
+    if (match(Token::Minus)) {
+        oper = Operator(Token::Minus);
+    } else if (match(Token::Twiddle)) {
+        oper = Operator(Token::Twiddle);
+    } else if (match(Token::Bang)) {
+        oper = Operator(Token::Bang);
+    } else if (match(Token::Inc)) {
+        oper = Operator(Token::Inc);
+    } else if (match(Token::Dec)) {
+        oper = Operator(Token::Dec);
+    } else if (match(Token::And)) {
+        oper = Operator(Token::And);
+    } else {
+        return nullptr;
+    }
+    
+    return std::make_shared<UnaryOpNode>(oper, unaryExpression());
+}
+
+ASTPtr
 CompileEngine::postfixExpression()
 {
-    if (!primaryExpression()) {
-        return false;
+    ASTPtr lhs = primaryExpression();
+    if (!lhs) {
+        return nullptr;
     }
     
     while (true) {
         if (match(Token::OpenParen)) {
-            // Top of exprStack must be a function id
-            Function fun;
-//            expect(findFunction(_exprStack.back(), fun), Compiler::Error::ExpectedFunction);
-            expect(argumentList(fun), Compiler::Error::ExpectedArgList);
+            // FIXME: Handle function
+            //expect(argumentList(fun), Compiler::Error::ExpectedArgList);
             expect(Token::CloseParen);
-            
-            // Replace the top of the exprStack with the function return value
-            
-//            if (fun.isNative()) {
-//                addOpId(Op::CallNative, uint16_t(fun.nativeId()));
-//            } else { 
-//                addOpTarg(Op::Call, fun.addr());
-//            }
         } else if (match(Token::OpenBracket)) {
-            expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
+            ASTPtr rhs = expression();
+            ASTPtr result = std::make_shared<BinaryOpNode>(Operator::ArrIdx, lhs, rhs);
             expect(Token::CloseBracket);
+            return result;
         } else if (match(Token::Dot)) {
             std::string id;
             expect(identifier(id), Compiler::Error::ExpectedIdentifier);
-            return true;
+            return std::make_shared<DotNode>(lhs, id);
         } else if (match(Token::Inc)) {
-//            if (type == Type::Float) {
-//                addOp(Op::PostIncFloat);
-//            } else {
-//                expect(type == Type::Int, Compiler::Error::MismatchedType);
-//                addOp(Op::PostIncInt);
-//            }
+            return std::make_shared<UnaryOpNode>(Operator::Inc, lhs);
         } else if (match(Token::Dec)) {
-//            if (type == Type::Float) {
-//                addOp(Op::PostDecFloat);
-//            } else {
-//                expect(type == Type::Int, Compiler::Error::MismatchedType);
-//                addOp(Op::PostDecInt);
-//            }
+            return std::make_shared<UnaryOpNode>(Operator::Dec, lhs);
         } else {
-            return true;
+            return lhs;
         }
     }
 }
 
-bool
+ASTPtr
 CompileEngine::primaryExpression()
 {
     if (match(Token::OpenParen)) {
-        expect(arithmeticExpression(), Compiler::Error::ExpectedExpr);
+        ASTPtr ast = expression();
+        expect(!ast, Compiler::Error::ExpectedExpr);
         expect(Token::CloseParen);
-        return true;
+        return ast;
     }
     
     std::string id;
     if (identifier(id)) {
-        // See if this is a def
-//        _exprStack.emplace_back(id);
-        return true;
-    }
+        expect(_inFunction, Compiler::Error::InternalError);
+        uint32_t symbolIndex;
+        if (findSymbol(id, symbolIndex)) {
+            return std::make_shared<VarNode>(symbolIndex);
+        }
         
+        Type t;
+        uint32_t v;
+        if (findConstant(id, t, v)) {
+            return std::make_shared<ConstantNode>(t, v);
+        }
+        expect(false, Compiler::Error::ExpectedVar);
+    }
+    
     float f;
     if (floatValue(f)) {
-//        _exprStack.emplace_back(f);
-        return true;
+        return std::make_shared<ConstantNode>(f);
     }
         
-    int32_t i;
+    uint32_t i;
     if (integerValue(i)) {
-//        _exprStack.emplace_back(i);
-        return true;
+        return std::make_shared<ConstantNode>(i);
     }
-    return false;
+    
+    return nullptr;
 }
 
 bool
@@ -909,7 +883,7 @@ CompileEngine::formalParameterList()
     
         std::string id;
         expect(identifier(id), Compiler::Error::ExpectedIdentifier);
-        currentFunction().addArg(id, t, isPointer);
+        currentFunction().addArg(id, t, sizeInBytes(t), isPointer);
         
         if (!match(Token::Comma)) {
             return true;
@@ -924,7 +898,7 @@ CompileEngine::argumentList(const Function& fun)
 {
     int i = 0;
     while (true) {
-        if (!arithmeticExpression()) {
+        if (!expression()) {
             if (i == 0) {
                 break;
             }
@@ -933,7 +907,7 @@ CompileEngine::argumentList(const Function& fun)
         
         i++;
         
-        expect(fun.args() >= i, Compiler::Error::WrongNumberOfArgs);
+        //expect(fun.args() >= i, Compiler::Error::WrongNumberOfArgs);
     
         // Bake the arithmeticExpression, leaving the result in r0.
         // Make sure the type matches the formal argument and push
@@ -943,7 +917,7 @@ CompileEngine::argumentList(const Function& fun)
         }
     }
 
-    expect(fun.args() == i, Compiler::Error::WrongNumberOfArgs);
+    //expect(fun.args() == i, Compiler::Error::WrongNumberOfArgs);
     return true;
 }
 
@@ -967,7 +941,7 @@ CompileEngine::identifier(std::string& id, bool retire)
 }
 
 bool
-CompileEngine::integerValue(int32_t& i)
+CompileEngine::integerValue(uint32_t& i)
 {
     if (_scanner.getToken() != Token::Integer) {
         return false;
@@ -1199,14 +1173,38 @@ CompileEngine::findFunction(const std::string& s, Function& fun)
 }
 
 bool
-CompileEngine::findSymbol(const std::string& s, Symbol& sym)
+CompileEngine::findStruct(const std::string& id, uint32_t& structIndex)
+{
+    auto it = find_if(_structs.begin(), _structs.end(),
+                    [id](const Struct s) { return s.name() == id; });
+    if (it != _structs.end()) {
+        structIndex = uint32_t(_structs.begin() - it);
+        return true;
+    }
+    return false;
+}
+
+bool
+CompileEngine::findSymbol(const std::string& s, uint32_t& symbolIndex)
 {
     // First look in the current function and then in the parent struct
-    if (currentFunction().findLocal(s, sym)) {
+    if (currentFunction().findLocal(s, symbolIndex)) {
         return true;
     }
     
-    return currentStruct().findLocal(s, sym);
+    // Next look in the current struct
+    Struct& strucT = currentStruct();
+    if (strucT.findLocal(s, symbolIndex)) {
+        return true;
+    }
+    
+    // Finally look up the struct chain
+    for (auto i : strucT.structIndexes()) {
+        if (_structs[i].findLocal(s, symbolIndex)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool
@@ -1229,35 +1227,6 @@ CompileEngine::structFromType(Type type, Struct& s)
     
     s = _structs[index];
     return true;
-}
-
-void
-CompileEngine::findStructElement(Type type, const std::string& id, uint8_t& index, Type& elementType)
-{
-    Struct s;
-    expect(structFromType(type, s), Compiler::Error::ExpectedStructType);
-    
-    const std::vector<Symbol>& locals = s.locals();
-
-    auto it = find_if(locals.begin(), locals.end(),
-                    [id](const Symbol& sym) { return sym.name() == id; });
-    expect(it != locals.end(), Compiler::Error::InvalidStructId);
-    
-    // FIXME: For now assume structs can only have 1 word entries. If we ever support Structs with Structs this is not true
-    index = it - locals.begin();
-    elementType = it->type();
-}
-
-uint8_t
-CompileEngine::elementSize(Type type)
-{
-    if (uint8_t(type) < StructTypeStart) {
-        return 1;
-    }
-    
-    uint8_t structIndex = uint8_t(type) - 0x80;
-    expect(structIndex < _structs.size(), Compiler::Error::InternalError);
-    return _structs[structIndex].size();
 }
 
 void
@@ -1298,3 +1267,26 @@ CompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
 //    addOpTarg(op, 0);
 //    _jumpList.back().emplace_back(type, addr);
 }
+
+uint16_t
+CompileEngine::sizeInBytes(Type type) const
+{
+    switch(type) {
+        case Type::UInt8:
+        case Type::Int8:    return 1;
+        case Type::Fixed:
+        case Type::UInt16:
+        case Type::Int16:   return 2;
+        case Type::Float:
+        case Type::UInt32:
+        case Type::Int32:   return 4;
+        default:
+            // Handle Structs
+            int16_t structIndex = uint16_t(type) < StructTypeStart;
+            if (structIndex < 0 || structIndex > (255 - StructTypeStart)) {
+                return 0;
+            }
+            return _structs[structIndex].size();
+    }
+}
+

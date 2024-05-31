@@ -26,15 +26,18 @@ namespace lucid {
 // Classes to represent AST
 
 enum class ASTNodeType {
-    Program,
-    Import,
-    Struct,
-    StructInstance,
+    Statements,
+    BinaryOp,
+    UnaryOp,
+    Var,
+    Constant,
+    Dot,
 };
 
 class ASTNode;
 
-using ASTNodeList = std::vector<std::shared_ptr<ASTNode>>;
+using ASTPtr = std::shared_ptr<ASTNode>;
+using ASTNodeList = std::vector<ASTPtr>;
 
 class ASTNode
 {
@@ -43,74 +46,104 @@ class ASTNode
     virtual ~ASTNode() { }
     
     virtual ASTNodeType type() const = 0;
-    virtual bool addNode(const std::shared_ptr<ASTNode>&) { return false; }
+    virtual void addNode(const std::shared_ptr<ASTNode>&) { }
 };
 
-class ProgramNode : public ASTNode
+class StatementsNode : public ASTNode
 {
   public:
-    virtual ASTNodeType type() const override{ return ASTNodeType::Program; }
+    virtual ASTNodeType type() const override{ return ASTNodeType::Statements; }
     
-    virtual bool addNode(const std::shared_ptr<ASTNode>& node) override
+    virtual void addNode(const std::shared_ptr<ASTNode>& node) override
     {
-        // Imports then structs then the struct instance
-        if (node->type() == ASTNodeType::Import) {
-            if (!_structs.empty() || _haveStructInstance) {
-                return false;
-            }
-            _imports.push_back(node);
-            return true;
-        }
-        
-        if (node->type() == ASTNodeType::Struct) {
-            if (_haveStructInstance) {
-                return false;
-            }
-            _structs.push_back(node);
-            return true;
-        }
-        
-         if (node->type() == ASTNodeType::StructInstance) {
-            if (_haveStructInstance) {
-                return false;
-            }
-            _instance = node;
-            _haveStructInstance = true;
-            return true;
-        }
-        return false;
+        _statements.push_back(node);
     }
     
   private:
-    ASTNodeList _imports;
-    ASTNodeList _structs;
-    std::shared_ptr<ASTNode> _instance;
-    bool _haveStructInstance = false;
+    ASTNodeList _statements;
 };
 
-class ImportNode : public ASTNode
+class VarNode : public ASTNode
 {
   public:
-    ImportNode(const std::string& id, const std::string& idAs) : _id(id), _idAs(idAs) { }
-    
-    virtual ASTNodeType type() const override{ return ASTNodeType::Import; }
+    VarNode(uint32_t symbolIndex) : _symbolIndex(symbolIndex) { }
+
+    virtual ASTNodeType type() const override{ return ASTNodeType::Var; }
 
   private:
-    std::string _id, _idAs;
+    uint32_t _symbolIndex = 0;
 };
 
-class StructInstanceNode : public ASTNode
+// This can hold a numeric float, int or a constant. Constants are
+// strongly typed and can't be implicitly cast. A numeric float
+// can be implicitly cast to a fixed, but not to an int. A numeric
+// int can be implicitly cast to any signed or unsigned int type
+// and to a float or fixed. If the value is a constant
+// (_numeric == false) if the type is a signed integer the _i
+// value is cast to a signed type to get the correct value.
+//
+class ConstantNode : public ASTNode
 {
   public:
-    StructInstanceNode(Type type, const std::string& id) : _type(type), _id(id) { }
-    
-    virtual ASTNodeType type() const override{ return ASTNodeType::StructInstance; }
+    ConstantNode(Type t, float v) : _t(t), _f(v) { }
+    ConstantNode(Type t, uint32_t v) : _t(t), _i(v) { }
+    ConstantNode(float v) : _numeric(true), _f(v) { }
+    ConstantNode(uint32_t v) : _numeric(true), _i(v) { }
 
-    // Nothing to add
-    virtual bool addNode(const std::shared_ptr<ASTNode>& node) override { return false; }
+    virtual ASTNodeType type() const override{ return ASTNodeType::Constant; }
 
   private:
-    Type _type;
+    Type _t;
+    bool _numeric = false; // If true, type is Float or UInt32
+    union {
+        float _f;
+        uint32_t _i;
+    };
+};
+
+class BinaryOpNode : public ASTNode
+{
+  public:
+    BinaryOpNode(Operator op, const std::shared_ptr<ASTNode>& left, const std::shared_ptr<ASTNode>& right)
+        : _op(op)
+        , _left(left)
+        , _right(right)
+    { }
+    
+    virtual ASTNodeType type() const override{ return ASTNodeType::BinaryOp; }
+
+  private:
+    Operator _op;
+    std::shared_ptr<ASTNode> _left, _right;
+};
+
+class UnaryOpNode : public ASTNode
+{
+  public:
+    UnaryOpNode(Operator op, const std::shared_ptr<ASTNode>& operand)
+        : _op(op)
+        , _operand(operand)
+    { }
+    
+    virtual ASTNodeType type() const override{ return ASTNodeType::UnaryOp; }
+
+  private:
+    Operator _op;
+    std::shared_ptr<ASTNode> _operand;
+};
+
+class DotNode : public ASTNode
+{
+  public:
+    DotNode(const std::shared_ptr<ASTNode>& operand, const std::string& id)
+        : _operand(operand)
+        , _id(id)
+    { }
+    
+    virtual ASTNodeType type() const override{ return ASTNodeType::UnaryOp; }
+
+  private:
+    std::shared_ptr<ASTNode> _operand;
     std::string _id;
 };
 

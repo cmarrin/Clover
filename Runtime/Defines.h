@@ -61,6 +61,11 @@ static inline uint32_t floatToInt(float f)
     return i;
 }
 
+// PointerSize is needed to know how much space is taken
+// by pointers on the stack and to compute function and
+// struct variable sizes.
+static constexpr uint8_t PointerSize = 2;
+
 /*
 
 Machine Code for LucidVM
@@ -417,50 +422,85 @@ enum class OpParams : uint8_t {
     Idx_Len_S, // b[3:0] = <int> (0-15), b+1 = <int>, followed by Sz string bytes
 };
 
-    // Built-in types are 0x00-StructTypeStart-1, custom types are StructTypeStart-0xff
-    enum class Type : uint8_t {
-        None = 0,
-        Float = 1,
-        Fixed = 2,
-        
-        Int8 = 10,
-        UInt8 = 11,
-        Int16 = 12,
-        UInt16 = 13,
-        Int32 = 14,
-        UInt32 = 15,
-        Int = 16, // Unspecified size
-        UInt = 17, // Unspecified size
-        
-        Struct = 20,
-        
-        Ptr = 30
-    };
+// Built-in types are 0x00-StructTypeStart-1, custom types are StructTypeStart-0xff
+enum class Type : uint8_t {
+    None = 0,
+    Float = 1,
+    Fixed = 2,
+    
+    Int8 = 10,
+    UInt8 = 11,
+    Int16 = 12,
+    UInt16 = 13,
+    Int32 = 14,
+    UInt32 = 15,
+    Int = 16, // Unspecified size
+    UInt = 17, // Unspecified size
+    
+    Struct = 20,
+    
+    Ptr = 30
+};
 
-    enum class Reserved {
-        None,
-        Struct,
-        Const,
-        Import,
-        As,
-        Function,
-        Initialize,
-        Return,
-        Break,
-        Continue,
-        End,
-        Loop,
-        While,
-        For,
-        If,
-        Else,
-        Float,
-        Fixed,
-        Int8,
-        UInt8,
-        Int16,
-        UInt16,
-        Int32,
-        UInt32,
-    };
+enum class Reserved {
+    None,
+    Struct,
+    Const,
+    Import,
+    As,
+    Function,
+    Initialize,
+    Return,
+    Break,
+    Continue,
+    End,
+    Loop,
+    While,
+    For,
+    If,
+    Else,
+    Float,
+    Fixed,
+    Int8,
+    UInt8,
+    Int16,
+    UInt16,
+    Int32,
+    UInt32,
+};
+
+// These must match the values for Token
+enum class Operator : uint8_t {
+    Equal   = '=',
+    AddSto  = 0xa0,
+    SubSto  = 0xa1,
+    MulSto  = 0xa2,
+    DivSto  = 0xa3,
+    ModSto  = 0xa4,
+    AndSto  = 0xa5,
+    OrSto   = 0xa6,
+    XorSto  = 0xa7,
+    LOr     = 0xa8,
+    LAnd    = 0xa9,
+    Or      = '|',
+    Xor     = '^',
+    And     = '&',
+    EQ      = 0xab,
+    NE      = 0xac,
+    LT      = '<',
+    GT      = '>',
+    GE      = 0xad,
+    LE      = 0xaa,
+    Plus    = '+',
+    Minus   = '-',
+    Mul     = '*',
+    Div     = '/',
+    Mod     = '%',
+    Inc     = 0xae,
+    Dec     = 0xaf,
+    Twiddle = '~',
+    Bang    = '!',
+    ArrIdx  = '[',
+};
+
 }

@@ -108,6 +108,7 @@ CompileEngine::opInfo(Token token, OpInfo& op) const
         { Token::Minus,    14, Op::SubInt,  Op::SubFloat, OpInfo::Assign::None , Type::None },
         { Token::Mul,      15, Op::MulInt,  Op::MulFloat, OpInfo::Assign::None , Type::None },
         { Token::Div,      15, Op::DivInt,  Op::DivFloat, OpInfo::Assign::None , Type::None },
+        { Token::Mod,      15, Op::ModInt,  Op::ModFloat, OpInfo::Assign::None , Type::None },
     };
 
     auto it = find_if(opInfo.begin(), opInfo.end(),

@@ -7,52 +7,72 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-// Clover compiler
-//
-// A simple imperative language which generates code that can be 
-// executed by the Interpreter
-//
-
 #pragma once
 
 namespace lucid {
 
+enum class Assoc { None, Left, Right };
+    
 class OpInfo {
-public:        
+  public:
     OpInfo() { }
     
-    enum class Assign { None, Only, Op };
-    
     // assign says this is an assignmentOperator, opAssign says it also has a binary op
-    OpInfo(Token token, uint8_t prec, Op intOp, Op floatOp, Assign assign, Type resultType)
-        : _token(token)
-        , _intOp(intOp)
-        , _floatOp(floatOp)
+    OpInfo(Operator oper, uint8_t prec, Assoc assoc)
+        : _oper(oper)
         , _prec(prec)
-        , _assign(assign)
-        , _resultType(resultType)
+        , _assoc(assoc)
     {
     }
     
-    bool operator==(const Token& t)
-    {
-        return static_cast<Token>(_token) == t;
-    }
-    
-    Token token() const { return _token; }
+    Operator oper() const { return _oper; }
     uint8_t prec() const { return _prec; }
-    Op intOp() const { return _intOp; }
-    Op floatOp() const { return _floatOp; }
-    Assign assign() const { return _assign; }
-    Type resultType() const { return _resultType; }
-    
-private:
-    Token _token;
-    Op _intOp;
-    Op _floatOp;
+    Assoc assoc() const { return _assoc; }
+
+  private:
+    Operator _oper;
     uint8_t _prec;
-    Assign _assign;
-    Type _resultType;
+    Assoc _assoc;
 };
+
+static std::vector<OpInfo> info {
+    { Operator::Equal , 1 , Assoc::Right },
+    { Operator::AddSto, 1 , Assoc::Right },
+    { Operator::SubSto, 1 , Assoc::Right },
+    { Operator::MulSto, 1 , Assoc::Right },
+    { Operator::DivSto, 1 , Assoc::Right },
+    { Operator::ModSto, 1 , Assoc::Right },
+    { Operator::AndSto, 1 , Assoc::Right },
+    { Operator::OrSto , 1 , Assoc::Right },
+    { Operator::XorSto, 1 , Assoc::Right },
+    { Operator::LOr   , 2 , Assoc::Left  },
+    { Operator::LAnd  , 3 , Assoc::Left  },
+    { Operator::Or    , 4 , Assoc::Left  },
+    { Operator::Xor   , 5 , Assoc::Left  },
+    { Operator::And   , 6 , Assoc::Left  },
+    { Operator::EQ    , 7 , Assoc::Left  },
+    { Operator::NE    , 7 , Assoc::Left  },
+    { Operator::LT    , 8 , Assoc::Left  },
+    { Operator::GT    , 8 , Assoc::Left  },
+    { Operator::GE    , 8 , Assoc::Left  },
+    { Operator::LE    , 8 , Assoc::Left  },
+    { Operator::Plus  , 10, Assoc::Left  },
+    { Operator::Minus , 10, Assoc::Left  },
+    { Operator::Mul   , 11, Assoc::Left  },
+    { Operator::Div   , 11, Assoc::Left  },
+    { Operator::Mod   , 11, Assoc::Left  },
+};
+
+bool findOpInfo(Operator oper, OpInfo& opInfo)
+{
+    auto it = find_if(info.begin(), info.end(),
+                    [oper](const OpInfo opInfo) { return opInfo.oper() == oper; });
+    if (it != info.end()) {
+        opInfo = *it;
+        return true;
+    }
+    return false;
+}
+    
 
 }
