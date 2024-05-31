@@ -12,7 +12,7 @@
 namespace lucid {
 
 class ExecutionUnit;
-class CompileEngine;
+class Compiler;
 
 class NativeModule
 {
@@ -24,7 +24,7 @@ public:
     virtual int32_t call(ExecutionUnit*, uint8_t id) = 0;
     
 #ifndef ARDUINO
-    virtual void addFunctions(CompileEngine*) = 0;
+    virtual void addFunctions(Compiler*) = 0;
 #endif
 };
 

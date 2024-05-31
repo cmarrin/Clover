@@ -7,7 +7,7 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-// Clover compiler
+// Lucid compiler
 //
 // A simple imperative language which generates code that can be 
 // executed by the Interpreter
@@ -30,7 +30,7 @@ namespace lucid {
 
 //*********************************
 //
-//  Class: CompileEngine
+//  Class: Compiler
 //
 //*********************************
 
@@ -250,9 +250,9 @@ enum class Error {
 
 static constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
 
-class CompileEngine {
+class Compiler {
 public:
-  	CompileEngine(std::istream* stream, AnnotationList* annotations)
+  	Compiler(std::istream* stream, AnnotationList* annotations)
         : _scanner(stream, annotations)
     { }
 

@@ -17,7 +17,7 @@
 
 namespace lucid {
 
-class CompileEngine;
+class Compiler;
 
 class Decompiler
 {
@@ -37,7 +37,7 @@ public:
         _it = _in->begin();
     }
     
-    bool printFirstPass(const CompileEngine& engine);
+    bool printFirstPass(const Compiler& engine);
     bool decompile();
     
     Error error() const { return _error; }

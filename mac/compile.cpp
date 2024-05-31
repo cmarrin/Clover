@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "CompileEngine.h"
+#include "Compiler.h"
 #include "Decompiler.h"
 #include "Defines.h"
 
@@ -142,7 +142,7 @@ int main(int argc, char * const argv[]) {
         
         lucid::randomSeed(uint32_t(clock()));
 
-        lucid::CompileEngine compiler(&stream, &annotations);
+        lucid::Compiler compiler(&stream, &annotations);
 
         compiler.compile(executable, MaxExecutableSize, { });
         if (compiler.error() != lucid::Error::None) {

@@ -7,7 +7,7 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include "CompileEngine.h"
+#include "Compiler.h"
 
 #include <map>
 #include <vector>
@@ -18,7 +18,7 @@
 
 using namespace lucid;
 
-bool CompileEngine::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
+bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
                             const std::vector<NativeModule*>& modules)
 {
     // Install the modules in the engine
@@ -36,7 +36,7 @@ bool CompileEngine::compile(std::vector<uint8_t>& executable, uint32_t maxExecut
     return _error == Error::None;
 }
 bool
-CompileEngine::program()
+Compiler::program()
 {
     _scanner.setIgnoreNewlines(true);
     
@@ -64,7 +64,7 @@ CompileEngine::program()
 }
 
 bool
-CompileEngine::import()
+Compiler::import()
 {
     if (!match(Reserved::Import)) {
         return false;
@@ -87,7 +87,7 @@ CompileEngine::import()
 }
 
 bool
-CompileEngine::strucT()
+Compiler::strucT()
 {
     if (!match(Reserved::Struct)) {
         return false;
@@ -117,7 +117,7 @@ CompileEngine::strucT()
 }
 
 bool
-CompileEngine::structEntry()
+Compiler::structEntry()
 {
     if (strucT() || varStatement() || function() || init()) {
         return true;
@@ -127,7 +127,7 @@ CompileEngine::structEntry()
 }
 
 bool
-CompileEngine::constant()
+Compiler::constant()
 {
     if (!match(Reserved::Const)) {
         return false;
@@ -153,7 +153,7 @@ CompileEngine::constant()
 }
 
 bool
-CompileEngine::value(uint32_t& i, Type t)
+Compiler::value(uint32_t& i, Type t)
 {
     bool neg = false;
     if (match(Token::Minus)) {
@@ -191,7 +191,7 @@ CompileEngine::value(uint32_t& i, Type t)
 }
 
 bool
-CompileEngine::varStatement()
+Compiler::varStatement()
 {
     Type t = Type::None;
     std::string id;
@@ -225,7 +225,7 @@ CompileEngine::varStatement()
 }
 
 bool
-CompileEngine::var(Type type, bool isPointer)
+Compiler::var(Type type, bool isPointer)
 {
     std::string id;
     expect(identifier(id), Error::ExpectedIdentifier);
@@ -274,7 +274,7 @@ CompileEngine::var(Type type, bool isPointer)
 }
 
 bool
-CompileEngine::type(Type& t)
+Compiler::type(Type& t)
 {
     if (match(Reserved::Float)) {
         t = Type::Float;
@@ -328,7 +328,7 @@ CompileEngine::type(Type& t)
 }
 
 bool
-CompileEngine::function()
+Compiler::function()
 {
     if (!match(Reserved::Function)) {
         return false;
@@ -387,7 +387,7 @@ CompileEngine::function()
 }
 
 bool
-CompileEngine::init()
+Compiler::init()
 {
     if (!match(Reserved::Initialize)) {
         return false;
@@ -437,7 +437,7 @@ CompileEngine::init()
 }
 
 bool
-CompileEngine::statement()
+Compiler::statement()
 {
     if (compoundStatement()) return true;
     if (ifStatement()) return true;
@@ -452,7 +452,7 @@ CompileEngine::statement()
 }
 
 bool
-CompileEngine::compoundStatement()
+Compiler::compoundStatement()
 {
     if (!match(Token::OpenBrace)) {
         return false;
@@ -477,7 +477,7 @@ CompileEngine::compoundStatement()
 }
 
 bool
-CompileEngine::ifStatement()
+Compiler::ifStatement()
 {
     if (!match(Reserved::If)) {
         return false;
@@ -519,7 +519,7 @@ CompileEngine::ifStatement()
 }
 
 bool
-CompileEngine::forStatement()
+Compiler::forStatement()
 {
     if (!match(Reserved::For)) {
         return false;
@@ -630,7 +630,7 @@ CompileEngine::forStatement()
 }
 
 bool
-CompileEngine::whileStatement()
+Compiler::whileStatement()
 {
     if (!match(Reserved::While)) {
         return false;
@@ -661,7 +661,7 @@ CompileEngine::whileStatement()
 }
 
 bool
-CompileEngine::loopStatement()
+Compiler::loopStatement()
 {
     if (!match(Reserved::Loop)) {
         return false;
@@ -683,7 +683,7 @@ CompileEngine::loopStatement()
 }
 
 bool
-CompileEngine::returnStatement()
+Compiler::returnStatement()
 {
     if (!match(Reserved::Return)) {
         return false;
@@ -702,7 +702,7 @@ CompileEngine::returnStatement()
 }
 
 bool
-CompileEngine::jumpStatement()
+Compiler::jumpStatement()
 {
     JumpEntry::Type type;
     
@@ -724,7 +724,7 @@ CompileEngine::jumpStatement()
 }
 
 bool
-CompileEngine::expressionStatement()
+Compiler::expressionStatement()
 {
     if (!assignmentExpression()) {
         return false;
@@ -742,19 +742,19 @@ CompileEngine::expressionStatement()
 }
 
 ASTPtr
-CompileEngine::expression()
+Compiler::expression()
 {
     return arithmeticExpression(primaryExpression(), 1);
 }
 
 ASTPtr
-CompileEngine::assignmentExpression()
+Compiler::assignmentExpression()
 {
     return arithmeticExpression(unaryExpression(), 1);
 }
 
 ASTPtr
-CompileEngine::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
+Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
 {
     ASTPtr lhs = node;
     
@@ -785,7 +785,7 @@ CompileEngine::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
 }
 
 ASTPtr
-CompileEngine::unaryExpression()
+Compiler::unaryExpression()
 {
     ASTPtr node = postfixExpression();
     if (node) {
@@ -814,7 +814,7 @@ CompileEngine::unaryExpression()
 }
 
 ASTPtr
-CompileEngine::postfixExpression()
+Compiler::postfixExpression()
 {
     ASTPtr lhs = primaryExpression();
     if (!lhs) {
@@ -846,7 +846,7 @@ CompileEngine::postfixExpression()
 }
 
 ASTPtr
-CompileEngine::primaryExpression()
+Compiler::primaryExpression()
 {
     if (match(Token::OpenParen)) {
         ASTPtr ast = expression();
@@ -885,7 +885,7 @@ CompileEngine::primaryExpression()
 }
 
 bool
-CompileEngine::formalParameterList()
+Compiler::formalParameterList()
 {
     Type t;
     while (true) {
@@ -911,7 +911,7 @@ CompileEngine::formalParameterList()
 }
 
 bool
-CompileEngine::argumentList(const Function& fun)
+Compiler::argumentList(const Function& fun)
 {
     int i = 0;
     while (true) {
@@ -939,7 +939,7 @@ CompileEngine::argumentList(const Function& fun)
 }
 
 bool
-CompileEngine::identifier(std::string& id, bool retire)
+Compiler::identifier(std::string& id, bool retire)
 {
     if (_scanner.getToken() != Token::Identifier) {
         return false;
@@ -958,7 +958,7 @@ CompileEngine::identifier(std::string& id, bool retire)
 }
 
 bool
-CompileEngine::integerValue(uint32_t& i)
+Compiler::integerValue(uint32_t& i)
 {
     if (_scanner.getToken() != Token::Integer) {
         return false;
@@ -970,7 +970,7 @@ CompileEngine::integerValue(uint32_t& i)
 }
 
 bool
-CompileEngine::floatValue(float& f)
+Compiler::floatValue(float& f)
 {
     if (_scanner.getToken() != Token::Float) {
         return false;
@@ -982,7 +982,7 @@ CompileEngine::floatValue(float& f)
 }
 
 bool
-CompileEngine::stringValue(std::string& str)
+Compiler::stringValue(std::string& str)
 {
     if (_scanner.getToken() != Token::String) {
         return false;
@@ -994,7 +994,7 @@ CompileEngine::stringValue(std::string& str)
 }
 
 void
-CompileEngine::expect(Token token, const char* str)
+Compiler::expect(Token token, const char* str)
 {
     bool err = false;
     if (_scanner.getToken() != token) {
@@ -1023,7 +1023,7 @@ CompileEngine::expect(Token token, const char* str)
 }
 
 void
-CompileEngine::expect(bool passed, Error error)
+Compiler::expect(bool passed, Error error)
 {
     if (!passed) {
         _error = error;
@@ -1032,7 +1032,7 @@ CompileEngine::expect(bool passed, Error error)
 }
 
 void
-CompileEngine::expectWithoutRetire(Token token)
+Compiler::expectWithoutRetire(Token token)
 {
     if (_scanner.getToken() != token) {
         _expectedToken = token;
@@ -1043,7 +1043,7 @@ CompileEngine::expectWithoutRetire(Token token)
 }
 
 bool
-CompileEngine::match(Reserved r)
+Compiler::match(Reserved r)
 {
     Reserved rr;
     if (!isReserved(_scanner.getToken(), _scanner.getTokenString(), rr)) {
@@ -1057,7 +1057,7 @@ CompileEngine::match(Reserved r)
 }
 
 bool
-CompileEngine::match(Token t)
+Compiler::match(Token t)
 {
     if (_scanner.getToken() != t) {
         return false;
@@ -1067,20 +1067,20 @@ CompileEngine::match(Token t)
 }
 
 bool
-CompileEngine::reserved()
+Compiler::reserved()
 {
     Reserved r;
     return isReserved(_scanner.getToken(), _scanner.getTokenString(), r);
 }
 
 bool
-CompileEngine::reserved(Reserved &r)
+Compiler::reserved(Reserved &r)
 {
     return isReserved(_scanner.getToken(), _scanner.getTokenString(), r);
 }
 
 bool
-CompileEngine::isReserved(Token token, const std::string str, Reserved& r)
+Compiler::isReserved(Token token, const std::string str, Reserved& r)
 {
     static std::map<std::string, Reserved> reserved = {
         { "const",      Reserved::Const },
@@ -1120,7 +1120,7 @@ CompileEngine::isReserved(Token token, const std::string str, Reserved& r)
 }
 
 uint8_t
-CompileEngine::findInt(int32_t i)
+Compiler::findInt(int32_t i)
 {
     // Try to find an existing int const. If found, return
     // its address. If not found, create one and return 
@@ -1141,7 +1141,7 @@ CompileEngine::findInt(int32_t i)
 
 const
 Function&
-CompileEngine::handleFunctionName()
+Compiler::handleFunctionName()
 {
     std::string targ;
     expect(identifier(targ), Error::ExpectedIdentifier);
@@ -1154,7 +1154,7 @@ CompileEngine::handleFunctionName()
 }
 
 uint8_t
-CompileEngine::findFloat(float f)
+Compiler::findFloat(float f)
 {
     // Try to find an existing fp const. If found, return
     // its address. If not found, create one and return 
@@ -1176,7 +1176,7 @@ CompileEngine::findFloat(float f)
 }
 
 bool
-CompileEngine::findFunction(const std::string& s, Function& fun)
+Compiler::findFunction(const std::string& s, Function& fun)
 {
     auto it = find_if(_functions.begin(), _functions.end(),
                     [s](const Function& fun) { return fun.name() == s; });
@@ -1190,7 +1190,7 @@ CompileEngine::findFunction(const std::string& s, Function& fun)
 }
 
 bool
-CompileEngine::findStruct(const std::string& id, uint32_t& structIndex)
+Compiler::findStruct(const std::string& id, uint32_t& structIndex)
 {
     auto it = find_if(_structs.begin(), _structs.end(),
                     [id](const Struct s) { return s.name() == id; });
@@ -1202,7 +1202,7 @@ CompileEngine::findStruct(const std::string& id, uint32_t& structIndex)
 }
 
 bool
-CompileEngine::findSymbol(const std::string& s, uint32_t& symbolIndex)
+Compiler::findSymbol(const std::string& s, uint32_t& symbolIndex)
 {
     // First look in the current function and then in the parent struct
     if (currentFunction().findLocal(s, symbolIndex)) {
@@ -1225,7 +1225,7 @@ CompileEngine::findSymbol(const std::string& s, uint32_t& symbolIndex)
 }
 
 bool
-CompileEngine::isExprFunction()
+Compiler::isExprFunction()
 {
 //    expect(!_exprStack.empty(), Error::InternalError);
     
@@ -1234,7 +1234,7 @@ CompileEngine::isExprFunction()
 }
 
 bool
-CompileEngine::structFromType(Type type, Struct& s)
+Compiler::structFromType(Type type, Struct& s)
 {
     if (uint8_t(type) < StructTypeStart) {
         return false;
@@ -1247,7 +1247,7 @@ CompileEngine::structFromType(Type type, Struct& s)
 }
 
 void
-CompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr)
+Compiler::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr)
 {
     expect(!_jumpList.empty(), Error::InternalError);
 
@@ -1276,7 +1276,7 @@ CompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t b
 }
 
 void
-CompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
+Compiler::addJumpEntry(Op op, JumpEntry::Type type)
 {
     expect(!_jumpList.empty(), Error::InternalError);
     
@@ -1286,7 +1286,7 @@ CompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
 }
 
 uint16_t
-CompileEngine::sizeInBytes(Type type) const
+Compiler::sizeInBytes(Type type) const
 {
     switch(type) {
         case Type::UInt8:

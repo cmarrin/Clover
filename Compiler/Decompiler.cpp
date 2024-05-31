@@ -9,11 +9,11 @@
 
 #include "Decompiler.h"
 
-#include "CompileEngine.h"
+#include "Compiler.h"
 
 using namespace lucid;
 
-bool Decompiler::printFirstPass(const CompileEngine& engine)
+bool Decompiler::printFirstPass(const Compiler& engine)
 {
     // Output constants
     return true;
@@ -191,7 +191,7 @@ Decompiler::statement()
     }
     
 //    OpData opData;
-//    if (!CompileEngine::opDataFromOp(Op(opInt), opData)) {
+//    if (!Compiler::opDataFromOp(Op(opInt), opData)) {
 //        _error = Error::InvalidOp;
 //        throw true;
 //    }
