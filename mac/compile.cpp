@@ -152,67 +152,80 @@ int main(int argc, char * const argv[]) {
         }
 
         std::cout << "Compile succeeded. Executable size=" << std::to_string(executable.size()) << "\n";
-        
-        // Write executable
-        // Use the same name as the input file for the output
-        std::string path = it.substr(0, it.find_last_of('.'));
-        
-        // Delete any old copies
-        std::string name = path + ".h";
-        remove(name.c_str());
 
-        name = path + ".lcdx";
-        remove(name.c_str());
-
-        std::cout << "\nEmitting executable to '" << path << "'\n";
-        std::fstream outStream;
-
-        if (headerFile) {
-            name = path + ".h";
-        } else {
-            name = path + ".lcdx";
-        }
-    
-        std::ios_base::openmode mode = std::fstream::out;
-        if (!headerFile) {
-            mode|= std::fstream::binary;
-        }
-        
-        outStream.open(name.c_str(), mode);
-        if (outStream.fail()) {
-            std::cout << "Can't open '" << name << "'\n";
-            return 0;
-        } else {
-            char* buf = reinterpret_cast<char*>(&(executable[0]));
+        // Emit info from first pass of compiler
+        if (decompile) {
+            std::string out;
+            lucid::Decompiler decompiler(&executable, &out, annotations);
+            bool success = decompiler.printFirstPass(compiler);
             
-            if (!headerFile) {
-                // Write the buffer
-                outStream.write(buf, executable.size());
-                if (outStream.fail()) {
-                    std::cout << "Save failed\n";
-                    return 0;
-                } else {
-                    outStream.close();
-                    std::cout << "    Saved " << name << "\n";
-                }
-            } else {
-                // Write out as a header file
-                std::string name = path.substr(path.find_last_of('/') + 1);
-                outStream << "static const uint8_t PROGMEM EEPROM_Upload_" << name << "[ ] = {\n";
-                
-                for (size_t i = 0; i < executable.size(); ++i) {
-                    char hexbuf[5];
-                    snprintf(hexbuf, 5, "0x%02x", executable[i]);
-                    outStream << hexbuf << ", ";
-                    if (i % 8 == 7) {
-                        outStream << std::endl;
-                    }
-                }
-
-                outStream << "};\n";
+            std::cout << "\nPrinting first pass:\n" << out << "\nEnd first pass\n\n";
+            if (!success) {
+                std::cout << "First pass failed\n\n";
+                return 0;
             }
         }
-        std::cout << "Executables saved\n";
+        
+//        // Write executable
+//        // Use the same name as the input file for the output
+//        std::string path = it.substr(0, it.find_last_of('.'));
+//
+//        // Delete any old copies
+//        std::string name = path + ".h";
+//        remove(name.c_str());
+//
+//        name = path + ".lcdx";
+//        remove(name.c_str());
+//
+//        std::cout << "\nEmitting executable to '" << path << "'\n";
+//        std::fstream outStream;
+//
+//        if (headerFile) {
+//            name = path + ".h";
+//        } else {
+//            name = path + ".lcdx";
+//        }
+//
+//        std::ios_base::openmode mode = std::fstream::out;
+//        if (!headerFile) {
+//            mode|= std::fstream::binary;
+//        }
+//
+//        outStream.open(name.c_str(), mode);
+//        if (outStream.fail()) {
+//            std::cout << "Can't open '" << name << "'\n";
+//            return 0;
+//        } else {
+//            char* buf = reinterpret_cast<char*>(&(executable[0]));
+//
+//            if (!headerFile) {
+//                // Write the buffer
+//                outStream.write(buf, executable.size());
+//                if (outStream.fail()) {
+//                    std::cout << "Save failed\n";
+//                    return 0;
+//                } else {
+//                    outStream.close();
+//                    std::cout << "    Saved " << name << "\n";
+//                }
+//            } else {
+//                // Write out as a header file
+//                std::string name = path.substr(path.find_last_of('/') + 1);
+//                outStream << "static const uint8_t PROGMEM EEPROM_Upload_" << name << "[ ] = {\n";
+//
+//                for (size_t i = 0; i < executable.size(); ++i) {
+//                    char hexbuf[5];
+//                    snprintf(hexbuf, 5, "0x%02x", executable[i]);
+//                    outStream << hexbuf << ", ";
+//                    if (i % 8 == 7) {
+//                        outStream << std::endl;
+//                    }
+//                }
+//
+//                outStream << "};\n";
+//            }
+//        }
+//        std::cout << "Executables saved\n";
 
         // decompile if needed
         if (decompile) {

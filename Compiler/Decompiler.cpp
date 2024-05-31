@@ -13,6 +13,12 @@
 
 using namespace lucid;
 
+bool Decompiler::printFirstPass(const CompileEngine& engine)
+{
+    // Output constants
+    return true;
+}
+
 bool Decompiler::decompile()
 {
     // Output everything before the first addr
