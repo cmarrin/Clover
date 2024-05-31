@@ -12,9 +12,12 @@
 
 #pragma once
 
-#include "Compiler.h"
+#include <vector>
+#include "Scanner.h"
 
 namespace lucid {
+
+class CompileEngine;
 
 class Decompiler
 {
@@ -34,6 +37,7 @@ public:
         _it = _in->begin();
     }
     
+    bool printFirstPass(const CompileEngine& engine);
     bool decompile();
     
     Error error() const { return _error; }

@@ -18,6 +18,23 @@
 
 using namespace lucid;
 
+bool CompileEngine::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
+                            const std::vector<NativeModule*>& modules)
+{
+    // Install the modules in the engine
+    // First add the core
+//    for (const auto& it : modules) {
+//        it->addFunctions(engine);
+//    }
+    
+    program();
+    
+    if (_error == Error::None && executable.size() > maxExecutableSize) {
+        _error = Error::ExecutableTooBig;
+    }
+
+    return _error == Error::None;
+}
 bool
 CompileEngine::program()
 {
@@ -32,8 +49,8 @@ CompileEngine::program()
         uint32_t structIndex;
         std::string id;
         if (identifier(id)) {
-            expect(findStruct(id, structIndex), Compiler::Error::ExpectedStructType);
-            expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+            expect(findStruct(id, structIndex), Error::ExpectedStructType);
+            expect(identifier(id), Error::ExpectedIdentifier);
         }
 
         expect(Token::Semicolon);
@@ -43,7 +60,7 @@ CompileEngine::program()
         return false;
     }
     
-    return _error == Compiler::Error::None;
+    return _error == Error::None;
 }
 
 bool
@@ -54,10 +71,10 @@ CompileEngine::import()
     }
     
     std::string id, idAs;
-    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+    expect(identifier(id), Error::ExpectedIdentifier);
 
     if (match(Reserved::As)) {
-        expect(identifier(idAs), Compiler::Error::ExpectedIdentifier);
+        expect(identifier(idAs), Error::ExpectedIdentifier);
     }
     
     // FIXME: Compile the import inline.
@@ -77,7 +94,7 @@ CompileEngine::strucT()
     }
     
     std::string id;
-    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+    expect(identifier(id), Error::ExpectedIdentifier);
 
     // Add a struct entry
     _structs.emplace_back(id);
@@ -120,15 +137,15 @@ CompileEngine::constant()
     std::string id;
     uint32_t val;
     
-    expect(type(t), Compiler::Error::ExpectedType);
+    expect(type(t), Error::ExpectedType);
     
     // Only built-in types allowed for types
-    expect(uint8_t(t) < StructTypeStart, Compiler::Error::ConstMustBeSimpleType);
-    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
-    expect(value(val, t), Compiler::Error::ExpectedValue);
+    expect(uint8_t(t) < StructTypeStart, Error::ConstMustBeSimpleType);
+    expect(identifier(id), Error::ExpectedIdentifier);
+    expect(value(val, t), Error::ExpectedValue);
     expect(Token::Semicolon);
 
-    expect(findConstant(id, t, val), Compiler::Error::DuplicateIdentifier);
+    expect(findConstant(id, t, val), Error::DuplicateIdentifier);
     
     _constants.emplace_back(t, id, val);
     
@@ -194,7 +211,7 @@ CompileEngine::varStatement()
             if (!haveOne) {
                 break;
             }
-            expect(false, Compiler::Error::ExpectedVar);
+            expect(false, Error::ExpectedVar);
         }
         
         haveOne = true;
@@ -211,12 +228,12 @@ bool
 CompileEngine::var(Type type, bool isPointer)
 {
     std::string id;
-    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+    expect(identifier(id), Error::ExpectedIdentifier);
     
     uint32_t size = 1;
 
     if (match(Token::OpenBracket)) {
-        expect(integerValue(size), Compiler::Error::ExpectedValue);
+        expect(integerValue(size), Error::ExpectedValue);
         expect(Token::CloseBracket);
     }
     
@@ -224,12 +241,12 @@ CompileEngine::var(Type type, bool isPointer)
 
     // Put the var in the current struct unless we're in a function, then put it in _locals
     if (_inFunction) {
-        expect(currentFunction().addLocal(id, type, size, isPointer), Compiler::Error::DuplicateIdentifier);
+        expect(currentFunction().addLocal(id, type, size, isPointer), Error::DuplicateIdentifier);
     } else {
-        expect(!_structStack.empty(), Compiler::Error::InternalError);
+        expect(!_structStack.empty(), Error::InternalError);
         
         // FIXME: Need to deal with ptr and size
-        expect(currentStruct().addLocal(id, type, size, false), Compiler::Error::DuplicateIdentifier);
+        expect(currentStruct().addLocal(id, type, size, false), Error::DuplicateIdentifier);
     }
     
     // Check for an initializer. We only allow initializers on Int and Float
@@ -237,7 +254,7 @@ CompileEngine::var(Type type, bool isPointer)
         if (uint8_t(type) < StructTypeStart) {
             // Built-in type. Generate an expression
             ASTPtr ast = expression();
-            expect(ast != nullptr, Compiler::Error::ExpectedExpr);
+            expect(ast != nullptr, Error::ExpectedExpr);
         } else {
             // Struct type, collect initializers
             expect(Token::OpenBrace);
@@ -246,7 +263,7 @@ CompileEngine::var(Type type, bool isPointer)
                 // FIXME: For now ignore the initializers
                 while (match(Token::Comma)) {
                     ast = expression();
-                    expect(ast != nullptr, Compiler::Error::ExpectedExpr);
+                    expect(ast != nullptr, Error::ExpectedExpr);
                 }
             }
             expect(Token::CloseBrace);
@@ -324,7 +341,7 @@ CompileEngine::function()
     type(t);
     
     std::string id;
-    expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+    expect(identifier(id), Error::ExpectedIdentifier);
 
     // Remember the function
     _functions.emplace_back(id, t);
@@ -332,7 +349,7 @@ CompileEngine::function()
     
     expect(Token::OpenParen);
     
-    expect(formalParameterList(), Compiler::Error::ExpectedFormalParams);
+    expect(formalParameterList(), Error::ExpectedFormalParams);
     
     expect(Token::CloseParen);
     expect(Token::OpenBrace);
@@ -382,7 +399,7 @@ CompileEngine::init()
     
     expect(Token::OpenParen);
     
-    expect(formalParameterList(), Compiler::Error::ExpectedFormalParams);
+    expect(formalParameterList(), Error::ExpectedFormalParams);
     
     expect(Token::CloseParen);
     expect(Token::OpenBrace);
@@ -520,23 +537,23 @@ CompileEngine::forStatement()
         ASTPtr ast;
         
         if (t != Type::None) {
-            expect(t == Type::Int || t == Type::Float, Compiler::Error::WrongType);
+            expect(t == Type::Int || t == Type::Float, Error::WrongType);
 
             std::string id;
-            expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+            expect(identifier(id), Error::ExpectedIdentifier);
             expect(Token::Equal);
 
             // Generate an expression
-            expect(_inFunction, Compiler::Error::InternalError);
-            expect(currentFunction().addLocal(id, t, sizeInBytes(t), false), Compiler::Error::DuplicateIdentifier);
+            expect(_inFunction, Error::InternalError);
+            expect(currentFunction().addLocal(id, t, sizeInBytes(t), false), Error::DuplicateIdentifier);
             _nextMem += 1;
 
             // FIXME: This needs to be an arithmeticExpression?
             ast = expression();
-            expect(ast != nullptr, Compiler::Error::ExpectedExpr);
+            expect(ast != nullptr, Error::ExpectedExpr);
         } else {
             ast = expression();
-            expect(ast != nullptr, Compiler::Error::ExpectedExpr);
+            expect(ast != nullptr, Error::ExpectedExpr);
         }
         expect(Token::Semicolon);
     }
@@ -677,7 +694,7 @@ CompileEngine::returnStatement()
         // Push the return value
     } else {
         // If the function return type not None, we need a return value
-        expect(currentFunction().returnType() == Type::None, Compiler::Error::MismatchedType);
+        expect(currentFunction().returnType() == Type::None, Error::MismatchedType);
     }
     
     expect(Token::Semicolon);
@@ -698,7 +715,7 @@ CompileEngine::jumpStatement()
     }
     
     // Make sure we're in a loop
-    expect(!_jumpList.empty(), Compiler::Error::OnlyAllowedInLoop);
+    expect(!_jumpList.empty(), Error::OnlyAllowedInLoop);
     
     addJumpEntry(Op::Jump, type);
 
@@ -807,7 +824,7 @@ CompileEngine::postfixExpression()
     while (true) {
         if (match(Token::OpenParen)) {
             // FIXME: Handle function
-            //expect(argumentList(fun), Compiler::Error::ExpectedArgList);
+            //expect(argumentList(fun), Error::ExpectedArgList);
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
@@ -816,7 +833,7 @@ CompileEngine::postfixExpression()
             return result;
         } else if (match(Token::Dot)) {
             std::string id;
-            expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+            expect(identifier(id), Error::ExpectedIdentifier);
             return std::make_shared<DotNode>(lhs, id);
         } else if (match(Token::Inc)) {
             return std::make_shared<UnaryOpNode>(Operator::Inc, lhs);
@@ -833,14 +850,14 @@ CompileEngine::primaryExpression()
 {
     if (match(Token::OpenParen)) {
         ASTPtr ast = expression();
-        expect(!ast, Compiler::Error::ExpectedExpr);
+        expect(!ast, Error::ExpectedExpr);
         expect(Token::CloseParen);
         return ast;
     }
     
     std::string id;
     if (identifier(id)) {
-        expect(_inFunction, Compiler::Error::InternalError);
+        expect(_inFunction, Error::InternalError);
         uint32_t symbolIndex;
         if (findSymbol(id, symbolIndex)) {
             return std::make_shared<VarNode>(symbolIndex);
@@ -851,7 +868,7 @@ CompileEngine::primaryExpression()
         if (findConstant(id, t, v)) {
             return std::make_shared<ConstantNode>(t, v);
         }
-        expect(false, Compiler::Error::ExpectedVar);
+        expect(false, Error::ExpectedVar);
     }
     
     float f;
@@ -882,7 +899,7 @@ CompileEngine::formalParameterList()
         }
     
         std::string id;
-        expect(identifier(id), Compiler::Error::ExpectedIdentifier);
+        expect(identifier(id), Error::ExpectedIdentifier);
         currentFunction().addArg(id, t, sizeInBytes(t), isPointer);
         
         if (!match(Token::Comma)) {
@@ -902,12 +919,12 @@ CompileEngine::argumentList(const Function& fun)
             if (i == 0) {
                 break;
             }
-            expect(false, Compiler::Error::ExpectedExpr);
+            expect(false, Error::ExpectedExpr);
         }
         
         i++;
         
-        //expect(fun.args() >= i, Compiler::Error::WrongNumberOfArgs);
+        //expect(fun.args() >= i, Error::WrongNumberOfArgs);
     
         // Bake the arithmeticExpression, leaving the result in r0.
         // Make sure the type matches the formal argument and push
@@ -917,7 +934,7 @@ CompileEngine::argumentList(const Function& fun)
         }
     }
 
-    //expect(fun.args() == i, Compiler::Error::WrongNumberOfArgs);
+    //expect(fun.args() == i, Error::WrongNumberOfArgs);
     return true;
 }
 
@@ -981,12 +998,12 @@ CompileEngine::expect(Token token, const char* str)
 {
     bool err = false;
     if (_scanner.getToken() != token) {
-        _error = Compiler::Error::ExpectedToken;
+        _error = Error::ExpectedToken;
         err = true;
     }
     
     if (str && _scanner.getTokenString() != str) {
-        _error = Compiler::Error::ExpectedToken;
+        _error = Error::ExpectedToken;
         err = true;
     }
     
@@ -1006,7 +1023,7 @@ CompileEngine::expect(Token token, const char* str)
 }
 
 void
-CompileEngine::expect(bool passed, Compiler::Error error)
+CompileEngine::expect(bool passed, Error error)
 {
     if (!passed) {
         _error = error;
@@ -1020,7 +1037,7 @@ CompileEngine::expectWithoutRetire(Token token)
     if (_scanner.getToken() != token) {
         _expectedToken = token;
         _expectedString = "";
-        _error = Compiler::Error::ExpectedToken;
+        _error = Error::ExpectedToken;
         throw true;
     }
 }
@@ -1127,11 +1144,11 @@ Function&
 CompileEngine::handleFunctionName()
 {
     std::string targ;
-    expect(identifier(targ), Compiler::Error::ExpectedIdentifier);
+    expect(identifier(targ), Error::ExpectedIdentifier);
     
     auto it = find_if(_functions.begin(), _functions.end(),
                     [targ](const Function& fun) { return fun.name() == targ; });
-    expect(it != _functions.end(), Compiler::Error::UndefinedIdentifier);
+    expect(it != _functions.end(), Error::UndefinedIdentifier);
 
     return *it;
 }
@@ -1210,7 +1227,7 @@ CompileEngine::findSymbol(const std::string& s, uint32_t& symbolIndex)
 bool
 CompileEngine::isExprFunction()
 {
-//    expect(!_exprStack.empty(), Compiler::Error::InternalError);
+//    expect(!_exprStack.empty(), Error::InternalError);
     
     Function fun;
     return true; //findFunction(_exprStack.back(), fun);
@@ -1223,7 +1240,7 @@ CompileEngine::structFromType(Type type, Struct& s)
         return false;
     }
     uint8_t index = uint8_t(type) - StructTypeStart;
-    expect(index < _structs.size(), Compiler::Error::InternalError);
+    expect(index < _structs.size(), Error::InternalError);
     
     s = _structs[index];
     return true;
@@ -1232,12 +1249,12 @@ CompileEngine::structFromType(Type type, Struct& s)
 void
 CompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr)
 {
-    expect(!_jumpList.empty(), Compiler::Error::InternalError);
+    expect(!_jumpList.empty(), Error::InternalError);
 
     // Go through all the entries in the last _jumpList entry and fill in
     // the addresses.
     for (const auto& it : _jumpList.back()) {
-        expect(it._addr < breakAddr, Compiler::Error::InternalError);
+        expect(it._addr < breakAddr, Error::InternalError);
         
         uint16_t addr;
         
@@ -1249,7 +1266,7 @@ CompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t b
          
 //        int16_t offset = int16_t(addr) - int16_t(it._addr) - 2;
          
-//        expect(_rom8[it._addr + 1] == 0, Compiler::Error::InternalError);
+//        expect(_rom8[it._addr + 1] == 0, Error::InternalError);
 //        
 //        _rom8[it._addr] |= (offset >> 8) & 0x0f;
 //        _rom8[it._addr + 1] = uint8_t(offset);
@@ -1261,7 +1278,7 @@ CompileEngine::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t b
 void
 CompileEngine::addJumpEntry(Op op, JumpEntry::Type type)
 {
-    expect(!_jumpList.empty(), Compiler::Error::InternalError);
+    expect(!_jumpList.empty(), Error::InternalError);
     
 //    uint16_t addr = _rom8.size();
 //    addOpTarg(op, 0);

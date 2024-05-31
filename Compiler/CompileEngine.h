@@ -15,15 +15,16 @@
 
 #pragma once
 
-#include "Compiler.h"
-#include "Function.h"
-#include "Defines.h"
-#include "Scanner.h"
-#include "Struct.h"
-#include "AST.h"
 #include <cstdint>
 #include <istream>
 #include <variant>
+
+#include "AST.h"
+#include "Function.h"
+#include "Defines.h"
+#include "NativeModule.h"
+#include "Scanner.h"
+#include "Struct.h"
 
 namespace lucid {
 
@@ -201,13 +202,62 @@ operator: (* operator   precedence   association *)
     
 */
 
+enum class Error {
+    None,
+    UnrecognizedLanguage,
+    ExpectedToken,
+    ExpectedKeyword,
+    ExpectedType,
+    ExpectedValue,
+    ExpectedString,
+    ExpectedRef,
+    ExpectedOpcode,
+    ExpectedEnd,
+    ExpectedIdentifier,
+    ExpectedExpr,
+    ExpectedArgList,
+    ExpectedFormalParams,
+    ExpectedFunction,
+    ExpectedLHSExpr,
+    ExpectedStructType,
+    ExpectedVar,
+    AssignmentNotAllowedHere,
+    InvalidStructId,
+    InvalidParamCount,
+    UndefinedIdentifier,
+    ParamOutOfRange,
+    JumpTooBig,
+    IfTooBig,
+    ElseTooBig,
+    StringTooLong,
+    TooManyConstants,
+    TooManyVars,
+    DefOutOfRange,
+    ExpectedDef,
+    NoMoreTemps,
+    TempNotAllocated,
+    InternalError,
+    StackTooBig,
+    MismatchedType,
+    WrongNumberOfArgs,
+    WrongType,
+    OnlyAllowedInLoop,
+    DuplicateIdentifier,
+    ExecutableTooBig,
+    InitializerNotAllowed,
+    ConstMustBeSimpleType,
+};
+
 static constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
 
-class CompileEngine : public Compiler {
+class CompileEngine {
 public:
   	CompileEngine(std::istream* stream, AnnotationList* annotations)
         : _scanner(stream, annotations)
     { }
+
+    bool compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
+                 const std::vector<NativeModule*>&);
 
 //    void addNative(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
 //    {
@@ -216,7 +266,7 @@ public:
 
     bool program();
 
-    Compiler::Error error() const { return _error; }
+    Error error() const { return _error; }
     Token expectedToken() const { return _expectedToken; }
     const std::string& expectedString() const { return _expectedString; }
     uint32_t lineno() const { return _scanner.lineno(); }
@@ -273,7 +323,7 @@ private:
     // throw is called. The first version also retires the
     // current token.
     void expect(Token token, const char* str = nullptr);
-    void expect(bool passed, Compiler::Error error);
+    void expect(bool passed, Error error);
     void expectWithoutRetire(Token token);
     bool match(Reserved r);
     bool match(Token r);
@@ -323,7 +373,7 @@ private:
     
     Function& currentFunction()
     {
-        expect(!_functions.empty(), Compiler::Error::InternalError);
+        expect(!_functions.empty(), Error::InternalError);
         return _functions.back();
     }
     
@@ -338,7 +388,7 @@ private:
         
     bool findFunction(const std::string&, Function&);
 
-    Compiler::Error _error = Compiler::Error::None;
+    Error _error = Error::None;
     Token _expectedToken = Token::None;
     std::string _expectedString;
     
@@ -403,7 +453,7 @@ private:
 
     Struct& currentStruct()
     {
-        expect(!_structStack.empty(), Compiler::Error::InternalError);
+        expect(!_structStack.empty(), Error::InternalError);
         return _structs[_structStack.back()];
     }
 

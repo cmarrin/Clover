@@ -10,7 +10,6 @@
 		4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A0F22BB6F59900CE3C9E /* compile.cpp */; };
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
 		4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
-		4941A1142BBA290B00CE3C9E /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10B2BBA290B00CE3C9E /* Compiler.cpp */; };
 		4941A1152BBA290B00CE3C9E /* CompileEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* CompileEngine.cpp */; };
 		49C164B02C02981300981AD1 /* interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49279C052C0148A100294992 /* interp.cpp */; };
 		49C164B12C0298CE00981AD1 /* ExecutionUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* ExecutionUnit.cpp */; };
@@ -48,8 +47,6 @@
 		4941A1062BBA28F000CE3C9E /* ExecutionUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ExecutionUnit.h; path = ../Runtime/ExecutionUnit.h; sourceTree = "<group>"; };
 		4941A1092BBA290B00CE3C9E /* Decompiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Decompiler.cpp; path = ../Compiler/Decompiler.cpp; sourceTree = "<group>"; };
 		4941A10A2BBA290B00CE3C9E /* Scanner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Scanner.cpp; path = ../Compiler/Scanner.cpp; sourceTree = "<group>"; };
-		4941A10B2BBA290B00CE3C9E /* Compiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Compiler.cpp; path = ../Compiler/Compiler.cpp; sourceTree = "<group>"; };
-		4941A10C2BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler/Compiler.h; sourceTree = "<group>"; };
 		4941A10D2BBA290B00CE3C9E /* CompileEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CompileEngine.cpp; path = ../Compiler/CompileEngine.cpp; sourceTree = "<group>"; };
 		4941A10E2BBA290B00CE3C9E /* Decompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Decompiler.h; path = ../Compiler/Decompiler.h; sourceTree = "<group>"; };
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Compiler/Scanner.h; sourceTree = "<group>"; };
@@ -143,8 +140,6 @@
 				4941A1102BBA290B00CE3C9E /* CompileEngine.h */,
 				49C164B22C03E84700981AD1 /* Function.h */,
 				49C164B32C03E90400981AD1 /* Symbol.h */,
-				4941A10B2BBA290B00CE3C9E /* Compiler.cpp */,
-				4941A10C2BBA290B00CE3C9E /* Compiler.h */,
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
 				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
 				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
@@ -241,7 +236,6 @@
 				4941A1152BBA290B00CE3C9E /* CompileEngine.cpp in Sources */,
 				4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
-				4941A1142BBA290B00CE3C9E /* Compiler.cpp in Sources */,
 				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

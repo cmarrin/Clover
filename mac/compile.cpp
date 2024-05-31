@@ -10,59 +10,59 @@
 #include <filesystem>
 #include <fstream>
 
-#include "Compiler.h"
+#include "CompileEngine.h"
 #include "Decompiler.h"
 #include "Defines.h"
 
 static constexpr uint32_t MaxExecutableSize = 65536;
 
-static void showError(lucid::Compiler::Error error, lucid::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
+static void showError(lucid::Error error, lucid::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
 {
     const char* err = "unknown";
     switch(error) {
-        case lucid::Compiler::Error::None: err = "internal error"; break;
-        case lucid::Compiler::Error::UnrecognizedLanguage: err = "unrecognized language"; break;
-        case lucid::Compiler::Error::ExpectedToken: err = "expected token"; break;
-        case lucid::Compiler::Error::ExpectedKeyword: err = "expected keyword"; break;
-        case lucid::Compiler::Error::ExpectedType: err = "expected type"; break;
-        case lucid::Compiler::Error::ExpectedValue: err = "expected value"; break;
-        case lucid::Compiler::Error::ExpectedString: err = "expected string"; break;
-        case lucid::Compiler::Error::ExpectedRef: err = "expected ref"; break;
-        case lucid::Compiler::Error::ExpectedOpcode: err = "expected opcode"; break;
-        case lucid::Compiler::Error::ExpectedEnd: err = "expected 'end'"; break;
-        case lucid::Compiler::Error::ExpectedIdentifier: err = "expected identifier"; break;
-        case lucid::Compiler::Error::ExpectedExpr: err = "expected expression"; break;
-        case lucid::Compiler::Error::ExpectedLHSExpr: err = "expected left-hand side expression"; break;
-        case lucid::Compiler::Error::ExpectedArgList: err = "expected arg list"; break;
-        case lucid::Compiler::Error::ExpectedFormalParams: err = "expected formal params"; break;
-        case lucid::Compiler::Error::ExpectedFunction: err = "expected function name"; break;
-        case lucid::Compiler::Error::ExpectedStructType: err = "expected Struct type"; break;
-        case lucid::Compiler::Error::ExpectedVar: err = "expected var"; break;
-        case lucid::Compiler::Error::AssignmentNotAllowedHere: err = "assignment not allowed here"; break;
-        case lucid::Compiler::Error::InvalidStructId: err = "invalid Struct identifier"; break;
-        case lucid::Compiler::Error::InvalidParamCount: err = "invalid param count"; break;
-        case lucid::Compiler::Error::UndefinedIdentifier: err = "undefined identifier"; break;
-        case lucid::Compiler::Error::ParamOutOfRange: err = "param must be 0..15"; break;
-        case lucid::Compiler::Error::JumpTooBig: err = "tried to jump too far"; break;
-        case lucid::Compiler::Error::IfTooBig: err = "too many instructions in if"; break;
-        case lucid::Compiler::Error::ElseTooBig: err = "too many instructions in else"; break;
-        case lucid::Compiler::Error::StringTooLong: err = "string too long"; break;
-        case lucid::Compiler::Error::TooManyConstants: err = "too many constants"; break;
-        case lucid::Compiler::Error::TooManyVars: err = "too many vars"; break;
-        case lucid::Compiler::Error::DefOutOfRange: err = "def out of range"; break;
-        case lucid::Compiler::Error::ExpectedDef: err = "expected def"; break;
-        case lucid::Compiler::Error::NoMoreTemps: err = "no more temp variables available"; break;
-        case lucid::Compiler::Error::TempNotAllocated: err = "temp not allocated"; break;
-        case lucid::Compiler::Error::InternalError: err = "internal error"; break;
-        case lucid::Compiler::Error::StackTooBig: err = "stack too big"; break;
-        case lucid::Compiler::Error::MismatchedType: err = "mismatched type"; break;
-        case lucid::Compiler::Error::WrongType: err = "wrong type"; break;
-        case lucid::Compiler::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
-        case lucid::Compiler::Error::OnlyAllowedInLoop: err = "break/continue only allowed in loop"; break;
-        case lucid::Compiler::Error::DuplicateIdentifier: err = "duplicate identifier"; break;
-        case lucid::Compiler::Error::ExecutableTooBig: err = "executable too big"; break;
-        case lucid::Compiler::Error::InitializerNotAllowed: err = "initializer not allowed for this type"; break;
-        case lucid::Compiler::Error::ConstMustBeSimpleType: err = "const must be simple type"; break;
+        case lucid::Error::None: err = "internal error"; break;
+        case lucid::Error::UnrecognizedLanguage: err = "unrecognized language"; break;
+        case lucid::Error::ExpectedToken: err = "expected token"; break;
+        case lucid::Error::ExpectedKeyword: err = "expected keyword"; break;
+        case lucid::Error::ExpectedType: err = "expected type"; break;
+        case lucid::Error::ExpectedValue: err = "expected value"; break;
+        case lucid::Error::ExpectedString: err = "expected string"; break;
+        case lucid::Error::ExpectedRef: err = "expected ref"; break;
+        case lucid::Error::ExpectedOpcode: err = "expected opcode"; break;
+        case lucid::Error::ExpectedEnd: err = "expected 'end'"; break;
+        case lucid::Error::ExpectedIdentifier: err = "expected identifier"; break;
+        case lucid::Error::ExpectedExpr: err = "expected expression"; break;
+        case lucid::Error::ExpectedLHSExpr: err = "expected left-hand side expression"; break;
+        case lucid::Error::ExpectedArgList: err = "expected arg list"; break;
+        case lucid::Error::ExpectedFormalParams: err = "expected formal params"; break;
+        case lucid::Error::ExpectedFunction: err = "expected function name"; break;
+        case lucid::Error::ExpectedStructType: err = "expected Struct type"; break;
+        case lucid::Error::ExpectedVar: err = "expected var"; break;
+        case lucid::Error::AssignmentNotAllowedHere: err = "assignment not allowed here"; break;
+        case lucid::Error::InvalidStructId: err = "invalid Struct identifier"; break;
+        case lucid::Error::InvalidParamCount: err = "invalid param count"; break;
+        case lucid::Error::UndefinedIdentifier: err = "undefined identifier"; break;
+        case lucid::Error::ParamOutOfRange: err = "param must be 0..15"; break;
+        case lucid::Error::JumpTooBig: err = "tried to jump too far"; break;
+        case lucid::Error::IfTooBig: err = "too many instructions in if"; break;
+        case lucid::Error::ElseTooBig: err = "too many instructions in else"; break;
+        case lucid::Error::StringTooLong: err = "string too long"; break;
+        case lucid::Error::TooManyConstants: err = "too many constants"; break;
+        case lucid::Error::TooManyVars: err = "too many vars"; break;
+        case lucid::Error::DefOutOfRange: err = "def out of range"; break;
+        case lucid::Error::ExpectedDef: err = "expected def"; break;
+        case lucid::Error::NoMoreTemps: err = "no more temp variables available"; break;
+        case lucid::Error::TempNotAllocated: err = "temp not allocated"; break;
+        case lucid::Error::InternalError: err = "internal error"; break;
+        case lucid::Error::StackTooBig: err = "stack too big"; break;
+        case lucid::Error::MismatchedType: err = "mismatched type"; break;
+        case lucid::Error::WrongType: err = "wrong type"; break;
+        case lucid::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
+        case lucid::Error::OnlyAllowedInLoop: err = "break/continue only allowed in loop"; break;
+        case lucid::Error::DuplicateIdentifier: err = "duplicate identifier"; break;
+        case lucid::Error::ExecutableTooBig: err = "executable too big"; break;
+        case lucid::Error::InitializerNotAllowed: err = "initializer not allowed for this type"; break;
+        case lucid::Error::ConstMustBeSimpleType: err = "const must be simple type"; break;
     }
     
     if (token == lucid::Token::EndOfFile) {
@@ -129,7 +129,6 @@ int main(int argc, char * const argv[]) {
     std::vector<std::pair<int32_t, std::string>> functions;
 
     for (const auto& it : inputFiles) {
-        lucid::Compiler compiler;
         std::fstream stream;
         stream.open(it.c_str(), std::fstream::in);
         if (stream.fail()) {
@@ -143,8 +142,10 @@ int main(int argc, char * const argv[]) {
         
         lucid::randomSeed(uint32_t(clock()));
 
-        compiler.compile(&stream, executable, MaxExecutableSize, { }, &annotations);
-        if (compiler.error() != lucid::Compiler::Error::None) {
+        lucid::CompileEngine compiler(&stream, &annotations);
+
+        compiler.compile(executable, MaxExecutableSize, { });
+        if (compiler.error() != lucid::Error::None) {
             showError(compiler.error(), compiler.expectedToken(), compiler.expectedString(), compiler.lineno(), compiler.charno());
             std::cout << "          Executable size=" << std::to_string(executable.size()) << "\n";
             return -1;
