@@ -46,10 +46,10 @@ Compiler::program()
         while(strucT()) { }
         
         // Handle top level struct if it exists
-        uint32_t structIndex;
         std::string id;
         if (identifier(id)) {
-            expect(findStruct(id, structIndex), Error::ExpectedStructType);
+            Struct* struc = findStruct(id);
+            expect(struc != nullptr, Error::ExpectedStructType);
             expect(identifier(id), Error::ExpectedIdentifier);
         }
 
@@ -96,15 +96,14 @@ Compiler::strucT()
     std::string id;
     expect(identifier(id), Error::ExpectedIdentifier);
 
-    // Add a struct entry
-    _structs.emplace_back(id);
-    
+    // Add a struct
     if (!_structStack.empty()) {
         // This is a child of another struct
-        currentStruct().addStruct(uint32_t(_structs.size()) - 1);
+        _structStack.push_back(&(currentStruct()->addStruct(id, Type(_nextStructType++))));
+    } else {
+        _structs.emplace_back(id, Type(_nextStructType++));
+        _structStack.push_back(&(_structs.back()));
     }
-    
-    _structStack.push_back(uint32_t(_structs.size() - 1));
     
     expect(Token::OpenBrace);
     
@@ -241,12 +240,12 @@ Compiler::var(Type type, bool isPointer)
 
     // Put the var in the current struct unless we're in a function, then put it in _locals
     if (_inFunction) {
-        expect(currentFunction().addLocal(id, type, size, isPointer), Error::DuplicateIdentifier);
+        expect(currentFunction()->addLocal(id, type, size, isPointer), Error::DuplicateIdentifier);
     } else {
         expect(!_structStack.empty(), Error::InternalError);
         
         // FIXME: Need to deal with ptr and size
-        expect(currentStruct().addLocal(id, type, size, false), Error::DuplicateIdentifier);
+        expect(currentStruct()->addLocal(id, type, size, false), Error::DuplicateIdentifier);
     }
     
     // Check for an initializer. We only allow initializers on Int and Float
@@ -315,15 +314,24 @@ Compiler::type(Type& t)
         return false;
     }
     
-    auto it = find_if(_structs.begin(), _structs.end(),
-                    [id](const Struct s) { return s.name() == id; });
-    if (it != _structs.end()) {
-        // Types from StructTypeStart - 0xff are structs. Make the enum the struct
-        // index + StructTypeStart
-        t = Type(StructTypeStart + (it - _structs.begin()));
+    // First look in the child structs then at the peers
+    Struct* struc = currentStruct();
+    expect(struc != nullptr, Error::InternalError);
+    struc = struc->findStruct(id);
+    
+    if (struc) {
+        t = struc->type();
         _scanner.retireToken();
         return true;
     }
+    
+    struc = findStruct(id);
+    if (struc) {
+        t = struc->type();
+        _scanner.retireToken();
+        return true;
+    }
+    
     return false;
 }
 
@@ -344,7 +352,8 @@ Compiler::function()
     expect(identifier(id), Error::ExpectedIdentifier);
 
     // Remember the function
-    _functions.emplace_back(id, t);
+    expect(currentStruct() != nullptr, Error::InternalError);
+    _currentFunction = currentStruct()->addFunction(id, t);
     _inFunction = true;
     
     expect(Token::OpenParen);
@@ -383,6 +392,7 @@ Compiler::function()
 //    }
     
     _inFunction = false;
+    _currentFunction = nullptr;
     return true;
 }
 
@@ -393,8 +403,10 @@ Compiler::init()
         return false;
     }
     
+    // The init method is a function that has no name and no return type
     // Remember the function
-    _functions.emplace_back();
+    expect(currentStruct() != nullptr, Error::InternalError);
+    _currentFunction = currentStruct()->addFunction("", Type::None);
     _inFunction = true;
     
     expect(Token::OpenParen);
@@ -433,6 +445,7 @@ Compiler::init()
 //    }
     
     _inFunction = false;
+    _currentFunction = nullptr;
     return true;
 }
 
@@ -462,7 +475,7 @@ Compiler::compoundStatement()
     // added so we can toss them at the end
     auto numLocals = 0;
     if (_inFunction) {
-        numLocals = currentFunction().numLocals();
+        numLocals = currentFunction()->numLocals();
     }
     
     while(statement()) { }
@@ -471,7 +484,7 @@ Compiler::compoundStatement()
     
     // prune the locals added in this block
     if (_inFunction) {
-        currentFunction().pruneLocals(currentFunction().numLocals() - numLocals);
+        currentFunction()->pruneLocals(currentFunction()->numLocals() - numLocals);
     }
     return true;
 }
@@ -545,7 +558,7 @@ Compiler::forStatement()
 
             // Generate an expression
             expect(_inFunction, Error::InternalError);
-            expect(currentFunction().addLocal(id, t, sizeInBytes(t), false), Error::DuplicateIdentifier);
+            expect(currentFunction()->addLocal(id, t, sizeInBytes(t), false), Error::DuplicateIdentifier);
             _nextMem += 1;
 
             // FIXME: This needs to be an arithmeticExpression?
@@ -694,7 +707,7 @@ Compiler::returnStatement()
         // Push the return value
     } else {
         // If the function return type not None, we need a return value
-        expect(currentFunction().returnType() == Type::None, Error::MismatchedType);
+        expect(currentFunction()->returnType() == Type::None, Error::MismatchedType);
     }
     
     expect(Token::Semicolon);
@@ -858,9 +871,9 @@ Compiler::primaryExpression()
     std::string id;
     if (identifier(id)) {
         expect(_inFunction, Error::InternalError);
-        uint32_t symbolIndex;
-        if (findSymbol(id, symbolIndex)) {
-            return std::make_shared<VarNode>(symbolIndex);
+        Symbol* symbol = findSymbol(id);
+        if (symbol) {
+            return std::make_shared<VarNode>(symbol);
         }
         
         Type t;
@@ -900,7 +913,7 @@ Compiler::formalParameterList()
     
         std::string id;
         expect(identifier(id), Error::ExpectedIdentifier);
-        currentFunction().addArg(id, t, sizeInBytes(t), isPointer);
+        currentFunction()->addArg(id, t, sizeInBytes(t), isPointer);
         
         if (!match(Token::Comma)) {
             return true;
@@ -1139,20 +1152,6 @@ Compiler::findInt(int32_t i)
     return 0;
 }
 
-const
-Function&
-Compiler::handleFunctionName()
-{
-    std::string targ;
-    expect(identifier(targ), Error::ExpectedIdentifier);
-    
-    auto it = find_if(_functions.begin(), _functions.end(),
-                    [targ](const Function& fun) { return fun.name() == targ; });
-    expect(it != _functions.end(), Error::UndefinedIdentifier);
-
-    return *it;
-}
-
 uint8_t
 Compiler::findFloat(float f)
 {
@@ -1175,62 +1174,41 @@ Compiler::findFloat(float f)
     return 0;
 }
 
-bool
-Compiler::findFunction(const std::string& s, Function& fun)
-{
-    auto it = find_if(_functions.begin(), _functions.end(),
-                    [s](const Function& fun) { return fun.name() == s; });
-
-    if (it != _functions.end()) {
-        fun = *it;
-        return true;
-    }
-    
-    return false;
-}
-
-bool
-Compiler::findStruct(const std::string& id, uint32_t& structIndex)
+Struct*
+Compiler::findStruct(const std::string& id)
 {
     auto it = find_if(_structs.begin(), _structs.end(),
                     [id](const Struct s) { return s.name() == id; });
     if (it != _structs.end()) {
-        structIndex = uint32_t(_structs.begin() - it);
-        return true;
+        return &(*it);
     }
-    return false;
+    return nullptr;
 }
 
-bool
-Compiler::findSymbol(const std::string& s, uint32_t& symbolIndex)
+Symbol*
+Compiler::findSymbol(const std::string& s)
 {
+    // If we're in a function, look at the local function vars first.
+    // Then look at the vars in this struct
+    //
     // First look in the current function and then in the parent struct
-    if (currentFunction().findLocal(s, symbolIndex)) {
-        return true;
-    }
+    Symbol *symbol = nullptr;
     
-    // Next look in the current struct
-    Struct& strucT = currentStruct();
-    if (strucT.findLocal(s, symbolIndex)) {
-        return true;
-    }
-    
-    // Finally look up the struct chain
-    for (auto i : strucT.structIndexes()) {
-        if (_structs[i].findLocal(s, symbolIndex)) {
-            return true;
+    if (_inFunction) {
+        Symbol *symbol = currentFunction()->findLocal(s);
+        if (symbol) {
+            return symbol;
         }
     }
-    return false;
-}
-
-bool
-Compiler::isExprFunction()
-{
-//    expect(!_exprStack.empty(), Error::InternalError);
     
-    Function fun;
-    return true; //findFunction(_exprStack.back(), fun);
+    // Next look at the vars in the current struct
+    Struct* strucT = currentStruct();
+    symbol = strucT->findLocal(s);
+    if (symbol) {
+        return symbol;
+    }
+    
+    return nullptr;
 }
 
 bool

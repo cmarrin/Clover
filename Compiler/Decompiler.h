@@ -14,6 +14,7 @@
 
 #include <vector>
 #include "Scanner.h"
+#include "Struct.h"
 
 namespace lucid {
 

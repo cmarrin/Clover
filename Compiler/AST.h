@@ -35,6 +35,7 @@ enum class ASTNodeType {
 };
 
 class ASTNode;
+class Symbol;
 
 using ASTPtr = std::shared_ptr<ASTNode>;
 using ASTNodeList = std::vector<ASTPtr>;
@@ -66,12 +67,12 @@ class StatementsNode : public ASTNode
 class VarNode : public ASTNode
 {
   public:
-    VarNode(uint32_t symbolIndex) : _symbolIndex(symbolIndex) { }
+    VarNode(Symbol* symbol) : _symbol(symbol) { }
 
     virtual ASTNodeType type() const override{ return ASTNodeType::Var; }
 
   private:
-    uint32_t _symbolIndex = 0;
+    Symbol* _symbol = nullptr;
 };
 
 // This can hold a numeric float, int or a constant. Constants are

@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include "Defines.h"
+
 namespace lucid {
 
 // A symbol is a variable inside a struct or function. They have a name and type.

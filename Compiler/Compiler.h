@@ -315,8 +315,8 @@ private:
     
     virtual bool isReserved(Token token, const std::string str, Reserved&);
 
-    bool findStruct(const std::string&, uint32_t& structIndex);
-    bool findSymbol(const std::string&, uint32_t& symbolIndex);
+    Struct* findStruct(const std::string&);
+    Symbol* findSymbol(const std::string&);
     uint8_t findInt(int32_t);
     uint8_t findFloat(float);
 
@@ -343,25 +343,6 @@ private:
     
     uint16_t sizeInBytes(Type type) const;
     
-    bool addASTNode(std::shared_ptr<ASTNode> node)
-    {
-        assert(!_currentNodeStack.empty());
-        _currentNodeStack.back()->addNode(node);
-        _currentNodeStack.push_back(node);
-        return true;
-    }
-    
-    bool popASTNode()
-    {
-        if (_currentNodeStack.empty()) {
-            return false;
-        }
-        _currentNodeStack.pop_back();
-        return true;
-    }
-    
-    const Function& handleFunctionName();
-
     struct Def
     {
         Def() { }
@@ -373,10 +354,10 @@ private:
         uint8_t _value;
     };
     
-    Function& currentFunction()
+    Function* currentFunction()
     {
-        expect(!_functions.empty(), Error::InternalError);
-        return _functions.back();
+        expect(_inFunction && _currentFunction, Error::InternalError);
+        return _currentFunction;
     }
     
     void annotate()
@@ -387,38 +368,11 @@ private:
     }
     
     uint8_t allocNativeId() { return _nextNativeId++; }
-        
-    bool findFunction(const std::string&, Function&);
 
     Error _error = Error::None;
     Token _expectedToken = Token::None;
     std::string _expectedString;
     
-    // The ExprStack
-    //
-    // This is a stack of the operators being processed. Values can be:
-    //
-    //      Id      - string id
-    //      Float   - float constant
-    //      Int     - int32_t constant
-    //      Dot     - r0 contains a ref. entry is an index into a Struct.
-
-    // ExprAction indicates what to do with the top entry on the ExprStack during baking
-    //
-    //      Right       - Entry is a RHS, so it can be a float, int or id and the value 
-    //                    is loaded into r0
-    //      Left        - Entry is a LHS, so it must be an id, value in r0 is stored at the id
-    //      Function    - Entry is the named function which has already been emitted so value
-    //                    is the return value in r0
-    //      Ref         - Value left in r0 must be an address to a value (Const or RAM)
-    //      Deref       = Value must be a Struct entry for the value in _stackEntry - 1
-    //      Dot         - Dot operator. TOS must be a struct id, TOS-1 must be a ref with
-    //                    a type. Struct id must be a member of the type of the ref.
-    //                    pop the two 
-    //
-    enum class ExprAction { Left, Right, Ref, Index, Offset };
-    bool isExprFunction();
-
     struct Constant
     {
         Constant(Type t, const std::string& id, int32_t value) : _type(t), _id(id), _value(value) { }
@@ -453,10 +407,10 @@ private:
     
     bool structFromType(Type, Struct&);
 
-    Struct& currentStruct()
+    Struct* currentStruct()
     {
         expect(!_structStack.empty(), Error::InternalError);
-        return _structs[_structStack.back()];
+        return _structStack.back();
     }
 
     struct JumpEntry
@@ -476,15 +430,15 @@ private:
     Scanner _scanner;
 
     bool _inFunction = false;
+    Function* _currentFunction = nullptr;
+    
+    uint8_t _nextStructType = StructTypeStart;
 
     uint32_t _entryStructIndex;
     
     std::vector<Constant> _constants;
-    std::vector<Function> _functions;
     std::vector<Struct> _structs;
-    std::vector<uint32_t> _structStack;
-
-    std::vector<std::shared_ptr<ASTNode>> _currentNodeStack;
+    std::vector<Struct*> _structStack;
     
     // The jump list is an array of arrays of JumpEntries. The outermost array
     // is a stack of active looping statements (for, loop, etc.). Each of these

@@ -11,34 +11,42 @@
 
 #pragma once
 
+#include "Function.h"
+#include "Symbol.h"
+
 namespace lucid {
 
     class Struct
     {
     public:
-        Struct() { }
-        
-        Struct(const std::string& name)
+        Struct(const std::string& name, Type type)
             : _name(name)
+            , _type(type)
         { }
         
         const std::vector<Symbol>& locals() const { return _locals; }
-        const std::vector<uint32_t>& structIndexes() const { return _structIndexes; }
         
         const std::string& name() const { return _name; }
+        Type type() const { return _type; }
         uint8_t size() const { return _localSize; }
         
-        bool addStruct(uint32_t index)
+        Function* addFunction(const std::string& name, Type returnType)
         {
-            _structIndexes.emplace_back(index);
-            return true;
+            _functions.emplace_back(name, returnType);
+            return &(_functions.back());
+        }
+
+        Struct& addStruct(const std::string& name, Type type)
+        {
+            _structs.emplace_back(name, type);
+            return _structs.back();
         }
 
         bool addLocal(const std::string& name, Type type, uint8_t size, bool ptr)
         {
             // Check for duplicates
-            uint32_t symbolIndex;
-            if (findLocal(name, symbolIndex)) {
+            Symbol* symbol = findLocal(name);
+            if (symbol) {
                 return false;
             }
             _locals.emplace_back(name, type, size, ptr);
@@ -46,25 +54,36 @@ namespace lucid {
             return true;
         }
 
-        bool findLocal(const std::string& s, uint32_t& symbolIndex)
+        Symbol* findLocal(const std::string& s)
         {
             const auto& it = find_if(_locals.begin(), _locals.end(),
                     [s](const Symbol& p) { return p.name() == s; });
 
             if (it != _locals.end()) {
-                symbolIndex = uint32_t(it - _locals.begin());
-                return true;
+                return &(*it);
             }
-            return false;
+            return nullptr;
+        }
+
+        Struct* findStruct(const std::string& s)
+        {
+            const auto& it = find_if(_structs.begin(), _structs.end(),
+                    [s](const Struct& p) { return p.name() == s; });
+
+            if (it != _structs.end()) {
+                return &(*it);
+            }
+            return nullptr;
         }
 
     private:
         std::string _name;
-        std::vector<uint32_t> _structIndexes;
+        std::vector<Struct> _structs;
         std::vector<Symbol> _locals;
         std::vector<Function> _functions;
         uint8_t _localSize = 0;
         uint8_t _size = 0;
+        Type _type = Type::None;
     };
     
 }

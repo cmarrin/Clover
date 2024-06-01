@@ -79,8 +79,7 @@ public:
     bool addLocal(const std::string& name, Type type, uint16_t size, bool ptr)
     {
         // Check for duplicates
-        uint32_t symbolIndex;
-        if (findLocal(name, symbolIndex)) {
+        if (findLocal(name)) {
             return false;
         }
         _locals.emplace_back(name, type, size, _localSize, ptr);
@@ -91,16 +90,15 @@ public:
         return true;
     }
 
-    bool findLocal(const std::string& s, uint32_t& symbolIndex)
+    Symbol* findLocal(const std::string& s)
     {
         const auto& it = find_if(_locals.begin(), _locals.end(),
                 [s](const Symbol& p) { return p.name() == s; });
 
         if (it != _locals.end()) {
-            symbolIndex = uint32_t(it - _locals.begin());
-            return true;
+            return &(*it);
         }
-        return false;
+        return nullptr;
     }
     
 private:
