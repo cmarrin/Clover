@@ -43,6 +43,8 @@ public:
     Error error() const { return _error; }
 
 private:
+    void firstPassStruct(const Struct&) const;
+    
     void constants();
     void commands();
     void statement();

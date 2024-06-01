@@ -272,6 +272,8 @@ public:
     uint32_t lineno() const { return _scanner.lineno(); }
     uint32_t charno() const { return _scanner.charno(); }
 
+    const std::vector<Struct>& structs() const { return _structs; }
+    
 protected:
     bool statement();
     bool function();

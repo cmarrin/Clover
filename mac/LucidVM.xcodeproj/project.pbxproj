@@ -136,20 +136,20 @@
 		4941A1032BBA27DE00CE3C9E /* Compiler */ = {
 			isa = PBXGroup;
 			children = (
-				4941A10D2BBA290B00CE3C9E /* Compiler.cpp */,
-				4941A1102BBA290B00CE3C9E /* Compiler.h */,
-				49C164B22C03E84700981AD1 /* Function.h */,
-				49C164B32C03E90400981AD1 /* Symbol.h */,
-				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
-				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
-				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
-				4941A10F2BBA290B00CE3C9E /* Scanner.h */,
-				49C164B52C04463000981AD1 /* OpInfo.h */,
-				49C164B62C04EC1E00981AD1 /* Codegen.cpp */,
-				49C164B72C04EC1E00981AD1 /* Codegen.h */,
 				49C164B82C04EC6400981AD1 /* AST.cpp */,
 				49C164B92C04EC6400981AD1 /* AST.h */,
+				49C164B62C04EC1E00981AD1 /* Codegen.cpp */,
+				49C164B72C04EC1E00981AD1 /* Codegen.h */,
+				4941A10D2BBA290B00CE3C9E /* Compiler.cpp */,
+				4941A1102BBA290B00CE3C9E /* Compiler.h */,
+				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
+				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
+				49C164B22C03E84700981AD1 /* Function.h */,
+				49C164B52C04463000981AD1 /* OpInfo.h */,
+				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
+				4941A10F2BBA290B00CE3C9E /* Scanner.h */,
 				49C164BC2C0545D100981AD1 /* Struct.h */,
+				49C164B32C03E90400981AD1 /* Symbol.h */,
 			);
 			name = Compiler;
 			sourceTree = "<group>";

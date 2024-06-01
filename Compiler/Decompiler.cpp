@@ -13,10 +13,22 @@
 
 using namespace lucid;
 
-bool Decompiler::printFirstPass(const Compiler& engine)
+bool Decompiler::printFirstPass(const Compiler& compiler)
 {
-    // Output constants
+    // FIXME: Output constants
+    
+    // Output top level structs
+    for (auto &it : compiler.structs()) {
+        firstPassStruct(it);
+    }
+    
+    // Output entry point struct instance
     return true;
+}
+
+void Decompiler::firstPassStruct(const Struct& struc) const
+{
+    // 
 }
 
 bool Decompiler::decompile()
