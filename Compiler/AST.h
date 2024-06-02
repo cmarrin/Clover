@@ -20,6 +20,7 @@
 #include <string>
 
 #include "Defines.h"
+#include "Symbol.h"
 
 namespace lucid {
 
@@ -30,6 +31,7 @@ enum class ASTNodeType {
     Op,
     Var,
     Constant,
+    String,
     Dot,
 };
 
@@ -47,6 +49,12 @@ class ASTNode
     
     virtual ASTNodeType type() const = 0;
     virtual void addNode(const std::shared_ptr<ASTNode>&) { }
+    virtual bool isTerminal() const { return false; }
+    
+    // isList is true if this node can have more than two children and the node itself has not operation
+    virtual bool isList() const { return false; }
+    virtual const ASTPtr child(uint32_t i) const { return nullptr; }
+    virtual std::string toString() const { return ""; }
 };
 
 class StatementsNode : public ASTNode
@@ -54,11 +62,21 @@ class StatementsNode : public ASTNode
   public:
     virtual ASTNodeType type() const override{ return ASTNodeType::Statements; }
     
+    virtual bool isList() const override { return true; }
+
     virtual void addNode(const std::shared_ptr<ASTNode>& node) override
     {
         _statements.push_back(node);
     }
     
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (_statements.size() <= i) {
+            return nullptr;
+        }
+        return _statements[i];
+    }
+
   private:
     ASTNodeList _statements;
 };
@@ -69,6 +87,9 @@ class VarNode : public ASTNode
     VarNode(Symbol* symbol) : _symbol(symbol) { }
 
     virtual ASTNodeType type() const override{ return ASTNodeType::Var; }
+    virtual bool isTerminal() const override { return true; }
+
+    virtual std::string toString() const override { return _symbol ? _symbol->name() : ""; }
 
   private:
     Symbol* _symbol = nullptr;
@@ -91,9 +112,19 @@ class ConstantNode : public ASTNode
     ConstantNode(uint32_t v) : _numeric(true), _i(v) { }
 
     virtual ASTNodeType type() const override{ return ASTNodeType::Constant; }
+    virtual bool isTerminal() const override { return true; }
+
+    virtual std::string toString() const override
+    {
+        // FIXME: Need to handle Float, etc.
+        if (_numeric) {
+            return std::to_string(_i);
+        }
+        return "";
+    }
 
   private:
-    Type _t;
+    Type _t = Type::None;
     bool _numeric = false; // If true, type is Float or UInt32
     union {
         float _f;
@@ -163,14 +194,29 @@ class DotNode : public ASTNode
   public:
     DotNode(const std::shared_ptr<ASTNode>& operand, const std::string& id)
         : _operand(operand)
-        , _id(id)
-    { }
+    {
+        // Create a StringNode for the id, for consistency
+        _property = std::make_shared<StringNode>(id);
+    }
     
-    virtual ASTNodeType type() const override{ return ASTNodeType::UnaryOp; }
+    virtual ASTNodeType type() const override{ return ASTNodeType::Dot; }
+
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (i == 0) {
+            return _operand;
+        }
+        if (i == 1) {
+            return _property;
+        }
+        return nullptr;
+    }
+
+    virtual std::string toString() const override { return "."; }
 
   private:
     std::shared_ptr<ASTNode> _operand;
-    std::string _id;
+    std::shared_ptr<ASTNode> _property;
 };
 
 }
