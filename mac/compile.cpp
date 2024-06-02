@@ -226,27 +226,27 @@ int main(int argc, char * const argv[]) {
 //            }
 //        }
 //        std::cout << "Executables saved\n";
-
-        // decompile if needed
-        if (decompile) {
-            std::string out;
-            lucid::Decompiler decompiler(&executable, &out, annotations);
-            bool success = decompiler.decompile();
-            std::cout << "\nDecompiled executable:\n" << out << "\nEnd decompilation\n\n";
-            if (!success) {
-                const char* err = "unknown";
-                switch(decompiler.error()) {
-                    case lucid::Decompiler::Error::None: err = "internal error"; break;
-                    case lucid::Decompiler::Error::InvalidSignature: err = "invalid signature"; break;
-                    case lucid::Decompiler::Error::InvalidOp: err = "invalid op"; break;
-                    case lucid::Decompiler::Error::PrematureEOF: err = "premature EOF"; break;
-                }
-                std::cout << "Decompile failed: " << err << "\n\n";
-                return 0;
-            }
-        }
-        
-        // Execute if needed
+//
+//        // decompile if needed
+//        if (decompile) {
+//            std::string out;
+//            lucid::Decompiler decompiler(&executable, &out, annotations);
+//            bool success = decompiler.decompile();
+//            std::cout << "\nDecompiled executable:\n" << out << "\nEnd decompilation\n\n";
+//            if (!success) {
+//                const char* err = "unknown";
+//                switch(decompiler.error()) {
+//                    case lucid::Decompiler::Error::None: err = "internal error"; break;
+//                    case lucid::Decompiler::Error::InvalidSignature: err = "invalid signature"; break;
+//                    case lucid::Decompiler::Error::InvalidOp: err = "invalid op"; break;
+//                    case lucid::Decompiler::Error::PrematureEOF: err = "premature EOF"; break;
+//                }
+//                std::cout << "Decompile failed: " << err << "\n\n";
+//                return 0;
+//            }
+//        }
+//
+//        // Execute if needed
 //        if (execute) {
 //            Simulator sim;
 //            
