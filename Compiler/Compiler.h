@@ -272,7 +272,20 @@ public:
     uint32_t lineno() const { return _scanner.lineno(); }
     uint32_t charno() const { return _scanner.charno(); }
 
-    const std::vector<Struct>& structs() const { return _structs; }
+    const std::vector<StructPtr>& structs() const { return _structs; }
+    
+    const StructPtr structFromType(Type type) const
+    {
+        uint8_t i = uint8_t(type);
+        if (i < StructTypeStart) {
+            return nullptr;
+        }
+        i -= StructTypeStart;
+        if (i >= _structTypes.size()) {
+            return nullptr;
+        }
+        return _structTypes[i];
+    }
     
 protected:
     bool statement();
@@ -304,7 +317,6 @@ private:
     enum class ArithType { Assign, Op };
     
     ASTPtr expression();
-    ASTPtr assignmentExpression();
     ASTPtr arithmeticExpression(const ASTPtr& lhs, uint8_t minPrec = 1);
     ASTPtr unaryExpression();
     ASTPtr postfixExpression();
@@ -315,7 +327,13 @@ private:
     
     virtual bool isReserved(Token token, const std::string str, Reserved&);
 
-    Struct* findStruct(const std::string&);
+    StructPtr addStruct(const std::string& name, Type type)
+    {
+        _structs.push_back(std::make_shared<Struct>(name, type));
+        return _structs.back();
+    }
+
+    StructPtr findStruct(const std::string&);
     Symbol* findSymbol(const std::string&);
     uint8_t findInt(int32_t);
     uint8_t findFloat(float);
@@ -405,9 +423,9 @@ private:
         Type _type;
     };
     
-    bool structFromType(Type, Struct&);
+    bool structFromType(Type, StructPtr&);
 
-    Struct* currentStruct()
+    StructPtr currentStruct()
     {
         expect(!_structStack.empty(), Error::InternalError);
         return _structStack.back();
@@ -433,12 +451,13 @@ private:
     Function* _currentFunction = nullptr;
     
     uint8_t _nextStructType = StructTypeStart;
+    std::vector<StructPtr> _structTypes; // array of structs, ordered by (type-StructTypeStart)
 
     uint32_t _entryStructIndex;
     
     std::vector<Constant> _constants;
-    std::vector<Struct> _structs;
-    std::vector<Struct*> _structStack;
+    std::vector<StructPtr> _structs;
+    std::vector<StructPtr> _structStack;
     
     // The jump list is an array of arrays of JumpEntries. The outermost array
     // is a stack of active looping statements (for, loop, etc.). Each of these

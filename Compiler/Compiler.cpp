@@ -48,7 +48,7 @@ Compiler::program()
         // Handle top level struct if it exists
         std::string id;
         if (identifier(id)) {
-            Struct* struc = findStruct(id);
+            StructPtr struc = findStruct(id);
             expect(struc != nullptr, Error::ExpectedStructType);
             expect(identifier(id), Error::ExpectedIdentifier);
         }
@@ -99,10 +99,11 @@ Compiler::strucT()
     // Add a struct
     if (!_structStack.empty()) {
         // This is a child of another struct
-        _structStack.push_back(&(currentStruct()->addStruct(id, Type(_nextStructType++))));
+        _structStack.push_back(currentStruct()->addStruct(id, Type(_nextStructType++)));
+        _structTypes.push_back(_structStack.back());
     } else {
-        _structs.emplace_back(id, Type(_nextStructType++));
-        _structStack.push_back(&(_structs.back()));
+        _structStack.push_back(addStruct(id, Type(_nextStructType++)));
+        _structTypes.push_back(_structStack.back());
     }
     
     expect(Token::OpenBrace);
@@ -315,7 +316,7 @@ Compiler::type(Type& t)
     }
     
     // First look in the child structs then at the peers
-    Struct* struc = currentStruct();
+    StructPtr struc = currentStruct();
     expect(struc != nullptr, Error::InternalError);
     struc = struc->findStruct(id);
     
@@ -739,29 +740,19 @@ Compiler::jumpStatement()
 bool
 Compiler::expressionStatement()
 {
-    if (!assignmentExpression()) {
+    ASTPtr node = expression();
+    if (!node) {
         return false;
     }
     
-    // The exprStack may or may not have one entry.
-    // If it does it means that there was an unused
-    // value from the expression, for instance, a
-    // return value from a function. If not it means
-    // the expression ended in an assignment. Do 
-    // what's needed.
-    
+    expect(_inFunction, Error::InternalError);
+    currentFunction()->addASTNode(node);
     expect(Token::Semicolon);
     return true;
 }
 
 ASTPtr
 Compiler::expression()
-{
-    return arithmeticExpression(primaryExpression(), 1);
-}
-
-ASTPtr
-Compiler::assignmentExpression()
 {
     return arithmeticExpression(unaryExpression(), 1);
 }
@@ -791,7 +782,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         }
         
         // Generate an ASTNode
-        lhs = std::make_shared<BinaryOpNode>(opInfo.oper(), lhs, rhs);
+        lhs = std::make_shared<OpNode>(lhs, opInfo.oper(), rhs);
     }
     
     return lhs;
@@ -823,7 +814,7 @@ Compiler::unaryExpression()
         return nullptr;
     }
     
-    return std::make_shared<UnaryOpNode>(oper, unaryExpression());
+    return std::make_shared<OpNode>(oper, unaryExpression());
 }
 
 ASTPtr
@@ -841,7 +832,7 @@ Compiler::postfixExpression()
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
-            ASTPtr result = std::make_shared<BinaryOpNode>(Operator::ArrIdx, lhs, rhs);
+            ASTPtr result = std::make_shared<OpNode>(lhs, Operator::ArrIdx, rhs);
             expect(Token::CloseBracket);
             return result;
         } else if (match(Token::Dot)) {
@@ -849,9 +840,9 @@ Compiler::postfixExpression()
             expect(identifier(id), Error::ExpectedIdentifier);
             return std::make_shared<DotNode>(lhs, id);
         } else if (match(Token::Inc)) {
-            return std::make_shared<UnaryOpNode>(Operator::Inc, lhs);
+            return std::make_shared<OpNode>(lhs, Operator::Inc);
         } else if (match(Token::Dec)) {
-            return std::make_shared<UnaryOpNode>(Operator::Dec, lhs);
+            return std::make_shared<OpNode>(lhs, Operator::Dec);
         } else {
             return lhs;
         }
@@ -1174,13 +1165,13 @@ Compiler::findFloat(float f)
     return 0;
 }
 
-Struct*
+StructPtr
 Compiler::findStruct(const std::string& id)
 {
     auto it = find_if(_structs.begin(), _structs.end(),
-                    [id](const Struct s) { return s.name() == id; });
+                    [id](const StructPtr& s) { return s->name() == id; });
     if (it != _structs.end()) {
-        return &(*it);
+        return *it;
     }
     return nullptr;
 }
@@ -1202,7 +1193,7 @@ Compiler::findSymbol(const std::string& s)
     }
     
     // Next look at the vars in the current struct
-    Struct* strucT = currentStruct();
+    StructPtr strucT = currentStruct();
     symbol = strucT->findLocal(s);
     if (symbol) {
         return symbol;
@@ -1212,7 +1203,7 @@ Compiler::findSymbol(const std::string& s)
 }
 
 bool
-Compiler::structFromType(Type type, Struct& s)
+Compiler::structFromType(Type type, StructPtr& s)
 {
     if (uint8_t(type) < StructTypeStart) {
         return false;
@@ -1281,7 +1272,7 @@ Compiler::sizeInBytes(Type type) const
             if (structIndex < 0 || structIndex > (255 - StructTypeStart)) {
                 return 0;
             }
-            return _structs[structIndex].size();
+            return _structs[structIndex]->size();
     }
 }
 
