@@ -27,8 +27,7 @@ namespace lucid {
 
 enum class ASTNodeType {
     Statements,
-    BinaryOp,
-    UnaryOp,
+    Op,
     Var,
     Constant,
     Dot,
@@ -102,35 +101,61 @@ class ConstantNode : public ASTNode
     };
 };
 
-class BinaryOpNode : public ASTNode
+// String constant
+class StringNode : public ASTNode
 {
   public:
-    BinaryOpNode(Operator op, const std::shared_ptr<ASTNode>& left, const std::shared_ptr<ASTNode>& right)
+    StringNode(const char* s) : _string(s) { }
+    StringNode(const std::string& s) : _string(s) { }
+    StringNode(char c) { _string = c; }
+
+    virtual ASTNodeType type() const override { return ASTNodeType::Constant; }
+    virtual bool isTerminal() const override { return true; }
+
+    virtual std::string toString() const override { return _string; }
+
+  private:
+    std::string _string;
+};
+
+class OpNode : public ASTNode
+{
+  public:
+    OpNode(const std::shared_ptr<ASTNode>& left, Operator op, const std::shared_ptr<ASTNode>& right)
         : _op(op)
         , _left(left)
         , _right(right)
     { }
     
-    virtual ASTNodeType type() const override{ return ASTNodeType::BinaryOp; }
+    OpNode(const std::shared_ptr<ASTNode>& left, Operator op)
+        : _op(op)
+        , _left(left)
+    { }
+    
+    OpNode(Operator op, const std::shared_ptr<ASTNode>& right)
+        : _op(op)
+        , _right(right)
+    { }
+    
+    virtual ASTNodeType type() const override{ return ASTNodeType::Op; }
+
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (i == 0) {
+            return _left;
+        }
+        if (i == 1) {
+            return _right;
+        }
+        return nullptr;
+    }
+
+    // FIXME: this only works for single character operators
+    virtual std::string toString() const override { return std::string(1, char(_op)); }
 
   private:
     Operator _op;
     std::shared_ptr<ASTNode> _left, _right;
-};
-
-class UnaryOpNode : public ASTNode
-{
-  public:
-    UnaryOpNode(Operator op, const std::shared_ptr<ASTNode>& operand)
-        : _op(op)
-        , _operand(operand)
-    { }
-    
-    virtual ASTNodeType type() const override{ return ASTNodeType::UnaryOp; }
-
-  private:
-    Operator _op;
-    std::shared_ptr<ASTNode> _operand;
 };
 
 class DotNode : public ASTNode
