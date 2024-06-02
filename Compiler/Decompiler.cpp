@@ -15,10 +15,13 @@ using namespace lucid;
 
 bool Decompiler::printFirstPass(const Compiler& compiler)
 {
+    _compiler = &compiler;
+    _out->append("\n");
+
     // FIXME: Output constants
     
     // Output top level structs
-    for (auto &it : compiler.structs()) {
+    for (auto &it : _compiler->structs()) {
         firstPassStruct(it);
     }
     
@@ -26,9 +29,114 @@ bool Decompiler::printFirstPass(const Compiler& compiler)
     return true;
 }
 
-void Decompiler::firstPassStruct(const Struct& struc) const
+const char* Decompiler::typeToString(Type type) const
 {
-    // 
+    switch(type) {
+        case Type::Int8:    return "int8";
+        case Type::UInt8:   return "uint8";
+        case Type::Int16:   return "int16";
+        case Type::UInt16:  return "uint16";
+        case Type::Int32:   return "int32";
+        case Type::UInt32:  return "uint32";
+        default: {
+            if (uint8_t(type) < StructTypeStart) {
+                return "**UNK**";
+            }
+            const StructPtr struc = _compiler->structFromType(type);
+            return struc ? struc->name().c_str() : "**ILL**";
+        }
+    }
+}
+
+void Decompiler::firstPassStruct(const StructPtr& struc)
+{
+    doIndent();
+    incIndent();
+    
+    _out->append("struct ");
+    _out->append(struc->name());
+    _out->append(" {\n");
+    
+    // Print child structs
+    for (auto& it : struc->structs()) {
+        firstPassStruct(it);
+    }
+    
+    // Print member vars
+    for (auto& it : struc->locals()) {
+        doIndent();
+        _out->append(typeToString(it.type()));
+        _out->append(it.isPointer() ? "* " : " ");
+        _out->append(it.name() + " [");
+        _out->append(std::to_string(it.size()) + " byte");
+        if (it.size() != 1) {
+            _out->append("s");
+        }
+        _out->append(" at ");
+        _out->append(std::to_string(it.addr()));
+        _out->append("]\n");
+    }
+    
+    _out->append("\n");
+
+    // Print functions
+    for (auto& it : struc->functions()) {
+        doIndent();
+        _out->append("function ");
+        if (it.returnType() != Type::None) {
+            _out->append(typeToString(it.returnType()));
+            _out->append(" ");
+        }
+        _out->append(it.name());
+        _out->append("( )");
+        _out->append("\n");
+        doIndent();
+        incIndent();
+        _out->append("{\n");
+        
+        printASTNode(it.astNode());
+        decIndent();
+        doIndent();
+        _out->append("}\n");
+    }
+
+    decIndent();
+    doIndent();
+    _out->append("}\n\n");
+}
+
+void Decompiler::printASTNode(const ASTPtr& ast)
+{
+    if (!ast) {
+        return;
+    }
+    
+    if (ast->isTerminal()) {
+        _out->append(ast->toString());
+        return;
+    }
+
+    if (ast->isList()) {
+        // Just walk all the children. There can be no null child, seeing a null stops the iteration
+        for (uint32_t i = 0; ; ++i) {
+            ASTPtr child = ast->child(i);
+            if (!child) {
+                break;
+            }
+            doIndent();
+            printASTNode(child);
+            _out->append("\n");
+        }
+        return;
+    }
+    
+    // Do an inorder traversal of the ast node. If isTerminal is true then
+    // visit this node. Otherwise there can be one or two children. If
+    // one then it can be on the left or right (for prefix or postfix unary
+    // operations).
+    printASTNode(ast->child(0));
+    _out->append(ast->toString());
+    printASTNode(ast->child(1));
 }
 
 bool Decompiler::decompile()

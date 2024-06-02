@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "AST.h"
 #include "Defines.h"
 #include "Symbol.h"
 
@@ -54,6 +55,7 @@ public:
     uint16_t argSize() const { return _argSize; }
     uint16_t localSize() const { return _localHighWaterMark; }
     const Symbol& local(uint8_t i) const { return _locals[i]; }
+    const ASTPtr& astNode() const { return _astNode; }
 
     uint32_t numLocals() const { return uint32_t(_locals.size()); }
     void pruneLocals(uint32_t n)
@@ -101,8 +103,11 @@ public:
         return nullptr;
     }
     
+    void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
+    
 private:
     std::string _name;
+    ASTPtr _astNode = std::make_shared<StatementsNode>();
     std::vector<Symbol> _locals;
     uint16_t _argSize = 0;// Size in bytes of all args
     uint16_t _localSize = 0; // Size in bytes of all locals, including args

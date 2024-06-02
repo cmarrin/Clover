@@ -44,7 +44,10 @@ public:
     Error error() const { return _error; }
 
 private:
-    void firstPassStruct(const Struct&) const;
+    void firstPassStruct(const StructPtr&);
+    void printASTNode(const ASTPtr& ast);
+    
+    const char* typeToString(Type) const;
     
     void constants();
     void commands();
@@ -121,10 +124,11 @@ private:
     const std::vector<uint8_t>* _in;
     std::vector<uint8_t>::const_iterator _it;
     std::string* _out;
-    int32_t _indent = 4;
+    int32_t _indent = 1;
     uint16_t _codeOffset = 0; // Used by Call
     const AnnotationList& _annotations;
     int _annotationIndex = 0;
+    const Compiler* _compiler = nullptr;
 };
 
 }
