@@ -28,7 +28,7 @@ public:
     { }
     
     const std::vector<Function>& functions() const { return _functions; }
-    const std::vector<Symbol>& locals() const { return _locals; }
+    const std::vector<SymbolPtr>& locals() const { return _locals; }
     
     const std::string& name() const { return _name; }
     Type type() const { return _type; }
@@ -51,22 +51,22 @@ public:
     bool addLocal(const std::string& name, Type type, uint8_t size, bool ptr)
     {
         // Check for duplicates
-        Symbol* symbol = findLocal(name);
+        SymbolPtr symbol = findLocal(name);
         if (symbol) {
             return false;
         }
-        _locals.emplace_back(name, type, size, ptr);
+        _locals.push_back(std::make_shared<Symbol>(name, type, size, ptr));
         _localSize += size;
         return true;
     }
 
-    Symbol* findLocal(const std::string& s)
+    SymbolPtr findLocal(const std::string& s)
     {
         const auto& it = find_if(_locals.begin(), _locals.end(),
-                [s](const Symbol& p) { return p.name() == s; });
+                [s](const SymbolPtr& p) { return p->name() == s; });
 
         if (it != _locals.end()) {
-            return &(*it);
+            return *it;
         }
         return nullptr;
     }
@@ -85,7 +85,7 @@ public:
 private:
     std::string _name;
     std::vector<StructPtr> _structs;
-    std::vector<Symbol> _locals;
+    std::vector<SymbolPtr> _locals;
     std::vector<Function> _functions;
     uint8_t _localSize = 0;
     uint8_t _size = 0;

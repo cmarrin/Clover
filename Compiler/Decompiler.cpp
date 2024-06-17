@@ -65,15 +65,15 @@ void Decompiler::firstPassStruct(const StructPtr& struc)
     // Print member vars
     for (auto& it : struc->locals()) {
         doIndent();
-        _out->append(typeToString(it.type()));
-        _out->append(it.isPointer() ? "* " : " ");
-        _out->append(it.name() + " [");
-        _out->append(std::to_string(it.size()) + " byte");
-        if (it.size() != 1) {
+        _out->append(typeToString(it->type()));
+        _out->append(it->isPointer() ? "* " : " ");
+        _out->append(it->name() + " [");
+        _out->append(std::to_string(it->size()) + " byte");
+        if (it->size() != 1) {
             _out->append("s");
         }
         _out->append(" at ");
-        _out->append(std::to_string(it.addr()));
+        _out->append(std::to_string(it->addr()));
         _out->append("]\n");
     }
     

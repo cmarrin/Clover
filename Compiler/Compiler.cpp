@@ -8,6 +8,7 @@
 -------------------------------------------------------------------------*/
 
 #include "Compiler.h"
+#include "Codegen.h"
 
 #include <map>
 #include <vector>
@@ -32,6 +33,9 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     if (_error == Error::None && executable.size() > maxExecutableSize) {
         _error = Error::ExecutableTooBig;
     }
+    
+    // Do second pass
+    Codegen codeGen(&executable);
 
     return _error == Error::None;
 }
@@ -597,7 +601,7 @@ Compiler::forStatement()
         expression();
 
         // At this point the expresssion has been executed and the result is on TOS
-        addJumpEntry(Op::If, JumpEntry::Type::Break);
+        //addJumpEntry(Op::If, JumpEntry::Type::Break);
         expect(Token::Semicolon);
     }
     
@@ -634,7 +638,7 @@ Compiler::forStatement()
 //        delete [ ] iterBuf;
 //    }
 
-    addJumpEntry(Op::Jump, JumpEntry::Type::Start);
+    //addJumpEntry(Op::Jump, JumpEntry::Type::Start);
 
 //    uint16_t breakAddr = _rom8.size();
 
@@ -659,14 +663,14 @@ Compiler::whileStatement()
     
     expression();
 
-    addJumpEntry(Op::If, JumpEntry::Type::Break);
+    //addJumpEntry(Op::If, JumpEntry::Type::Break);
 
     expect(Token::CloseParen);
     
     statement();
 
     // Loop back to the beginning
-    addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
+    //addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
         
     // Now resolve all the jumps (stmtAddr will never be used so just reuse loopAddr)
 //    exitJumpContext(loopAddr, loopAddr, _rom8.size());
@@ -688,7 +692,7 @@ Compiler::loopStatement()
     statement();
 
     // Loop back to the beginning
-    addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
+    //addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
     
     // Now resolve all the jumps (stmtAddr will never be used so just reuse loopAddr)
 //    exitJumpContext(loopAddr, loopAddr, _rom8.size());
@@ -731,7 +735,7 @@ Compiler::jumpStatement()
     // Make sure we're in a loop
     expect(!_jumpList.empty(), Error::OnlyAllowedInLoop);
     
-    addJumpEntry(Op::Jump, type);
+    //addJumpEntry(Op::Jump, type);
 
     expect(Token::Semicolon);
     return true;
@@ -782,7 +786,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         }
         
         // Generate an ASTNode
-        lhs = std::make_shared<OpNode>(lhs, opInfo.oper(), rhs);
+        lhs = std::make_shared<OpNode>(lhs, opInfo.opcode(), rhs, opInfo.assoc() == Assoc::Right);
     }
     
     return lhs;
@@ -862,7 +866,7 @@ Compiler::primaryExpression()
     std::string id;
     if (identifier(id)) {
         expect(_inFunction, Error::InternalError);
-        Symbol* symbol = findSymbol(id);
+        SymbolPtr symbol = findSymbol(id);
         if (symbol) {
             return std::make_shared<VarNode>(symbol);
         }
@@ -1176,17 +1180,15 @@ Compiler::findStruct(const std::string& id)
     return nullptr;
 }
 
-Symbol*
+SymbolPtr
 Compiler::findSymbol(const std::string& s)
 {
     // If we're in a function, look at the local function vars first.
     // Then look at the vars in this struct
     //
     // First look in the current function and then in the parent struct
-    Symbol *symbol = nullptr;
-    
     if (_inFunction) {
-        Symbol *symbol = currentFunction()->findLocal(s);
+        SymbolPtr symbol = currentFunction()->findLocal(s);
         if (symbol) {
             return symbol;
         }
@@ -1194,7 +1196,7 @@ Compiler::findSymbol(const std::string& s)
     
     // Next look at the vars in the current struct
     StructPtr strucT = currentStruct();
-    symbol = strucT->findLocal(s);
+    SymbolPtr symbol = strucT->findLocal(s);
     if (symbol) {
         return symbol;
     }

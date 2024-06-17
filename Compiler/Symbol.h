@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "Defines.h"
 
 namespace lucid {
@@ -49,5 +51,7 @@ private:
     uint8_t _size = 0;
     uint16_t _addr = 0;
 };
+
+using SymbolPtr = std::shared_ptr<Symbol>;
 
 }

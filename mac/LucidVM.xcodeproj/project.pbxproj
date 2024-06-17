@@ -7,13 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		49279C282C12396F00294992 /* Codegen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B62C04EC1E00981AD1 /* Codegen.cpp */; };
+		49279C2A2C1903BE00294992 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
 		4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A0F22BB6F59900CE3C9E /* compile.cpp */; };
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
 		4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
 		4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* Compiler.cpp */; };
 		49C164B02C02981300981AD1 /* interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49279C052C0148A100294992 /* interp.cpp */; };
 		49C164B12C0298CE00981AD1 /* ExecutionUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* ExecutionUnit.cpp */; };
-		49C164BA2C04ECBA00981AD1 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -39,6 +40,7 @@
 
 /* Begin PBXFileReference section */
 		49279C052C0148A100294992 /* interp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = interp.cpp; sourceTree = "<group>"; };
+		49279C292C16872100294992 /* ExprEntry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ExprEntry.h; path = ../Compiler/ExprEntry.h; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
 		4941A1012BBA1D2800CE3C9E /* Flicker.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.lucid; path = ../examples/Flicker.lucid; sourceTree = "<group>"; };
@@ -144,6 +146,7 @@
 				4941A1102BBA290B00CE3C9E /* Compiler.h */,
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
 				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
+				49279C292C16872100294992 /* ExprEntry.h */,
 				49C164B22C03E84700981AD1 /* Function.h */,
 				49C164B52C04463000981AD1 /* OpInfo.h */,
 				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
@@ -232,11 +235,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				49C164BA2C04ECBA00981AD1 /* AST.cpp in Sources */,
+				49279C2A2C1903BE00294992 /* AST.cpp in Sources */,
 				4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */,
 				4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
 				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
+				49279C282C12396F00294992 /* Codegen.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

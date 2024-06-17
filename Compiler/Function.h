@@ -54,7 +54,7 @@ public:
     Type returnType() const { return _returnType; }
     uint16_t argSize() const { return _argSize; }
     uint16_t localSize() const { return _localHighWaterMark; }
-    const Symbol& local(uint8_t i) const { return _locals[i]; }
+    const SymbolPtr& local(uint8_t i) const { return _locals[i]; }
     const ASTPtr& astNode() const { return _astNode; }
 
     uint32_t numLocals() const { return uint32_t(_locals.size()); }
@@ -62,7 +62,7 @@ public:
     {
         // remove the last n locals and reduce _localSize
         while (n-- > 0) {
-            _localSize -= _locals.back().size();
+            _localSize -= _locals.back()->size();
             _locals.pop_back();
         }
     }
@@ -84,7 +84,7 @@ public:
         if (findLocal(name)) {
             return false;
         }
-        _locals.emplace_back(name, type, size, _localSize, ptr);
+        _locals.push_back(std::make_shared<Symbol>(name, type, size, _localSize, ptr));
         _localSize += size;
         if (_localHighWaterMark < _localSize) {
             _localHighWaterMark = _localSize;
@@ -92,13 +92,13 @@ public:
         return true;
     }
 
-    Symbol* findLocal(const std::string& s)
+    SymbolPtr findLocal(const std::string& s)
     {
         const auto& it = find_if(_locals.begin(), _locals.end(),
-                [s](const Symbol& p) { return p.name() == s; });
+                [s](const SymbolPtr& p) { return p->name() == s; });
 
         if (it != _locals.end()) {
-            return &(*it);
+            return *it;
         }
         return nullptr;
     }
@@ -108,7 +108,7 @@ public:
 private:
     std::string _name;
     ASTPtr _astNode = std::make_shared<StatementsNode>();
-    std::vector<Symbol> _locals;
+    std::vector<SymbolPtr> _locals;
     uint16_t _argSize = 0;// Size in bytes of all args
     uint16_t _localSize = 0; // Size in bytes of all locals, including args
     Type _returnType = Type::None;

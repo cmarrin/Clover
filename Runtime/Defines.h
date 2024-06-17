@@ -10,6 +10,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdlib.h>
 
 namespace lucid {
 
@@ -18,7 +19,7 @@ namespace lucid {
     static inline String to_string(int32_t v) { return String(v); }
     static inline String to_string(float v) { return String(v); }
 #else
-    #include <string>
+    //#include <string>
     
     static inline void randomSeed(uint32_t s) { srand(s); }
     static inline int32_t random(int32_t min, int32_t max)
@@ -42,9 +43,9 @@ namespace lucid {
         return (b > a) ? b : a;
     }
     
-    using String = std::string;
-    static inline String to_string(int32_t v) { return std::to_string(v); }
-    static inline String to_string(float v) { return std::to_string(v); }
+    //using String = std::string;
+    //static inline std::string to_string(int32_t v) { return std::to_string(v); }
+    //static inline std::string to_string(float v) { return std::to_string(v); }
 #endif
 
 static inline float intToFloat(uint32_t i)
@@ -98,10 +99,160 @@ Opcodes:
     
     // Load and store rather than push/pop
     ex., a.b = c.d
+
+    Non-stack machine (patterned after 6809)
     
-    // With push/pop this is 
+    - Has an accumulator (A) that can hold 8, 16 or 32 bit value
+    - Has an index register (X) that is the width of an absolute addr
+    - Has a base pointer (L) register pointing to local vars
+    - Has a stack pointer that grows down
+    - Has a pc
+    
+    All addresses can be 2 bytes for a 64KB range or 4 bytes for a 2^32 byte range.
+    This is determined at compile time. Also at compile time you can specify
+    float support or not and max integer width (16 or 32 bits).
+    
+    - Address mode
+        The byte following the opcode indicates the addressing mode. Bits1:0 indicate
+        how the addressing value is used:
+                        
+            00 - Immediate. Value is the signed operand
+            01 - X. Add signed value to X to get EA
+            10 - Y. Add signed value to X to get EA
+            11 - U. Add signed value to U to get EA
+                        
+        if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 16. If bit 2 is 1
+        then bits 4:3 are the number of bytes that follow, from 1 (00) to 4 (11). If
+        1 byte follows then bits 7:5 are appended as the MSB of a 13 bit signed integer
+        from -1024 to 1023. If 2, 3 or 4 bytes follow no appending is done.
+
+    Stack frame and Base pointer
+    
+    Stack grows down so when you push a value the current SP points to it. On a call
+    args are pushed from left to right so rightmost param is at the lowest address.
+    The caller then pushes the return address and calls the function.
+    
+    The first
+    instruction of a function must be ENTER. This has a 4 bit (0-15), 1 or 2 byte
+    operand which is the number of bytes of local storage needed. The ENTER
+    instruction pushes the current BP (U register), sets BP = SP and subtracts the
+    number of local bytes from SP. When indexing from BP, positive offsets starting
+    at 4 address the args. Locals are addressed with negative offsets starting
+    at -1.
+    
+    On return, the callee sets SP = BP, pops the stack into BP and performs a
+    return operation. The caller then adds the number of bytes of args to SP.
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    LDAK<1,2,4>     - Load 1, 2 or 4 bytes into A immediate
+    LDAX<1,2,4>     - Load 1, 2 or 4 bytes indexed from X
+    LDAL<1,2,4>     - Load 1, 2 or 4 bytes indexed from B
+    LDXK            - Load X immediate
+    LDXX            - Load X indexed from X
+    LDXL            - Load X indexed from B
+    
+    STAX<1,2,4>     - Store 1, 2 or 4 bytes of A into location indexed by X
+    STAL<1,2,4>     - Store 1, 2 or 4 bytes of A into location indexed by L
+    
+    LEAXX           - Load X with the EA derived from the index mode using X
+    LEAXL           - Load X with the EA derived from the index mode using L
+    
+    ADDAK<1,2,4>    - Add A (1, 2 or 4 bytes) to immediate value
+    ADDAX<1,2,4>    - Add A (1, 2 or 4 bytes) to value indexed from X
+    ADDAL<1,2,4>    - Add A (1, 2 or 4 bytes) to value indexed from L
+    ADDAFK          - Add float A to immediate float value
+    ADDAFX          - Add float A to float value indexed from X
+    ADDAFL          - Add float A to float value indexed from L
+    
+    SUBAK<1,2,4>    - Sub A (1, 2 or 4 bytes) from immediate value
+    SUBAX<1,2,4>    - Sub A (1, 2 or 4 bytes) from value indexed from X
+    SUBAL<1,2,4>    - Sub A (1, 2 or 4 bytes) from value indexed from L
+    SUBAFK          - Sub float A from immediate float value
+    SUBAFX          - Sub float A from float value indexed from X
+    SUBAFL          - Sub float A from float value indexed from L
+    
+    CMPAK<1,2,4>    - Cmp A (1, 2 or 4 bytes) to immediate value
+    CMPAX<1,2,4>    - Cmp A (1, 2 or 4 bytes) to value indexed from X
+    CMPAL<1,2,4>    - Cmp A (1, 2 or 4 bytes) to value indexed from L
+    CMPAFK          - Cmp float A to immediate float value
+    CMPAFX          - Cmp float A to float value indexed from X
+    CMPAFL          - Cmp float A to float value indexed from L
+    
+    MULAK<1,2,4>    - Mul A (1, 2 or 4 bytes) unsigned by immediate value
+    MULAX<1,2,4>    - Mul A (1, 2 or 4 bytes) unsigned by value indexed from X
+    MULAL<1,2,4>    - Mul A (1, 2 or 4 bytes) unsigned by value indexed from L
+    
+    MULASK<1,2,4>   - Mul A (1, 2 or 4 bytes) signed by immediate value
+    MULASX<1,2,4>   - Mul A (1, 2 or 4 bytes) signed by value indexed from X
+    MULASL<1,2,4>   - Mul A (1, 2 or 4 bytes) signed by value indexed from L
+    MULAFK          - Mul float A signed by immediate float value
+    MULAFX          - Mul float A signed by float value indexed from X
+    MULAFL          - Mul float A signed by float value indexed from L
+    
+    DIVAK<1,2,4>    - Div A (1, 2 or 4 bytes) unsigned by immediate value
+    DIVAX<1,2,4>    - Div A (1, 2 or 4 bytes) unsigned by value indexed from X
+    DIVAL<1,2,4>    - Div A (1, 2 or 4 bytes) unsigned by value indexed from L
+    
+    DIVAKS<1,2,4>    - Div A (1, 2 or 4 bytes) signed by immediate value
+    DIVAXS<1,2,4>    - Div A (1, 2 or 4 bytes) signed by value indexed from X
+    DIVALS<1,2,4>    - Div A (1, 2 or 4 bytes) signed by value indexed from L
+    DIVAKF           - Div float A signed by immediate float value
+    DIVAXF           - Div float A signed by float value indexed from X
+    DIVALF           - Div float A signed by float value indexed from L
+    
+    MODAK<1,2,4>    - Mod A (1, 2 or 4 bytes) by immediate value
+    MODAX<1,2,4>    - Mod A (1, 2 or 4 bytes) by value indexed from X
+    MODAL<1,2,4>    - Mod A (1, 2 or 4 bytes) by value indexed from L
+    
+    NEGA<1,2,4>     - Negate A (1, 2 or 4 bytes)
+    
+    BLE             - Branch if previous signed result is less than or equal to relative address in next byte
+    LBLE            - Branch if previous signed result is less than or equal to relative address in next 2 bytes
+    BLS             - Branch if previous unsigned result is less than or equal to relative address in next byte
+    LBLS            - Branch if previous unsigned result is less than or equal to relative address in next 2 bytes
+    
+    BLT             - Branch if previous signed result is less than to relative address in next byte
+    LBLT            - Branch if previous signed result is less than to relative address in next 2 bytes
+    BLO             - Branch if previous unsigned result is less than to relative address in next byte
+    LBLO            - Branch if previous unsigned result is less than to relative address in next 2 bytes
+    
+    BEQ             - Branch if previous result is equal to relative address in next byte
+    LBEQ            - Branch if previous result is equal to relative address in next 2 byte
+    BNE             - Branch if previous result is not equal to relative address in next byte
+    LBNE            - Branch if previous result is not equal to relative address in next 2 byte
+    
+    BGT             - Branch if previous signed result is greater than to relative address in next byte
+    LBGT            - Branch if previous signed result is greater than to relative address in next 2 bytes
+    BHI             - Branch if previous unsigned result is greater than to relative address in next byte
+    LBHI            - Branch if previous unsigned result is greater than to relative address in next 2 bytes
+    
+    BGE             - Branch if previous signed result is greater than or equal to relative address in next byte
+    LBGE            - Branch if previous signed result is greater than or equal to relative address in next 2 bytes
+    BHS             - Branch if previous unsigned result is greater than or equal to relative address in next byte
+    LBHS            - Branch if previous unsigned result is greater than or equal to relative address in next 2 bytes
+
+    BSR             - Branch to subroutine at relative address in next byte
+    LBSR            - Branch to subroutine at relative address in next 2 bytes
+    JSR             - Jump to subroutine at absolute address in next 2 or 4 bytes
+    RET             - Return from BSR or JSR
+    SETFRAME        -
+
+30 * 3 + 43 = 127
+
+
+
+
+
+
+
     PushDeref1              - uint16 tmp = pop16(), push1(mem1(tmp))
     PushDeref2              - uint16 tmp = pop16(), push2(mem2(tmp))
     PushDeref4              - uint16 tmp = pop16(), push4(mem4(tmp))
@@ -326,86 +477,139 @@ static constexpr uint16_t LocalSize = MaxIdSize - LocalStart;
 static constexpr uint8_t ExtOpcodeStart = 0x40;
 
 enum class Op: uint8_t {
-
-    None            = 0x00,
-
-    PushIntConst    = 0x01,
-    PushDeref       = 0x02,
-    PopDeref        = 0x03,
+    NOP     = 0x00,
     
-    Dup1            = 0x04,
-    Dup2            = 0x05,
-    Dup4            = 0x06,
-    Drop1           = 0x07,
-    Drop2           = 0x08,
-    Drop4           = 0x09,
-    Swap1           = 0x0a,
-    Swap2           = 0x0b,
-    Swap4           = 0x0c,
+// Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 3 bytes, 11 float
+    LDA     = 0x10,
+    LDX     = 0x14,
+    STA     = 0x18,
+    LEAX    = 0x1c,
     
-    CallNative      = 0x0e,
-    Return          = 0x0f,
+    ADDA    = 0x20,
+    SUBA    = 0x24,
+    CMPA    = 0x28,
+    MULA    = 0x2c,
+    DIVA    = 0x30, // a % b => a - a / b * b
     
-// 0x0c to 0x0f unused
-
-    Or              = 0x10,
-    Xor             = 0x11,
-    And             = 0x12,
-    Not             = 0x13,
-
-    LOr             = 0x14,
-    LAnd            = 0x15,
-    LNot            = 0x16,
-
-    LTInt           = 0x17,
-    LTFloat         = 0x18,
-    LEInt           = 0x19,
-    LEFloat         = 0x1a,
-    EQInt           = 0x1b,
-    EQFloat         = 0x1c,
-    NEInt           = 0x1d,
-    NEFloat         = 0x1e,
-    GEInt           = 0x1f,
-    GEFloat         = 0x20,
-    GTInt           = 0x21,
-    GTFloat         = 0x22,
-
-    AddInt          = 0x23,
-    AddFloat        = 0x24,
-    SubInt          = 0x25,
-    SubFloat        = 0x26,
-    MulInt          = 0x27,
-    MulFloat        = 0x28,
-    DivInt          = 0x29,
-    DivFloat        = 0x2a,
-
-    NegInt          = 0x2b,
-    NegFloat        = 0x2c,
+    ANDA    = 0x40,
+    ORA     = 0x44,
+    XORA    = 0x48,
     
-    PreIncInt       = 0x2d,
-    PreIncFloat     = 0x2e,
-    PreDecInt       = 0x2f,
-    PreDecFloat     = 0x30,
-    PostIncInt      = 0x31,
-    PostIncFloat    = 0x32,
-    PostDecInt      = 0x33,
-    PostDecFloat    = 0x34,
+// LSB = 0, branch address is 8 bit. LSB = 1, branch address is 16 bit
+    BLE    = 0x40,
+    BLS    = 0x42,
+    BLT    = 0x44,
+    BLO    = 0x46,
+    BGE    = 0x48,
+    BHS    = 0x4a,
+    BGT    = 0x4c,
+    BHI    = 0x4e,
     
-    // 0x40 - 0xf0 ops use lower 4 bits for data value
-
-    PushRef         = ExtOpcodeStart + 0x00,
-    Push            = ExtOpcodeStart + 0x10,
-    Pop             = ExtOpcodeStart + 0x20,
-
-    Call            = ExtOpcodeStart + 0x30,
+    BEQ    = 0x50,
+    BNE    = 0x52,
+    BRA    = 0x54,
     
-    Offset          = ExtOpcodeStart + 0x40,
-    Index           = ExtOpcodeStart + 0x50,
-    PushIntConstS   = ExtOpcodeStart + 0x60,
-    Log             = ExtOpcodeStart + 0x70,
-    SetFrameS       = ExtOpcodeStart + 0x80,    // p and l are each 2 bits (0-3)
-    Jump            = ExtOpcodeStart + 0x90,
-    If              = ExtOpcodeStart + 0xa0,
+// LSB = 0, absolute jump address is 16 bit. LSB = 1, address is 32 bit.
+    JMP    = 0x56,
+    JSR    = 0x58,
+    
+    RET    = 0x5a,
+    
+// This version has the local count in bytes in the next byte (0-255 bytes)
+    ENTER  = 0x5b,
+    
+// This version has the local count in bytes in the next 2 byte (0-65535 bytes)
+    ENTERL = 0x5c,
+    
+// This version has the local count in the lower 4 bits of the opcode (0-15 bytes)
+    ENTERS = 0x60,
+    
+// Next opcode is 0x70
+
+
+    
+    
+    
+    
+//    None            = 0x00,
+//
+//    PushIntConst    = 0x01,
+//    PushDeref       = 0x02,
+//    PopDeref        = 0x03,
+//
+//    Dup1            = 0x04,
+//    Dup2            = 0x05,
+//    Dup4            = 0x06,
+//    Drop1           = 0x07,
+//    Drop2           = 0x08,
+//    Drop4           = 0x09,
+//    Swap1           = 0x0a,
+//    Swap2           = 0x0b,
+//    Swap4           = 0x0c,
+//
+//    CallNative      = 0x0e,
+//    Return          = 0x0f,
+//
+//// 0x0c to 0x0f unused
+//
+//    Or              = 0x10,
+//    Xor             = 0x11,
+//    And             = 0x12,
+//    Not             = 0x13,
+//
+//    LOr             = 0x14,
+//    LAnd            = 0x15,
+//    LNot            = 0x16,
+//
+//    LTInt           = 0x17,
+//    LTFloat         = 0x18,
+//    LEInt           = 0x19,
+//    LEFloat         = 0x1a,
+//    EQInt           = 0x1b,
+//    EQFloat         = 0x1c,
+//    NEInt           = 0x1d,
+//    NEFloat         = 0x1e,
+//    GEInt           = 0x1f,
+//    GEFloat         = 0x20,
+//    GTInt           = 0x21,
+//    GTFloat         = 0x22,
+//
+//    AddInt          = 0x23,
+//    AddFloat        = 0x24,
+//    SubInt          = 0x25,
+//    SubFloat        = 0x26,
+//    MulInt          = 0x27,
+//    MulFloat        = 0x28,
+//    DivInt          = 0x29,
+//    DivFloat        = 0x2a,
+//
+//    NegInt          = 0x2b,
+//    NegFloat        = 0x2c,
+//
+//    PreIncInt       = 0x2d,
+//    PreIncFloat     = 0x2e,
+//    PreDecInt       = 0x2f,
+//    PreDecFloat     = 0x30,
+//    PostIncInt      = 0x31,
+//    PostIncFloat    = 0x32,
+//    PostDecInt      = 0x33,
+//    PostDecFloat    = 0x34,
+//
+//    // 0x40 - 0xf0 ops use lower 4 bits for data value
+//
+//    PushRef         = ExtOpcodeStart + 0x00,
+//    Push            = ExtOpcodeStart + 0x10,
+//    Pop             = ExtOpcodeStart + 0x20,
+//
+//    Call            = ExtOpcodeStart + 0x30,
+//
+//    Offset          = ExtOpcodeStart + 0x40,
+//    Index           = ExtOpcodeStart + 0x50,
+//    PushIntConstS   = ExtOpcodeStart + 0x60,
+//    Log             = ExtOpcodeStart + 0x70,
+//    SetFrameS       = ExtOpcodeStart + 0x80,    // p and l are each 2 bits (0-3)
+//    Jump            = ExtOpcodeStart + 0x90,
+//    If              = ExtOpcodeStart + 0xa0,
 };
 
 enum class OpParams : uint8_t {
@@ -436,11 +640,14 @@ enum class Type : uint8_t {
     UInt32 = 15,
     Int = 16, // Unspecified size
     UInt = 17, // Unspecified size
+    String = 18,
     
     Struct = 20,
     
     Ptr = 30
 };
+
+enum class Index : uint8_t { K = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
 
 enum class Reserved {
     None,
@@ -498,9 +705,15 @@ enum class Operator : uint8_t {
     Mod     = '%',
     Inc     = 0xae,
     Dec     = 0xaf,
-    Twiddle = '~',
-    Bang    = '!',
+    BNot    = '~',
+    LNot    = '!',
     ArrIdx  = '[',
+    Dot     = '.',
+    
+    // '&', '*' and '-' are used as unary operators. Represent those here.
+    AddrOf  = 0xe0,
+    Deref   = 0xe1,
+    UMinus  = 0xe2,
 };
 
 }

@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
     This source file is a part of Clover
-    For the latest info, see https://github.com/cmarrin/Clover
-    Copyright (c) 2021-2022, Chris Marrin
+    For the latest info, see https://github.com/cmarrin/Lucid
+    Copyright (c) 2021-2024, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
     found in the LICENSE file.
@@ -334,7 +334,7 @@ private:
     }
 
     StructPtr findStruct(const std::string&);
-    Symbol* findSymbol(const std::string&);
+    SymbolPtr findSymbol(const std::string&);
     uint8_t findInt(int32_t);
     uint8_t findFloat(float);
 

@@ -15,7 +15,12 @@ struct Simple
     
     initialize()
     {
-        a.b = c.d;
+        int8 x = 2;
+        int8 y = 3;
+        
+        int8 z = x + y;
+        
+        //a.b = c.d;
     }
 };
 
