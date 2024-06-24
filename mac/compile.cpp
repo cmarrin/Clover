@@ -153,15 +153,15 @@ int main(int argc, char * const argv[]) {
 
         std::cout << "Compile succeeded. Executable size=" << std::to_string(executable.size()) << "\n";
 
-        // Emit info from first pass of compiler
+        // Emit compiled code
         if (decompile) {
             std::string out;
             lucid::Decompiler decompiler(&executable, &out, annotations);
-            bool success = decompiler.printFirstPass(compiler);
+            bool success = decompiler.decompile();
             
-            std::cout << "\nPrinting first pass:\n" << out << "\nEnd first pass\n\n";
+            std::cout << "\nPrinting code:\n" << out << "\nEnd code\n\n";
             if (!success) {
-                std::cout << "First pass failed\n\n";
+                std::cout << "Decompile failed\n\n";
                 return 0;
             }
         }

@@ -14,7 +14,6 @@
 
 #include "AST.h"
 #include "Defines.h"
-#include "ExprEntry.h"
 #include "Symbol.h"
 
 namespace lucid {
@@ -49,7 +48,7 @@ public:
     bool processAST(const ASTPtr&);
 
 private:
-    bool processNextASTNode(const ASTPtr&);
+    bool processNextASTNode(const ASTPtr&, bool isLHS);
 
     // The ExprStack
     //
@@ -72,10 +71,6 @@ private:
     //                    a type. Struct id must be a member of the type of the ref.
     //                    pop the two 
 
-    Type bakeExpr(const ASTPtr&);
-    void addCode(std::vector<uint8_t>& code);
-    
-    std::vector<ExprEntry> _exprStack;
     std::vector<uint8_t>* _code;
 };
 

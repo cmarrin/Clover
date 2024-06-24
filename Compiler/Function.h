@@ -57,6 +57,8 @@ public:
     const SymbolPtr& local(uint8_t i) const { return _locals[i]; }
     const ASTPtr& astNode() const { return _astNode; }
 
+    void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
+
     uint32_t numLocals() const { return uint32_t(_locals.size()); }
     void pruneLocals(uint32_t n)
     {
@@ -102,9 +104,7 @@ public:
         }
         return nullptr;
     }
-    
-    void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
-    
+
 private:
     std::string _name;
     ASTPtr _astNode = std::make_shared<StatementsNode>();

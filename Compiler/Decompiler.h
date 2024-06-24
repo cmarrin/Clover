@@ -38,7 +38,6 @@ public:
         _it = _in->begin();
     }
     
-    bool printFirstPass(const Compiler& engine);
     bool decompile();
     
     Error error() const { return _error; }
@@ -49,10 +48,20 @@ private:
     
     const char* typeToString(Type) const;
     
-    void constants();
-    void commands();
     void statement();
     
+    void emitOp(const char* opString);
+    void emitSizeValue(uint8_t size);
+    void emitIndexValue(uint8_t index);
+    void emitRelAddr(const char* opString, uint8_t size);
+    void emitNumber(const char* opString, int32_t number);
+    
+    void emitNoParams(const char* opString) { emitOp(opString); }
+    void emitSize(const char* opString, uint8_t size) { emitOp(opString); emitSizeValue(size); }
+    void emitIndex(const char* opString, uint8_t index) { emitOp(opString); emitIndexValue(index); }
+    void emitSizeIndex(const char* opString, uint8_t size, uint8_t index) { emitOp(opString); emitSizeValue(size); emitIndexValue(index); }
+    
+    bool atEnd() { return (_in->end() - _it) <= 0; }
     uint32_t getUInt32()
     {
         if (_in->end() - _it < 4) {
@@ -63,6 +72,17 @@ private:
         // Little endian
         return uint32_t(*_it++) | (uint32_t(*_it++) << 8) | 
                 (uint32_t(*_it++) << 16) | (uint32_t(*_it++) << 24);
+    }
+    
+    int16_t getInt16()
+    {
+        if (_in->end() - _it < 2) {
+            _error = Error::PrematureEOF;
+            throw true;
+        }
+        
+        // Big endian
+        return (uint32_t(*_it++) << 8) | uint32_t(*_it++);
     }
     
     uint16_t getUInt16()
@@ -76,7 +96,18 @@ private:
         return uint32_t(*_it++) | (uint32_t(*_it++) << 8);
     }
     
-    uint16_t getUInt8()
+    int8_t getInt8()
+    {
+        if (_in->end() - _it < 1) {
+            _error = Error::PrematureEOF;
+            throw true;
+        }
+        
+
+        return int8_t(*_it++);
+    }
+    
+    uint8_t getUInt8()
     {
         if (_in->end() - _it < 1) {
             _error = Error::PrematureEOF;

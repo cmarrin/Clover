@@ -10,8 +10,8 @@ struct Simple
     struct A { int8 b; };
     struct C { int8 d; };
     
-    A a = { 1 };
-    C c = { 2 };
+    //A a = { 1 };
+    //C c = { 2 };
     
     initialize()
     {

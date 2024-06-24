@@ -54,6 +54,13 @@ class ASTNode
     virtual std::string toString() const { return ""; }
 
     virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const { }
+    
+    // Return true if this is an signed integer or float
+    bool isSigned() const
+    {
+        Type t = type();
+        return t == Type::Int8 || t == Type::Int16 || t == Type::Int32 || t == Type::Float;
+    }
 };
 
 class StatementsNode : public ASTNode
@@ -110,8 +117,8 @@ class ConstantNode : public ASTNode
   public:
     ConstantNode(Type t, float v) : _type(t), _f(v) { }
     ConstantNode(Type t, uint32_t v) : _type(t), _i(v) { }
-    ConstantNode(float v) : _numeric(true), _f(v) { }
-    ConstantNode(uint32_t v) : _numeric(true), _i(v) { }
+    ConstantNode(float v) : _type(Type::Float), _numeric(true), _f(v) { }
+    ConstantNode(uint32_t v) : _type(Type::Int), _numeric(true), _i(v) { }
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Constant; }
     virtual bool isTerminal() const override { return true; }

@@ -14,67 +14,49 @@ using namespace lucid;
 bool
 Codegen::processAST(const ASTPtr& ast)
 {
-    // Probably do some init
-    
-    return processNextASTNode(ast);
+    return processNextASTNode(ast, false);
 }
 
 bool
-Codegen::processNextASTNode(const ASTPtr& ast)
+Codegen::processNextASTNode(const ASTPtr& ast, bool isLHS)
 {
     // Traverse the AST and use the expression stack to generate the code
     if (ast->isTerminal()) {
-        _exprStack.push_back(ast);
+        ast->addCode(*_code, isLHS);
         return true;
     }
 
     if (ast->isList()) {
+        assert(!isLHS);
+        
         // Just walk all the children. There can be no null child, seeing a null stops the iteration
         for (uint32_t i = 0; ; ++i) {
             ASTPtr child = ast->child(i);
             if (!child) {
                 break;
             }
-            if (!processNextASTNode(child)) {
+            if (!processNextASTNode(child, false)) {
                 return false;
             }
         }
         return true;
     }
     
-    // This is a node that performs some operation, bake it
-    bakeExpr(ast);
-     
-    return false;
-}
-
-Type
-Codegen::bakeExpr(const ASTPtr& ast)
-{
-    // Passed ast is either a unary or binary operation.
-    // exprStack will have one or two entries which are
-    // the operands. If it takes one param is could be
-    // either a pre or post op, depending on whether it
-    // has a left or right child.We need to generate code
-    // for them and then for this operation
-    
-    if (!ast->isUnary()) {
-        // There should be 2 entries on the stack, right is on tos
-        assert(_exprStack.size() >= 2);
-        
-        const ExprEntry& right = _exprStack.back();
-        _exprStack.pop_back();
-        
-        right.addCode(*_code, false);
-        
-        const ExprEntry& left = _exprStack.back();
-        _exprStack.pop_back();
-        left.addCode(*_code, ast->isAssignment());
-        
-        // Now emit the op
-        ast->addCode(*_code, false);
+    // This is a node that performs an operation, process it's operands first
+    if (ast->child(0)) {
+        processNextASTNode(ast->child(0), ast->isAssignment());
     }
     
+    // FIXME: We need to distinguish between pre and post unary operations
+    if (ast->child(1)) {
+        processNextASTNode(ast->child(1), false);
+    }
+    
+    ast->addCode(*_code, false);
+     
+    return true;
+}
+
     
     
     
@@ -234,14 +216,3 @@ Codegen::bakeExpr(const ASTPtr& ast)
 //
 //    _exprStack.pop_back();
 //    return type;
-
-    return Type::None;
-}
-
-void Codegen::addCode(std::vector<uint8_t>& code)
-{
-    //code.push_back(opByTypeTable[uint8_t(_symbol->type())]._ldL);
-    
-    // emit the index byte
-}
-    

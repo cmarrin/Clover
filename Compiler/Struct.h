@@ -82,6 +82,10 @@ public:
         return nullptr;
     }
 
+    const ASTPtr& astNode() const { return _astNode; }
+
+    void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
+
 private:
     std::string _name;
     std::vector<StructPtr> _structs;
@@ -90,6 +94,7 @@ private:
     uint8_t _localSize = 0;
     uint8_t _size = 0;
     Type _type = Type::None;
+    ASTPtr _astNode = std::make_shared<StatementsNode>();
 };
 
 }

@@ -36,6 +36,22 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     
     // Do second pass
     Codegen codeGen(&executable);
+    
+    // Write signature
+    executable.push_back('l');
+    executable.push_back('u');
+    executable.push_back('c');
+    executable.push_back('d');
+
+    for (auto& itStruct : _structs) {
+        codeGen.processAST(itStruct->astNode());
+        
+        for (auto& itFunc : itStruct->functions()) {
+            codeGen.processAST(itFunc.astNode());
+        }
+        
+        // FIXME: We need to tell the functions and the struct where their code starts
+    }
 
     return _error == Error::None;
 }
@@ -244,25 +260,31 @@ Compiler::var(Type type, bool isPointer)
     size *= sizeInBytes(type);
 
     // Put the var in the current struct unless we're in a function, then put it in _locals
+    SymbolPtr idSym;
+    
     if (_inFunction) {
         expect(currentFunction()->addLocal(id, type, size, isPointer), Error::DuplicateIdentifier);
+        idSym = currentFunction()->findLocal(id);
     } else {
         expect(!_structStack.empty(), Error::InternalError);
         
         // FIXME: Need to deal with ptr and size
         expect(currentStruct()->addLocal(id, type, size, false), Error::DuplicateIdentifier);
+        idSym = currentStruct()->findLocal(id);
     }
     
     // Check for an initializer. We only allow initializers on Int and Float
+    ASTPtr ast;
+    
     if (match(Token::Equal)) {
         if (uint8_t(type) < StructTypeStart) {
             // Built-in type. Generate an expression
-            ASTPtr ast = expression();
+            ast = expression();
             expect(ast != nullptr, Error::ExpectedExpr);
         } else {
             // Struct type, collect initializers
             expect(Token::OpenBrace);
-            ASTPtr ast = expression();
+            ast = expression();
             if (ast) {
                 // FIXME: For now ignore the initializers
                 while (match(Token::Comma)) {
@@ -271,6 +293,17 @@ Compiler::var(Type type, bool isPointer)
                 }
             }
             expect(Token::CloseBrace);
+        }
+    }
+    
+    if (ast) {
+        ASTPtr idNode = std::make_shared<VarNode>(idSym);
+        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::DEREF, ast, true);
+    
+        if (_inFunction) {
+            currentFunction()->addASTNode(assignment);
+        } else {
+            currentStruct()->addASTNode(assignment);
         }
     }
     
@@ -786,7 +819,8 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         }
         
         // Generate an ASTNode
-        lhs = std::make_shared<OpNode>(lhs, opInfo.opcode(), rhs, opInfo.assoc() == Assoc::Right);
+        Op opcode = lhs->isSigned() ? opInfo.opcodeS() : opInfo.opcodeU();
+        lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.assoc() == Assoc::Right);
     }
     
     return lhs;
@@ -800,25 +834,25 @@ Compiler::unaryExpression()
         return node;
     }
 
-    Operator oper;
+    Op opcode;
     
     if (match(Token::Minus)) {
-        oper = Operator(Token::Minus);
+        opcode = Op::NEG;
     } else if (match(Token::Twiddle)) {
-        oper = Operator(Token::Twiddle);
+        opcode = Op::NOT;
     } else if (match(Token::Bang)) {
-        oper = Operator(Token::Bang);
+        opcode = Op::NOP;       // FIXME: Implement
     } else if (match(Token::Inc)) {
-        oper = Operator(Token::Inc);
+        opcode = Op::PREINC;
     } else if (match(Token::Dec)) {
-        oper = Operator(Token::Dec);
+        opcode = Op::PREDEC;
     } else if (match(Token::And)) {
-        oper = Operator(Token::And);
+        opcode = Op::NOP;       // FIXME: Implement
     } else {
         return nullptr;
     }
     
-    return std::make_shared<OpNode>(oper, unaryExpression());
+    return std::make_shared<OpNode>(opcode, unaryExpression());
 }
 
 ASTPtr
@@ -836,7 +870,7 @@ Compiler::postfixExpression()
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
-            ASTPtr result = std::make_shared<OpNode>(lhs, Operator::ArrIdx, rhs);
+            ASTPtr result = std::make_shared<OpNode>(lhs, Op::NOP, rhs, false); // FIXME: Implement
             expect(Token::CloseBracket);
             return result;
         } else if (match(Token::Dot)) {
@@ -844,9 +878,9 @@ Compiler::postfixExpression()
             expect(identifier(id), Error::ExpectedIdentifier);
             return std::make_shared<DotNode>(lhs, id);
         } else if (match(Token::Inc)) {
-            return std::make_shared<OpNode>(lhs, Operator::Inc);
+            return std::make_shared<OpNode>(lhs, Op::POSTINC);
         } else if (match(Token::Dec)) {
-            return std::make_shared<OpNode>(lhs, Operator::Dec);
+            return std::make_shared<OpNode>(lhs, Op::POSTDEC);
         } else {
             return lhs;
         }
