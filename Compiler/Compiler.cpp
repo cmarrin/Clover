@@ -22,6 +22,8 @@ using namespace lucid;
 bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
                             const std::vector<NativeModule*>& modules)
 {
+    // Add built-in modulles
+    
     // Install the modules in the engine
     // First add the core
 //    for (const auto& it : modules) {
@@ -97,12 +99,20 @@ Compiler::import()
         expect(identifier(idAs), Error::ExpectedIdentifier);
     }
     
-    // FIXME: Compile the import inline.
+    // FIXME: For now only support built-in imports and only built-ins
+    // we already know about (like "System").
+    //
+    // If and when we support Lucid imports, compile the import inline.
     // An import is a regular Lucid program but only the first struct is
     // used. What about imports in the imported file? Are there warnings
     // if there are more structs? What about an entry struct?
     // Need to rename struct if there is an idAs. How do we deal with
     // duplicate struct names?
+    
+    
+
+    expect(Token::Semicolon);
+
     return true;
 }
 
@@ -205,6 +215,11 @@ Compiler::value(uint32_t& i, Type t)
             f = float(i);
             i = *(reinterpret_cast<int32_t*>(&f));
         }
+        return true;
+    }
+    
+    std::string s;
+    if (stringValue(s)) {
         return true;
     }
     return false;
@@ -866,7 +881,9 @@ Compiler::postfixExpression()
     while (true) {
         if (match(Token::OpenParen)) {
             // FIXME: Handle function
-            //expect(argumentList(fun), Error::ExpectedArgList);
+            Function* fun = nullptr;
+            //expect(findFunction(_exprStack.back(), fun), Error::ExpectedFunction);
+            expect(argumentList(fun), Error::ExpectedArgList);
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
@@ -923,6 +940,11 @@ Compiler::primaryExpression()
         return std::make_shared<ConstantNode>(i);
     }
     
+    std::string s;
+    if (stringValue(s)) {
+        return std::make_shared<StringNode>(s);
+    }
+    
     return nullptr;
 }
 
@@ -953,7 +975,7 @@ Compiler::formalParameterList()
 }
 
 bool
-Compiler::argumentList(const Function& fun)
+Compiler::argumentList(Function* fun)
 {
     int i = 0;
     while (true) {
@@ -1234,6 +1256,8 @@ Compiler::findSymbol(const std::string& s)
     if (symbol) {
         return symbol;
     }
+    
+    // Now see if it's a global
     
     return nullptr;
 }

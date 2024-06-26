@@ -38,7 +38,8 @@ public:
     
     Function* addFunction(const std::string& name, Type returnType)
     {
-        _functions.emplace_back(name, returnType);
+        _functions.emplace_back(returnType);
+        addLocal(name, returnType, 0, false);
         return &(_functions.back());
     }
 

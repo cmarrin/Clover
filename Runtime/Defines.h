@@ -217,7 +217,6 @@ static constexpr uint8_t EnterShortEnd     = 0xff;
 enum class Op: uint8_t {
     NOP     = 0x00,
     PUSHREF = 0x01,
-    RET     = 0x02,
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 3 bytes, 11 float
     DEREF   = 0x10,
@@ -255,14 +254,16 @@ enum class Op: uint8_t {
     EQ      = 0x80,
     NE      = 0x84,
     
-// LSB = 0, branch address is 8 bit. LSB = 1, branch address is 16 bit
+// LSB = 0, following param is 8 bit. LSB = 1, following param is 16 bit
     IF      = 0x90,
     BRA     = 0x92,
     CALL    = 0x94,
     ENTER   = 0x96,
+    RET     = 0x98,
 
-// This version has the local count in the lower 4 bits of the opcode (0-15 bytes)
-    ENTERS = 0xf0,
+// These versions use the lower 4 bits of the opcode as a param (0-15)
+    RETS    = 0xe0,
+    ENTERS  = 0xf0,
 };
 
 enum class OpParams : uint8_t {
@@ -294,6 +295,7 @@ enum class Type : uint8_t {
     Int = 16, // Unspecified size
     UInt = 17, // Unspecified size
     String = 18,
+    Function = 19,
     
     Struct = 20,
     

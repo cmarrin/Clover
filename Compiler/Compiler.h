@@ -323,7 +323,7 @@ private:
     ASTPtr primaryExpression();
 
     bool formalParameterList();
-    bool argumentList(const Function& fun);
+    bool argumentList(Function* fun);
     
     virtual bool isReserved(Token token, const std::string str, Reserved&);
 
@@ -458,6 +458,7 @@ private:
     std::vector<Constant> _constants;
     std::vector<StructPtr> _structs;
     std::vector<StructPtr> _structStack;
+    std::vector<NativeModule*> _
     
     // The jump list is an array of arrays of JumpEntries. The outermost array
     // is a stack of active looping statements (for, loop, etc.). Each of these

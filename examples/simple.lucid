@@ -5,6 +5,8 @@
 //  Created by Chris Marrin on 5/25/24.
 //
 
+import System as sys;
+
 struct Simple
 {
     struct A { int8 b; };
@@ -19,6 +21,8 @@ struct Simple
         int8 y = 3;
         
         int8 z = x + y;
+        
+        sys.print("x=" + string(x) + ", y=" + string(y) + ", z=" + string(z));
         
         //a.b = c.d;
     }

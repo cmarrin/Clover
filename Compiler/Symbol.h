@@ -23,12 +23,16 @@ namespace lucid {
 // this is the byte offset from the start of the frame base pointer. For structs
 // it is the byte offset from the start of the struct instance.
 
+class Function;
+
 class Symbol
 {
 public:
     enum class Storage { None, Const, Global, Local };
     
     Symbol() { }
+    
+    Symbol(Function* func) : _function(func), _type(Type::Function) { }
     
     Symbol(const std::string& name, Type type, uint8_t size, uint16_t addr, bool ptr = false)
         : _name(name)
@@ -50,6 +54,7 @@ private:
     bool _ptr = false;
     uint8_t _size = 0;
     uint16_t _addr = 0;
+    Function* _function = nullptr;
 };
 
 using SymbolPtr = std::shared_ptr<Symbol>;

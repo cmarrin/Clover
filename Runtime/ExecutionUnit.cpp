@@ -506,10 +506,11 @@ ExecutionUnit::animate(uint32_t index)
 }
 
 bool
-ExecutionUnit::log(const char* fmt, uint8_t numArgs)
+ExecutionUnit::printf(const char* fmt, uint8_t numArgs)
 {
     // This is a very simplified version of printf. It
-    // handles '%i' and '%f'
+    // handles:
+    //      %
     uint8_t arg = numArgs;
     
     for (int i = 0; ; ) {

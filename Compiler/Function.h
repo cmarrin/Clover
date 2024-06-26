@@ -35,9 +35,8 @@ public:
     // Default ctor is used for initialize method. If the name is empty and type is None, it's initialize
     Function() { }
     
-    Function(const std::string& name, Type returnType = Type::None)
-        : _name(name)
-        , _returnType(returnType)
+    Function(Type returnType = Type::None)
+        : _returnType(returnType)
         , _native(false)
     { }
 
@@ -50,7 +49,6 @@ public:
 //        , _native(true)
 //    { }
 
-    const std::string& name() const { return _name; }
     Type returnType() const { return _returnType; }
     uint16_t argSize() const { return _argSize; }
     uint16_t localSize() const { return _localHighWaterMark; }
@@ -106,7 +104,6 @@ public:
     }
 
 private:
-    std::string _name;
     ASTPtr _astNode = std::make_shared<StatementsNode>();
     std::vector<SymbolPtr> _locals;
     uint16_t _argSize = 0;// Size in bytes of all args
