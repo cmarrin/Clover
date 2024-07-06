@@ -13,6 +13,7 @@
 #pragma once
 
 #include <vector>
+#include "AST.h"
 #include "Scanner.h"
 #include "Struct.h"
 

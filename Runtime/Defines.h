@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <memory>
 
 namespace lucid {
 
@@ -371,4 +372,35 @@ enum class Operator : uint8_t {
     UMinus  = 0xe2,
 };
 
+// Native functions
+//
+// These are implemented in the ExecutionUnit and are recognized by the Compiler.
+// CallNative op has an operand which is the Native enum value. All params are
+// passed on the stack and must be the expected size and type. Return value is
+// sent back as an int32_t but can represent any type of value as defined in the
+// native function signature
+//
+// Functions:
+//
+//      void    print(string)       - prints the passed string to the console
+//      string  int8ToString(int8)  - return passed int8 value converted to string
+
+enum class NativeId : uint8_t {
+    None            = 0,
+    Print           = 1,
+    Int8ToString    = 2,
+    UInt8ToString   = 3,
+    Int16ToString   = 4,
+    UInt16ToString  = 5,
+    Int32ToString   = 6,
+    UInt32ToString  = 7,
+    FloatToString   = 8,
+};
+
+class ASTNode;
+using ASTPtr = std::shared_ptr<ASTNode>;
+
+class Symbol;
+using SymbolPtr = std::shared_ptr<Symbol>;
+using SymbolList = std::vector<Symbol>;
 }

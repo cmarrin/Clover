@@ -57,6 +57,4 @@ private:
     Function* _function = nullptr;
 };
 
-using SymbolPtr = std::shared_ptr<Symbol>;
-
 }

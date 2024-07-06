@@ -12,6 +12,7 @@
 #pragma once
 
 #include "Function.h"
+#include "Module.h"
 #include "Symbol.h"
 
 namespace lucid {
@@ -19,30 +20,21 @@ namespace lucid {
 class Struct;
 using StructPtr = std::shared_ptr<Struct>;
 
-class Struct
+class Struct : public Module
 {
 public:
     Struct(const std::string& name, Type type)
-        : _name(name)
+        : Module(name)
         , _type(type)
     { }
     
-    const std::vector<Function>& functions() const { return _functions; }
     const std::vector<SymbolPtr>& locals() const { return _locals; }
     
-    const std::string& name() const { return _name; }
     Type type() const { return _type; }
     uint8_t size() const { return _localSize; }
     
     const std::vector<StructPtr>& structs() const { return _structs; }
     
-    Function* addFunction(const std::string& name, Type returnType)
-    {
-        _functions.emplace_back(returnType);
-        addLocal(name, returnType, 0, false);
-        return &(_functions.back());
-    }
-
     StructPtr addStruct(const std::string& name, Type type)
     {
         _structs.push_back(std::make_shared<Struct>(name, type));
@@ -88,10 +80,8 @@ public:
     void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
 
 private:
-    std::string _name;
     std::vector<StructPtr> _structs;
     std::vector<SymbolPtr> _locals;
-    std::vector<Function> _functions;
     uint8_t _localSize = 0;
     uint8_t _size = 0;
     Type _type = Type::None;

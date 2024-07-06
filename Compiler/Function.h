@@ -11,9 +11,10 @@
 
 #pragma once
 
-#include "AST.h"
+#include <string>
+#include <vector>
+
 #include "Defines.h"
-#include "Symbol.h"
 
 namespace lucid {
 
@@ -35,37 +36,26 @@ public:
     // Default ctor is used for initialize method. If the name is empty and type is None, it's initialize
     Function() { }
     
-    Function(Type returnType = Type::None)
-        : _returnType(returnType)
+    Function(const std::string& name, Type returnType = Type::None)
+        : _name(name)
+        , _returnType(returnType)
         , _native(false)
     { }
 
     // Used to create built-in native functions
-//    Function(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
-//        : _name(name)
-//        , _locals(locals)
-//        , _args(locals.size())
-//        , _type(type)
-//        , _native(true)
-//    { }
+    Function(const char* name, NativeId nativeId, Type returnType, const SymbolList& locals);
 
+    const std::string& name() const { return _name; }
     Type returnType() const { return _returnType; }
     uint16_t argSize() const { return _argSize; }
     uint16_t localSize() const { return _localHighWaterMark; }
     const SymbolPtr& local(uint8_t i) const { return _locals[i]; }
     const ASTPtr& astNode() const { return _astNode; }
 
-    void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
+    void addASTNode(const ASTPtr& node);
 
     uint32_t numLocals() const { return uint32_t(_locals.size()); }
-    void pruneLocals(uint32_t n)
-    {
-        // remove the last n locals and reduce _localSize
-        while (n-- > 0) {
-            _localSize -= _locals.back()->size();
-            _locals.pop_back();
-        }
-    }
+    void pruneLocals(uint32_t n);
     
     bool isNative() const { return _native; }
 
@@ -92,19 +82,11 @@ public:
         return true;
     }
 
-    SymbolPtr findLocal(const std::string& s)
-    {
-        const auto& it = find_if(_locals.begin(), _locals.end(),
-                [s](const SymbolPtr& p) { return p->name() == s; });
-
-        if (it != _locals.end()) {
-            return *it;
-        }
-        return nullptr;
-    }
+    SymbolPtr findLocal(const std::string& s) const;
 
 private:
-    ASTPtr _astNode = std::make_shared<StatementsNode>();
+    std::string _name;
+    ASTPtr _astNode;
     std::vector<SymbolPtr> _locals;
     uint16_t _argSize = 0;// Size in bytes of all args
     uint16_t _localSize = 0; // Size in bytes of all locals, including args

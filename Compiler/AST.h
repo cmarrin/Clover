@@ -9,10 +9,11 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
 #include <string>
 
+#include "Defines.h"
+#include "Module.h"
 #include "Symbol.h"
 
 namespace lucid {
@@ -27,6 +28,8 @@ enum class ASTNodeType {
     String,
     Dot,
     Value,
+    Module,
+    FunctionCall,
 };
 
 class ASTNode;
@@ -248,6 +251,36 @@ class DotNode : public ASTNode
   private:
     std::shared_ptr<ASTNode> _operand;
     std::shared_ptr<ASTNode> _property;
+};
+
+class ModuleNode : public ASTNode
+{
+  public:
+    ModuleNode(const ModulePtr& module) : _module(module) { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Module; }
+    virtual bool isTerminal() const override { return true; }
+    virtual Type type() const override { return Type::None; }
+    
+    const ModulePtr& module() const { return _module; }
+
+  private:
+    ModulePtr _module;
+};
+
+class FunctionCallNode : public ASTNode
+{
+  public:
+    FunctionCallNode(Function* func) : _function(func) { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::FunctionCall; }
+    virtual bool isTerminal() const override { return true; }
+    virtual Type type() const override { return _function ? _function->returnType() : Type::None; }
+
+    Function* function() const { return _function; }
+    
+  private:
+    Function* _function;
 };
 
 }

@@ -22,7 +22,7 @@
 #include "AST.h"
 #include "Function.h"
 #include "Defines.h"
-#include "NativeModule.h"
+#include "Module.h"
 #include "Scanner.h"
 #include "Struct.h"
 
@@ -46,7 +46,7 @@ struct is instantiated and its ctor is called.
 BNF:
 
 program:
-    { import } { constant } { struct } [ <type> <id> ] ;
+    { import } { constant } struct ;
 
 import:
     'import' <id> [ 'as' <id> ] ;
@@ -257,7 +257,7 @@ public:
     { }
 
     bool compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
-                 const std::vector<NativeModule*>&);
+                 const std::vector<Module*>&);
 
 //    void addNative(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
 //    {
@@ -335,6 +335,7 @@ private:
 
     StructPtr findStruct(const std::string&);
     SymbolPtr findSymbol(const std::string&);
+    ModulePtr findModule(const std::string&);
     uint8_t findInt(int32_t);
     uint8_t findFloat(float);
 
@@ -458,7 +459,7 @@ private:
     std::vector<Constant> _constants;
     std::vector<StructPtr> _structs;
     std::vector<StructPtr> _structStack;
-    std::vector<NativeModule*> _
+    std::vector<ModulePtr> _modules;
     
     // The jump list is an array of arrays of JumpEntries. The outermost array
     // is a stack of active looping statements (for, loop, etc.). Each of these

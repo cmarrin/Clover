@@ -20,15 +20,20 @@
 using namespace lucid;
 
 bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
-                            const std::vector<NativeModule*>& modules)
+                            const std::vector<Module*>& modules)
 {
-    // Add built-in modulles
-    
-    // Install the modules in the engine
-    // First add the core
-//    for (const auto& it : modules) {
-//        it->addFunctions(engine);
-//    }
+    // Add built-in native modules
+    ModulePtr coreModule = std::make_shared<Module>("core");
+    coreModule->addNativeFunction("printf", NativeId::Print, Type::None, {{ "s", Type::String, 1, 0 }});
+//    coreModule->addNativeFunction("int8ToString", NativeId::Int8ToString, Type::String, {{ "v", Type::Int8, 1, 0 }});
+//    coreModule->addNativeFunction("uint8ToString", NativeId::UInt8ToString, Type::String, {{ "v", Type::UInt8, 1, 0 }});
+//    coreModule->addNativeFunction("int16ToString", NativeId::Int16ToString, Type::String, {{ "v", Type::Int16, 1, 0 }});
+//    coreModule->addNativeFunction("uint16ToString", NativeId::UInt16ToString, Type::String, {{ "v", Type::UInt16, 1, 0 }});
+//    coreModule->addNativeFunction("int32ToString", NativeId::Int32ToString, Type::String, {{ "v", Type::Int32, 1, 0 }});
+//    coreModule->addNativeFunction("uint32ToString", NativeId::UInt32ToString, Type::String, {{ "v", Type::UInt32, 1, 0 }});
+//    coreModule->addNativeFunction("floatToString", NativeId::FloatToString, Type::String, {{ "v", Type::Float, 1, 0 }});
+
+    _modules.push_back(coreModule);
     
     program();
     
@@ -65,17 +70,8 @@ Compiler::program()
     try {
         while(import()) { }
         while(constant()) { }
-        while(strucT()) { }
-        
-        // Handle top level struct if it exists
-        std::string id;
-        if (identifier(id)) {
-            StructPtr struc = findStruct(id);
-            expect(struc != nullptr, Error::ExpectedStructType);
-            expect(identifier(id), Error::ExpectedIdentifier);
-        }
+        strucT();
 
-        expect(Token::Semicolon);
         expect(Token::EndOfFile);
     }
     catch(...) {
@@ -880,9 +876,9 @@ Compiler::postfixExpression()
     
     while (true) {
         if (match(Token::OpenParen)) {
-            // FIXME: Handle function
-            Function* fun = nullptr;
-            //expect(findFunction(_exprStack.back(), fun), Error::ExpectedFunction);
+            expect(lhs->astNodeType() == ASTNodeType::FunctionCall, Error::ExpectedFunction);
+            Function* fun = std::static_pointer_cast<FunctionCallNode>(lhs)->function();
+
             expect(argumentList(fun), Error::ExpectedArgList);
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
@@ -893,6 +889,15 @@ Compiler::postfixExpression()
         } else if (match(Token::Dot)) {
             std::string id;
             expect(identifier(id), Error::ExpectedIdentifier);
+            
+            // If lhs is a module, this has to be a function inside that module.
+            if (lhs->astNodeType() == ASTNodeType::Module) {
+                Function* f = std::static_pointer_cast<ModuleNode>(lhs)->module()->findFunction(id);
+                expect(f, Error::UndefinedIdentifier);
+                lhs = std::make_shared<FunctionCallNode>(f);
+                continue;
+            }
+            
             return std::make_shared<DotNode>(lhs, id);
         } else if (match(Token::Inc)) {
             return std::make_shared<OpNode>(lhs, Op::POSTINC);
@@ -927,6 +932,12 @@ Compiler::primaryExpression()
         if (findConstant(id, t, v)) {
             return std::make_shared<ConstantNode>(t, v);
         }
+
+        ModulePtr module = findModule(id);
+        if (module) {
+            return std::make_shared<ModuleNode>(module);
+        }
+
         expect(false, Error::ExpectedVar);
     }
     
@@ -979,7 +990,8 @@ Compiler::argumentList(Function* fun)
 {
     int i = 0;
     while (true) {
-        if (!expression()) {
+        ASTPtr arg = expression();
+        if (!arg) {
             if (i == 0) {
                 break;
             }
@@ -1257,8 +1269,17 @@ Compiler::findSymbol(const std::string& s)
         return symbol;
     }
     
-    // Now see if it's a global
-    
+    return nullptr;
+}
+
+ModulePtr
+Compiler::findModule(const std::string& id)
+{
+    auto it = find_if(_modules.begin(), _modules.end(),
+                    [id](const ModulePtr& m) { return m->name() == id; });
+    if (it != _modules.end()) {
+        return *it;
+    }
     return nullptr;
 }
 

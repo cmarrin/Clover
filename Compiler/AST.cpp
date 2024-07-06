@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-    This source file is a part of Clover
+    This source file is a part of Lucid
     For the latest info, see https://github.com/cmarrin/Lucid
     Copyright (c) 2021-2024, Chris Marrin
     All rights reserved.
