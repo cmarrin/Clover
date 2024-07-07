@@ -59,6 +59,8 @@ std::map<Operator, std::pair<Op, Op>> opMap {
     { Operator::UMinus  , { Op::NEG   , Op::NEG    } },
 };
 
+// This version is for opcodes where the lower 2 bits hold type info and the following
+// bytes hold values or addresses
 static void emitCode(std::vector<uint8_t>& code, Op opcode, Type type, Index index, int32_t value)
 {
     code.push_back(uint8_t(opcode) | typeToSizeBits[type]);
@@ -97,6 +99,27 @@ static void emitCode(std::vector<uint8_t>& code, Op opcode, Type type, Index ind
     }
 }
 
+// This version is for opcodes where the LSB indicates 8 or 16 bit values that follow
+static void emitCode(std::vector<uint8_t>& code, Op opcode, int32_t value)
+{
+    if (value <= 127 && value >= -128) {
+        // 8 bit case
+        code.push_back(uint8_t(opcode));
+        code.push_back(value);
+    } else {
+        // 16 bit case
+        code.push_back(uint8_t(opcode) | 0x01);
+        code.push_back(value >> 8);
+        code.push_back(value);
+    }
+}
+
+// This version is for opcodes where the value is in the lower 4 bits
+static void emitCodeShort(std::vector<uint8_t>& code, Op opcode, int32_t value)
+{
+    code.push_back(uint8_t(opcode) | (value & 0x0f));
+}
+
 void VarNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     // If isLHS is true, code generated will be a Ref
@@ -121,7 +144,11 @@ void ConstantNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 
 void StringNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
-    // FIXME: Implement
+    code.push_back(uint8_t(Op::PUSHS));
+    code.push_back(_string.size());
+    for (const char& c : _string) {
+        code.push_back(c);
+    }
 }
 
 void OpNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
@@ -132,5 +159,28 @@ void OpNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 void DotNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     // FIXME: Implement
+}
+
+void FunctionCallNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+{
+    // Add a function call. args will already be pushed
+    int32_t addr = _function->addr();
+    if (_function->isNative()) {
+        if (addr <= 15) {
+            code.push_back(uint8_t(Op::NCALLS) | addr);
+        } else {
+            if (addr <= 255) {
+                code.push_back(uint8_t(Op::NCALL));
+                code.push_back(addr);
+            } else {
+                code.push_back(uint8_t(Op::NCALL) | 0x01);
+                code.push_back(addr >> 8);
+                code.push_back(addr);
+            }
+        }
+    } else {
+        // FIXME: How does addr get set for a function call? 2 pass? Fixup?
+        // FIXME: Implement CALL
+    }
 }
 

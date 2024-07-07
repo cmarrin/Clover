@@ -39,6 +39,10 @@ Codegen::processNextASTNode(const ASTPtr& ast, bool isLHS)
                 return false;
             }
         }
+        
+        // A node with lists can be a function, so it could do an operation
+        ast->addCode(*_code, false);
+        
         return true;
     }
     

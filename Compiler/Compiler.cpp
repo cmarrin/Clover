@@ -876,10 +876,7 @@ Compiler::postfixExpression()
     
     while (true) {
         if (match(Token::OpenParen)) {
-            expect(lhs->astNodeType() == ASTNodeType::FunctionCall, Error::ExpectedFunction);
-            Function* fun = std::static_pointer_cast<FunctionCallNode>(lhs)->function();
-
-            expect(argumentList(fun), Error::ExpectedArgList);
+            expect(argumentList(lhs), Error::ExpectedArgList);
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
@@ -986,8 +983,12 @@ Compiler::formalParameterList()
 }
 
 bool
-Compiler::argumentList(Function* fun)
+Compiler::argumentList(const ASTPtr& fun)
 {
+    expect(fun->astNodeType() == ASTNodeType::FunctionCall, Error::ExpectedFunction);
+    Function* function = std::static_pointer_cast<FunctionCallNode>(fun)->function();
+    (void) function;
+    
     int i = 0;
     while (true) {
         ASTPtr arg = expression();
@@ -997,20 +998,18 @@ Compiler::argumentList(Function* fun)
             }
             expect(false, Error::ExpectedExpr);
         }
+
+        // FIXME: Validate type with expected arg type
+        fun->addNode(arg);
         
         i++;
         
-        //expect(fun.args() >= i, Error::WrongNumberOfArgs);
-    
-        // Bake the arithmeticExpression, leaving the result in r0.
-        // Make sure the type matches the formal argument and push
-
         if (!match(Token::Comma)) {
             break;
         }
     }
 
-    //expect(fun.args() == i, Error::WrongNumberOfArgs);
+    // FIXME: Handle case where fewer args are passed - push 0 if so
     return true;
 }
 

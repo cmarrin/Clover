@@ -191,17 +191,17 @@ Decompiler::statement()
     uint8_t size = 0;
     Op opcode = Op::NOP;
 
-    if (opInt >= WidthOpcodesStart && opInt <= WidthOpcodesEnd) {
-        size = opInt & 0x03;
-        opcode = Op(opInt & 0xfc);
-    } else if (opInt >= OffsetStart && opInt <= OffsetEnd) {
+    if (opInt < OneBitOperandStart) {
+        opcode = Op(opInt);
+    } else if (opInt < TwoBitOperandStart) {
         size = opInt & 0x01;
         opcode = Op(opInt & 0xfe);
-    } else if (opInt >= EnterShortStart && opInt <= EnterShortEnd) {
+    } else if (opInt < FoutBitOperandStart) {
+        size = opInt & 0x03;
+        opcode = Op(opInt & 0xfc);
+    } else {
         size = opInt & 0x0f;
         opcode = Op(opInt & 0xf0);
-    } else {
-        opcode = Op(opInt);
     }
     
     switch (opcode) {
@@ -243,7 +243,23 @@ Decompiler::statement()
         case Op::CALL    : emitRelAddr("CALL", size); break;
         case Op::ENTER   : emitNumber("ENTER", size ? getUInt16() : getUInt8()); break;
         case Op::ENTERS  : emitNumber("ENTERS", size); break;
-        default: break;
+        case Op::NCALL   : emitNumber("NCALL", size ? getUInt16() : getUInt8()); break;
+        case Op::NCALLS  : emitNumber("NCALLS", size); break;
+        case Op::PUSHS   : {
+            emitOp("PUSHS");
+            _out->append(" \"");
+            uint8_t size = getUInt8();
+            for (uint8_t i = 0; i < size; ++i) {
+                char c = getUInt8();
+                if (c == '\n') {
+                    _out->append("\\n");
+                } else {
+                    _out->append(&c, 1);
+                }
+            }
+            _out->append("\"");
+            break;
+        }
     }
     
     _out->append("\n");
@@ -259,13 +275,15 @@ void Decompiler::emitOp(const char* opString)
 void Decompiler::emitRelAddr(const char* opString, uint8_t size)
 {
     emitOp(opString);
-    std::to_string(size ? getInt16() : getInt8());
+    _out->append(" ");
+    _out->append(std::to_string(size ? getInt16() : getInt8()));
 }
 
 void Decompiler::emitNumber(const char* opString, int32_t number)
 {
     emitOp(opString);
-    std::to_string(number);
+    _out->append(" ");
+    _out->append(std::to_string(number));
 }
 
 void Decompiler::emitSizeValue(uint8_t size)

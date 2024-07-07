@@ -323,7 +323,7 @@ private:
     ASTPtr primaryExpression();
 
     bool formalParameterList();
-    bool argumentList(Function* fun);
+    bool argumentList(const ASTPtr& fun);
     
     virtual bool isReserved(Token token, const std::string str, Reserved&);
 

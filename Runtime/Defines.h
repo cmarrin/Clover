@@ -208,62 +208,62 @@ static constexpr uint16_t LocalStart = GlobalStart + GlobalSize;
 static constexpr uint16_t LocalSize = MaxIdSize - LocalStart;
 static constexpr uint8_t ExtOpcodeStart = 0x40;
 
-static constexpr uint8_t WidthOpcodesStart = 0x10;
-static constexpr uint8_t WidthOpcodesEnd   = 0x8f;
-static constexpr uint8_t OffsetStart       = 0x90;
-static constexpr uint8_t OffsetEnd         = 0x9f;
-static constexpr uint8_t EnterShortStart   = 0xf0;
-static constexpr uint8_t EnterShortEnd     = 0xff;
+// 0 bit opcodes start at 0x00
+static constexpr uint8_t OneBitOperandStart = 0x10;
+static constexpr uint8_t TwoBitOperandStart = 0x20;
+static constexpr uint8_t FoutBitOperandStart = 0xd0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
     PUSHREF = 0x01,
+    RET     = 0x02,
+    PUSHS   = 0x03, // Following byte is length, followed by length chars
+
+// LSB = 0, following param is 8 bit. LSB = 1, following param is 16 bit
+    IF      = 0x10,
+    BRA     = 0x12,
+    CALL    = 0x14,
+    NCALL   = 0x16,
+    ENTER   = 0x18,
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 3 bytes, 11 float
-    DEREF   = 0x10,
-    PUSH    = 0x14,
-    DUP     = 0x18,
-    DROP    = 0x1c,
-    SWAP    = 0x20,
+    DEREF   = 0x20,
+    PUSH    = 0x24,
+    DUP     = 0x28,
+    DROP    = 0x2c,
+    SWAP    = 0x30,
     
-    ADD     = 0x24,
-    SUB     = 0x28,
-    IMUL    = 0x2c,
-    UMUL    = 0x30,
-    IDIV    = 0x34,
-    UDIV    = 0x38,
+    ADD     = 0x34,
+    SUB     = 0x38,
+    IMUL    = 0x3c,
+    UMUL    = 0x40,
+    IDIV    = 0x44,
+    UDIV    = 0x48,
     
-    AND     = 0x3c,
-    OR      = 0x40,
-    XOR     = 0x44,
-    NOT     = 0x48,
-    NEG     = 0x4c,
+    AND     = 0x4c,
+    OR      = 0x50,
+    XOR     = 0x54,
+    NOT     = 0x58,
+    NEG     = 0x5c,
 
-    PREINC  = 0x50,
-    PREDEC  = 0x54,
-    POSTINC = 0x58,
-    POSTDEC = 0x5c,
+    PREINC  = 0x60,
+    PREDEC  = 0x64,
+    POSTINC = 0x68,
+    POSTDEC = 0x6c,
     
-    LE      = 0x60,
-    LS      = 0x64,
-    LT      = 0x68,
-    LO      = 0x6c,
-    GE      = 0x70,
-    HS      = 0x74,
-    GT      = 0x78,
-    HI      = 0x7c,
-    EQ      = 0x80,
-    NE      = 0x84,
+    LE      = 0x70,
+    LS      = 0x74,
+    LT      = 0x78,
+    LO      = 0x7c,
+    GE      = 0x80,
+    HS      = 0x84,
+    GT      = 0x88,
+    HI      = 0x8c,
+    EQ      = 0x90,
+    NE      = 0x94,
     
-// LSB = 0, following param is 8 bit. LSB = 1, following param is 16 bit
-    IF      = 0x90,
-    BRA     = 0x92,
-    CALL    = 0x94,
-    ENTER   = 0x96,
-    RET     = 0x98,
-
 // These versions use the lower 4 bits of the opcode as a param (0-15)
-    RETS    = 0xe0,
+    NCALLS  = 0xe0,
     ENTERS  = 0xf0,
 };
 

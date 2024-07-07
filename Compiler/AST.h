@@ -259,6 +259,7 @@ class ModuleNode : public ASTNode
     ModuleNode(const ModulePtr& module) : _module(module) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Module; }
+    virtual bool isList() const override { return true; }
     virtual bool isTerminal() const override { return true; }
     virtual Type type() const override { return Type::None; }
     
@@ -274,13 +275,30 @@ class FunctionCallNode : public ASTNode
     FunctionCallNode(Function* func) : _function(func) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::FunctionCall; }
-    virtual bool isTerminal() const override { return true; }
+    virtual bool isList() const override { return true; }
     virtual Type type() const override { return _function ? _function->returnType() : Type::None; }
+
+    virtual void addNode(const std::shared_ptr<ASTNode>& node) override
+    {
+        _args.push_back(node);
+    }
+    
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (_args.size() <= i) {
+            return nullptr;
+        }
+        return _args[i];
+    }
+
+    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
 
     Function* function() const { return _function; }
     
   private:
     Function* _function;
+    ASTNodeList _args;
+
 };
 
 }

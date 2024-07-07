@@ -17,6 +17,7 @@ Function::Function(const char* name, NativeId nativeId, Type returnType, const S
     : _name(name)
     , _returnType(returnType)
     , _native(true)
+    , _addr(int32_t(nativeId))
 {
     for (const auto& it : locals) {
         addArg(it.name(), it.type(), it.size(), it.isPointer());
