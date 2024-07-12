@@ -599,7 +599,7 @@ Compiler::forStatement()
         ASTPtr ast;
         
         if (t != Type::None) {
-            expect(t == Type::Int || t == Type::Float, Error::WrongType);
+            //expect(t == Type::Int || t == Type::Float, Error::WrongType);
 
             std::string id;
             expect(identifier(id), Error::ExpectedIdentifier);
@@ -945,7 +945,17 @@ Compiler::primaryExpression()
         
     uint32_t i;
     if (integerValue(i)) {
-        return std::make_shared<ConstantNode>(i);
+        // Set the type to the smallest type value fits in.
+        Type type;
+        if (i <= 255) {
+            type = Type::UInt8;
+        } else if (i <= 65535) {
+            type = Type::UInt16;
+        } else {
+            type = Type::UInt32;
+        }
+        
+        return std::make_shared<ConstantNode>(type, i);
     }
     
     std::string s;

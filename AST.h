@@ -20,6 +20,20 @@ namespace lucid {
 
 // Classes to represent AST
 
+static uint8_t typeToSizeBits(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return 0x00;
+        case Type::UInt8    : return 0x00;
+        case Type::Int16    : return 0x01;
+        case Type::UInt16   : return 0x01;
+        case Type::Int32    : return 0x02;
+        case Type::UInt32   : return 0x02;
+        case Type::Float    : return 0x03;
+        default: return 0;
+    }
+};
+
 enum class ASTNodeType {
     Statements,
     Op,
@@ -121,7 +135,6 @@ class ConstantNode : public ASTNode
     ConstantNode(Type t, float v) : _type(t), _f(v) { }
     ConstantNode(Type t, uint32_t v) : _type(t), _i(v) { }
     ConstantNode(float v) : _type(Type::Float), _numeric(true), _f(v) { }
-    ConstantNode(uint32_t v) : _type(Type::Int), _numeric(true), _i(v) { }
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Constant; }
     virtual bool isTerminal() const override { return true; }
@@ -137,13 +150,17 @@ class ConstantNode : public ASTNode
     }
 
     virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    
+    void toFloat() { _f = float(_i); }
+    void toUInt() { _i = uint32_t(_f); }
+    void setType(Type type) { _type = type; }
 
   private:
     Type _type = Type::None;
     bool _numeric = false; // If true, type is a Float or UInt32 literal
     union {
         float _f;
-        uint32_t _i;
+        int32_t _i;
     };
 };
 
@@ -167,6 +184,20 @@ class StringNode : public ASTNode
     std::string _string;
 };
 
+static Op castToOp(Type type)
+{
+    switch (type) {
+        case Type::Float: return Op::TOF;
+        case Type::UInt8: return Op::TOU8;
+        case Type::Int8: return Op::TOI8;
+        case Type::UInt16: return Op::TOU16;
+        case Type::Int16: return Op::TOI16;
+        case Type::UInt32: return Op::TOU32;
+        case Type::Int32: return Op::TOI32;
+        default: return Op::NOP;
+    }
+}
+
 class OpNode : public ASTNode
 {
   public:
@@ -177,6 +208,26 @@ class OpNode : public ASTNode
         , _right(right)
     {
         _type = _left->type();
+        
+        // If types don't match, add a cast operator
+        if (_right->type() != _type) {
+            // If _right is a constant just change its type
+            if (_right->astNodeType() == ASTNodeType::Constant) {
+                ConstantNode* rightNode = reinterpret_cast<ConstantNode*>(_right.get());
+                if (_type == Type::Float) {
+                    // Value must be an unsigned int
+                    rightNode->toFloat();
+                } else if (rightNode->type() == Type::Float) {
+                    // Convert value to int
+                    rightNode->toUInt();
+                }
+                rightNode->setType(_type);
+
+            } else {
+                Op castTo = castToOp(_type);
+                _right = std::make_shared<OpNode>(Op(uint8_t(castTo) | typeToSizeBits(_right->type())), _right);
+            }
+        }
     }
     
     OpNode(const std::shared_ptr<ASTNode>& left, Op op)
@@ -197,6 +248,7 @@ class OpNode : public ASTNode
 
     virtual bool isAssignment() const override { return _isAssignment; }
     virtual bool isUnary() const override { return _left == nullptr || _right == nullptr; }
+    virtual Type type() const override { return _type; }
     
     virtual const ASTPtr child(uint32_t i) const override
     {
@@ -261,7 +313,6 @@ class ModuleNode : public ASTNode
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Module; }
     virtual bool isList() const override { return true; }
     virtual bool isTerminal() const override { return true; }
-    virtual Type type() const override { return Type::None; }
     
     const ModulePtr& module() const { return _module; }
 

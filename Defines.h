@@ -128,17 +128,30 @@ Opcodes:
         The byte following the opcode indicates the addressing mode. Bits1:0 indicate
         how the addressing value is used:
                         
-            00 - Immediate. Value is the signed operand
+            00 - Reserved
             01 - X. Add signed value to X to get EA
             10 - Y. Add signed value to Y to get EA
             11 - U. Add signed value to U to get EA
                         
         if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 16. If bit 2 is 1
-        then bits 4:3 are the number of bytes that follow, from 1 (00) to 4 (11). If
-        1 byte follows then bits 7:5 are appended as the MSB of a 13 bit signed integer
-        from -1024 to 1023. If 2, 3 or 4 bytes follow no appending is done.
+        then bits 4:3 are the number of bytes that follow, from 1 (00) to 4 (11).
 
-    Stack frame and Base pointer
+    - Immediate value
+        PUSHK takes an immediate operand. Bits 3:0 of the operand indicate the
+        number of bytes pushed and the number of bytes following the operand. Values
+        are:
+            0x00 - Push 1 byte, 1 byte operand
+            0x01 - Push 2 byte, 1 byte operand
+            0x02 - Push 4 byte, 1 byte operand
+            0x03 - Push 2 byte, 2 byte operand
+            0x04 - Push 4 byte, 2 byte operand
+            0x05 - Push 4 byte, 3 byte operand
+            0x06 - Push 4 byte, 4 byte operand
+            
+            
+        Operands are signed and are sign extended to fit in the desired size to push.
+
+    - Stack frame and Base pointer
     
     Stack grows down so when you push a value the current SP points to it. On a call
     args are pushed from left to right so rightmost param is at the lowest address.
@@ -153,9 +166,10 @@ Opcodes:
     On return, the callee sets SP = BP, pops the stack into BP and performs a
     return operation. The caller then adds the number of bytes of args to SP.
     
-    PUSHREF         - push EA of value (must be X, Y, or BP addressing mode)
+    PUSHREF         - push EA of value (must be X, Y, or U addressing mode)
     DEREF<1,2,4>    - Value is on TOS, EA is TOS+1, store value at EA
-    PUSH<1,2,4>     - Push value (immediate or indexed from X, y or BP)
+    PUSH<1,2,4>     - Push value (indexed from X, y or BP)
+    PUSHK<1,2,4>     - Push value (immediate value)
     
     DUP<1,2,4>      - Duplicate TOS
     DROP<1,2,4>     - Pop TOS
@@ -210,15 +224,22 @@ static constexpr uint8_t ExtOpcodeStart = 0x40;
 
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart = 0x10;
-static constexpr uint8_t TwoBitOperandStart = 0x20;
-static constexpr uint8_t FoutBitOperandStart = 0xd0;
+static constexpr uint8_t TwoBitOperandStart = 0x1c;
+static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
     PUSHREF = 0x01,
     RET     = 0x02,
     PUSHS   = 0x03, // Following byte is length, followed by length chars
-
+    PUSHK11 = 0x04, // 1 byte operand, push 1 byte
+    PUSHK12 = 0x05, // 1 byte operand, push 2 bytes
+    PUSHK14 = 0x06, // 1 byte operand, push 4 bytes
+    PUSHK22 = 0x07, // 2 byte operand, push 2 bytes
+    PUSHK24 = 0x08, // 2 byte operand, push 4 bytes
+    PUSHK34 = 0x09, // 3 byte operand, push 4 bytes
+    PUSHK44 = 0x0a, // 4 byte operand, push 4 bytes
+    
 // LSB = 0, following param is 8 bit. LSB = 1, following param is 16 bit
     IF      = 0x10,
     BRA     = 0x12,
@@ -226,7 +247,9 @@ enum class Op: uint8_t {
     NCALL   = 0x16,
     ENTER   = 0x18,
 
-// Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 3 bytes, 11 float
+    TOI32   = 0x1c,
+
+// Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
     DEREF   = 0x20,
     PUSH    = 0x24,
     DUP     = 0x28,
@@ -261,8 +284,18 @@ enum class Op: uint8_t {
     HI      = 0x8c,
     EQ      = 0x90,
     NE      = 0x94,
-    
+
+    TOF     = 0x98,
+    TOU8    = 0x9c,
+    TOI8    = 0xa0,
+    TOU16   = 0xa4,
+    TOI16   = 0xa8,
+    TOU32   = 0xac,
+
 // These versions use the lower 4 bits of the opcode as a param (0-15)
+    PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
+    PUSHKS2 = 0xc0, // lower 4 bits is value from -8 to 7, push 2 bytes
+    PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
     NCALLS  = 0xe0,
     ENTERS  = 0xf0,
 };
@@ -293,8 +326,6 @@ enum class Type : uint8_t {
     UInt16 = 13,
     Int32 = 14,
     UInt32 = 15,
-    Int = 16, // Unspecified size
-    UInt = 17, // Unspecified size
     String = 18,
     Function = 19,
     
@@ -303,7 +334,7 @@ enum class Type : uint8_t {
     Ptr = 30
 };
 
-enum class Index : uint8_t { K = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
+enum class Index : uint8_t { X = 0x01, Y = 0x02, U = 0x03 };
 
 enum class Reserved {
     None,

@@ -206,10 +206,27 @@ Decompiler::statement()
     
     switch (opcode) {
         case Op::NOP     : emitOp("NOP"); break;
+        case Op::TOF     : emitSize("TOF", size); break;
+        case Op::TOU8    : emitSize("TOU8", size); break;
+        case Op::TOI8    : emitSize("TOI8", size); break;
+        case Op::TOU16   : emitSize("TOU16", size); break;
+        case Op::TOI16   : emitSize("TOI16", size); break;
+        case Op::TOU32   : emitSize("TOU32", size); break;
+        case Op::TOI32   : emitSize("TOI32", size); break;
         case Op::PUSHREF : emitIndex("PUSHREF", getUInt8()); break;
         case Op::RET     : emitOp("RET"); break;
         case Op::DEREF   : emitSize("DEREF", size); break;
         case Op::PUSH    : emitSizeIndex("PUSH", size, getUInt8()); break;
+        case Op::PUSHK11 : emitSizeIndex("PUSHK11", size, getUInt8()); break;
+        case Op::PUSHK12 : emitSizeIndex("PUSHK12", size, getUInt8()); break;
+        case Op::PUSHK14 : emitSizeIndex("PUSHK14", size, getUInt8()); break;
+        case Op::PUSHK22 : emitSizeIndex("PUSHK22", size, getUInt8()); break;
+        case Op::PUSHK24 : emitSizeIndex("PUSHK24", size, getUInt8()); break;
+        case Op::PUSHK34 : emitSizeIndex("PUSHK34", size, getUInt8()); break;
+        case Op::PUSHK44 : emitSizeIndex("PUSHK44", size, getUInt8()); break;
+        case Op::PUSHKS1 : emitSize("PUSHKS1", size); break;
+        case Op::PUSHKS2 : emitSize("PUSHKS2", size); break;
+        case Op::PUSHKS4 : emitSize("PUSHKS4", size); break;
         case Op::DUP     : emitSize("DUP", size); break;
         case Op::DROP    : emitSize("DROP", size); break;
         case Op::SWAP    : emitSize("SWAP", size); break;

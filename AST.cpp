@@ -13,14 +13,18 @@
 
 using namespace lucid;
 
-std::map<Type, uint8_t> typeToSizeBits {
-    { Type::Int8,   0x00 },
-    { Type::UInt8,  0x00 },
-    { Type::Int16,  0x01 },
-    { Type::UInt16, 0x01 },
-    { Type::Int32,  0x02 },
-    { Type::UInt32, 0x02 },
-    { Type::Float,  0x03 },
+static uint8_t typeToBytes(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return 1;
+        case Type::UInt8    : return 1;
+        case Type::Int16    : return 2;
+        case Type::UInt16   : return 2;
+        case Type::Int32    : return 4;
+        case Type::UInt32   : return 4;
+        case Type::Float    : return 4;
+        default: return 0;
+    }
 };
 
 // Operator map. Maps Operators (contained in the AST OpNode) to opcodes
@@ -63,24 +67,24 @@ std::map<Operator, std::pair<Op, Op>> opMap {
 // bytes hold values or addresses
 static void emitCode(std::vector<uint8_t>& code, Op opcode, Type type, Index index, int32_t value)
 {
-    code.push_back(uint8_t(opcode) | typeToSizeBits[type]);
+    code.push_back(uint8_t(opcode) | typeToSizeBits(type));
     
     uint8_t extra = uint8_t(index);
     uint8_t addedBytes = 0;
     
     if (value >= -16 && value <= 15) {
         extra |= uint8_t(value << 3);
-    } else if (value >= -2048 && value <= 2047) {
-        extra |= uint8_t(value << 5);
+    } else if (value >= -128 && value <= 127) {
+        extra |= 0x4;
         addedBytes = 1;
     } else if (value >= -32768 && value <= 32767) {
-        extra |= 0x08;
+        extra |= 0x0c;
         addedBytes = 2;
     } else if (value >= -8388608 && value <= 8388607) {
-        extra |= 0x10;
+        extra |= 0x14;
         addedBytes = 3;
     } else {
-        extra |= 0x18;
+        extra |= 0x1c;
         addedBytes = 4;
     }
     
@@ -99,26 +103,26 @@ static void emitCode(std::vector<uint8_t>& code, Op opcode, Type type, Index ind
     }
 }
 
-// This version is for opcodes where the LSB indicates 8 or 16 bit values that follow
-static void emitCode(std::vector<uint8_t>& code, Op opcode, int32_t value)
-{
-    if (value <= 127 && value >= -128) {
-        // 8 bit case
-        code.push_back(uint8_t(opcode));
-        code.push_back(value);
-    } else {
-        // 16 bit case
-        code.push_back(uint8_t(opcode) | 0x01);
-        code.push_back(value >> 8);
-        code.push_back(value);
-    }
-}
-
-// This version is for opcodes where the value is in the lower 4 bits
-static void emitCodeShort(std::vector<uint8_t>& code, Op opcode, int32_t value)
-{
-    code.push_back(uint8_t(opcode) | (value & 0x0f));
-}
+//// This version is for opcodes where the LSB indicates 8 or 16 bit values that follow
+//static void emitCode(std::vector<uint8_t>& code, Op opcode, int32_t value)
+//{
+//    if (value <= 127 && value >= -128) {
+//        // 8 bit case
+//        code.push_back(uint8_t(opcode));
+//        code.push_back(value);
+//    } else {
+//        // 16 bit case
+//        code.push_back(uint8_t(opcode) | 0x01);
+//        code.push_back(value >> 8);
+//        code.push_back(value);
+//    }
+//}
+//
+//// This version is for opcodes where the value is in the lower 4 bits
+//static void emitCodeShort(std::vector<uint8_t>& code, Op opcode, int32_t value)
+//{
+//    code.push_back(uint8_t(opcode) | (value & 0x0f));
+//}
 
 void VarNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
@@ -131,6 +135,24 @@ void VarNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
     emitCode(code, op, _symbol->type(), Index::U, _symbol->addr());
 }
 
+// If short, bytesInOperand is 0
+static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
+{
+    switch((bytesInOperand << 4) | bytesToPush) {
+        case 0x01: return Op::PUSHKS1;
+        case 0x02: return Op::PUSHKS2;
+        case 0x04: return Op::PUSHKS4;
+        case 0x11: return Op::PUSHK11;
+        case 0x12: return Op::PUSHK12;
+        case 0x14: return Op::PUSHK14;
+        case 0x22: return Op::PUSHK22;
+        case 0x24: return Op::PUSHK24;
+        case 0x34: return Op::PUSHK34;
+        case 0x44: return Op::PUSHK44;
+        default: return Op::NOP;
+    }
+}
+
 void ConstantNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     assert(!isLHS);
@@ -138,8 +160,35 @@ void ConstantNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
     // FIXME: What about Type::Int and Type::Float? These are generic int and float literals
     // and we should auto convert them to the right type?
     assert(_type != Type::None);
-        
-    emitCode(code, Op::PUSH, _type, Index::K, _i);
+    
+    uint8_t bytesInOperand;
+    
+    if (_i >= -8 && _i <= 7) {
+        bytesInOperand = 0;
+    } else if (_i >= -128 && _i <= 127) {
+        bytesInOperand = 1;
+    } else if (_i >= -32768 && _i <= 32767) {
+        bytesInOperand = 2;
+    } else if (_i >= -8388608 && _i <= 8388607) {
+        bytesInOperand = 3;
+    } else {
+        bytesInOperand = 4;
+    }
+
+    Op op = constantOp(bytesInOperand, typeToBytes(_type));
+    
+    if (bytesInOperand == 0) {
+        code.push_back(uint8_t(op) | _i);
+    } else {
+        code.push_back(uint8_t(op));
+        switch(bytesInOperand) {
+            case 4: code.push_back(_i >> 24);
+            case 3: code.push_back(_i >> 16);
+            case 2: code.push_back(_i >> 8);
+            case 1: code.push_back(_i);
+            default: break;
+        }
+    }
 }
 
 void StringNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
