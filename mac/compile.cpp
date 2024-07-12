@@ -13,8 +13,21 @@
 #include "Compiler.h"
 #include "Decompiler.h"
 #include "Defines.h"
+#include "Interpreter.h"
 
 static constexpr uint32_t MaxExecutableSize = 65536;
+static constexpr uint32_t StackSize = 2048;
+
+class MyInterpreter : public lucid::Interpreter<StackSize>
+{
+  public:
+    MyInterpreter(uint8_t* rom) : _rom(rom) { }
+    
+    virtual uint8_t rom(uint16_t i) const override { return _rom[i]; }
+
+  private:
+    uint8_t* _rom = nullptr;
+};
 
 static void showError(lucid::Error error, lucid::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
 {
@@ -80,7 +93,7 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
 //
 //      -h      output in include file format. Output file is <root name>.h
 //      -d      decompile and print result
-//      -x      simulate resulting binary
+//      -x      interpret resulting binary
 //
 // Multiple input files accepted. Output file(s) are placed in the same dir as input
 // files with extension .arlx or .h. If segmented (-s), filename has 2 digit suffix
@@ -153,7 +166,6 @@ int main(int argc, char * const argv[]) {
 
         std::cout << "Compile succeeded. Executable size=" << std::to_string(executable.size()) << "\n";
 
-        // Emit compiled code
         if (decompile) {
             std::string out;
             lucid::Decompiler decompiler(&executable, &out, annotations);
@@ -161,145 +173,115 @@ int main(int argc, char * const argv[]) {
             
             std::cout << "\nPrinting code:\n" << out << "\nEnd code\n\n";
             if (!success) {
-                std::cout << "Decompile failed\n\n";
+                const char* err = "unknown";
+                switch(decompiler.error()) {
+                    case lucid::Decompiler::Error::None: err = "internal error"; break;
+                    case lucid::Decompiler::Error::InvalidSignature: err = "invalid signature"; break;
+                    case lucid::Decompiler::Error::InvalidOp: err = "invalid op"; break;
+                    case lucid::Decompiler::Error::PrematureEOF: err = "premature EOF"; break;
+                }
+                std::cout << "Decompile failed: " << err << "\n\n";
                 return 0;
             }
         }
         
-//        // Write executable
-//        // Use the same name as the input file for the output
-//        std::string path = it.substr(0, it.find_last_of('.'));
-//
-//        // Delete any old copies
-//        std::string name = path + ".h";
-//        remove(name.c_str());
-//
-//        name = path + ".lcdx";
-//        remove(name.c_str());
-//
-//        std::cout << "\nEmitting executable to '" << path << "'\n";
-//        std::fstream outStream;
-//
-//        if (headerFile) {
-//            name = path + ".h";
-//        } else {
-//            name = path + ".lcdx";
-//        }
-//
-//        std::ios_base::openmode mode = std::fstream::out;
-//        if (!headerFile) {
-//            mode|= std::fstream::binary;
-//        }
-//
-//        outStream.open(name.c_str(), mode);
-//        if (outStream.fail()) {
-//            std::cout << "Can't open '" << name << "'\n";
-//            return 0;
-//        } else {
-//            char* buf = reinterpret_cast<char*>(&(executable[0]));
-//
-//            if (!headerFile) {
-//                // Write the buffer
-//                outStream.write(buf, executable.size());
-//                if (outStream.fail()) {
-//                    std::cout << "Save failed\n";
-//                    return 0;
-//                } else {
-//                    outStream.close();
-//                    std::cout << "    Saved " << name << "\n";
+        // Write executable
+        // Use the same name as the input file for the output
+        std::string path = it.substr(0, it.find_last_of('.'));
+
+        // Delete any old copies
+        std::string name = path + ".h";
+        remove(name.c_str());
+
+        name = path + ".lcdx";
+        remove(name.c_str());
+
+        std::cout << "\nEmitting executable to '" << path << "'\n";
+        std::fstream outStream;
+
+        if (headerFile) {
+            name = path + ".h";
+        } else {
+            name = path + ".lcdx";
+        }
+
+        std::ios_base::openmode mode = std::fstream::out;
+        if (!headerFile) {
+            mode|= std::fstream::binary;
+        }
+
+        outStream.open(name.c_str(), mode);
+        if (outStream.fail()) {
+            std::cout << "Can't open '" << name << "'\n";
+            return 0;
+        } else {
+            char* buf = reinterpret_cast<char*>(&(executable[0]));
+
+            if (!headerFile) {
+                // Write the buffer
+                outStream.write(buf, executable.size());
+                if (outStream.fail()) {
+                    std::cout << "Save failed\n";
+                    return 0;
+                } else {
+                    outStream.close();
+                    std::cout << "    Saved " << name << "\n";
+                }
+            } else {
+                // Write out as a header file
+                std::string name = path.substr(path.find_last_of('/') + 1);
+                outStream << "static const uint8_t PROGMEM EEPROM_Upload_" << name << "[ ] = {\n";
+
+                for (size_t i = 0; i < executable.size(); ++i) {
+                    char hexbuf[5];
+                    snprintf(hexbuf, 5, "0x%02x", executable[i]);
+                    outStream << hexbuf << ", ";
+                    if (i % 8 == 7) {
+                        outStream << std::endl;
+                    }
+                }
+
+                outStream << "};\n";
+            }
+        }
+        std::cout << "Executables saved\n";
+
+        // Execute if needed
+        if (execute) {
+            MyInterpreter interp(&(executable[0]));
+
+            std::cout << "Running '" << "???" << "' command...\n";
+            int32_t result = interp.interp();
+            if (result) {
+                std::cout << "Complete\n\n";
+            } else {
+                const char* err = "unknown";
+//                switch(interp.error()) {
+//                    case lucid::Interpreter::Error::None: err = "internal error"; break;
+//                    case lucid::Interpreter::Error::CmdNotFound: err = "command not found"; break;
+//                    case lucid::Interpreter::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
+//                    case lucid::Interpreter::Error::InvalidOp: err = "invalid opcode"; break;
+//                    case lucid::Interpreter::Error::InvalidNativeFunction: err = "invalid native function"; break;
+//                    case lucid::Interpreter::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
+//                    case lucid::Interpreter::Error::StackOverrun: err = "can't call, stack full"; break;
+//                    case lucid::Interpreter::Error::StackUnderrun: err = "stack underrun"; break;
+//                    case lucid::Interpreter::Error::StackOutOfRange: err = "stack access out of range"; break;
+//                    case lucid::Interpreter::Error::AddressOutOfRange: err = "address out of range"; break;
+//                    case lucid::Interpreter::Error::InvalidModuleOp: err = "invalid operation in module"; break;
+//                    case lucid::Interpreter::Error::ExpectedSetFrame: err = "expected SetFrame as first function op"; break;
+//                    case lucid::Interpreter::Error::NotEnoughArgs: err = "not enough args on stack"; break;
+//                    case lucid::Interpreter::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
 //                }
-//            } else {
-//                // Write out as a header file
-//                std::string name = path.substr(path.find_last_of('/') + 1);
-//                outStream << "static const uint8_t PROGMEM EEPROM_Upload_" << name << "[ ] = {\n";
-//
-//                for (size_t i = 0; i < executable.size(); ++i) {
-//                    char hexbuf[5];
-//                    snprintf(hexbuf, 5, "0x%02x", executable[i]);
-//                    outStream << hexbuf << ", ";
-//                    if (i % 8 == 7) {
-//                        outStream << std::endl;
-//                    }
-//                }
-//
-//                outStream << "};\n";
-//            }
-//        }
-//        std::cout << "Executables saved\n";
-//
-//        // decompile if needed
-//        if (decompile) {
-//            std::string out;
-//            lucid::Decompiler decompiler(&executable, &out, annotations);
-//            bool success = decompiler.decompile();
-//            std::cout << "\nDecompiled executable:\n" << out << "\nEnd decompilation\n\n";
-//            if (!success) {
-//                const char* err = "unknown";
-//                switch(decompiler.error()) {
-//                    case lucid::Decompiler::Error::None: err = "internal error"; break;
-//                    case lucid::Decompiler::Error::InvalidSignature: err = "invalid signature"; break;
-//                    case lucid::Decompiler::Error::InvalidOp: err = "invalid op"; break;
-//                    case lucid::Decompiler::Error::PrematureEOF: err = "premature EOF"; break;
-//                }
-//                std::cout << "Decompile failed: " << err << "\n\n";
-//                return 0;
-//            }
-//        }
-//
-//        // Execute if needed
-//        if (execute) {
-//            Simulator sim;
-//            
-//            sim.setROM(executable);
-//            
-//            for (const Test& test : Tests) {
-//                std::cout << "Running '" << test._cmd << "' command...\n";
-//            
-//                bool success = sim.init(test._cmd, &test._buf[0], test._buf.size());
-//                if (success && NumLoops > 0) {
-//                    for (int i = 0; i < NumLoops; ++i) {
-//                        int32_t delay = sim.loop();
-//                        if (delay < 0) {
-//                            success = false;
-//                            break;
-//                        }
-//                        std::cout << "[" << i << "]: delay = " << delay << "\n";
-//                    }
-//                
-//                    if (success) {
-//                        std::cout << "Complete\n\n";
-//                    }
-//                }
-//                
-//                if (!success) {
-//                    const char* err = "unknown";
-//                    switch(sim.error()) {
-//                        case clvr::Interpreter::Error::None: err = "internal error"; break;
-//                        case clvr::Interpreter::Error::CmdNotFound: err = "command not found"; break;
-//                        case clvr::Interpreter::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
-//                        case clvr::Interpreter::Error::InvalidOp: err = "invalid opcode"; break;
-//                        case clvr::Interpreter::Error::InvalidNativeFunction: err = "invalid native function"; break;
-//                        case clvr::Interpreter::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
-//                        case clvr::Interpreter::Error::StackOverrun: err = "can't call, stack full"; break;
-//                        case clvr::Interpreter::Error::StackUnderrun: err = "stack underrun"; break;
-//                        case clvr::Interpreter::Error::StackOutOfRange: err = "stack access out of range"; break;
-//                        case clvr::Interpreter::Error::AddressOutOfRange: err = "address out of range"; break;
-//                        case clvr::Interpreter::Error::InvalidModuleOp: err = "invalid operation in module"; break;
-//                        case clvr::Interpreter::Error::ExpectedSetFrame: err = "expected SetFrame as first function op"; break;
-//                        case clvr::Interpreter::Error::NotEnoughArgs: err = "not enough args on stack"; break;
-//                        case clvr::Interpreter::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
-//                    }
-//                    std::cout << "Interpreter failed: " << err;
-//                    
-//                    int16_t errorAddr = sim.errorAddr();
-//                    if (errorAddr >= 0) {
-//                        std::cout << " at addr " << errorAddr;
-//                    }
-//                    
-//                    std::cout << "\n\n";
-//                }
-//            }
-//        }
+                std::cout << "Interpreter failed: " << err;
+                
+                int16_t errorAddr = interp.errorAddr();
+                if (errorAddr >= 0) {
+                    std::cout << " at addr " << errorAddr;
+                }
+                
+                std::cout << "\n\n";
+            }
+        }
     }
 
     return 1;
