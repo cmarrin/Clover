@@ -300,20 +300,6 @@ enum class Op: uint8_t {
     ENTERS  = 0xf0,
 };
 
-enum class OpParams : uint8_t {
-    None,       // No params
-    Id,         // b+1 = <id>
-    I,          // b+1[3:0] = <int> (0-3)
-    Index,      // b[3:0] = <int> (0-15)
-    Const,      // b+1 = 0-255
-    AbsTarg,    // Lower 4 bits of opcode (bits 11:8) | byte after opcode
-                // (bits 7:0). 12 bit absolute address (0 to 4095).
-    RelTarg,    // Lower 4 bits of opcode (bits 11:8) | byte after opcode
-                // (bits 7:0). 12 bit relative address (-2048 to 2047).
-    P_L,        // b[3:0] = num params (0-15), b+1 = num locals (0-255)
-    Idx_Len_S, // b[3:0] = <int> (0-15), b+1 = <int>, followed by Sz string bytes
-};
-
 // Built-in types are 0x00-StructTypeStart-1, custom types are StructTypeStart-0xff
 enum class Type : uint8_t {
     None = 0,
@@ -335,6 +321,20 @@ enum class Type : uint8_t {
 };
 
 enum class Index : uint8_t { X = 0x01, Y = 0x02, U = 0x03 };
+enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
+
+// Defines for size of addresses
+constexpr OpSize AddrOpSize = OpSize::i32;
+
+static inline uint8_t OpSizeToCount(OpSize opSize)
+{
+    switch (opSize) {
+        case OpSize::i8:  return 1;
+        case OpSize::i16: return 2;
+        case OpSize::i32: return 4;
+        case OpSize::flt: return 4;
+    }
+}
 
 enum class Reserved {
     None,

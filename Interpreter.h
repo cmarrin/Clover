@@ -48,7 +48,7 @@ class InterpreterBase
     // from _sp.
     void setFrame(uint16_t locals)
     {
-        _memMgr.stack().push(_u, 4);
+        _memMgr.stack().push(_u, AddrOpSize);
         _u = _memMgr.stack().sp();
         _memMgr.stack().ensurePush(locals);
         _memMgr.stack().sp() -= locals;
@@ -57,7 +57,7 @@ class InterpreterBase
     void restoreFrame()
     {
         _memMgr.stack().sp() = _u;
-        _u = _memMgr.stack().pop(4);
+        _u = _memMgr.stack().pop(AddrOpSize);
     }
 
   protected:
@@ -112,8 +112,7 @@ class InterpreterBase
         return v;
     }
     
-    // If immediate the immediate value is returned, otherwise it is the value at the ea
-    uint32_t ea(uint8_t count)
+    uint32_t ea()
     {
         Index index;
         int32_t addr = addrMode(index);
@@ -125,9 +124,9 @@ class InterpreterBase
         }
     }
     
-    uint32_t value(uint8_t count)
+    uint32_t value(OpSize opSize)
     {
-        return _memMgr.getAbs(ea(count), count);
+        return _memMgr.getAbs(ea(), opSize);
     }
     
     uint32_t immed(uint8_t opnd, uint8_t& count)

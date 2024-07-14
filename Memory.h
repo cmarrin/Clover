@@ -35,51 +35,49 @@ class Memory
         const uint8_t& abs(uint32_t addr) const { return _mem[addr]; }
         uint8_t& abs(uint32_t addr) { return _mem[addr]; }
 
-        void push(uint32_t v, uint8_t count)
+        void push(uint32_t v, OpSize size)
         {
-            assert(count < 4);
-            switch (count) {
-                case 3:
-                case 2: push(uint8_t(v >> 24));
-                        push(uint8_t(v >> 16));
-                case 1: push(uint8_t(v >> 8));
-                case 0: push(uint8_t(v));
+            push(uint8_t(v));
+            if (size == OpSize::i8) {
+                return;
             }
+            push(uint8_t(v >> 8));
+            if (size == OpSize::i16) {
+                return;
+            }
+            push(uint8_t(v >> 16));
+            push(uint8_t(v >> 24));
         }
                 
-        uint32_t pop(uint8_t count)
+        uint32_t pop(OpSize size)
         {
-            assert(count < 4);
-            
             uint32_t v = 0;
             
-            switch (count) {
-                case 3:
-                case 2: v |= uint32_t(pop()) << 24;
-                        v |= uint32_t(pop()) << 16;
-                case 1: v |= uint32_t(pop()) << 8;
-                case 0: v |= uint32_t(pop());
+            switch (size) {
+                case OpSize::flt  :
+                case OpSize::i32: v |= uint32_t(pop()) << 24;
+                                  v |= uint32_t(pop()) << 16;
+                case OpSize::i16: v |= uint32_t(pop()) << 8;
+                case OpSize::i8 : v |= uint32_t(pop());
             }
             return v;
         }
         
-        void drop(uint8_t n) { ensureCount(n); _sp += n; }
+        void drop(OpSize size) { _sp += OpSizeToCount(size); }
         
-        void swap(uint8_t count)
+        void swap(OpSize size)
         {
-            assert(count < 4);
-            
-            uint32_t a = pop(count);
-            uint32_t b = pop(count);
-            push(a, count);
-            push(b, count);
+            uint32_t a = pop(size);
+            uint32_t b = pop(size);
+            push(a, size);
+            push(b, size);
         }
         
-        void dup(uint8_t count)
+        void dup(OpSize size)
         {
-            uint32_t v = pop(count);
-            push(v, count);
-            push(v, count);
+            uint32_t v = pop(size);
+            push(v, size);
+            push(v, size);
         }
 
         bool empty() const { return _sp == _size; }
@@ -126,30 +124,27 @@ class Memory
     Error error() const { return _stack.error(); }
     const Stack& stack() const { return _stack; }
     Stack& stack() { return _stack; }
-    void setAbs(uint32_t addr, uint32_t v, uint8_t count)
+    void setAbs(uint32_t addr, uint32_t v, OpSize opSize)
     {
-        assert(count < 4);
-        switch (count) {
-            case 3:
-            case 2: _stack.abs(addr++) = uint8_t(v >> 24);
-                    _stack.abs(addr++) = uint8_t(v >> 16);
-            case 1: _stack.abs(addr++) = uint8_t(v >> 8);
-            case 0: _stack.abs(addr++) = uint8_t(v);
+        switch (opSize) {
+            case OpSize::flt:
+            case OpSize::i32: _stack.abs(addr++) = uint8_t(v >> 24);
+                              _stack.abs(addr++) = uint8_t(v >> 16);
+            case OpSize::i16: _stack.abs(addr++) = uint8_t(v >> 8);
+            case OpSize::i8 : _stack.abs(addr++) = uint8_t(v);
         }
     }
     
-    uint32_t getAbs(uint32_t addr, uint8_t count)
+    uint32_t getAbs(uint32_t addr, OpSize opSize)
     {
-        assert(count < 4);
-        
         uint32_t v = 0;
         
-        switch (count) {
-            case 3:
-            case 2: v |= uint32_t(_stack.abs(addr++)) >> 24;
-                    v |= uint32_t(_stack.abs(addr++)) >> 16;
-            case 1: v |= uint32_t(_stack.abs(addr++)) >> 8;
-            case 0: v |= uint32_t(_stack.abs(addr++));
+        switch (opSize) {
+            case OpSize::flt:
+            case OpSize::i32: v |= uint32_t(_stack.abs(addr++)) >> 24;
+                              v |= uint32_t(_stack.abs(addr++)) >> 16;
+            case OpSize::i16: v |= uint32_t(_stack.abs(addr++)) >> 8;
+            case OpSize::i8 : v |= uint32_t(_stack.abs(addr++));
         }
         
         return v;

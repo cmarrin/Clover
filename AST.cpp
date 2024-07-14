@@ -193,11 +193,13 @@ void ConstantNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 
 void StringNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
+    // We will push a null terminator in addition to the size. Make room for it
     code.push_back(uint8_t(Op::PUSHS));
-    code.push_back(_string.size());
+    code.push_back(_string.size() + 1);
     for (const char& c : _string) {
         code.push_back(c);
     }
+    code.push_back('\0');
 }
 
 void OpNode::addCode(std::vector<uint8_t>& code, bool isLHS) const

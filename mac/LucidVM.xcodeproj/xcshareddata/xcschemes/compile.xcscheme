@@ -55,7 +55,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-d simple.lucid"
+            argument = "-d -x simple.lucid"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
