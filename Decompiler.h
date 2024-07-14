@@ -54,13 +54,12 @@ private:
     void emitOp(const char* opString);
     void emitSizeValue(uint8_t size);
     void emitIndexValue(uint8_t index);
-    void emitRelAddr(const char* opString, uint8_t size);
-    void emitNumber(const char* opString, int32_t number);
+    void emitRelAddr(uint8_t size);
+    void emitNumber(int32_t number);
     
-    void emitNoParams(const char* opString) { emitOp(opString); }
-    void emitSize(const char* opString, uint8_t size) { emitOp(opString); emitSizeValue(size); }
-    void emitIndex(const char* opString, uint8_t index) { emitOp(opString); emitIndexValue(index); }
-    void emitSizeIndex(const char* opString, uint8_t size, uint8_t index) { emitOp(opString); emitSizeValue(size); emitIndexValue(index); }
+    void emitSize(uint8_t size) { emitSizeValue(size); }
+    void emitIndex(uint8_t index) { emitIndexValue(index); }
+    void emitSizeIndex(uint8_t size, uint8_t index) { emitSizeValue(size); emitIndexValue(index); }
     
     bool atEnd() { return (_in->end() - _it) <= 0; }
     uint32_t getUInt32()

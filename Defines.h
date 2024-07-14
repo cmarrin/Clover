@@ -137,19 +137,10 @@ Opcodes:
         then bits 4:3 are the number of bytes that follow, from 1 (00) to 4 (11).
 
     - Immediate value
-        PUSHK takes an immediate operand. Bits 3:0 of the operand indicate the
-        number of bytes pushed and the number of bytes following the operand. Values
-        are:
-            0x00 - Push 1 byte, 1 byte operand
-            0x01 - Push 2 byte, 1 byte operand
-            0x02 - Push 4 byte, 1 byte operand
-            0x03 - Push 2 byte, 2 byte operand
-            0x04 - Push 4 byte, 2 byte operand
-            0x05 - Push 4 byte, 3 byte operand
-            0x06 - Push 4 byte, 4 byte operand
-            
-            
-        Operands are signed and are sign extended to fit in the desired size to push.
+        PUSHK<width><size> pushes an immediate operand. <width> indicates the number
+        of bytes to push (1, 2, or 4) and <size> indicates the number of bytes
+        following the opcode (1, 2, 3, or 4). Operand is signed and is sign extended
+        to fit in the desired number of bytes to push.
 
     - Stack frame and Base pointer
     
@@ -224,7 +215,7 @@ static constexpr uint8_t ExtOpcodeStart = 0x40;
 
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart = 0x10;
-static constexpr uint8_t TwoBitOperandStart = 0x1c;
+static constexpr uint8_t TwoBitOperandStart = 0x20;
 static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
 enum class Op: uint8_t {
@@ -240,57 +231,61 @@ enum class Op: uint8_t {
     PUSHK34 = 0x09, // 3 byte operand, push 4 bytes
     PUSHK44 = 0x0a, // 4 byte operand, push 4 bytes
     
-// LSB = 0, following param is 8 bit. LSB = 1, following param is 16 bit
+    DROP1   = 0x0b, // Next byte is count (1 - 256)
+    DROP2   = 0x0c, // Next 2 bytes are count (1 - 65536)
+
+    
+// Bits 1:0 is the bytes that make up the operand (00=1, 01=2, 10=3, 11=4).
+// Operand is sign extended
     IF      = 0x10,
     BRA     = 0x12,
     CALL    = 0x14,
     NCALL   = 0x16,
     ENTER   = 0x18,
 
-    TOI32   = 0x1c,
-
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
+
     DEREF   = 0x20,
     PUSH    = 0x24,
     DUP     = 0x28,
-    DROP    = 0x2c,
-    SWAP    = 0x30,
+    SWAP    = 0x2c,
     
-    ADD     = 0x34,
-    SUB     = 0x38,
-    IMUL    = 0x3c,
-    UMUL    = 0x40,
-    IDIV    = 0x44,
-    UDIV    = 0x48,
+    ADD     = 0x30,
+    SUB     = 0x34,
+    IMUL    = 0x38,
+    UMUL    = 0x3c,
+    IDIV    = 0x40,
+    UDIV    = 0x44,
     
-    AND     = 0x4c,
-    OR      = 0x50,
-    XOR     = 0x54,
-    NOT     = 0x58,
-    NEG     = 0x5c,
+    AND     = 0x48,
+    OR      = 0x4c,
+    XOR     = 0x50,
+    NOT     = 0x54,
+    NEG     = 0x58,
 
-    PREINC  = 0x60,
-    PREDEC  = 0x64,
-    POSTINC = 0x68,
-    POSTDEC = 0x6c,
+    PREINC  = 0x5c,
+    PREDEC  = 0x60,
+    POSTINC = 0x64,
+    POSTDEC = 0x68,
     
-    LE      = 0x70,
-    LS      = 0x74,
-    LT      = 0x78,
-    LO      = 0x7c,
-    GE      = 0x80,
-    HS      = 0x84,
-    GT      = 0x88,
-    HI      = 0x8c,
-    EQ      = 0x90,
-    NE      = 0x94,
+    LE      = 0x6c,
+    LS      = 0x70,
+    LT      = 0x74,
+    LO      = 0x78,
+    GE      = 0x7c,
+    HS      = 0x80,
+    GT      = 0x84,
+    HI      = 0x88,
+    EQ      = 0x8c,
+    NE      = 0x90,
 
-    TOF     = 0x98,
-    TOU8    = 0x9c,
-    TOI8    = 0xa0,
-    TOU16   = 0xa4,
-    TOI16   = 0xa8,
-    TOU32   = 0xac,
+    TOF     = 0x94,
+    TOU8    = 0x98,
+    TOI8    = 0x9c,
+    TOU16   = 0xa0,
+    TOI16   = 0xa4,
+    TOU32   = 0xa8,
+    TOI32   = 0xac,
 
 // These versions use the lower 4 bits of the opcode as a param (0-15)
     PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte

@@ -411,6 +411,8 @@ Compiler::function()
     
     expect(Token::CloseParen);
     expect(Token::OpenBrace);
+    
+    
 
     // SetFrame has to be the first instruction in the Function. Pass Params and
     // set Locals byte to 0 and remember it's location so we can fix it at the
@@ -465,16 +467,9 @@ Compiler::init()
     expect(Token::CloseParen);
     expect(Token::OpenBrace);
 
-    // SetFrame has to be the first instruction in the Function. Pass Params and
-    // set Locals byte to 0 and remember it's location so we can fix it at the
-    // end of the function
-//    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
-//    auto localsIndex = _rom8.size();
-//    addInt(0);
+    // ENTER has to be the first instruction in the Function.
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction->localSize()));
 
-    // Remember the rom addr so we can check to see if we've emitted any code
-//    uint16_t size = romSize();
-    
     while(statement()) { }
     
     expect(Token::CloseBrace);
@@ -488,10 +483,11 @@ Compiler::init()
     }
     
     // Emit Return at the end if there's not already one
-//    if (size == romSize() || lastOp() != Op::Return) {
-//        addOpSingleByteIndex(Op::PushIntConstS, 0);
-//        addOp(Op::Return);
-//    }
+    ASTPtr nodes = _currentFunction->astNode();
+    ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
+    if (lastNode->astNodeType() != ASTNodeType::Op || reinterpret_cast<OpNode*>(lastNode.get())->op() != Op::RET) {
+        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET));
+    }
     
     _inFunction = false;
     _currentFunction = nullptr;

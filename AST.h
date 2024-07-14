@@ -44,6 +44,7 @@ enum class ASTNodeType {
     Value,
     Module,
     FunctionCall,
+    Enter,
 };
 
 class ASTNode;
@@ -68,6 +69,7 @@ class ASTNode
     virtual Type type() const { return Type::None; }
     
     virtual const ASTPtr child(uint32_t i) const { return nullptr; }
+    virtual const uint32_t numChildren() const { return 0; }
     virtual std::string toString() const { return ""; }
 
     virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const { }
@@ -99,6 +101,8 @@ class StatementsNode : public ASTNode
         }
         return _statements[i];
     }
+
+    virtual const uint32_t numChildren() const override { return uint32_t(_statements.size()); }
 
   private:
     ASTNodeList _statements;
@@ -244,6 +248,8 @@ class OpNode : public ASTNode
         _type = _right->type();
     }
     
+    OpNode(Op op) : _op(op) { }
+    
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Op; }
 
     virtual bool isAssignment() const override { return _isAssignment; }
@@ -265,6 +271,8 @@ class OpNode : public ASTNode
     virtual std::string toString() const override { return std::string(1, char(_op)); }
 
     virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    
+    Op op() const { return _op; }
 
   private:
     bool _isAssignment = false;
@@ -342,6 +350,8 @@ class FunctionCallNode : public ASTNode
         return _args[i];
     }
 
+    virtual const uint32_t numChildren() const override { return uint32_t(_args.size()); }
+
     virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
 
     Function* function() const { return _function; }
@@ -350,6 +360,19 @@ class FunctionCallNode : public ASTNode
     Function* _function;
     ASTNodeList _args;
 
+};
+
+class EnterNode : public ASTNode
+{
+  public:
+    EnterNode(uint32_t localSize) : _localSize(localSize) { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Enter; }
+
+    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    
+  private:
+    uint32_t _localSize = 0;
 };
 
 }

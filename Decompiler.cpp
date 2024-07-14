@@ -206,62 +206,63 @@ Decompiler::statement()
     
     switch (opcode) {
         case Op::NOP     : emitOp("NOP"); break;
-        case Op::TOF     : emitSize("TOF", size); break;
-        case Op::TOU8    : emitSize("TOU8", size); break;
-        case Op::TOI8    : emitSize("TOI8", size); break;
-        case Op::TOU16   : emitSize("TOU16", size); break;
-        case Op::TOI16   : emitSize("TOI16", size); break;
-        case Op::TOU32   : emitSize("TOU32", size); break;
-        case Op::TOI32   : emitSize("TOI32", size); break;
-        case Op::PUSHREF : emitIndex("PUSHREF", getUInt8()); break;
+        case Op::TOF     : emitOp("TOF"); emitSize(size); break;
+        case Op::TOU8    : emitOp("TOU8"); emitSize(size); break;
+        case Op::TOI8    : emitOp("TOI8"); emitSize(size); break;
+        case Op::TOU16   : emitOp("TOU16"); emitSize(size); break;
+        case Op::TOI16   : emitOp("TOI16"); emitSize(size); break;
+        case Op::TOU32   : emitOp("TOU32"); emitSize(size); break;
+        case Op::TOI32   : emitOp("TOI32"); emitSize(size); break;
+        case Op::PUSHREF : emitOp("PUSHREF"); emitIndex(getUInt8()); break;
         case Op::RET     : emitOp("RET"); break;
-        case Op::DEREF   : emitSize("DEREF", size); break;
-        case Op::PUSH    : emitSizeIndex("PUSH", size, getUInt8()); break;
-        case Op::PUSHK11 : emitSizeIndex("PUSHK11", size, getUInt8()); break;
-        case Op::PUSHK12 : emitSizeIndex("PUSHK12", size, getUInt8()); break;
-        case Op::PUSHK14 : emitSizeIndex("PUSHK14", size, getUInt8()); break;
-        case Op::PUSHK22 : emitSizeIndex("PUSHK22", size, getUInt8()); break;
-        case Op::PUSHK24 : emitSizeIndex("PUSHK24", size, getUInt8()); break;
-        case Op::PUSHK34 : emitSizeIndex("PUSHK34", size, getUInt8()); break;
-        case Op::PUSHK44 : emitSizeIndex("PUSHK44", size, getUInt8()); break;
-        case Op::PUSHKS1 : emitSize("PUSHKS1", size); break;
-        case Op::PUSHKS2 : emitSize("PUSHKS2", size); break;
-        case Op::PUSHKS4 : emitSize("PUSHKS4", size); break;
-        case Op::DUP     : emitSize("DUP", size); break;
-        case Op::DROP    : emitSize("DROP", size); break;
-        case Op::SWAP    : emitSize("SWAP", size); break;
-        case Op::ADD     : emitSize("ADD", size); break;
-        case Op::SUB     : emitSize("SUB", size); break;
-        case Op::IMUL    : emitSize("IMUL", size); break;
-        case Op::UMUL    : emitSize("UMUL", size); break;
-        case Op::IDIV    : emitSize("IDIV", size); break;
-        case Op::UDIV    : emitSize("UDIV", size); break;
-        case Op::AND     : emitSize("AND", size); break;
-        case Op::OR      : emitSize("OR", size); break;
-        case Op::XOR     : emitSize("XOR", size); break;
-        case Op::NOT     : emitSize("NOT", size); break;
-        case Op::NEG     : emitSize("NEG", size); break;
-        case Op::PREINC  : emitSizeIndex("PREINC", size, getUInt8()); break;
-        case Op::PREDEC  : emitSizeIndex("PREDEC", size, getUInt8()); break;
-        case Op::POSTINC : emitSizeIndex("POSTINC", size, getUInt8()); break;
-        case Op::POSTDEC : emitSizeIndex("POSTDEC", size, getUInt8()); break;
-        case Op::LE      : emitSize("LE", size); break;
-        case Op::LS      : emitSize("LS", size); break;
-        case Op::LT      : emitSize("LT", size); break;
-        case Op::LO      : emitSize("LO", size); break;
-        case Op::GE      : emitSize("GE", size); break;
-        case Op::HS      : emitSize("HS", size); break;
-        case Op::GT      : emitSize("GT", size); break;
-        case Op::HI      : emitSize("HI", size); break;
-        case Op::EQ      : emitSize("EQ", size); break;
-        case Op::NE      : emitSize("NE", size); break;
-        case Op::IF      : emitRelAddr("IF", size); break;
-        case Op::BRA     : emitRelAddr("BRA", size); break;
-        case Op::CALL    : emitRelAddr("CALL", size); break;
-        case Op::ENTER   : emitNumber("ENTER", size ? getUInt16() : getUInt8()); break;
-        case Op::ENTERS  : emitNumber("ENTERS", size); break;
-        case Op::NCALL   : emitNumber("NCALL", size ? getUInt16() : getUInt8()); break;
-        case Op::NCALLS  : emitNumber("NCALLS", size); break;
+        case Op::DEREF   : emitOp("DEREF"); emitSize(size); break;
+        case Op::PUSH    : emitOp("PUSH"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PUSHK11 : emitOp("PUSHK11"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PUSHK12 : emitOp("PUSHK12"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PUSHK14 : emitOp("PUSHK14"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PUSHK22 : emitOp("PUSHK22"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PUSHK24 : emitOp("PUSHK24"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PUSHK34 : emitOp("PUSHK34"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PUSHK44 : emitOp("PUSHK44"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PUSHKS1 : emitOp("PUSHKS1"); emitSize(size); break;
+        case Op::PUSHKS2 : emitOp("PUSHKS2"); emitSize(size); break;
+        case Op::PUSHKS4 : emitOp("PUSHKS4"); emitSize(size); break;
+        case Op::DUP     : emitOp("DUP"); emitSize(size); break;
+        case Op::DROP1   : emitOp("DROP"); emitNumber(getUInt8()); break;
+        case Op::DROP2   : emitOp("DROP"); emitNumber(getUInt16()); break;
+        case Op::SWAP    : emitOp("SWAP"); emitSize(size); break;
+        case Op::ADD     : emitOp("ADD"); emitSize(size); break;
+        case Op::SUB     : emitOp("SUB"); emitSize(size); break;
+        case Op::IMUL    : emitOp("IMUL"); emitSize(size); break;
+        case Op::UMUL    : emitOp("UMUL"); emitSize(size); break;
+        case Op::IDIV    : emitOp("IDIV"); emitSize(size); break;
+        case Op::UDIV    : emitOp("UDIV"); emitSize(size); break;
+        case Op::AND     : emitOp("AND"); emitSize(size); break;
+        case Op::OR      : emitOp("OR"); emitSize(size); break;
+        case Op::XOR     : emitOp("XOR"); emitSize(size); break;
+        case Op::NOT     : emitOp("NOT"); emitSize(size); break;
+        case Op::NEG     : emitOp("NEG"); emitSize(size); break;
+        case Op::PREINC  : emitOp("PREINC"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PREDEC  : emitOp("PREDEC"); emitSizeIndex(size, getUInt8()); break;
+        case Op::POSTINC : emitOp("POSTINC"); emitSizeIndex(size, getUInt8()); break;
+        case Op::POSTDEC : emitOp("POSTDEC"); emitSizeIndex(size, getUInt8()); break;
+        case Op::LE      : emitOp("LE"); emitSize(size); break;
+        case Op::LS      : emitOp("LS"); emitSize(size); break;
+        case Op::LT      : emitOp("LT"); emitSize(size); break;
+        case Op::LO      : emitOp("LO"); emitSize(size); break;
+        case Op::GE      : emitOp("GE"); emitSize(size); break;
+        case Op::HS      : emitOp("HS"); emitSize(size); break;
+        case Op::GT      : emitOp("GT"); emitSize(size); break;
+        case Op::HI      : emitOp("HI"); emitSize(size); break;
+        case Op::EQ      : emitOp("EQ"); emitSize(size); break;
+        case Op::NE      : emitOp("NE"); emitSize(size); break;
+        case Op::IF      : emitOp("IF"); emitRelAddr(size); break;
+        case Op::BRA     : emitOp("BRA"); emitRelAddr(size); break;
+        case Op::CALL    : emitOp("CALL"); emitRelAddr(size); break;
+        case Op::ENTER   : emitOp("ENTER"); emitNumber(size ? getUInt16() : getUInt8()); break;
+        case Op::ENTERS  : emitOp("ENTERS"); emitNumber(size); break;
+        case Op::NCALL   : emitOp("NCALL"); emitNumber(size ? getUInt16() : getUInt8()); break;
+        case Op::NCALLS  : emitOp("NCALLS"); emitNumber(size); break;
         case Op::PUSHS   : {
             emitOp("PUSHS");
             _out->append(" \"");
@@ -289,16 +290,14 @@ void Decompiler::emitOp(const char* opString)
     _out->append(opString);
 }
 
-void Decompiler::emitRelAddr(const char* opString, uint8_t size)
+void Decompiler::emitRelAddr(uint8_t size)
 {
-    emitOp(opString);
     _out->append(" ");
     _out->append(std::to_string(size ? getInt16() : getInt8()));
 }
 
-void Decompiler::emitNumber(const char* opString, int32_t number)
+void Decompiler::emitNumber(int32_t number)
 {
-    emitOp(opString);
     _out->append(" ");
     _out->append(std::to_string(number));
 }

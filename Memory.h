@@ -63,7 +63,7 @@ class Memory
             return v;
         }
         
-        void drop(OpSize size) { _sp += OpSizeToCount(size); }
+        void drop(uint16_t count) { _sp += count; }
         
         void swap(OpSize size)
         {

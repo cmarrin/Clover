@@ -69,13 +69,6 @@ class InterpreterBase
         return rom(index);
     }
     
-    uint16_t getUInt16ROM(uint16_t index) const
-    {
-        // Little endian
-        return uint32_t(getUInt8ROM(index)) |
-               (uint32_t(getUInt8ROM(index + 1)) << 8);
-    }
-
     uint32_t getOpnd(uint8_t bytes)
     {
         int32_t v = 0;

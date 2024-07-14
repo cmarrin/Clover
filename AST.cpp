@@ -23,6 +23,7 @@ static uint8_t typeToBytes(Type type)
         case Type::Int32    : return 4;
         case Type::UInt32   : return 4;
         case Type::Float    : return 4;
+        case Type::String   : return OpSizeToCount(AddrOpSize);
         default: return 0;
     }
 };
@@ -233,5 +234,34 @@ void FunctionCallNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
         // FIXME: How does addr get set for a function call? 2 pass? Fixup?
         // FIXME: Implement CALL
     }
+    
+    // Pop the args after the call returns
+    uint16_t argSize = 0;
+    for (auto& it : _args) {
+        argSize += typeToBytes(it->type());
+    }
+
+    if (argSize) {
+        code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
+        if (argSize > 256) {
+            code.push_back(argSize >> 8);
+        }
+        code.push_back(argSize);
+    }
 }
+
+void EnterNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+{
+    if (_localSize < 15) {
+        code.push_back(uint8_t(Op::ENTERS) | _localSize);
+    } else {
+        bool isLong = _localSize > 255;
+        code.push_back(uint8_t(Op::ENTER) | (isLong ? 0x01 : 0x00));
+        if (isLong) {
+            code.push_back(uint8_t(_localSize >> 8));
+        }
+        code.push_back(uint8_t(_localSize));
+    }
+}
+
 

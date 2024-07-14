@@ -72,7 +72,6 @@ InterpreterBase::execute(uint16_t addr)
             case Op::POSTDEC :
             case Op::PUSH    : _memMgr.stack().push(value(opSize), opSize); break;
             case Op::DUP     : _memMgr.stack().dup(opSize); break;
-            case Op::DROP    : _memMgr.stack().drop(opSize); break;
             case Op::SWAP    : _memMgr.stack().swap(opSize); break;
             case Op::ADD:
                 right = _memMgr.stack().pop(opSize);
@@ -132,13 +131,18 @@ InterpreterBase::execute(uint16_t addr)
             case Op::HI      :
             case Op::EQ      :
             case Op::NE      :
-            case Op::IF      :
-            case Op::BRA     :
-            case Op::CALL    :
-            case Op::ENTER   :
-            case Op::ENTERS  :
-            case Op::NCALL   :
-            case Op::NCALLS  :
+            
+            case Op::IF      : getOpnd(operand); break; // FIXME: Implement
+            case Op::BRA     : getOpnd(operand); break; // FIXME: Implement
+            case Op::CALL    : getOpnd(operand); break; // FIXME: Implement
+            case Op::ENTER   : left = getOpnd(operand); setFrame(left); break;
+            case Op::NCALL   : getOpnd(operand); break; // FIXME: Implement
+            case Op::DROP1   : left = getOpnd(0); _memMgr.stack().drop(left); break;
+            case Op::DROP2   : left = getOpnd(1); _memMgr.stack().drop(left); break;
+
+            
+            case Op::ENTERS  : setFrame(operand); break;
+            case Op::NCALLS  : break;
             case Op::PUSHK11 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i8); break;
             case Op::PUSHK12 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i16); break;
             case Op::PUSHK14 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i32); break;
