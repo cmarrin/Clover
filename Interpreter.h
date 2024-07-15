@@ -63,6 +63,8 @@ class InterpreterBase
   protected:
     virtual uint8_t rom(uint16_t i) const = 0;
 
+    void callNative(NativeId);
+
     // Index is in bytes
     uint8_t getUInt8ROM(uint16_t index) const
     {

@@ -12,6 +12,16 @@
 
 using namespace lucid;
 
+void
+InterpreterBase::callNative(NativeId id)
+{
+    switch (id) {
+        default: _error = Error::None; break;
+        case NativeId::PrintF:
+            break;
+    }
+}
+
 int32_t
 InterpreterBase::execute(uint16_t addr)
 {
@@ -138,14 +148,15 @@ InterpreterBase::execute(uint16_t addr)
             case Op::IF      : getOpnd(operand); break; // FIXME: Implement
             case Op::BRA     : getOpnd(operand); break; // FIXME: Implement
             case Op::CALL    : getOpnd(operand); break; // FIXME: Implement
-            case Op::ENTER   : left = getOpnd(operand); setFrame(left); break;
-            case Op::NCALL   : getOpnd(operand); break; // FIXME: Implement
             case Op::DROP1   : left = getOpnd(0); _memMgr.stack().drop(left); break;
             case Op::DROP2   : left = getOpnd(1); _memMgr.stack().drop(left); break;
 
-            
+            case Op::ENTER   : operand = getOpnd(operand);
             case Op::ENTERS  : setFrame(operand); break;
-            case Op::NCALLS  : break;
+            
+            case Op::NCALL   : operand = getOpnd(operand);
+            case Op::NCALLS  : callNative(NativeId(operand)); break;
+            
             case Op::PUSHK11 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i8); break;
             case Op::PUSHK12 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i16); break;
             case Op::PUSHK14 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i32); break;
