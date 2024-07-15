@@ -57,6 +57,9 @@ InterpreterBase::execute(uint16_t addr)
                 break;
             case Op::RET:
                 restoreFrame();
+                if (_memMgr.stack().empty()) {
+                    return 0;
+                }
                 _pc = _memMgr.stack().pop(AddrOpSize);
                 break;
             case Op::DEREF: {
