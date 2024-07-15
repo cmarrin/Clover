@@ -252,7 +252,7 @@ int main(int argc, char * const argv[]) {
 
             std::cout << "Running '" << "???" << "' command...\n";
             int32_t result = interp.interp();
-            if (result) {
+            if (result == 0) {
                 std::cout << "Complete\n\n";
             } else {
                 const char* err = "unknown";

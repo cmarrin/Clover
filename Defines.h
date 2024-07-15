@@ -413,7 +413,7 @@ enum class Operator : uint8_t {
 
 enum class NativeId : uint8_t {
     None            = 0,
-    Print           = 1,
+    PrintF          = 1,
     Int8ToString    = 2,
     UInt8ToString   = 3,
     Int16ToString   = 4,

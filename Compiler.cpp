@@ -24,7 +24,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
 {
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>("core");
-    coreModule->addNativeFunction("printf", NativeId::Print, Type::None, {{ "s", Type::String, 1, 0 }});
+    coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, 1, 0 }});
 //    coreModule->addNativeFunction("int8ToString", NativeId::Int8ToString, Type::String, {{ "v", Type::Int8, 1, 0 }});
 //    coreModule->addNativeFunction("uint8ToString", NativeId::UInt8ToString, Type::String, {{ "v", Type::UInt8, 1, 0 }});
 //    coreModule->addNativeFunction("int16ToString", NativeId::Int16ToString, Type::String, {{ "v", Type::Int16, 1, 0 }});
