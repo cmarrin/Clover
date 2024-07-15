@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4914A4852C2E0F92003DDADA /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4842C2E0F92003DDADA /* Function.cpp */; };
 		4914A4882C3E0752003DDADA /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* Interpreter.cpp */; };
+		4914A48B2C44A13B003DDADA /* Formatter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4892C44A132003DDADA /* Formatter.cpp */; };
 		49279C282C12396F00294992 /* Codegen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B62C04EC1E00981AD1 /* Codegen.cpp */; };
 		49279C2A2C1903BE00294992 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
 		4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A0F22BB6F59900CE3C9E /* compile.cpp */; };
@@ -41,6 +42,8 @@
 /* Begin PBXFileReference section */
 		4914A4842C2E0F92003DDADA /* Function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Function.cpp; path = ../Function.cpp; sourceTree = "<group>"; };
 		4914A4872C3B624D003DDADA /* Memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Memory.h; path = ../Memory.h; sourceTree = "<group>"; };
+		4914A4892C44A132003DDADA /* Formatter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Formatter.cpp; path = ../Formatter.cpp; sourceTree = "<group>"; };
+		4914A48A2C44A132003DDADA /* Formatter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Formatter.h; path = ../Formatter.h; sourceTree = "<group>"; };
 		49279C292C16872100294992 /* ExprEntry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ExprEntry.h; path = ../ExprEntry.h; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
@@ -89,6 +92,8 @@
 		4941A0E62BB6F59900CE3C9E = {
 			isa = PBXGroup;
 			children = (
+				4914A4892C44A132003DDADA /* Formatter.cpp */,
+				4914A48A2C44A132003DDADA /* Formatter.h */,
 				49C164B82C04EC6400981AD1 /* AST.cpp */,
 				49C164B92C04EC6400981AD1 /* AST.h */,
 				49C164B62C04EC1E00981AD1 /* Codegen.cpp */,
@@ -228,6 +233,7 @@
 				4914A4882C3E0752003DDADA /* Interpreter.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
 				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
+				4914A48B2C44A13B003DDADA /* Formatter.cpp in Sources */,
 				49279C282C12396F00294992 /* Codegen.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
