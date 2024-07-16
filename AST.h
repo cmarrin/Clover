@@ -20,20 +20,6 @@ namespace lucid {
 
 // Classes to represent AST
 
-static uint8_t typeToSizeBits(Type type)
-{
-    switch (type) {
-        case Type::Int8     : return 0x00;
-        case Type::UInt8    : return 0x00;
-        case Type::Int16    : return 0x01;
-        case Type::UInt16   : return 0x01;
-        case Type::Int32    : return 0x02;
-        case Type::UInt32   : return 0x02;
-        case Type::Float    : return 0x03;
-        default: return 0;
-    }
-};
-
 enum class ASTNodeType {
     Statements,
     Op,

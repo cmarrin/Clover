@@ -13,21 +13,6 @@
 
 using namespace lucid;
 
-static uint8_t typeToBytes(Type type)
-{
-    switch (type) {
-        case Type::Int8     : return 1;
-        case Type::UInt8    : return 1;
-        case Type::Int16    : return 2;
-        case Type::UInt16   : return 2;
-        case Type::Int32    : return 4;
-        case Type::UInt32   : return 4;
-        case Type::Float    : return 4;
-        case Type::String   : return OpSizeToCount(AddrOpSize);
-        default: return 0;
-    }
-};
-
 // Operator map. Maps Operators (contained in the AST OpNode) to opcodes
 std::map<Operator, std::pair<Op, Op>> opMap {
     { Operator::Equal   , { Op::NOP   , Op::NOP    } }, // OpNode knows if this is an assignment.

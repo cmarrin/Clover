@@ -331,6 +331,54 @@ static inline uint8_t OpSizeToCount(OpSize opSize)
     }
 }
 
+// Defines for size of addresses
+constexpr OpSize AddrOpSize = OpSize::i32;
+constexpr uint8_t AddrSize = opSizeToBytes(AddrOpSize);
+using AddrType = uint32_t;
+
+static inline uint8_t typeToBytes(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return 1;
+        case Type::UInt8    : return 1;
+        case Type::Int16    : return 2;
+        case Type::UInt16   : return 2;
+        case Type::Int32    : return 4;
+        case Type::UInt32   : return 4;
+        case Type::Float    : return 4;
+        case Type::String   : return AddrSize;
+        default: return 0;
+    }
+};
+
+static inline uint8_t typeToSizeBits(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return 0x00;
+        case Type::UInt8    : return 0x00;
+        case Type::Int16    : return 0x01;
+        case Type::UInt16   : return 0x01;
+        case Type::Int32    : return 0x02;
+        case Type::UInt32   : return 0x02;
+        case Type::Float    : return 0x03;
+        default: return 0;
+    }
+};
+
+static inline OpSize typeToOpSize(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return OpSize::i8;
+        case Type::UInt8    : return OpSize::i8;
+        case Type::Int16    : return OpSize::i16;
+        case Type::UInt16   : return OpSize::i16;
+        case Type::Int32    : return OpSize::i32;
+        case Type::UInt32   : return OpSize::i32;
+        case Type::Float    : return OpSize::i32;
+        default: return OpSize::i32;
+    }
+};
+
 enum class Reserved {
     None,
     Struct,
