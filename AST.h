@@ -330,10 +330,14 @@ class FunctionCallNode : public ASTNode
     
     virtual const ASTPtr child(uint32_t i) const override
     {
+        // _args has the list of arguments in order from left to right. But stack
+        // pushes down, so args will appear in reverse order on the stack
+        // (right most arg will be at lowest addr). So return children in reverse
+        // order so the first arg is at the lowest address when pushed
         if (_args.size() <= i) {
             return nullptr;
         }
-        return _args[i];
+        return _args[_args.size() - i - 1];
     }
 
     virtual const uint32_t numChildren() const override { return uint32_t(_args.size()); }
