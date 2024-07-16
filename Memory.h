@@ -11,6 +11,8 @@
 //
 #pragma once
 
+#include "Defines.h"
+
 namespace lucid {
 
 // Stack grows down from the top. Heap grows up from the bottom
@@ -150,8 +152,87 @@ class Memory
         return v;
     }
     
+    // On entry args are pushed on stack followed by retAddr.
+    // Push _bp and then set _bp to _sp. The subtract locals
+    // from _sp.
+    void setFrame(uint16_t locals)
+    {
+        _stack.push(_u, AddrOpSize);
+        _u = _stack.sp();
+        _stack.ensurePush(locals);
+        _stack.sp() -= locals;
+    }
+
+    void restoreFrame()
+    {
+        _stack.sp() = _u;
+        _u = _stack.pop(AddrOpSize);
+    }
+
+    AddrType index(int32_t offset, Index idx) const
+    {
+        switch (idx) {
+            case Index::X: return _x + offset;
+            case Index::Y: return _y + offset;
+            case Index::U: return _u + offset;
+        }
+    }
+    
+    // Local offsets are positive, starting at 0, which
+    // is the LSB of the first local. But locals are
+    // actually negative offsets from U, so we pass the type
+    // and return the address of the MSB, accounting for
+    // the previousU pointer. So an offset of 3 and a
+    // Type of int32 would return an address of -10
+    // (assuming AddrType of uint32_t).
+
+    AddrType local(uint32_t offset, Type type) const
+    {
+        return _u + -(AddrSize + offset + typeToBytes(type) - 1);
+    }
+    
+    // Arg offsets are positive, starting at 0, which
+    // is the MSB of the first arg. Args are positive
+    // offsets from U, after space for the previous U
+    // and return address.
+    
+    AddrType arg(uint32_t offset)
+    {
+        return _u + AddrSize * 2 + offset;
+    }
+    
   private:
     Stack _stack;
+    AddrType _u = 0;
+    AddrType _x = 0;
+    AddrType _y = 0;
 };
 
+// Stack grows down. On a function call U points to previous U pushed onto the stack.
+// Above that is the return address and then the args. The MSB of the leftmost arg
+// is first since it is pushed last. Locals are negative offsets from U, so
+// U - AddrSize is the LSB of the first local variable.
+
+class VarArg
+{
+  public:
+    VarArg(Memory* memMgr, uint32_t lastArgOffset, Type lastArgType)
+        : _memMgr(memMgr)
+    {
+        _nextAddr = memMgr->arg(lastArgOffset) + typeToBytes(lastArgType);
+    }
+    
+    // Type returned is always uint32_t. Use reinterpret_cast to convert to the proper type
+    uint32_t arg(Type type)
+    {
+        AddrType argAddr = _nextAddr;
+        _nextAddr += typeToBytes(type);
+        return _memMgr->getAbs(argAddr, typeToOpSize(type));
+    }
+
+  private:
+    AddrType _nextAddr;
+    Memory* _memMgr;
+};
+    
 }

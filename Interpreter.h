@@ -43,23 +43,6 @@ class InterpreterBase
     InterpreterBase(uint8_t* mem, uint32_t memSize) : _memMgr(mem, memSize) { }
     int32_t execute(uint16_t addr);
 
-    // On entry args are pushed on stack followed by retAddr.
-    // Push _bp and then set _bp to _sp. The subtract locals
-    // from _sp.
-    void setFrame(uint16_t locals)
-    {
-        _memMgr.stack().push(_u, AddrOpSize);
-        _u = _memMgr.stack().sp();
-        _memMgr.stack().ensurePush(locals);
-        _memMgr.stack().sp() -= locals;
-    }
-
-    void restoreFrame()
-    {
-        _memMgr.stack().sp() = _u;
-        _u = _memMgr.stack().pop(AddrOpSize);
-    }
-
   protected:
     virtual uint8_t rom(uint16_t i) const = 0;
 
@@ -143,9 +126,6 @@ class InterpreterBase
     }
     
     uint16_t _pc = 0;
-    uint16_t _u = 0;
-    uint16_t _x = 0;
-    uint16_t _y = 0;
 
     Error _error = Error::None;
     int16_t _errorAddr = -1;
