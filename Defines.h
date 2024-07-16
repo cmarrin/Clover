@@ -17,10 +17,16 @@ namespace lucid {
 
 #ifdef ARDUINO
     #include <Arduino.h>
+    #include <EEPROM.h>
+
+    static inline uint8_t rom(uint32_t addr) { return EEPROM[addr]; }
+    
     static inline String to_string(int32_t v) { return String(v); }
     static inline String to_string(float v) { return String(v); }
 #else
-    //#include <string>
+    extern uint8_t* ROMBase;
+
+    static inline uint8_t rom(uint32_t addr) { return ROMBase[addr]; }
     
     static inline void randomSeed(uint32_t s) { srand(s); }
     static inline int32_t random(int32_t min, int32_t max)

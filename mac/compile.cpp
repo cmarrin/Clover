@@ -15,18 +15,19 @@
 #include "Defines.h"
 #include "Interpreter.h"
 
+// Base pointer of executable code (see Defines.h)
+uint8_t* lucid::ROMBase = nullptr;
+
 static constexpr uint32_t MaxExecutableSize = 65536;
 static constexpr uint32_t StackSize = 2048;
 
 class MyInterpreter : public lucid::Interpreter<StackSize>
 {
   public:
-    MyInterpreter(uint8_t* rom) : _rom(rom) { }
-    
-    virtual uint8_t rom(uint16_t i) const override { return _rom[i]; }
-
-  private:
-    uint8_t* _rom = nullptr;
+    virtual void putc(uint8_t c) const override
+    {
+        ::putchar(c);
+    }
 };
 
 static void showError(lucid::Error error, lucid::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
@@ -106,7 +107,8 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
 // byte of the binary data as a hex value. It also has a
 // 'static constexpr uint16_t EEPROM_Upload_Size = ' with the number of bytes.
 
-int main(int argc, char * const argv[]) {
+int main(int argc, char * const argv[])
+{
     std::cout << "Lucid Compiler v0.1\n\n";
     
     int c;
@@ -248,7 +250,10 @@ int main(int argc, char * const argv[]) {
 
         // Execute if needed
         if (execute) {
-            MyInterpreter interp(&(executable[0]));
+            // Setup executable pointer
+            lucid::ROMBase = &(executable[0]);
+            
+            MyInterpreter interp;
 
             std::cout << "Running '" << "???" << "' command...\n";
             int32_t result = interp.interp();

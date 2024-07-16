@@ -41,11 +41,13 @@ class InterpreterBase
     };
 
     InterpreterBase(uint8_t* mem, uint32_t memSize) : _memMgr(mem, memSize) { }
+    virtual ~InterpreterBase() { }
+    
+    virtual void putc(uint8_t c) const = 0;
+    
     int32_t execute(uint16_t addr);
 
   protected:
-    virtual uint8_t rom(uint16_t i) const = 0;
-
     void callNative(NativeId);
 
     // Index is in bytes
@@ -90,16 +92,11 @@ class InterpreterBase
         return v;
     }
     
-    uint32_t ea()
+    AddrType ea()
     {
         Index index;
-        int32_t addr = addrMode(index);
-        
-        switch (index) {
-            case Index::X: return uint32_t(int32_t(_x) + addr);
-            case Index::Y: return uint32_t(int32_t(_y) + addr);
-            case Index::U: return uint32_t(int32_t(_u) + addr);
-        }
+        AddrType addr = addrMode(index);
+        return _memMgr.index(addr, index);
     }
     
     uint32_t value(OpSize opSize)
@@ -137,8 +134,7 @@ template <uint32_t memSize> class Interpreter : public InterpreterBase
 {
 public:
     Interpreter() : InterpreterBase(_mem, memSize) { }
-    virtual ~Interpreter() { }
-    
+
     int32_t interp()
     {
         return execute(4);
@@ -164,11 +160,7 @@ public:
 //		return r;
 //	}
 
-    uint32_t stackLocal(uint16_t addr) const { return _mem.local(addr); }
-
     void setError(Error error) { _error = error; }
-
-//    virtual void log(const char* s) const = 0;
 
 private:
     uint16_t getId(uint8_t i)

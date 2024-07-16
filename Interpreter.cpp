@@ -8,6 +8,8 @@
 -------------------------------------------------------------------------*/
 
 #include "Interpreter.h"
+
+#include "Formatter.h"
 #include "Module.h"
 
 using namespace lucid;
@@ -15,11 +17,24 @@ using namespace lucid;
 void
 InterpreterBase::callNative(NativeId id)
 {
+    // Add a dummy return address to make everything work
+    _memMgr.stack().push(0, AddrOpSize);
+    
+    // Set the frame
+    _memMgr.setFrame(0);
+    
     switch (id) {
         default: _error = Error::None; break;
-        case NativeId::PrintF:
+        case NativeId::PrintF: {
+            VarArg va(&_memMgr, 0, Type::String);
+            AddrType fmt = _memMgr.getAbs(_memMgr.arg(0), AddrOpSize);
+            fmt::Formatter::format([this](uint8_t c) { putc(c); }, fmt, va);
             break;
+        }
     }
+
+    // Restore the frame
+    _memMgr.restoreFrame();
 }
 
 int32_t
@@ -66,7 +81,7 @@ InterpreterBase::execute(uint16_t addr)
                 _memMgr.stack().push(ea(), AddrOpSize);
                 break;
             case Op::RET:
-                restoreFrame();
+                _memMgr.restoreFrame();
                 if (_memMgr.stack().empty()) {
                     return 0;
                 }
@@ -152,7 +167,7 @@ InterpreterBase::execute(uint16_t addr)
             case Op::DROP2   : left = getOpnd(1); _memMgr.stack().drop(left); break;
 
             case Op::ENTER   : operand = getOpnd(operand);
-            case Op::ENTERS  : setFrame(operand); break;
+            case Op::ENTERS  : _memMgr.setFrame(operand); break;
             
             case Op::NCALL   : operand = getOpnd(operand);
             case Op::NCALLS  : callNative(NativeId(operand)); break;

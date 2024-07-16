@@ -14,36 +14,36 @@
 
 #include "Formatter.h"
 
+#include "Defines.h"
+#include "Memory.h"
+
 #include <assert.h>
 #include <string.h>
 
 using namespace fmt;
 
-bool Formatter::toNumber(const char*& s, uint32_t& n)
+bool Formatter::toNumber(lucid::AddrType& s, uint32_t& n)
 {
-#ifdef ARDUINO
-    String str(s);
-    n = str.toInt();
-#else
-    n = atoi(s);
-#endif
-    return true;
+    n = 0;
+    bool haveNumber = false;
+    while (1) {
+        uint8_t c = lucid::rom(s);
+        if (c < '0' || c > '9') {
+            return haveNumber;
+        }
+        n = n * 10 + c - '0';
+        s += 1;
+        haveNumber = true;
+    }
 }
-
-
 
 enum class Signed { Yes, No };
 enum class FloatType { Float, Exp, Shortest };
  
-// va_list can be either an array or a struct. This makes it impossible to pass by reference
-// in a cross-platform way. Wrap it in a struct and pass that by reference so it works in
-// all platforms
-struct VA_LIST { va_list value; };
-
-static void handleFlags(const char*& format, uint8_t& flags)
+static void handleFlags(lucid::AddrType& format, uint8_t& flags)
 {
     while (1) {
-        switch (*format) {
+        switch (lucid::rom(format)) {
         case '-': Formatter::setFlag(flags, Formatter::Flag::leftJustify); break;
         case '+': Formatter::setFlag(flags, Formatter::Flag::plus); break;
         case ' ': Formatter::setFlag(flags, Formatter::Flag::space); break;
@@ -55,11 +55,11 @@ static void handleFlags(const char*& format, uint8_t& flags)
     }
 }
 
-static int32_t handleWidth(const char*& format, VA_LIST& va)
+static int32_t handleWidth(lucid::AddrType& format, lucid::VarArg& va)
 {
-    if (*format == '*') {
+    if (lucid::rom(format) == '*') {
         ++format;
-        return va_arg(va.value, int);
+        return va.arg(lucid::Type::UInt32);
     }
     
     uint32_t n;
@@ -68,30 +68,30 @@ static int32_t handleWidth(const char*& format, VA_LIST& va)
 
 enum class Length { None, H, HH, L, LL, J, Z, T };
 
-static Length handleLength(const char*& format)
+static Length handleLength(lucid::AddrType& format)
 {
     Length length = Length::None;
-    if (*format == 'h') {
+    if (lucid::rom(format) == 'h') {
         ++format;
-        if (*format == 'h') {
+        if (lucid::rom(format) == 'h') {
             ++format;
             length = Length::HH;
         } else {
             length = Length::H;
         }
-    } else if (*format == 'l') {
+    } else if (lucid::rom(format) == 'l') {
         ++format;
-        if (*format == 'l') {
+        if (lucid::rom(format) == 'l') {
             ++format;
             length = Length::LL;
         } else {
             length = Length::L;
         }
-    } else if (*format == 'j') {
+    } else if (lucid::rom(format) == 'j') {
         length = Length::J;
-    } else if (*format == 'z') {
+    } else if (lucid::rom(format) == 'z') {
         length = Length::Z;
-    } else if (*format == 't') {
+    } else if (lucid::rom(format) == 't') {
         length = Length::T;
     } else {
         return length;
@@ -99,30 +99,20 @@ static Length handleLength(const char*& format)
     return length;
 }
 
-static uintmax_t getInteger(Length length, Signed sign, VA_LIST& va)
+// 32 bit values are the max supported. Return int32_t for L, LL, J, Z, and T
+// Always return int32_t. Unsigned values less than 32 bits will be sign extended,
+// but reinterpret_cast to unsigned values will work corrently
+static int32_t getInteger(Length length, lucid::VarArg& va)
 {
-    if (sign == Signed::Yes) {
-        switch(length) {
-        case Length::None: return static_cast<intmax_t>(va_arg(va.value, int));
-        case Length::H: return static_cast<uintmax_t>(va_arg(va.value, int)) & 0xffff;
-        case Length::HH: return static_cast<uintmax_t>(va_arg(va.value, int)) & 0xff;
-        case Length::L: return static_cast<uintmax_t>(va_arg(va.value, long int));
-        case Length::LL: return static_cast<uintmax_t>(va_arg(va.value, long long int));
-        case Length::J: return static_cast<uintmax_t>(va_arg(va.value, intmax_t));
-        case Length::Z: return static_cast<uintmax_t>(va_arg(va.value, size_t));
-        case Length::T: return static_cast<uintmax_t>(va_arg(va.value, ptrdiff_t));
-        }
-    } else {
-        switch(length) {
-        case Length::None: return static_cast<uintmax_t>(va_arg(va.value, unsigned int)) & 0xffffffff;
-        case Length::H: return static_cast<uintmax_t>(va_arg(va.value, unsigned int)) & 0xffff;
-        case Length::HH: return static_cast<uintmax_t>(va_arg(va.value, unsigned int)) & 0xff;
-        case Length::L: return static_cast<uintmax_t>(va_arg(va.value, unsigned long int));
-        case Length::LL: return static_cast<uintmax_t>(va_arg(va.value, unsigned long long int));
-        case Length::J: return static_cast<uintmax_t>(va_arg(va.value, intmax_t));
-        case Length::Z: return static_cast<uintmax_t>(va_arg(va.value, size_t));
-        case Length::T: return static_cast<uintmax_t>(va_arg(va.value, ptrdiff_t));
-        }
+    switch(length) {
+        case Length::H: return int32_t(int8_t(va.arg(lucid::Type::UInt8)));
+        case Length::HH: return int32_t(int16_t(va.arg(lucid::Type::UInt16)));
+        case Length::L:
+        case Length::LL:
+        case Length::J:
+        case Length::Z:
+        case Length::T:
+        case Length::None: return va.arg(lucid::Type::UInt32);
     }
     return 0;
 }
@@ -147,25 +137,25 @@ static char* intToString(uint64_t value, char* buf, size_t size, uint8_t base = 
     return p;
 }
 
-static int32_t outInteger(Formatter::Generator& gen, uintmax_t value, Signed sign, int32_t width, int32_t precision, uint8_t flags, uint8_t base, Formatter::Capital cap)
+static int32_t outInteger(Generator gen, uintmax_t value, Signed sign, int32_t width, int32_t precision, uint8_t flags, uint8_t base, Formatter::Capital cap)
 {
     uint32_t size = 0;
     if (sign == Signed::Yes) {
         intmax_t signedValue = value;
         if (signedValue < 0) {
             value = -signedValue;
-            gen.append('-');
+            gen('-');
             size = 1;
             width--;
         }
     }
     
     if (Formatter::isFlag(flags, Formatter::Flag::alt) && base != 10) {
-        gen.append('0');
+        gen('0');
         size++;
         width--;
         if (base == 16) {
-            gen.append((cap == Formatter::Capital::Yes) ? 'X' : 'x');
+            gen((cap == Formatter::Capital::Yes) ? 'X' : 'x');
             size++;
             width--;
         }
@@ -178,27 +168,33 @@ static int32_t outInteger(Formatter::Generator& gen, uintmax_t value, Signed sig
     if (Formatter::isFlag(flags, Formatter::Flag::zeroPad)) {
         int32_t pad = static_cast<int32_t>(width) - static_cast<int32_t>(strlen(p));
         while (pad > 0) {
-            gen.append('0');
+            gen('0');
             size++;
             pad--;
         }
     }
     
     for ( ; *p; ++p) {
-        gen.append(*p);
+        gen(*p);
     }
 
     return size;
 }
 
-static int32_t outString(Formatter::Generator& gen, const char* s, int32_t width, int32_t precision, uint8_t flags)
+static int32_t outString(Generator gen, lucid::AddrType addr, int32_t width, int32_t precision, uint8_t flags)
 {
     // FIXME: Handle flags.leftJustify
     // FIXME: Handle width
     // FIXME: Handle precision
+    
+    // String addr is a ROM addr
     int32_t size = 0;
-    while (*s) {
-        gen.append(*s++);
+    while (true) {
+        uint8_t c = lucid::rom(addr++);
+        if (c == '\0') {
+            break;
+        }
+        gen(c);
         ++size;
     }
     return size;
@@ -210,52 +206,49 @@ static int32_t outString(Formatter::Generator& gen, const char* s, int32_t width
 //     'a', 'A' specifiers - prints hex floats
 //     'L' length - long double
 //     'l' length for 'c' and 's' specifiers - wide characters
+//
+// 
  
-int32_t Formatter::vformat(Formatter::Generator& gen, const char *format, va_list vaIn)
+int32_t Formatter::format(Generator gen, lucid::AddrType fmt, lucid::VarArg& va)
 {
-    assert(format);
-    
-    VA_LIST va;
-    va_copy(va.value, vaIn);
-    
     uint8_t flags = 0;
         
     int32_t size = 0;
     
-    while (*format) {
-        if (*format != '%') {
-            gen.append(*format++);
+    while (lucid::rom(fmt)) {
+        if (lucid::rom(fmt) != '%') {
+            gen(lucid::rom(fmt++));
             size++;
             continue;
         }
         
-        format++;
+        fmt++;
         
         // We have a format, do the optional part
-        handleFlags(format, flags);
-        int32_t width = handleWidth(format, va);
+        handleFlags(fmt, flags);
+        int32_t width = handleWidth(fmt, va);
         int32_t precision = -1;
-        if (*format == '.') {
-            precision = handleWidth(++format, va);
+        if (lucid::rom(fmt) == '.') {
+            precision = handleWidth(++fmt, va);
         }
-        Length length = handleLength(format);
+        Length length = handleLength(fmt);
         
         // Handle the specifier
-        switch (*format)
+        switch (lucid::rom(fmt))
         {
         case 'd':
         case 'i':
-            size += outInteger(gen, getInteger(length, Signed::Yes, va), Signed::Yes, width, precision, flags, 10, Formatter::Capital::No);
+            size += outInteger(gen, getInteger(length, va), Signed::Yes, width, precision, flags, 10, Formatter::Capital::No);
             break;
         case 'u':
-            size += outInteger(gen, getInteger(length, Signed::No, va), Signed::No, width, precision, flags, 10, Formatter::Capital::No);
+            size += outInteger(gen, getInteger(length, va), Signed::No, width, precision, flags, 10, Formatter::Capital::No);
             break;
         case 'o':
-            size += outInteger(gen, getInteger(length, Signed::No, va), Signed::No, width, precision, flags, 8, Formatter::Capital::No);
+            size += outInteger(gen, getInteger(length, va), Signed::No, width, precision, flags, 8, Formatter::Capital::No);
             break;
         case 'x':
         case 'X':
-            size += outInteger(gen, getInteger(length, Signed::No, va), Signed::No, width, precision, flags, 16, (*format == 'X') ? Formatter::Capital::Yes : Formatter::Capital::No);
+            size += outInteger(gen, getInteger(length, va), Signed::No, width, precision, flags, 16, (lucid::rom(fmt) == 'X') ? Formatter::Capital::Yes : Formatter::Capital::No);
             break;
         case 'f':
         case 'F':
@@ -265,7 +258,7 @@ int32_t Formatter::vformat(Formatter::Generator& gen, const char *format, va_lis
         case 'G': {
             Formatter::Capital cap = Formatter::Capital::No;
             FloatType type = FloatType::Shortest;
-            switch(*format)
+            switch(lucid::rom(fmt))
             {
             case 'f': cap = Formatter::Capital::No; type = FloatType::Float; break;
             case 'F': cap = Formatter::Capital::Yes; type = FloatType::Float; break;
@@ -279,21 +272,21 @@ int32_t Formatter::vformat(Formatter::Generator& gen, const char *format, va_lis
             break;
         }
         case 'c':
-            gen.append(static_cast<char>(va_arg(va.value, int)));
+            gen(static_cast<char>(va.arg(lucid::Type::UInt8)));
             size++;
             break;
         case 's':
-            size += outString(gen, va_arg(va.value, const char*), width, precision, flags);
+            size += outString(gen, va.arg(lucid::Type::String), width, precision, flags);
             break;
         case 'p':
-            size += outInteger(gen, reinterpret_cast<int64_t>(va_arg(va.value, void*)), Signed::No, width, precision, flags, 16, Formatter::Capital::No);
+            size += outInteger(gen, va.arg(lucid::Type::UInt32), Signed::No, width, precision, flags, 16, Formatter::Capital::No);
             break;
         default:
-            gen.append(*format++);
+            gen(lucid::rom(fmt++));
             size++;
             break;
         }
-        ++format;
+        ++fmt;
     }
     
     return size;
