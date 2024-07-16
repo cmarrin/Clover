@@ -325,7 +325,7 @@ private:
     bool formalParameterList();
     bool argumentList(const ASTPtr& fun);
     
-    virtual bool isReserved(Token token, const std::string str, Reserved&);
+    bool isReserved(Token token, const std::string str, Reserved&);
 
     StructPtr addStruct(const std::string& name, Type type)
     {
