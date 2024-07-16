@@ -318,10 +318,7 @@ enum class Type : uint8_t {
 enum class Index : uint8_t { X = 0x01, Y = 0x02, U = 0x03 };
 enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
 
-// Defines for size of addresses
-constexpr OpSize AddrOpSize = OpSize::i32;
-
-static inline uint8_t OpSizeToCount(OpSize opSize)
+static constexpr uint8_t opSizeToBytes(OpSize opSize)
 {
     switch (opSize) {
         case OpSize::i8:  return 1;
