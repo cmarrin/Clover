@@ -105,8 +105,8 @@ static Length handleLength(lucid::AddrType& format)
 static int32_t getInteger(Length length, lucid::VarArg& va)
 {
     switch(length) {
-        case Length::H: return int32_t(int8_t(va.arg(lucid::Type::UInt8)));
-        case Length::HH: return int32_t(int16_t(va.arg(lucid::Type::UInt16)));
+        case Length::H: return int32_t(int16_t(va.arg(lucid::Type::UInt16)));
+        case Length::HH: return int32_t(int8_t(va.arg(lucid::Type::UInt8)));
         case Length::L:
         case Length::LL:
         case Length::J:

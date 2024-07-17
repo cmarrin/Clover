@@ -37,7 +37,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/cmarrin/Projects/git/6809/LucidVM/examples"
+      customWorkingDirectory = "/Users/cmarrin/Projects/git/LucidVM/examples"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"

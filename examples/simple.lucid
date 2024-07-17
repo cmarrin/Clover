@@ -20,7 +20,7 @@ struct Simple
         
         int8 z = x + y;
         
-        core.printf("x=%i, y=%i, z=%i\n", x, y, z);
+        core.printf("x=%hhi, y=%hhi, z=%hhi\n", x, y, z);
         //core.print("x=" + core.int8ToString(x) + ", y=" + core.int8ToString(y) + ", z=" + core.int8ToString(z));
         
         //a.b = c.d;
