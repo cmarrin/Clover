@@ -9,6 +9,8 @@
 
 #include "Codegen.h"
 
+#include <assert.h>
+
 using namespace lucid;
 
 bool

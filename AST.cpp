@@ -7,9 +7,10 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include <map>
-
 #include "AST.h"
+
+#include <assert.h>
+#include <map>
 
 using namespace lucid;
 
