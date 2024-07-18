@@ -9,6 +9,8 @@
 
 #include "Codegen.h"
 
+#include <assert.h>
+
 using namespace lucid;
 
 Codegen::Codegen(std::vector<uint8_t>* code)\
