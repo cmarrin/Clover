@@ -41,6 +41,15 @@ NOTE:   I'm also considering a bool type. It would be 8 bits, so maybe not
         to uint8, 1 and 0.
 */
 
+/*
+    Executable format
+    
+    Signature       4 bytes             "lucd"
+    Addr size       1 byte              0 - 16 bit, 1 - 32 bit
+    Entry point     Addr size bytes     Address of first instruction to execute
+    Code            Rest of file        Executable code
+ */
+
 class Codegen {
 public:
     Codegen(std::vector<uint8_t>* code) : _code(code) { }

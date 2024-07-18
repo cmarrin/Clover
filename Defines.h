@@ -50,9 +50,6 @@ namespace lucid {
         return (b > a) ? b : a;
     }
     
-    //using String = std::string;
-    //static inline std::string to_string(int32_t v) { return std::to_string(v); }
-    //static inline std::string to_string(float v) { return std::to_string(v); }
 #endif
 
 static inline float intToFloat(uint32_t i)
@@ -95,7 +92,15 @@ Opcodes:
         
         ref     - Reference to a value on the stack or a constant.
 
-    Stack is 8 bit. 16 and 32 bit values are stored in consecutive locations (HI to LO)
+    Stack is 8 bit and grows down. 16 and 32 bit values are stored in consecutive
+    locations (HI to LO).
+    
+    A stack frame has a U register pointing at the previous U register value. Above
+    that is the return address, followed by args. The leftmost arg is pushed
+    last and is therefore right above the return address. Args are accessed by
+    negative offsets from U. Args are popped by the caller and therefore there
+    can always be a variable number of arguments passed. Locals start just below
+    the U register pointer and are accessed with positive offsets from U.
     
     Stack machine
     
@@ -105,26 +110,21 @@ Opcodes:
     int16 c = 20;
     int16 a = (b + 5) * (c + 6);
     
-    PUSHREF b,bp
-    PUSH2   #10
-    DEREF2
-    PUSHREF c,bp
-    PUSH2   #20
-    DEREF2
-    PUSHREF a,BP
-    PUSH2   b,BP
-    PUSH2   #5
-    ADD2
-    PUSH2   c,BP
-    PUSH2   #6
-    ADD2
-    IMUL2
-    DEREF2
-    
-    - Values are 8, 16 or 32 bit
-    - Has a base pointer (BP) register pointing to local vars and args
-    - Has a stack pointer that grows down
-    - Has a pc
+    PUSHREF   b,U
+    PUSHK<2>  #10
+    DEREF<2>
+    PUSHREF   c,U
+    PUSHK<2>  #20
+    DEREF<2>
+    PUSHREF   a,U
+    PUSH<2>   b,U
+    PUSHK<2>  #5
+    ADD<2>
+    PUSH<2>   c,BP
+    PUSHK<2>  #6
+    ADD<2>
+    MUL<2>
+    DEREF<2>
     
     All addresses can be 2 bytes for a 64KB range or 4 bytes for a 2^32 byte range.
     This is determined at compile time. Also at compile time you can specify
@@ -151,16 +151,16 @@ Opcodes:
     - Stack frame and Base pointer
     
     Stack grows down so when you push a value the current SP points to it. On a call
-    args are pushed from left to right so rightmost param is at the lowest address.
+    args are pushed from right to left so first param is at the lowest address.
     The caller then pushes the return address and calls the function.
     
     The first instruction of a function must be ENTER. This has a 4 bit (0-15), 1 or
     2 byte operand which is the number of bytes of local storage needed. The ENTER
-    instruction pushes the current BP, sets BP = SP and subtracts the number of
-    local bytes from SP. When indexing from BP, positive offsets starting at 4
-    address the args. Locals are addressed with negative offsets starting at -1.
+    instruction pushes the current U reg, sets U = SP and subtracts the number of
+    local bytes from SP. When indexing from BP, positive offsets address the args.
+    Locals are addressed with negative offsets.
     
-    On return, the callee sets SP = BP, pops the stack into BP and performs a
+    On return, the callee sets SP = U, pops the stack into U and performs a
     return operation. The caller then adds the number of bytes of args to SP.
     
     PUSHREF         - push EA of value (must be X, Y, or U addressing mode)
