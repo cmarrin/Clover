@@ -50,27 +50,6 @@ public:
 private:
     bool processNextASTNode(const ASTPtr&, bool isLHS);
 
-    // The ExprStack
-    //
-    // This is a stack of the operators being processed. Values can be:
-    //
-    //      Id      - string id
-    //      Scalae  - ineger or float constant
-    //      Dot     - index into a struct.
-
-    // ExprAction indicates what to do with the top entry on the ExprStack during baking
-    //
-    //      Right       - Entry is a RHS, so it can be a float, int or id and the value 
-    //                    is loaded into r0
-    //      Left        - Entry is a LHS, so it must be an id, value in r0 is stored at the id
-    //      Function    - Entry is the named function which has already been emitted so value
-    //                    is the return value in r0
-    //      Ref         - Value left in r0 must be an address to a value (Const or RAM)
-    //      Deref       = Value must be a Struct entry for the value in _stackEntry - 1
-    //      Dot         - Dot operator. TOS must be a struct id, TOS-1 must be a ref with
-    //                    a type. Struct id must be a member of the type of the ref.
-    //                    pop the two 
-
     std::vector<uint8_t>* _code;
 };
 
