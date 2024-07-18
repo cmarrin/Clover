@@ -52,7 +52,7 @@ NOTE:   I'm also considering a bool type. It would be 8 bits, so maybe not
 
 class Codegen {
 public:
-    Codegen(std::vector<uint8_t>* code) : _code(code) { }
+    Codegen(std::vector<uint8_t>* code);
   	
     bool processAST(const ASTPtr&);
 

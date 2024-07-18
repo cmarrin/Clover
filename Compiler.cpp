@@ -44,12 +44,6 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     // Do second pass
     Codegen codeGen(&executable);
     
-    // Write signature
-    executable.push_back('l');
-    executable.push_back('u');
-    executable.push_back('c');
-    executable.push_back('d');
-
     for (auto& itStruct : _structs) {
         codeGen.processAST(itStruct->astNode());
         

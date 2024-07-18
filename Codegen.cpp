@@ -11,6 +11,16 @@
 
 using namespace lucid;
 
+Codegen::Codegen(std::vector<uint8_t>* code)\
+    : _code(code)
+{
+    // Write signature
+    _code->push_back('l');
+    _code->push_back('u');
+    _code->push_back('c');
+    _code->push_back('d');
+}
+
 bool
 Codegen::processAST(const ASTPtr& ast)
 {
