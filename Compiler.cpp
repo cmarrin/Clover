@@ -48,6 +48,11 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         codeGen.processAST(itStruct->astNode());
         
         for (auto& itFunc : itStruct->functions()) {
+            // If this is the initialize function of the top level
+            // struct, set the entry point
+            if (itStruct == _structs[0] && itFunc.name() == "") {
+                codeGen.setEntryPoint();
+            }
             codeGen.processAST(itFunc.astNode());
         }
         
@@ -122,6 +127,7 @@ Compiler::strucT()
         _structStack.push_back(currentStruct()->addStruct(id, Type(_nextStructType++)));
         _structTypes.push_back(_structStack.back());
     } else {
+        // This is the top level struct
         _structStack.push_back(addStruct(id, Type(_nextStructType++)));
         _structTypes.push_back(_structStack.back());
     }

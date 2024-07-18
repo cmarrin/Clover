@@ -38,9 +38,26 @@ InterpreterBase::callNative(NativeId id)
 }
 
 int32_t
-InterpreterBase::execute(uint16_t addr)
+InterpreterBase::execute()
 {
-    _pc = addr;
+    // Check signature
+    if (getUInt8ROM(0) != 'l' || getUInt8ROM(1) != 'u' || getUInt8ROM(2) != 'c' || getUInt8ROM(3) != 'd') {
+        _error = Error::InvalidSignature;
+        return -1;
+    }
+    
+    AddrType entryPoint = 0;
+    entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
+    entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
+    entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
+    entryPoint |= uint32_t(getUInt8ROM(7));
+    
+    if (entryPoint == 0) {
+        _error = Error::NoEntryPoint;
+        return -1;
+    }
+    
+    _pc = entryPoint;
     
     while(1) {
         if (_memMgr.error() != Memory::Error::None) {

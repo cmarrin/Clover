@@ -13,7 +13,7 @@
 
 using namespace lucid;
 
-Codegen::Codegen(std::vector<uint8_t>* code)\
+Codegen::Codegen(std::vector<uint8_t>* code)
     : _code(code)
 {
     // Write signature
@@ -21,6 +21,12 @@ Codegen::Codegen(std::vector<uint8_t>* code)\
     _code->push_back('u');
     _code->push_back('c');
     _code->push_back('d');
+    
+    // Write dummy entry point address, to be filled in later
+    _code->push_back(0);
+    _code->push_back(0);
+    _code->push_back(0);
+    _code->push_back(0);
 }
 
 bool
@@ -28,6 +34,17 @@ Codegen::processAST(const ASTPtr& ast)
 {
     return processNextASTNode(ast, false);
 }
+
+void
+Codegen::setEntryPoint()
+{
+    uint32_t cur = uint32_t(_code->size());
+    _code->at(4) = cur >> 24;
+    _code->at(5) = cur >> 16;
+    _code->at(6) = cur >> 8;
+    _code->at(7) = cur;
+}
+
 
 bool
 Codegen::processNextASTNode(const ASTPtr& ast, bool isLHS)

@@ -34,6 +34,17 @@ bool Decompiler::decompile()
             return false;
         }
         
+        // Emit entry point
+        uint32_t entryPoint = 0;
+        entryPoint |= uint32_t(getUInt8()) << 24;
+        entryPoint |= uint32_t(getUInt8()) << 16;
+        entryPoint |= uint32_t(getUInt8()) << 8;
+        entryPoint |= uint32_t(getUInt8());
+        
+        _out->append("\nEntry Point: ");
+        _out->append(std::to_string(entryPoint));
+        _out->append("\n\n");
+        
         // Emit code
         while (!atEnd()) {
             statement();

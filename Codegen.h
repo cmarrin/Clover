@@ -46,7 +46,9 @@ NOTE:   I'm also considering a bool type. It would be 8 bits, so maybe not
     
     Signature       4 bytes             "lucd"
     Addr size       1 byte              0 - 16 bit, 1 - 32 bit
-    Entry point     Addr size bytes     Address of first instruction to execute
+    Entry point     Addr size bytes     Address of first instruction of
+                                        initialize function of top level
+                                        struct
     Code            Rest of file        Executable code
  */
 
@@ -55,6 +57,8 @@ public:
     Codegen(std::vector<uint8_t>* code);
   	
     bool processAST(const ASTPtr&);
+    
+    void setEntryPoint();
 
 private:
     bool processNextASTNode(const ASTPtr&, bool isLHS);

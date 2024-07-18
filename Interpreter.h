@@ -24,6 +24,8 @@ class InterpreterBase
   public:
     enum class Error {
         None,
+        InvalidSignature,
+        NoEntryPoint,
         UnexpectedOpInIf,
 		InvalidOp,
         OnlyMemAddressesAllowed,
@@ -45,7 +47,7 @@ class InterpreterBase
     
     virtual void putc(uint8_t c) const = 0;
     
-    int32_t execute(uint16_t addr);
+    int32_t execute();
 
   protected:
     void callNative(NativeId);
@@ -137,7 +139,7 @@ public:
 
     int32_t interp()
     {
-        return execute(4);
+        return execute();
     }
 
     Error error() const { return _error; }
