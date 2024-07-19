@@ -191,7 +191,7 @@ void StringNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 
 void OpNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
-    code.push_back(uint8_t(_op));
+    code.push_back(uint8_t(_op) | typeToSizeBits(_type));
 }
 
 void DotNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
