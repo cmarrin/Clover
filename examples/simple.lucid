@@ -13,14 +13,13 @@ struct Simple
     //A a = { 1 };
     //C c = { 2 };
     
-    initialize()
+    initialize(uint8 cmd, uint16 x)
     {
-        int8 x = 2;
         int8 y = 3;
         
         int8 z = x + y;
         
-        core.printf("x=%hhi, y=%hhi, z=%hhi\n", x, y, z);
+        core.printf("x=%hi, y=%hhi, z=%hhi\n", x, y, z);
         //core.print("x=" + core.int8ToString(x) + ", y=" + core.int8ToString(y) + ", z=" + core.int8ToString(z));
         
         //a.b = c.d;

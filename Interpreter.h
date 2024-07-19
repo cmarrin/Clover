@@ -49,6 +49,9 @@ class InterpreterBase
     
     int32_t execute();
 
+    void addArg(uint32_t v, Type type);
+    void addArg(float v);
+
   protected:
     void callNative(NativeId);
 

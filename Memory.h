@@ -36,6 +36,9 @@ class Memory
         
         const uint8_t& abs(uint32_t addr) const { return _mem[addr]; }
         uint8_t& abs(uint32_t addr) { return _mem[addr]; }
+        
+        void push(uint32_t v, Type type) { push(v, typeToOpSize(type)); }
+        void push(float v) { push(*(reinterpret_cast<uint32_t*>(&v)), typeToOpSize(Type::Float)); }
 
         void push(uint32_t v, OpSize size)
         {

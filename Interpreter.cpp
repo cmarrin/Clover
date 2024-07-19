@@ -15,6 +15,18 @@
 using namespace lucid;
 
 void
+InterpreterBase::addArg(uint32_t v, Type type)
+{
+    _memMgr.stack().push(v, type);
+}
+
+void
+InterpreterBase::addArg(float v)
+{
+    _memMgr.stack().push(v);
+}
+
+void
 InterpreterBase::callNative(NativeId id)
 {
     // Add a dummy return address to make everything work
