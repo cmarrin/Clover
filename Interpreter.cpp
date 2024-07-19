@@ -57,6 +57,9 @@ InterpreterBase::execute()
         return -1;
     }
     
+    // Push a dummy return address
+    _memMgr.stack().push(0, AddrOpSize);
+    
     _pc = entryPoint;
     
     while(1) {
@@ -99,10 +102,12 @@ InterpreterBase::execute()
                 break;
             case Op::RET:
                 _memMgr.restoreFrame();
-                if (_memMgr.stack().empty()) {
+                _pc = _memMgr.stack().pop(AddrOpSize);
+                
+                // If return address is 0, we exit
+                if (_pc == 0) {
                     return 0;
                 }
-                _pc = _memMgr.stack().pop(AddrOpSize);
                 break;
             case Op::DEREF: {
                 uint32_t v = _memMgr.stack().pop(opSize);
