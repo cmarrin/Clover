@@ -337,7 +337,7 @@ Compiler::type(Type& t)
         return true;
     }
     if (match(Reserved::UInt8)) {
-        t = Type::Int8;
+        t = Type::UInt8;
         return true;
     }
     if (match(Reserved::Int16)) {
@@ -345,7 +345,7 @@ Compiler::type(Type& t)
         return true;
     }
     if (match(Reserved::UInt16)) {
-        t = Type::Int16;
+        t = Type::UInt16;
         return true;
     }
     if (match(Reserved::Int32)) {
@@ -353,7 +353,7 @@ Compiler::type(Type& t)
         return true;
     }
     if (match(Reserved::UInt32)) {
-        t = Type::Int32;
+        t = Type::UInt32;
         return true;
     }
         
