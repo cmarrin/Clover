@@ -39,7 +39,7 @@ InterpreterBase::callNative(NativeId id)
         default: _error = Error::None; break;
         case NativeId::PrintF: {
             VarArg va(&_memMgr, 0, Type::String);
-            AddrType fmt = _memMgr.getAbs(_memMgr.arg(0), AddrOpSize);
+            AddrNativeType fmt = _memMgr.getAbs(_memMgr.local(0, AddrType), AddrOpSize);
             fmt::Formatter::format([this](uint8_t c) { putc(c); }, fmt, va);
             break;
         }
@@ -58,7 +58,7 @@ InterpreterBase::execute()
         return -1;
     }
     
-    AddrType entryPoint = 0;
+    AddrNativeType entryPoint = 0;
     entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
     entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
     entryPoint |= uint32_t(getUInt8ROM(6)) << 8;

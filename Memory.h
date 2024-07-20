@@ -172,7 +172,7 @@ class Memory
         _u = _stack.pop(AddrOpSize);
     }
 
-    AddrType index(int32_t offset, Index idx) const
+    AddrNativeType index(int32_t offset, Index idx) const
     {
         switch (idx) {
             case Index::X: return _x + offset;
@@ -181,34 +181,22 @@ class Memory
         }
     }
     
-    // Local offsets are positive, starting at 0, which
-    // is the LSB of the first local. But locals are
-    // actually negative offsets from U, so we pass the type
-    // and return the address of the MSB, accounting for
-    // the previousU pointer. So an offset of 3 and a
-    // Type of int32 would return an address of -10
-    // (assuming AddrType of uint32_t).
-
-    AddrType local(uint32_t offset, Type type) const
+    // Local offsets are negative and args are non-negative so
+    // the first local byte (or the LSB if 16 or 32 bit) is -1
+    // and the first arg (or the MSB if 16 or 32 bit) is 0.
+    AddrNativeType local(int32_t offset, Type type) const
     {
-        return _u + -(AddrSize + offset + typeToBytes(type) - 1);
-    }
-    
-    // Arg offsets are positive, starting at 0, which
-    // is the MSB of the first arg. Args are positive
-    // offsets from U, after space for the previous U
-    // and return address.
-    
-    AddrType arg(uint32_t offset)
-    {
+        if (offset < 0) {
+            return _u + -(AddrSize + offset + typeToBytes(type) - 1);
+        }
         return _u + AddrSize * 2 + offset;
     }
     
   private:
     Stack _stack;
-    AddrType _u = 0;
-    AddrType _x = 0;
-    AddrType _y = 0;
+    AddrNativeType _u = 0;
+    AddrNativeType _x = 0;
+    AddrNativeType _y = 0;
 };
 
 // Stack grows down. On a function call U points to previous U pushed onto the stack.
@@ -222,19 +210,19 @@ class VarArg
     VarArg(Memory* memMgr, uint32_t lastArgOffset, Type lastArgType)
         : _memMgr(memMgr)
     {
-        _nextAddr = memMgr->arg(lastArgOffset) + typeToBytes(lastArgType);
+        _nextAddr = memMgr->local(lastArgOffset, lastArgType) + typeToBytes(lastArgType);
     }
     
     // Type returned is always uint32_t. Use reinterpret_cast to convert to the proper type
     uint32_t arg(Type type)
     {
-        AddrType argAddr = _nextAddr;
+        AddrNativeType argAddr = _nextAddr;
         _nextAddr += typeToBytes(type);
         return _memMgr->getAbs(argAddr, typeToOpSize(type));
     }
 
   private:
-    AddrType _nextAddr;
+    AddrNativeType _nextAddr;
     Memory* _memMgr;
 };
     

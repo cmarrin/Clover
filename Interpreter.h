@@ -97,10 +97,10 @@ class InterpreterBase
         return v;
     }
     
-    AddrType ea()
+    AddrNativeType ea()
     {
         Index index;
-        AddrType addr = addrMode(index);
+        AddrNativeType addr = addrMode(index);
         return _memMgr.index(addr, index);
     }
     

@@ -334,10 +334,25 @@ static constexpr uint8_t opSizeToBytes(OpSize opSize)
     }
 }
 
+static constexpr OpSize typeToOpSize(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return OpSize::i8;
+        case Type::UInt8    : return OpSize::i8;
+        case Type::Int16    : return OpSize::i16;
+        case Type::UInt16   : return OpSize::i16;
+        case Type::Int32    : return OpSize::i32;
+        case Type::UInt32   : return OpSize::i32;
+        case Type::Float    : return OpSize::i32;
+        default: return OpSize::i32;
+    }
+};
+
 // Defines for size of addresses
-constexpr OpSize AddrOpSize = OpSize::i32;
+using AddrNativeType = uint32_t;
+constexpr Type AddrType = Type::UInt32;
+constexpr OpSize AddrOpSize = typeToOpSize(AddrType);
 constexpr uint8_t AddrSize = opSizeToBytes(AddrOpSize);
-using AddrType = uint32_t;
 
 static inline uint8_t typeToBytes(Type type)
 {
@@ -365,20 +380,6 @@ static inline uint8_t typeToSizeBits(Type type)
         case Type::UInt32   : return 0x02;
         case Type::Float    : return 0x03;
         default: return 0;
-    }
-};
-
-static inline OpSize typeToOpSize(Type type)
-{
-    switch (type) {
-        case Type::Int8     : return OpSize::i8;
-        case Type::UInt8    : return OpSize::i8;
-        case Type::Int16    : return OpSize::i16;
-        case Type::UInt16   : return OpSize::i16;
-        case Type::Int32    : return OpSize::i32;
-        case Type::UInt32   : return OpSize::i32;
-        case Type::Float    : return OpSize::i32;
-        default: return OpSize::i32;
     }
 };
 
