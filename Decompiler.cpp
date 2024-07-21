@@ -102,16 +102,16 @@ Decompiler::statement()
         case Op::RET     : emitOp("RET"); break;
         case Op::DEREF   : emitOp("DEREF"); emitSize(size); break;
         case Op::PUSH    : emitOp("PUSH"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK11 : emitOp("PUSHK11"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK12 : emitOp("PUSHK12"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK14 : emitOp("PUSHK14"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK22 : emitOp("PUSHK22"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK24 : emitOp("PUSHK24"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK34 : emitOp("PUSHK34"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK44 : emitOp("PUSHK44"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHKS1 : emitOp("PUSHKS1"); emitSize(size); break;
-        case Op::PUSHKS2 : emitOp("PUSHKS2"); emitSize(size); break;
-        case Op::PUSHKS4 : emitOp("PUSHKS4"); emitSize(size); break;
+        case Op::PUSHK11 : emitOp("PUSHK11"); emitConstant(1); break;
+        case Op::PUSHK12 : emitOp("PUSHK12"); emitConstant(1); break;
+        case Op::PUSHK14 : emitOp("PUSHK14"); emitConstant(1); break;
+        case Op::PUSHK22 : emitOp("PUSHK22"); emitConstant(2); break;
+        case Op::PUSHK24 : emitOp("PUSHK24"); emitConstant(2); break;
+        case Op::PUSHK34 : emitOp("PUSHK34"); emitConstant(3); break;
+        case Op::PUSHK44 : emitOp("PUSHK44"); emitConstant(4); break;
+        case Op::PUSHKS1 : emitOp("PUSHKS1"); emitShortConstant(size); break;
+        case Op::PUSHKS2 : emitOp("PUSHKS2"); emitShortConstant(size); break;
+        case Op::PUSHKS4 : emitOp("PUSHKS4"); emitShortConstant(size); break;
         case Op::DUP     : emitOp("DUP"); emitSize(size); break;
         case Op::DROP1   : emitOp("DROP"); emitNumber(getUInt8()); break;
         case Op::DROP2   : emitOp("DROP"); emitNumber(getUInt16()); break;
@@ -209,24 +209,32 @@ void Decompiler::emitIndexValue(uint8_t index)
     if (value & 0x01) {
         // Long form
         uint8_t size = (value >> 1) & 0x03;
-        if (size == 0) {
-            value = (value << 8) | getUInt8();
-        } else {
-            value = int32_t(getInt16());
-            if (size == 2) {
-                value = (value << 8) | getUInt8();
-            } else if (size == 3) {
-                value = (value << 16) | getUInt16();
-            }
+
+        value = getUInt8();
+        if (value > 127) {
+            // sign extend
+            value |= 0xffffff80;
+        }
+        if (size > 0) {
+            value = (value < 8) | getUInt8();
+        }
+        if (size > 1) {
+            value = (value < 8) | getUInt8();
+        }
+        if (size > 2) {
+            value = (value < 8) | getUInt8();
         }
     } else {
         value >>= 1;
+        if (value > 15) {
+            // Sign extend
+            value |= 0xfffffff0;
+        }
     }
     
     if (mode == 0) {
-        // Immediate
-        _out->append("#");
-        _out->append(std::to_string(value));
+        // Reserved
+        _out->append("???");
     } else {
         _out->append(std::to_string(value));
         _out->append(",");
@@ -234,3 +242,35 @@ void Decompiler::emitIndexValue(uint8_t index)
     }
 }
 
+void
+Decompiler::emitConstant(uint8_t bytes)
+{
+    _out->append(" #");
+    int32_t value = getUInt8();
+    if (value > 127) {
+        // sign extend
+        value |= 0xffffff80;
+    }
+    if (bytes > 1) {
+        value = (value < 8) | getUInt8();
+    }
+    if (bytes > 2) {
+        value = (value < 8) | getUInt8();
+    }
+    if (bytes > 3) {
+        value = (value < 8) | getUInt8();
+    }
+    _out->append(std::to_string(value));
+}
+    
+void
+Decompiler::emitShortConstant(uint8_t v)
+{
+    _out->append(" #");
+    int32_t value = v;
+    if (value > 127) {
+        // sign extend
+        value |= 0xffffff80;
+    }
+    _out->append(std::to_string(value));
+}
