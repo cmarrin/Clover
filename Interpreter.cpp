@@ -39,7 +39,7 @@ InterpreterBase::callNative(NativeId id)
         default: _error = Error::None; break;
         case NativeId::PrintF: {
             VarArg va(&_memMgr, 0, Type::String);
-            AddrNativeType fmt = _memMgr.getAbs(_memMgr.local(0, AddrType), AddrOpSize);
+            AddrNativeType fmt = _memMgr.getAbs(_memMgr.local(0, AddrOpSize), AddrOpSize);
             fmt::Formatter::format([this](uint8_t c) { putc(c); }, fmt, va);
             break;
         }
@@ -110,7 +110,7 @@ InterpreterBase::execute()
             case Op::NOP:
                 break;
             case Op::PUSHREF:
-                _memMgr.stack().push(ea(), AddrOpSize);
+                _memMgr.stack().push(ea(opSize), AddrOpSize);
                 break;
             case Op::RET:
                 _memMgr.restoreFrame();
@@ -128,7 +128,7 @@ InterpreterBase::execute()
                 break;
             }
             case Op::PREINC:
-                addr = ea();
+                addr = ea(opSize);
             case Op::PREDEC  :
             case Op::POSTINC :
             case Op::POSTDEC :

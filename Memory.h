@@ -172,22 +172,22 @@ class Memory
         _u = _stack.pop(AddrOpSize);
     }
 
-    AddrNativeType index(int32_t offset, Index idx) const
+    AddrNativeType index(int32_t offset, Index idx, OpSize opSize) const
     {
         switch (idx) {
             case Index::X: return _x + offset;
             case Index::Y: return _y + offset;
-            case Index::U: return _u + offset;
+            case Index::U: return local(offset, opSize);
         }
     }
     
     // Local offsets are negative and args are non-negative so
     // the first local byte (or the LSB if 16 or 32 bit) is -1
     // and the first arg (or the MSB if 16 or 32 bit) is 0.
-    AddrNativeType local(int32_t offset, Type type) const
+    AddrNativeType local(int32_t offset, OpSize opSize) const
     {
         if (offset < 0) {
-            return _u + -(AddrSize + offset + typeToBytes(type) - 1);
+            return _u + offset + opSizeToBytes(opSize) - 1;
         }
         return _u + AddrSize * 2 + offset;
     }
@@ -210,7 +210,7 @@ class VarArg
     VarArg(Memory* memMgr, uint32_t lastArgOffset, Type lastArgType)
         : _memMgr(memMgr)
     {
-        _nextAddr = memMgr->local(lastArgOffset, lastArgType) + typeToBytes(lastArgType);
+        _nextAddr = memMgr->local(lastArgOffset, typeToOpSize(lastArgType)) + typeToBytes(lastArgType);
     }
     
     // Type returned is always uint32_t. Use reinterpret_cast to convert to the proper type

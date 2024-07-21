@@ -55,10 +55,10 @@ class InterpreterBase
   protected:
     void callNative(NativeId);
 
-    // Index is in bytes
-    uint8_t getUInt8ROM(uint16_t index) const
+    // Addr is in bytes
+    uint8_t getUInt8ROM(uint16_t addr) const
     {
-        return rom(index);
+        return rom(addr);
     }
     
     uint32_t getOpnd(uint8_t bytes)
@@ -97,16 +97,16 @@ class InterpreterBase
         return v;
     }
     
-    AddrNativeType ea()
+    AddrNativeType ea(OpSize opSize)
     {
         Index index;
-        AddrNativeType addr = addrMode(index);
-        return _memMgr.index(addr, index);
+        int32_t addr = addrMode(index);
+        return _memMgr.index(addr, index, opSize);
     }
     
     uint32_t value(OpSize opSize)
     {
-        return _memMgr.getAbs(ea(), opSize);
+        return _memMgr.getAbs(ea(opSize), opSize);
     }
     
     uint32_t immed(uint8_t opnd, uint8_t& count)

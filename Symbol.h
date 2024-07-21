@@ -27,14 +27,12 @@ class Function;
 
 class Symbol
 {
-public:
-    enum class Storage { None, Const, Global, Local };
-    
+public:    
     Symbol() { }
     
     Symbol(Function* func) : _function(func), _type(Type::Function) { }
     
-    Symbol(const std::string& name, Type type, uint8_t size, uint16_t addr, bool ptr = false)
+    Symbol(const std::string& name, Type type, uint8_t size, int32_t addr, bool ptr = false)
         : _name(name)
         , _type(type)
         , _ptr(ptr)
@@ -46,14 +44,14 @@ public:
     Type type() const { return _type; }
     bool isPointer() const { return _ptr; }
     uint8_t size() const { return _size; }
-    uint16_t addr() const { return _addr; }
+    int32_t addr() const { return _addr; }
     
 private:
     std::string _name;
     Type _type = Type::None;
     bool _ptr = false;
     uint8_t _size = 0;
-    uint16_t _addr = 0;
+    int32_t _addr = 0;
     Function* _function = nullptr;
 };
 
