@@ -90,35 +90,12 @@ static void emitCode(std::vector<uint8_t>& code, Op opcode, Type type, Index ind
     }
 }
 
-//// This version is for opcodes where the LSB indicates 8 or 16 bit values that follow
-//static void emitCode(std::vector<uint8_t>& code, Op opcode, int32_t value)
-//{
-//    if (value <= 127 && value >= -128) {
-//        // 8 bit case
-//        code.push_back(uint8_t(opcode));
-//        code.push_back(value);
-//    } else {
-//        // 16 bit case
-//        code.push_back(uint8_t(opcode) | 0x01);
-//        code.push_back(value >> 8);
-//        code.push_back(value);
-//    }
-//}
-//
-//// This version is for opcodes where the value is in the lower 4 bits
-//static void emitCodeShort(std::vector<uint8_t>& code, Op opcode, int32_t value)
-//{
-//    code.push_back(uint8_t(opcode) | (value & 0x0f));
-//}
-
 void VarNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     // If isLHS is true, code generated will be a Ref
     Op op = isLHS ? Op::PUSHREF : Op::PUSH;
     
     // FIXME: We assume we're indexing from U, is this always true? What about using Y as the 'this' ptr?
-    // FIXME: Right now _symbol->addr() is a uint16_t. We need positive addrs for args and negative
-    // addrs for locals.
     emitCode(code, op, _symbol->type(), Index::U, _symbol->addr());
 }
 
