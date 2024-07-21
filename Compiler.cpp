@@ -309,7 +309,7 @@ Compiler::var(Type type, bool isPointer)
     
     if (ast) {
         ASTPtr idNode = std::make_shared<VarNode>(idSym);
-        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::DEREF, ast, true);
+        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, true);
     
         if (_inFunction) {
             currentFunction()->addASTNode(assignment);

@@ -168,7 +168,13 @@ void StringNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 
 void OpNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
-    code.push_back(uint8_t(_op) | typeToSizeBits(_type));
+    // FIXME: If _isAssignment as op is not a NOP it means this is an
+    // arithmethic assignment (e.g., +=). We need to handle that.
+    Op op = _op;
+    if (_isAssignment && op == Op::NOP) {
+        op = Op::DEREF;
+    }
+    code.push_back(uint8_t(op) | typeToSizeBits(_type));
 }
 
 void DotNode::addCode(std::vector<uint8_t>& code, bool isLHS) const

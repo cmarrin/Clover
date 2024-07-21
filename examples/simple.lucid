@@ -17,7 +17,8 @@ struct Simple
     {
         int8 y = 3;
         
-        int8 z = x + y;
+        int8 z;
+        z = x + y;
         
         core.printf("x=%hi, y=%hhi, z=%hhi\n", x, y, z);
         //core.print("x=" + core.int8ToString(x) + ", y=" + core.int8ToString(y) + ", z=" + core.int8ToString(z));
