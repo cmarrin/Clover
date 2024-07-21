@@ -56,6 +56,8 @@ private:
     void emitIndexValue(uint8_t index);
     void emitRelAddr(uint8_t size);
     void emitNumber(int32_t number);
+    void emitConstant(uint8_t bytes);
+    void emitShortConstant(uint8_t value);
     
     void emitSize(uint8_t size) { emitSizeValue(size); }
     void emitIndex(uint8_t index) { emitIndexValue(index); }
