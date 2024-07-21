@@ -215,15 +215,16 @@ void FunctionCallNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 
 void EnterNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
-    if (_localSize < 15) {
-        code.push_back(uint8_t(Op::ENTERS) | _localSize);
+    uint16_t localSize = _function->localSize();
+    if (localSize < 15) {
+        code.push_back(uint8_t(Op::ENTERS) | localSize);
     } else {
-        bool isLong = _localSize > 255;
+        bool isLong = localSize > 255;
         code.push_back(uint8_t(Op::ENTER) | (isLong ? 0x01 : 0x00));
         if (isLong) {
-            code.push_back(uint8_t(_localSize >> 8));
+            code.push_back(uint8_t(localSize >> 8));
         }
-        code.push_back(uint8_t(_localSize));
+        code.push_back(uint8_t(localSize));
     }
 }
 

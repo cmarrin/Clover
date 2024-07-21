@@ -355,14 +355,14 @@ class FunctionCallNode : public ASTNode
 class EnterNode : public ASTNode
 {
   public:
-    EnterNode(uint32_t localSize) : _localSize(localSize) { }
+    EnterNode(Function* function) : _function(function) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Enter; }
 
     virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
     
   private:
-    uint32_t _localSize = 0;
+    Function* _function;
 };
 
 }

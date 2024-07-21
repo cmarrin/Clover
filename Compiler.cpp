@@ -468,7 +468,7 @@ Compiler::init()
     expect(Token::OpenBrace);
 
     // ENTER has to be the first instruction in the Function.
-    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction->localSize()));
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction));
 
     while(statement()) { }
     
