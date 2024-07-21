@@ -221,26 +221,24 @@ static constexpr uint8_t ExtOpcodeStart = 0x40;
 
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart = 0x10;
-static constexpr uint8_t TwoBitOperandStart = 0x20;
+static constexpr uint8_t TwoBitOperandStart = 0x1c;
 static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
-    PUSHREF = 0x01,
-    RET     = 0x02,
-    PUSHS   = 0x03, // Following byte is length, followed by length chars
-    PUSHK11 = 0x04, // 1 byte operand, push 1 byte
-    PUSHK12 = 0x05, // 1 byte operand, push 2 bytes
-    PUSHK14 = 0x06, // 1 byte operand, push 4 bytes
-    PUSHK22 = 0x07, // 2 byte operand, push 2 bytes
-    PUSHK24 = 0x08, // 2 byte operand, push 4 bytes
-    PUSHK34 = 0x09, // 3 byte operand, push 4 bytes
-    PUSHK44 = 0x0a, // 4 byte operand, push 4 bytes
+    RET     = 0x01,
+    PUSHS   = 0x02, // Following byte is length, followed by length chars
+    PUSHK11 = 0x03, // 1 byte operand, push 1 byte
+    PUSHK12 = 0x04, // 1 byte operand, push 2 bytes
+    PUSHK14 = 0x05, // 1 byte operand, push 4 bytes
+    PUSHK22 = 0x06, // 2 byte operand, push 2 bytes
+    PUSHK24 = 0x07, // 2 byte operand, push 4 bytes
+    PUSHK34 = 0x08, // 3 byte operand, push 4 bytes
+    PUSHK44 = 0x09, // 4 byte operand, push 4 bytes
     
-    DROP1   = 0x0b, // Next byte is count (1 - 256)
-    DROP2   = 0x0c, // Next 2 bytes are count (1 - 65536)
+    DROP1   = 0x0a, // Next byte is count (1 - 256)
+    DROP2   = 0x0b, // Next 2 bytes are count (1 - 65536)
 
-    
 // Bits 1:0 is the bytes that make up the operand (00=1, 01=2, 10=3, 11=4).
 // Operand is sign extended
     IF      = 0x10,
@@ -251,8 +249,9 @@ enum class Op: uint8_t {
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
+    PUSHREF = 0x1c, // Next byte is addr mode. Data width is used when computing negative offsets from U
     DEREF   = 0x20,
-    PUSH    = 0x24,
+    PUSH    = 0x24, // Next byte is addr mode
     DUP     = 0x28,
     SWAP    = 0x2c,
     
@@ -269,10 +268,10 @@ enum class Op: uint8_t {
     NOT     = 0x54,
     NEG     = 0x58,
 
-    PREINC  = 0x5c,
-    PREDEC  = 0x60,
-    POSTINC = 0x64,
-    POSTDEC = 0x68,
+    PREINC  = 0x5c, // Next byte is addr mode
+    PREDEC  = 0x60, // Next byte is addr mode
+    POSTINC = 0x64, // Next byte is addr mode
+    POSTDEC = 0x68, // Next byte is addr mode
     
     LE      = 0x6c,
     LS      = 0x70,
