@@ -257,9 +257,10 @@ int main(int argc, char * const argv[])
 
             std::cout << "Running '" << path << "' command...\n";
             
-            // Pass in 2 args, a uint8 command and a uint16 number
-            interp.addArg('f', lucid::Type::UInt8);
+            // Pass in 2 args, a uint8 command and a uint16 number.
+            // Push them backwards
             interp.addArg(2, lucid::Type::UInt16);
+            interp.addArg('f', lucid::Type::UInt8);
             int32_t result = interp.interp();
             if (result == 0) {
                 std::cout << "Complete\n\n";
