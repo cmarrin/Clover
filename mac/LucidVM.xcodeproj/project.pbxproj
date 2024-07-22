@@ -44,6 +44,21 @@
 		4914A4872C3B624D003DDADA /* Memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Memory.h; path = ../Memory.h; sourceTree = "<group>"; };
 		4914A4892C44A132003DDADA /* Formatter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Formatter.cpp; path = ../Formatter.cpp; sourceTree = "<group>"; };
 		4914A48A2C44A132003DDADA /* Formatter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Formatter.h; path = ../Formatter.h; sourceTree = "<group>"; };
+		4914A48D2C4DD665003DDADA /* TestCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestCore.h; path = ../Test/TestCore.h; sourceTree = "<group>"; };
+		4914A48E2C4DD665003DDADA /* TestPtrStruct.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestPtrStruct.clvr; path = ../Test/TestPtrStruct.clvr; sourceTree = "<group>"; };
+		4914A48F2C4DD665003DDADA /* TestIf.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestIf.clvr; path = ../Test/TestIf.clvr; sourceTree = "<group>"; };
+		4914A4902C4DD665003DDADA /* TestWhileLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestWhileLoop.h; path = ../Test/TestWhileLoop.h; sourceTree = "<group>"; };
+		4914A4912C4DD665003DDADA /* TestCore.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestCore.clvr; path = ../Test/TestCore.clvr; sourceTree = "<group>"; };
+		4914A4922C4DD665003DDADA /* TestFor.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFor.clvr; path = ../Test/TestFor.clvr; sourceTree = "<group>"; };
+		4914A4932C4DD665003DDADA /* TestFor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFor.h; path = ../Test/TestFor.h; sourceTree = "<group>"; };
+		4914A4942C4DD665003DDADA /* TestPtrStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestPtrStruct.h; path = ../Test/TestPtrStruct.h; sourceTree = "<group>"; };
+		4914A4952C4DD665003DDADA /* TestExpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestExpr.h; path = ../Test/TestExpr.h; sourceTree = "<group>"; };
+		4914A4962C4DD665003DDADA /* TestWhileLoop.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestWhileLoop.clvr; path = ../Test/TestWhileLoop.clvr; sourceTree = "<group>"; };
+		4914A4972C4DD665003DDADA /* Test.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Test.ino; path = ../Test/Test.ino; sourceTree = "<group>"; };
+		4914A4982C4DD665003DDADA /* TestFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFunction.h; path = ../Test/TestFunction.h; sourceTree = "<group>"; };
+		4914A4992C4DD665003DDADA /* TestIf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestIf.h; path = ../Test/TestIf.h; sourceTree = "<group>"; };
+		4914A49A2C4DD665003DDADA /* TestFunction.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.clvr; path = ../Test/TestFunction.clvr; sourceTree = "<group>"; };
+		4914A49C2C4DD665003DDADA /* TestExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestExpr.clvr; path = ../Test/TestExpr.clvr; sourceTree = "<group>"; };
 		49279C292C16872100294992 /* ExprEntry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ExprEntry.h; path = ../ExprEntry.h; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
@@ -89,6 +104,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4914A48C2C4DD63C003DDADA /* Test */ = {
+			isa = PBXGroup;
+			children = (
+				4914A4972C4DD665003DDADA /* Test.ino */,
+				4914A4912C4DD665003DDADA /* TestCore.clvr */,
+				4914A48D2C4DD665003DDADA /* TestCore.h */,
+				4914A49C2C4DD665003DDADA /* TestExpr.clvr */,
+				4914A4952C4DD665003DDADA /* TestExpr.h */,
+				4914A4922C4DD665003DDADA /* TestFor.clvr */,
+				4914A4932C4DD665003DDADA /* TestFor.h */,
+				4914A49A2C4DD665003DDADA /* TestFunction.clvr */,
+				4914A4982C4DD665003DDADA /* TestFunction.h */,
+				4914A48F2C4DD665003DDADA /* TestIf.clvr */,
+				4914A4992C4DD665003DDADA /* TestIf.h */,
+				4914A48E2C4DD665003DDADA /* TestPtrStruct.clvr */,
+				4914A4942C4DD665003DDADA /* TestPtrStruct.h */,
+				4914A4962C4DD665003DDADA /* TestWhileLoop.clvr */,
+				4914A4902C4DD665003DDADA /* TestWhileLoop.h */,
+			);
+			name = Test;
+			sourceTree = "<group>";
+		};
 		4941A0E62BB6F59900CE3C9E = {
 			isa = PBXGroup;
 			children = (
@@ -116,6 +153,7 @@
 				49C164BC2C0545D100981AD1 /* Struct.h */,
 				49C164B32C03E90400981AD1 /* Symbol.h */,
 				4941A0F12BB6F59900CE3C9E /* mac */,
+				4914A48C2C4DD63C003DDADA /* Test */,
 				4941A1002BBA1CF300CE3C9E /* examples */,
 				4941A0F02BB6F59900CE3C9E /* Products */,
 			);
