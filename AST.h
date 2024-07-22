@@ -31,6 +31,7 @@ enum class ASTNodeType {
     Module,
     FunctionCall,
     Enter,
+    TypeCast,
 };
 
 class ASTNode;
@@ -363,6 +364,28 @@ class EnterNode : public ASTNode
     
   private:
     Function* _function;
+};
+
+class TypeCastNode : public ASTNode
+{
+  public:
+    TypeCastNode(Type t, const std::shared_ptr<ASTNode>& arg) : _type(t), _arg(arg) { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::TypeCast; }
+
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (i == 0) {
+            return _arg;
+        }
+        return nullptr;
+    }
+
+    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    
+  private:
+    Type _type;
+    ASTPtr _arg;
 };
 
 }

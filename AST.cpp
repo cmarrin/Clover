@@ -234,4 +234,7 @@ void EnterNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
     }
 }
 
-
+void TypeCastNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+{
+    code.push_back(uint8_t(castToOp(_type)));
+}

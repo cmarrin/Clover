@@ -19,10 +19,12 @@ struct Simple
         
         int8 z;
         z = x + y;
-        
         core.printf("x=%hi, y=%hhi, z=%hhi\n", x, y, z);
-        //core.print("x=" + core.int8ToString(x) + ", y=" + core.int8ToString(y) + ", z=" + core.int8ToString(z));
+        
+        uint8 a = 10;
+        core.printf("a=%u\n", uint32(a));
         
         //a.b = c.d;
+        //core.printf("a.b=%hhi, c.d=%hhi\n", a.b, c.d);
     }
 };

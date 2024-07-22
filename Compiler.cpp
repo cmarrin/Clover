@@ -912,6 +912,16 @@ Compiler::primaryExpression()
         return ast;
     }
     
+    // See if this is a type cast
+    Type t;
+    if (type(t)) {
+        // A type cast looks like a function with a single arg
+        expect(Token::OpenParen);
+        ASTPtr arg = expression();
+        expect(Token::CloseParen);        
+        return std::make_shared<TypeCastNode>(t, arg);
+    }
+    
     std::string id;
     if (identifier(id)) {
         expect(_inFunction, Error::InternalError);
