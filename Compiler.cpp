@@ -25,7 +25,15 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>("core");
     coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, AddrSize, 0 }});
-    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "s", Type::String, AddrSize, 0 }});
+    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::Ptr, AddrSize, 0 },
+                                                                           { "v", Type::UInt8, 1, 4 },
+                                                                           { "n", Type::UInt32, 4, 5 }});
+    coreModule->addNativeFunction("irand", NativeId::RandomInt, Type::Int32, {{ "min", Type::Int32, 4, 0 }, { "max", Type::Int32, 4, 4 }});
+    coreModule->addNativeFunction("frand", NativeId::RandomFloat, Type::Float, {{ "min", Type::Float, 4, 0 }, { "max", Type::Float, 4, 4 }});
+    coreModule->addNativeFunction("imin", NativeId::MinInt, Type::Int32, {{ "a", Type::Int32, 4, 0 }, { "b", Type::Int32, 4, 4 }});
+    coreModule->addNativeFunction("imax", NativeId::MaxInt, Type::Int32, {{ "a", Type::Int32, 4, 0 }, { "b", Type::Int32, 4, 4 }});
+    coreModule->addNativeFunction("fmin", NativeId::MinFloat, Type::Float, {{ "a", Type::Float, 4, 0 }, { "b", Type::Float, 4, 4 }});
+    coreModule->addNativeFunction("fmax", NativeId::MaxFloat, Type::Float, {{ "a", Type::Float, 4, 0 }, { "b", Type::Float, 4, 4 }});
 
     _modules.push_back(coreModule);
     

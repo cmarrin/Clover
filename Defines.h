@@ -466,7 +466,12 @@ enum class NativeId : uint8_t {
     None            = 0,
     PrintF          = 1,
     MemSet          = 2,
-    
+    RandomInt       = 3,
+    RandomFloat     = 4,
+    MinInt          = 5,
+    MaxInt          = 6,
+    MinFloat        = 7,
+    MaxFloat        = 8,
 };
 
 class ASTNode;
