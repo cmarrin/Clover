@@ -121,10 +121,6 @@ void ConstantNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     assert(!isLHS);
     
-    // FIXME: What about Type::Int and Type::Float? These are generic int and float literals
-    // and we should auto convert them to the right type?
-    assert(_type != Type::None);
-    
     uint8_t bytesInOperand;
     
     if (_i >= -8 && _i <= 7) {
