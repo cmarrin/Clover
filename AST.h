@@ -123,7 +123,6 @@ class VarNode : public ASTNode
 class ConstantNode : public ASTNode
 {
   public:
-    ConstantNode(Type t, float v) : _type(t), _f(v) { }
     ConstantNode(Type t, uint32_t v) : _type(t), _i(v) { }
     ConstantNode(float v) : _type(Type::Float), _numeric(true), _f(v) { }
 
