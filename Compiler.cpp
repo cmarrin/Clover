@@ -43,6 +43,10 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         _error = Error::ExecutableTooBig;
     }
     
+    if (_error != Error::None) {
+        return false;
+    }
+    
     // Do second pass
     Codegen codeGen(&executable);
     
@@ -276,14 +280,14 @@ Compiler::var(Type type, bool isPointer)
     SymbolPtr idSym;
     
     if (_inFunction) {
-        expect(currentFunction()->addLocal(id, type, size, isPointer), Error::DuplicateIdentifier);
-        idSym = currentFunction()->findLocal(id);
+        idSym = currentFunction()->addLocal(id, type, size, isPointer);
+        expect(idSym != nullptr, Error::DuplicateIdentifier);
     } else {
         expect(!_structStack.empty(), Error::InternalError);
         
         // FIXME: Need to deal with ptr and size
-        expect(currentStruct()->addLocal(id, type, size, false), Error::DuplicateIdentifier);
-        idSym = currentStruct()->findLocal(id);
+        idSym = currentStruct()->addLocal(id, type, size, false);
+        expect(idSym != nullptr, Error::DuplicateIdentifier);
     }
     
     // Check for an initializer. We only allow initializers on Int and Float
@@ -413,25 +417,13 @@ Compiler::function()
     
     expect(Token::CloseParen);
     expect(Token::OpenBrace);
-    
-    
 
-    // SetFrame has to be the first instruction in the Function. Pass Params and
-    // set Locals byte to 0 and remember it's location so we can fix it at the
-    // end of the function
-//    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
-//    auto localsIndex = _rom8.size();
-//    addInt(0);
-
-    // Remember the rom addr so we can check to see if we've emitted any code
-//    uint16_t size = romSize();
+    // ENTER has to be the first instruction in the Function.
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction));
     
     while(statement()) { }
     
     expect(Token::CloseBrace);
-
-    // Update locals size
-//    _rom8[localsIndex] = currentFunction().localSize();
 
     // Set the high water mark
     if (_nextMem > _localHighWaterMark) {
@@ -439,11 +431,12 @@ Compiler::function()
     }
     
     // Emit Return at the end if there's not already one
-//    if (size == romSize() || lastOp() != Op::Return) {
-//        addOpSingleByteIndex(Op::PushIntConstS, 0);
-//        addOp(Op::Return);
-//    }
-    
+    ASTPtr nodes = _currentFunction->astNode();
+    ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
+    if (lastNode->astNodeType() != ASTNodeType::Op || reinterpret_cast<OpNode*>(lastNode.get())->op() != Op::RET) {
+        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET));
+    }
+        
     _inFunction = false;
     _currentFunction = nullptr;
     return true;
@@ -475,9 +468,6 @@ Compiler::init()
     while(statement()) { }
     
     expect(Token::CloseBrace);
-
-    // Update locals size
-//    _rom8[localsIndex] = currentFunction().localSize();
 
     // Set the high water mark
     if (_nextMem > _localHighWaterMark) {
@@ -605,7 +595,7 @@ Compiler::forStatement()
 
             // Generate an expression
             expect(_inFunction, Error::InternalError);
-            expect(currentFunction()->addLocal(id, t, sizeInBytes(t), false), Error::DuplicateIdentifier);
+            expect(currentFunction()->addLocal(id, t, sizeInBytes(t), false) != nullptr, Error::DuplicateIdentifier);
             _nextMem += 1;
 
             // FIXME: This needs to be an arithmeticExpression?
@@ -874,6 +864,7 @@ Compiler::postfixExpression()
     
     while (true) {
         if (match(Token::OpenParen)) {
+            // Function call
             expect(argumentList(lhs), Error::ExpectedArgList);
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
@@ -929,7 +920,12 @@ Compiler::primaryExpression()
         expect(_inFunction, Error::InternalError);
         SymbolPtr symbol = findSymbol(id);
         if (symbol) {
-            return std::make_shared<VarNode>(symbol);
+            // This could be a var or function. Create the proper ASTNode
+            if (symbol->type() == Type::Function) {
+                return std::make_shared<FunctionCallNode>(symbol->function());
+            } else {
+                return std::make_shared<VarNode>(symbol);
+            }
         }
         
         Type t;
@@ -978,11 +974,11 @@ bool
 Compiler::formalParameterList()
 {
     Type t;
+    if (!type(t)) {
+        return true;
+    }
+    
     while (true) {
-        if (!type(t)) {
-            return true;
-        }
-        
         bool isPointer = false;
         if (match(Token::Mul)) {
             isPointer = true;
@@ -990,11 +986,13 @@ Compiler::formalParameterList()
     
         std::string id;
         expect(identifier(id), Error::ExpectedIdentifier);
-        currentFunction()->addArg(id, t, sizeInBytes(t), isPointer);
+        expect(currentFunction()->addArg(id, t, sizeInBytes(t), isPointer) != nullptr, Error::DuplicateIdentifier);
         
         if (!match(Token::Comma)) {
             return true;
         }
+
+        expect(type(t), Error::ExpectedType);
     }
     
     return true;
