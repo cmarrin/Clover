@@ -465,13 +465,8 @@ enum class Operator : uint8_t {
 enum class NativeId : uint8_t {
     None            = 0,
     PrintF          = 1,
-    Int8ToString    = 2,
-    UInt8ToString   = 3,
-    Int16ToString   = 4,
-    UInt16ToString  = 5,
-    Int32ToString   = 6,
-    UInt32ToString  = 7,
-    FloatToString   = 8,
+    MemSet          = 2,
+    
 };
 
 class ASTNode;

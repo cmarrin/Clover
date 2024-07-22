@@ -25,13 +25,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>("core");
     coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, AddrSize, 0 }});
-//    coreModule->addNativeFunction("int8ToString", NativeId::Int8ToString, Type::String, {{ "v", Type::Int8, 1, 0 }});
-//    coreModule->addNativeFunction("uint8ToString", NativeId::UInt8ToString, Type::String, {{ "v", Type::UInt8, 1, 0 }});
-//    coreModule->addNativeFunction("int16ToString", NativeId::Int16ToString, Type::String, {{ "v", Type::Int16, 1, 0 }});
-//    coreModule->addNativeFunction("uint16ToString", NativeId::UInt16ToString, Type::String, {{ "v", Type::UInt16, 1, 0 }});
-//    coreModule->addNativeFunction("int32ToString", NativeId::Int32ToString, Type::String, {{ "v", Type::Int32, 1, 0 }});
-//    coreModule->addNativeFunction("uint32ToString", NativeId::UInt32ToString, Type::String, {{ "v", Type::UInt32, 1, 0 }});
-//    coreModule->addNativeFunction("floatToString", NativeId::FloatToString, Type::String, {{ "v", Type::Float, 1, 0 }});
+    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "s", Type::String, AddrSize, 0 }});
 
     _modules.push_back(coreModule);
     
