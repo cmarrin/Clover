@@ -165,13 +165,14 @@ static int32_t outInteger(Generator gen, uintmax_t value, Signed sign, int32_t w
     char* p = intToString(static_cast<uint64_t>(value), buf, Formatter::MaxIntegerBufferSize, base, cap);
     size += static_cast<uint32_t>(p - buf);
 
-    if (Formatter::isFlag(flags, Formatter::Flag::zeroPad)) {
-        int32_t pad = static_cast<int32_t>(width) - static_cast<int32_t>(strlen(p));
-        while (pad > 0) {
-            gen('0');
-            size++;
-            pad--;
-        }
+    int32_t pad = static_cast<int32_t>(width) - static_cast<int32_t>(strlen(p));
+    
+    char padChar = Formatter::isFlag(flags, Formatter::Flag::zeroPad) ? '0' : ' ';
+    
+    while (pad > 0) {
+        gen(padChar);
+        size++;
+        pad--;
     }
     
     for ( ; *p; ++p) {

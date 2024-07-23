@@ -15,11 +15,11 @@ struct Simple
     
     initialize(uint8 cmd, uint16 x)
     {
-        int8 y = 3;
+        int8 y = 12;
         
         int8 z;
         z = x + y;
-        core.printf("x=%hi, y=%hhi, z=%hhi\n", x, y, z);
+        core.printf("x =%2hu, y = %#04hhx, z = %hhi\n", x, y, z);
         
         uint8 a = 10;
         core.printf("a=%u\n", uint32(a));
