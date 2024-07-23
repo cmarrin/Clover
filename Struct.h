@@ -17,9 +17,6 @@
 
 namespace lucid {
 
-class Struct;
-using StructPtr = std::shared_ptr<Struct>;
-
 class Struct : public Module
 {
 public:
@@ -41,14 +38,14 @@ public:
         return _structs.back();
     }
 
-    Function* addFunction(const std::string& name, Type returnType)
+    FunctionPtr addFunction(const std::string& name, Type returnType)
     {
         SymbolPtr symbol = findLocal(name);
         if (symbol) {
             return nullptr;
         }
         
-        Function* function = Module::addFunction(name, returnType);
+        FunctionPtr function = Module::addFunction(name, returnType);
         _locals.push_back(std::make_shared<Symbol>(function));
         return function;
     }

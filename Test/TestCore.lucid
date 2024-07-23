@@ -14,46 +14,23 @@ struct Test
 
 uint16 globalArray[20];
 
-function space(uint8 n)
-{
-    while (n--) {
-        core.printf(" ");
-    }
-}
-
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
-    uint8 n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    core.printf("    Test %hhi: ", testNo);
-    space(n);
+    core.printf("    Test %2hhi: ", testNo);
     if (exp != act) {
-        core.printf("FAIL: exp %i, got %i\n", exp, act);
+        core.printf("     FAIL: exp %i, got %i\n", exp, act);
     } else {
-        core.printf("Pass\n");
+        core.printf("     Pass\n");
     }
 }
 
 function showFloatResults(uint8 testNo, float exp, float act)
 {
-    uint8 n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    core.printf("    Test %hhi: ", testNo);
-    space(n);
+    core.printf("    Test %2hhi: ", testNo);
     if (exp != act) {
-        core.printf("FAIL: exp %f, got %f\n", exp, act);
+        core.printf("     FAIL: exp %f, got %f\n", exp, act);
     } else {
-        core.printf("Pass\n");
+        core.printf("     Pass\n");
     }
 }
 

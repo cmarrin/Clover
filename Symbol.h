@@ -30,7 +30,7 @@ class Symbol
 public:    
     Symbol() { }
     
-    Symbol(Function* func) : _name(func->name()), _type(Type::Function), _function(func) { }
+    Symbol(const FunctionPtr& func) : _name(func->name()), _type(Type::Function), _function(func) { }
     
     Symbol(const std::string& name, Type type, uint8_t size, int32_t addr, bool ptr = false)
         : _name(name)
@@ -45,7 +45,7 @@ public:
     bool isPointer() const { return _ptr; }
     uint8_t size() const { return _size; }
     int32_t addr() const { return _addr; }
-    Function* function() const { return _function; }
+    FunctionPtr function() const { return _function; }
     
 private:
     std::string _name;
@@ -53,7 +53,7 @@ private:
     bool _ptr = false;
     uint8_t _size = 0;
     int32_t _addr = 0;
-    Function* _function = nullptr;
+    FunctionPtr _function = nullptr;
 };
 
 }

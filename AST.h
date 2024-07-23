@@ -333,7 +333,7 @@ class ModuleNode : public ASTNode
 class FunctionCallNode : public ASTNode
 {
   public:
-    FunctionCallNode(Function* func, int32_t annotationIndex) : ASTNode(annotationIndex), _function(func) { }
+    FunctionCallNode(FunctionPtr func, int32_t annotationIndex) : ASTNode(annotationIndex), _function(func) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::FunctionCall; }
     virtual bool isList() const override { return true; }
@@ -360,10 +360,10 @@ class FunctionCallNode : public ASTNode
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
 
-    Function* function() const { return _function; }
+    FunctionPtr function() const { return _function; }
     
   private:
-    Function* _function;
+    FunctionPtr _function;
     ASTNodeList _args;
 
 };
@@ -371,14 +371,14 @@ class FunctionCallNode : public ASTNode
 class EnterNode : public ASTNode
 {
   public:
-    EnterNode(Function* function, int32_t annotationIndex) : ASTNode(annotationIndex), _function(function) { }
+    EnterNode(const FunctionPtr& function, int32_t annotationIndex) : ASTNode(annotationIndex), _function(function) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Enter; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
     
   private:
-    Function* _function;
+    FunctionPtr _function;
 };
 
 class TypeCastNode : public ASTNode

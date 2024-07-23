@@ -23,26 +23,26 @@ class Module
     Module(const std::string& name) : _name(name) { }
     
     const std::string& name() const { return _name; }
-    const std::vector<Function>& functions() const { return _functions; }
+    const FunctionList& functions() const { return _functions; }
     
-    Function* addFunction(const std::string& name, Type returnType)
+    FunctionPtr addFunction(const std::string& name, Type returnType)
     {
-        _functions.emplace_back(name, returnType);
-        return &(_functions.back());
+        _functions.push_back(std::make_shared<Function>(name, returnType));
+        return _functions.back();
     }
 
-    void addNativeFunction(const char* name, NativeId nativeId, Type returnType, const SymbolList& locals)
+    void addNativeFunction(const char* name, NativeId nativeId, Type returnType, const Symbols& locals)
     {
-        _functions.emplace_back(name, nativeId, returnType, locals);
+        _functions.push_back(std::make_shared<Function>(name, nativeId, returnType, locals));
     }
     
-    Function* findFunction(const std::string& s)
+    FunctionPtr findFunction(const std::string& s)
     {
         const auto& it = find_if(_functions.begin(), _functions.end(),
-                [s](Function& f) { return f.name() == s; });
+                [s](FunctionPtr& f) { return f->name() == s; });
 
         if (it != _functions.end()) {
-            return &(*it);
+            return *it;
         }
         return nullptr;
     }
@@ -50,7 +50,7 @@ class Module
     
   private:
     std::string _name;
-    std::vector<Function> _functions;
+    FunctionList _functions;
 };
 
 using ModulePtr = std::shared_ptr<Module>;

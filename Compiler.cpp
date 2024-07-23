@@ -65,14 +65,14 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         for (auto& itFunc : itStruct->functions()) {
             // If this is the initialize function of the top level
             // struct, set the entry point
-            if (itStruct == _structs[0] && itFunc.name() == "") {
+            if (itStruct == _structs[0] && itFunc->name() == "") {
                 uint32_t cur = uint32_t(executable.size());
                 executable.at(4) = cur >> 24;
                 executable.at(5) = cur >> 16;
                 executable.at(6) = cur >> 8;
                 executable.at(7) = cur;
             }
-            itFunc.astNode()->emitCode(executable, false, this);
+            itFunc->astNode()->emitCode(executable, false, this);
         }
         
         // FIXME: We need to tell the functions and the struct where their code starts
@@ -891,8 +891,8 @@ Compiler::postfixExpression()
             
             // If lhs is a module, this has to be a function inside that module.
             if (lhs->astNodeType() == ASTNodeType::Module) {
-                Function* f = std::static_pointer_cast<ModuleNode>(lhs)->module()->findFunction(id);
-                expect(f, Error::UndefinedIdentifier);
+                FunctionPtr f = std::static_pointer_cast<ModuleNode>(lhs)->module()->findFunction(id);
+                expect(f != nullptr, Error::UndefinedIdentifier);
                 lhs = std::make_shared<FunctionCallNode>(f, annotationIndex());
                 continue;
             }
@@ -1015,7 +1015,7 @@ bool
 Compiler::argumentList(const ASTPtr& fun)
 {
     expect(fun->astNodeType() == ASTNodeType::FunctionCall, Error::ExpectedFunction);
-    Function* function = std::static_pointer_cast<FunctionCallNode>(fun)->function();
+    FunctionPtr function = std::static_pointer_cast<FunctionCallNode>(fun)->function();
     (void) function;
     
     int i = 0;

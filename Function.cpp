@@ -13,7 +13,7 @@
 
 using namespace lucid;
 
-Function::Function(const char* name, NativeId nativeId, Type returnType, const SymbolList& locals)
+Function::Function(const char* name, NativeId nativeId, Type returnType, const Symbols& locals)
     : _name(name)
     , _returnType(returnType)
     , _native(true)

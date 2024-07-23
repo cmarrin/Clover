@@ -479,5 +479,15 @@ using ASTPtr = std::shared_ptr<ASTNode>;
 
 class Symbol;
 using SymbolPtr = std::shared_ptr<Symbol>;
-using SymbolList = std::vector<Symbol>;
+using Symbols = std::vector<Symbol>;
+
+class Function;
+using FunctionPtr = std::shared_ptr<Function>;
+using FunctionList = std::vector<FunctionPtr>;
+
+class Struct;
+using StructPtr = std::shared_ptr<Struct>;
+using StructList = std::vector<StructPtr>;
+
+
 }

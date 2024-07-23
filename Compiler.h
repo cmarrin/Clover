@@ -259,11 +259,6 @@ public:
     bool compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
                  const std::vector<Module*>&);
 
-//    void addNative(const char* name, uint8_t nativeId, Type type, const SymbolList& locals)
-//    {
-//        _functions.emplace_back(name, nativeId, type, locals);
-//    }
-
     bool program();
 
     Error error() const { return _error; }
@@ -272,7 +267,7 @@ public:
     uint32_t lineno() const { return _scanner.lineno(); }
     uint32_t charno() const { return _scanner.charno(); }
 
-    const std::vector<StructPtr>& structs() const { return _structs; }
+    const StructList& structs() const { return _structs; }
     
     const StructPtr structFromType(Type type) const
     {
@@ -375,7 +370,7 @@ private:
         uint8_t _value;
     };
     
-    Function* currentFunction()
+    FunctionPtr currentFunction()
     {
         expect(_inFunction && _currentFunction, Error::InternalError);
         return _currentFunction;
@@ -446,7 +441,7 @@ private:
     Scanner _scanner;
 
     bool _inFunction = false;
-    Function* _currentFunction = nullptr;
+    FunctionPtr _currentFunction = nullptr;
     
     uint8_t _nextStructType = StructTypeStart;
     std::vector<StructPtr> _structTypes; // array of structs, ordered by (type-StructTypeStart)
@@ -454,8 +449,8 @@ private:
     uint32_t _entryStructIndex;
     
     std::vector<Constant> _constants;
-    std::vector<StructPtr> _structs;
-    std::vector<StructPtr> _structStack;
+    StructList _structs;
+    StructList _structStack;
     std::vector<ModulePtr> _modules;
     
     // The jump list is an array of arrays of JumpEntries. The outermost array
