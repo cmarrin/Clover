@@ -59,7 +59,6 @@
 		4914A4992C4DD665003DDADA /* TestIf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestIf.h; path = ../Test/TestIf.h; sourceTree = "<group>"; };
 		4914A49A2C4DD665003DDADA /* TestFunction.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.clvr; path = ../Test/TestFunction.clvr; sourceTree = "<group>"; };
 		4914A49C2C4DD665003DDADA /* TestExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestExpr.clvr; path = ../Test/TestExpr.clvr; sourceTree = "<group>"; };
-		49279C292C16872100294992 /* ExprEntry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ExprEntry.h; path = ../ExprEntry.h; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
 		4941A1012BBA1D2800CE3C9E /* Flicker.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.lucid; path = ../examples/Flicker.lucid; sourceTree = "<group>"; };
@@ -140,7 +139,6 @@
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
 				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
 				4941A1042BBA28F000CE3C9E /* Defines.h */,
-				49279C292C16872100294992 /* ExprEntry.h */,
 				4914A4842C2E0F92003DDADA /* Function.cpp */,
 				49C164B22C03E84700981AD1 /* Function.h */,
 				4941A1052BBA28F000CE3C9E /* Interpreter.cpp */,
