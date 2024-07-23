@@ -72,6 +72,9 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
                 executable.at(6) = cur >> 8;
                 executable.at(7) = cur;
             }
+            
+            // Set addr of this function
+            itFunc->setAddr(AddrNativeType(executable.size()));
             itFunc->astNode()->emitCode(executable, false, this);
         }
         

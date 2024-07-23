@@ -215,9 +215,22 @@ InterpreterBase::execute()
             case Op::EQ      :
             case Op::NE      :
             
-            case Op::IF      : getOpnd(operand); break; // FIXME: Implement
-            case Op::BRA     : getOpnd(operand); break; // FIXME: Implement
-            case Op::CALL    : getOpnd(operand); break; // FIXME: Implement
+            case Op::IF:
+                right = getOpnd(operand);
+                left = _memMgr.stack().pop(OpSize::i8);
+                if (left == 0) {
+                    _pc += right;
+                }
+                break;
+            case Op::BRA:
+                right = getOpnd(operand);
+                _pc += right;
+                break;
+            case Op::CALL:
+                right = getOpnd(operand);
+                _memMgr.stack().push(_pc, AddrOpSize);
+                _pc += right;
+                break;
             case Op::DROP1   : left = getOpnd(0); _memMgr.stack().drop(left); break;
             case Op::DROP2   : left = getOpnd(1); _memMgr.stack().drop(left); break;
 

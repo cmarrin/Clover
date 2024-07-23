@@ -239,8 +239,11 @@ enum class Op: uint8_t {
     DROP1   = 0x0a, // Next byte is count (1 - 256)
     DROP2   = 0x0b, // Next 2 bytes are count (1 - 65536)
 
-// Bits 1:0 is the bytes that make up the operand (00=1, 01=2, 10=3, 11=4).
+// Bit 0 is 0 if the operand is a 8 bits and 1 if 16 bits.
 // Operand is sign extended
+// This limits branches to the range -32768 to 32767.
+// What happens if we go over that? do we fail or have some
+// kind of trampoline support?
     IF      = 0x10,
     BRA     = 0x12,
     CALL    = 0x14,

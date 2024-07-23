@@ -182,7 +182,12 @@ void Decompiler::emitOp(const char* opString)
 void Decompiler::emitRelAddr(uint8_t size)
 {
     _out->append(" ");
-    _out->append(std::to_string(size ? getInt16() : getInt8()));
+    if (size) {
+        _out->append(std::to_string(getInt16()));
+    } else {
+        int8_t v = getInt8();
+        _out->append(std::to_string(v));
+    }
 }
 
 void Decompiler::emitNumber(int32_t number)

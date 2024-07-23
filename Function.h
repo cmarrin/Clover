@@ -49,7 +49,8 @@ public:
     Type returnType() const { return _returnType; }
     uint16_t argSize() const { return _argSize; }
     uint16_t localSize() const { return _localHighWaterMark; }
-    int32_t addr() const { return _addr; }
+    AddrNativeType addr() const { return _addr; }
+    void setAddr(AddrNativeType addr) { _addr = addr; }
     const SymbolPtr& local(uint8_t i) const { return _locals[i]; }
     const ASTPtr& astNode() const { return _astNode; }
 
@@ -100,7 +101,7 @@ private:
     uint16_t _localSize = 0; // Size in bytes of all locals, including args
     Type _returnType = Type::None;
     bool _native = false;
-    int32_t _addr = 0;
+    AddrNativeType _addr = 0;
     uint8_t _localHighWaterMark = 0;
 };
 

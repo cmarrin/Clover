@@ -208,8 +208,14 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) 
             }
         }
     } else {
-        // FIXME: How does addr get set for a function call? 2 pass? Fixup?
-        // FIXME: Implement CALL
+        int16_t relAddr = addr - code.size() - 2;
+        bool ext = relAddr < -128 || relAddr > 127;
+        code.push_back(uint8_t(Op::CALL) | (ext ? 0x01 : 0x00));
+        if (ext) {
+            relAddr -= 1;
+            code.push_back(relAddr >> 8);
+        }
+        code.push_back(relAddr);
     }
     
     // Pop the args after the call returns
