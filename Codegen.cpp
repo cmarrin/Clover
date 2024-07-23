@@ -51,34 +51,7 @@ Codegen::setEntryPoint()
 bool
 Codegen::processNextASTNode(const ASTPtr& ast, bool isLHS, Compiler* c)
 {
-    if (ast->isList()) {
-        assert(!isLHS);
-        
-        // Just walk all the children. There can be no null child, seeing a null stops the iteration
-        for (uint32_t i = 0; ; ++i) {
-            ASTPtr child = ast->child(i);
-            if (!child) {
-                break;
-            }
-            if (!processNextASTNode(child, false, c)) {
-                return false;
-            }
-        }
-    } else {
-        // This is a node that performs an operation, process it's operands first
-        if (ast->child(0)) {
-            processNextASTNode(ast->child(0), ast->isAssignment(), c);
-        }
-        
-        // FIXME: We need to distinguish between pre and post unary operations
-        if (ast->child(1)) {
-            processNextASTNode(ast->child(1), false, c);
-        }
-    }
-    
-    c->setAnnotation(ast->annotationIndex(), uint32_t(_code->size()));
-    ast->emitCode(*_code, isLHS);
-     
+    ast->emitCode(*_code, isLHS, c);
     return true;
 }
 

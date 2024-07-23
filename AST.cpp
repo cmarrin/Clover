@@ -9,14 +9,26 @@
 
 #include "AST.h"
 
+#include "Compiler.h"
+
 #include <assert.h>
 #include <map>
 
 using namespace lucid;
 
 void
-VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
+StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
+    for (auto& it : _statements) {
+        it->emitCode(code, isLHS, c);
+    }
+}
+
+void
+VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+{
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     // If isLHS is true, code generated will be a Ref
     Op op = isLHS ? Op::PUSHREF : Op::PUSH;
     
@@ -77,8 +89,10 @@ static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
 }
 
 void
-ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
+ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     assert(!isLHS);
     
     uint8_t bytesInOperand;
@@ -112,8 +126,10 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 }
 
 void
-StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
+StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     // We will push a null terminator in addition to the size. Make room for it
     code.push_back(uint8_t(Op::PUSHS));
     code.push_back(_string.size() + 1);
@@ -124,8 +140,18 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 }
 
 void
-OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
+OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
+    if (_left) {
+        _left->emitCode(code, isLHS, c);
+    }
+    
+    if (_right) {
+        _right->emitCode(code, isLHS, c);
+    }
+    
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     // FIXME: If _isAssignment as op is not a NOP it means this is an
     // arithmethic assignment (e.g., +=). We need to handle that.
     Op op = _op;
@@ -136,14 +162,34 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 }
 
 void
-DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
+DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
+    _operand->emitCode(code, isLHS, c);
+    _property->emitCode(code, isLHS, c);
+    
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     // FIXME: Implement
 }
 
 void
-FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
+ModuleNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
+}
+
+void
+FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+{
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
+    // _args has the list of arguments in order from left to right. But stack
+    // pushes down, so args will appear in reverse order on the stack
+    // (right most arg will be at lowest addr). So return children in reverse
+    // order so the first arg is at the lowest address when pushed
+    for (auto i = _args.size() - 1; _args.size() > i; --i) {
+        _args[i]->emitCode(code, isLHS, c);
+    }
+    
     // Add a function call. args will already be pushed
     int32_t addr = _function->addr();
     if (_function->isNative()) {
@@ -180,8 +226,10 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 }
 
 void
-EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
+EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     uint16_t localSize = _function->localSize();
     if (localSize < 15) {
         code.push_back(uint8_t(Op::ENTERS) | localSize);
@@ -196,7 +244,11 @@ EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 }
 
 void
-TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
+TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
+    _arg->emitCode(code, isLHS, c);
+    
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     code.push_back(uint8_t(castToOp(_type)));
 }
