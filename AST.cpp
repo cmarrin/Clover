@@ -143,7 +143,7 @@ void
 OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 {
     if (_left) {
-        _left->emitCode(code, isLHS, c);
+        _left->emitCode(code, _isAssignment, c);
     }
     
     if (_right) {
