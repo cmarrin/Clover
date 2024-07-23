@@ -14,6 +14,27 @@
 
 using namespace lucid;
 
+static int32_t typeCast(int32_t v, OpSize from, Type to)
+{
+    // handle from float case
+    if (from == OpSize::flt) {
+        float f = *(reinterpret_cast<float*>(&v));
+        if (to != Type::Float) {
+            v = int32_t(f);
+        }
+        return v;
+    }
+    
+    // handle to float case (assume from is int)
+    if (to == Type::Float) {
+        float f = float(v);
+        return *(reinterpret_cast<int32_t*>(&f));
+    }
+    
+    // This is just an int to int case, nothing to do
+    return v;
+}
+
 void
 InterpreterBase::addArg(uint32_t v, Type type)
 {
@@ -242,13 +263,13 @@ InterpreterBase::execute()
                 _pc += size;
                 break;
             }
-            case Op::TOF   : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(float(left), OpSize::flt); break;
-            case Op::TOU8  : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(uint8_t(left), OpSize::i8); break;
-            case Op::TOI8  : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(int8_t(left), OpSize::i8); break;
-            case Op::TOU16 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(uint16_t(left), OpSize::i16); break;
-            case Op::TOI16 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(int16_t(left), OpSize::i16); break;
-            case Op::TOU32 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(uint32_t(left), OpSize::i32); break;
-            case Op::TOI32 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(int32_t(left), OpSize::i32); break;
+            case Op::TOF   : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::Float), OpSize::flt); break;
+            case Op::TOU8  : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::UInt8), OpSize::i8); break;
+            case Op::TOI8  : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::Int8), OpSize::i8); break;
+            case Op::TOU16 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::UInt16), OpSize::i16); break;
+            case Op::TOI16 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::Int16), OpSize::i16); break;
+            case Op::TOU32 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::UInt32), OpSize::i32); break;
+            case Op::TOI32 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::Int32), OpSize::i32); break;
         }
     }
 }

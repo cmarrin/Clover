@@ -97,7 +97,9 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) cons
     
     uint8_t bytesInOperand;
     
-    if (_i >= -8 && _i <= 7) {
+    if (_type == Type::Float) {
+        bytesInOperand = 4;
+    } else if (_i >= -8 && _i <= 7) {
         bytesInOperand = 0;
     } else if (_i >= -128 && _i <= 127) {
         bytesInOperand = 1;
@@ -250,5 +252,5 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) cons
     
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
-    code.push_back(uint8_t(castToOp(_type)));
+    code.push_back(uint8_t(castToOp(_type)) | typeToSizeBits(_arg->type()));
 }
