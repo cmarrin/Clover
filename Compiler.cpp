@@ -51,7 +51,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     Codegen codeGen(&executable);
     
     for (auto& itStruct : _structs) {
-        codeGen.processAST(itStruct->astNode());
+        codeGen.processAST(itStruct->astNode(), this);
         
         for (auto& itFunc : itStruct->functions()) {
             // If this is the initialize function of the top level
@@ -59,7 +59,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
             if (itStruct == _structs[0] && itFunc.name() == "") {
                 codeGen.setEntryPoint();
             }
-            codeGen.processAST(itFunc.astNode());
+            codeGen.processAST(itFunc.astNode(), this);
         }
         
         // FIXME: We need to tell the functions and the struct where their code starts
@@ -314,8 +314,8 @@ Compiler::var(Type type, bool isPointer)
     }
     
     if (ast) {
-        ASTPtr idNode = std::make_shared<VarNode>(idSym);
-        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, true);
+        ASTPtr idNode = std::make_shared<VarNode>(idSym, annotationIndex());
+        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, true, annotationIndex());
     
         if (_inFunction) {
             currentFunction()->addASTNode(assignment);
@@ -419,7 +419,7 @@ Compiler::function()
     expect(Token::OpenBrace);
 
     // ENTER has to be the first instruction in the Function.
-    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction));
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
     
     while(statement()) { }
     
@@ -434,7 +434,7 @@ Compiler::function()
     ASTPtr nodes = _currentFunction->astNode();
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
     if (lastNode->astNodeType() != ASTNodeType::Op || reinterpret_cast<OpNode*>(lastNode.get())->op() != Op::RET) {
-        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET));
+        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET, annotationIndex()));
     }
         
     _inFunction = false;
@@ -463,7 +463,7 @@ Compiler::init()
     expect(Token::OpenBrace);
 
     // ENTER has to be the first instruction in the Function.
-    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction));
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
 
     while(statement()) { }
     
@@ -478,7 +478,7 @@ Compiler::init()
     ASTPtr nodes = _currentFunction->astNode();
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
     if (lastNode->astNodeType() != ASTNodeType::Op || reinterpret_cast<OpNode*>(lastNode.get())->op() != Op::RET) {
-        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET));
+        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET, annotationIndex()));
     }
     
     _inFunction = false;
@@ -819,7 +819,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         // Generate an ASTNode
         Op opcode = lhs->isSigned() ? opInfo.opcodeS() : opInfo.opcodeU();
-        lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.assoc() == Assoc::Right);
+        lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.assoc() == Assoc::Right, annotationIndex());
     }
     
     return lhs;
@@ -851,7 +851,7 @@ Compiler::unaryExpression()
         return nullptr;
     }
     
-    return std::make_shared<OpNode>(opcode, unaryExpression());
+    return std::make_shared<OpNode>(opcode, unaryExpression(), annotationIndex());
 }
 
 ASTPtr
@@ -869,7 +869,7 @@ Compiler::postfixExpression()
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
-            ASTPtr result = std::make_shared<OpNode>(lhs, Op::NOP, rhs, false); // FIXME: Implement
+            ASTPtr result = std::make_shared<OpNode>(lhs, Op::NOP, rhs, false, annotationIndex()); // FIXME: Implement
             expect(Token::CloseBracket);
             return result;
         } else if (match(Token::Dot)) {
@@ -880,15 +880,15 @@ Compiler::postfixExpression()
             if (lhs->astNodeType() == ASTNodeType::Module) {
                 Function* f = std::static_pointer_cast<ModuleNode>(lhs)->module()->findFunction(id);
                 expect(f, Error::UndefinedIdentifier);
-                lhs = std::make_shared<FunctionCallNode>(f);
+                lhs = std::make_shared<FunctionCallNode>(f, annotationIndex());
                 continue;
             }
             
-            return std::make_shared<DotNode>(lhs, id);
+            return std::make_shared<DotNode>(lhs, id, annotationIndex());
         } else if (match(Token::Inc)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTINC);
+            return std::make_shared<OpNode>(lhs, Op::POSTINC, annotationIndex());
         } else if (match(Token::Dec)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTDEC);
+            return std::make_shared<OpNode>(lhs, Op::POSTDEC, annotationIndex());
         } else {
             return lhs;
         }
@@ -912,7 +912,7 @@ Compiler::primaryExpression()
         expect(Token::OpenParen);
         ASTPtr arg = expression();
         expect(Token::CloseParen);        
-        return std::make_shared<TypeCastNode>(t, arg);
+        return std::make_shared<TypeCastNode>(t, arg, annotationIndex());
     }
     
     std::string id;
@@ -922,21 +922,21 @@ Compiler::primaryExpression()
         if (symbol) {
             // This could be a var or function. Create the proper ASTNode
             if (symbol->type() == Type::Function) {
-                return std::make_shared<FunctionCallNode>(symbol->function());
+                return std::make_shared<FunctionCallNode>(symbol->function(), annotationIndex());
             } else {
-                return std::make_shared<VarNode>(symbol);
+                return std::make_shared<VarNode>(symbol, annotationIndex());
             }
         }
         
         Type t;
         uint32_t v;
         if (findConstant(id, t, v)) {
-            return std::make_shared<ConstantNode>(t, v);
+            return std::make_shared<ConstantNode>(t, v, annotationIndex());
         }
 
         ModulePtr module = findModule(id);
         if (module) {
-            return std::make_shared<ModuleNode>(module);
+            return std::make_shared<ModuleNode>(module, annotationIndex());
         }
 
         expect(false, Error::ExpectedVar);
@@ -944,7 +944,7 @@ Compiler::primaryExpression()
     
     float f;
     if (floatValue(f)) {
-        return std::make_shared<ConstantNode>(f);
+        return std::make_shared<ConstantNode>(f, annotationIndex());
     }
         
     uint32_t i;
@@ -959,12 +959,12 @@ Compiler::primaryExpression()
             type = Type::UInt32;
         }
         
-        return std::make_shared<ConstantNode>(type, i);
+        return std::make_shared<ConstantNode>(type, i, annotationIndex());
     }
     
     std::string s;
     if (stringValue(s)) {
-        return std::make_shared<StringNode>(s);
+        return std::make_shared<StringNode>(s, annotationIndex());
     }
     
     return nullptr;

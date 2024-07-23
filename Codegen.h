@@ -52,16 +52,18 @@ NOTE:   I'm also considering a bool type. It would be 8 bits, so maybe not
     Code            Rest of file        Executable code
  */
 
+class Compiler;
+
 class Codegen {
 public:
     Codegen(std::vector<uint8_t>* code);
   	
-    bool processAST(const ASTPtr&);
+    bool processAST(const ASTPtr&, Compiler* c);
     
     void setEntryPoint();
 
 private:
-    bool processNextASTNode(const ASTPtr&, bool isLHS);
+    bool processNextASTNode(const ASTPtr&, bool isLHS, Compiler* c);
 
     std::vector<uint8_t>* _code;
 };

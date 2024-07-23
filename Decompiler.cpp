@@ -22,7 +22,7 @@ bool Decompiler::decompile()
             break;
         }
         
-        _out->append("//    ");
+        _out->append("                    //    ");
         _out->append(_annotations[_annotationIndex].second);
         _out->append("\n");
     }
@@ -63,7 +63,7 @@ Decompiler::statement()
     uint16_t a = addr() - _codeOffset;
     if (!_annotations.empty() && (_annotations[_annotationIndex].first == -1 || _annotations[_annotationIndex].first < a)) {
         for ( ; _annotationIndex < _annotations.size(); ) {
-            _out->append("//    ");
+            _out->append("                    //    ");
             _out->append(_annotations[_annotationIndex++].second);
             if (_annotations[_annotationIndex].first != -1) {
                 break;

@@ -9,6 +9,8 @@
 
 #include "Codegen.h"
 
+#include "Compiler.h"
+
 #include <assert.h>
 
 using namespace lucid;
@@ -30,9 +32,9 @@ Codegen::Codegen(std::vector<uint8_t>* code)
 }
 
 bool
-Codegen::processAST(const ASTPtr& ast)
+Codegen::processAST(const ASTPtr& ast, Compiler* c)
 {
-    return processNextASTNode(ast, false);
+    return processNextASTNode(ast, false, c);
 }
 
 void
@@ -47,10 +49,11 @@ Codegen::setEntryPoint()
 
 
 bool
-Codegen::processNextASTNode(const ASTPtr& ast, bool isLHS)
+Codegen::processNextASTNode(const ASTPtr& ast, bool isLHS, Compiler* c)
 {
     // Traverse the AST and use the expression stack to generate the code
     if (ast->isTerminal()) {
+        c->setAnnotation(ast->annotationIndex(), uint32_t(_code->size()));
         ast->addCode(*_code, isLHS);
         return true;
     }
@@ -64,12 +67,13 @@ Codegen::processNextASTNode(const ASTPtr& ast, bool isLHS)
             if (!child) {
                 break;
             }
-            if (!processNextASTNode(child, false)) {
+            if (!processNextASTNode(child, false, c)) {
                 return false;
             }
         }
         
         // A node with lists can be a function, so it could do an operation
+        c->setAnnotation(ast->annotationIndex(), uint32_t(_code->size()));
         ast->addCode(*_code, false);
         
         return true;
@@ -77,14 +81,15 @@ Codegen::processNextASTNode(const ASTPtr& ast, bool isLHS)
     
     // This is a node that performs an operation, process it's operands first
     if (ast->child(0)) {
-        processNextASTNode(ast->child(0), ast->isAssignment());
+        processNextASTNode(ast->child(0), ast->isAssignment(), c);
     }
     
     // FIXME: We need to distinguish between pre and post unary operations
     if (ast->child(1)) {
-        processNextASTNode(ast->child(1), false);
+        processNextASTNode(ast->child(1), false, c);
     }
     
+    c->setAnnotation(ast->annotationIndex(), uint32_t(_code->size()));
     ast->addCode(*_code, false);
      
     return true;

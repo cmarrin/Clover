@@ -163,15 +163,12 @@ public:
     
     void retireToken() { _currentToken = Token::None; }
     
-    int32_t annotation() const
-    {
-        return (_annotations && _annotations->empty()) ? _annotations->back().first : -1;
-    }
+    int32_t annotationIndex() const { return _annotations ? int32_t(_annotations->size()) : -1; }
     
-    void setAnnotation(int32_t id)
+    void setAnnotation(int32_t index, uint32_t addr)
     {
-        if (_annotations && !_annotations->empty()) {
-            _annotations->back().first = id;
+        if (_annotations && _annotations->size() > index) {
+            (*_annotations)[index].first = addr;
         }
     }
     
