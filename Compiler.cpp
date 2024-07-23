@@ -8,7 +8,6 @@
 -------------------------------------------------------------------------*/
 
 #include "Compiler.h"
-#include "Codegen.h"
 
 #include <map>
 #include <vector>
@@ -48,18 +47,32 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     }
     
     // Do second pass
-    Codegen codeGen(&executable);
+    // Write signature
+    executable.push_back('l');
+    executable.push_back('u');
+    executable.push_back('c');
+    executable.push_back('d');
+
+    // Write dummy entry point address, to be filled in later
+    executable.push_back(0);
+    executable.push_back(0);
+    executable.push_back(0);
+    executable.push_back(0);
     
     for (auto& itStruct : _structs) {
-        codeGen.processAST(itStruct->astNode(), this);
+        itStruct->astNode()->emitCode(executable, false, this);
         
         for (auto& itFunc : itStruct->functions()) {
             // If this is the initialize function of the top level
             // struct, set the entry point
             if (itStruct == _structs[0] && itFunc.name() == "") {
-                codeGen.setEntryPoint();
+                uint32_t cur = uint32_t(executable.size());
+                executable.at(4) = cur >> 24;
+                executable.at(5) = cur >> 16;
+                executable.at(6) = cur >> 8;
+                executable.at(7) = cur;
             }
-            codeGen.processAST(itFunc.astNode(), this);
+            itFunc.astNode()->emitCode(executable, false, this);
         }
         
         // FIXME: We need to tell the functions and the struct where their code starts

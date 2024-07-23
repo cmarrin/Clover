@@ -10,7 +10,6 @@
 		4914A4852C2E0F92003DDADA /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4842C2E0F92003DDADA /* Function.cpp */; };
 		4914A4882C3E0752003DDADA /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* Interpreter.cpp */; };
 		4914A48B2C44A13B003DDADA /* Formatter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4892C44A132003DDADA /* Formatter.cpp */; };
-		49279C282C12396F00294992 /* Codegen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B62C04EC1E00981AD1 /* Codegen.cpp */; };
 		49279C2A2C1903BE00294992 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
 		4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A0F22BB6F59900CE3C9E /* compile.cpp */; };
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
@@ -78,8 +77,6 @@
 		49C164B32C03E90400981AD1 /* Symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Symbol.h; path = ../Symbol.h; sourceTree = "<group>"; };
 		49C164B42C0409D700981AD1 /* Module.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Module.h; path = ../Module.h; sourceTree = "<group>"; };
 		49C164B52C04463000981AD1 /* OpInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OpInfo.h; path = ../OpInfo.h; sourceTree = "<group>"; };
-		49C164B62C04EC1E00981AD1 /* Codegen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Codegen.cpp; path = ../Codegen.cpp; sourceTree = "<group>"; };
-		49C164B72C04EC1E00981AD1 /* Codegen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Codegen.h; path = ../Codegen.h; sourceTree = "<group>"; };
 		49C164B82C04EC6400981AD1 /* AST.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AST.cpp; path = ../AST.cpp; sourceTree = "<group>"; };
 		49C164B92C04EC6400981AD1 /* AST.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AST.h; path = ../AST.h; sourceTree = "<group>"; };
 		49C164BC2C0545D100981AD1 /* Struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Struct.h; path = ../Struct.h; sourceTree = "<group>"; };
@@ -132,8 +129,6 @@
 				4914A48A2C44A132003DDADA /* Formatter.h */,
 				49C164B82C04EC6400981AD1 /* AST.cpp */,
 				49C164B92C04EC6400981AD1 /* AST.h */,
-				49C164B62C04EC1E00981AD1 /* Codegen.cpp */,
-				49C164B72C04EC1E00981AD1 /* Codegen.h */,
 				4941A10D2BBA290B00CE3C9E /* Compiler.cpp */,
 				4941A1102BBA290B00CE3C9E /* Compiler.h */,
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
@@ -270,7 +265,6 @@
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
 				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
 				4914A48B2C44A13B003DDADA /* Formatter.cpp in Sources */,
-				49279C282C12396F00294992 /* Codegen.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
