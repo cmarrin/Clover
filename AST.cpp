@@ -14,49 +14,17 @@
 
 using namespace lucid;
 
-// Operator map. Maps Operators (contained in the AST OpNode) to opcodes
-std::map<Operator, std::pair<Op, Op>> opMap {
-    { Operator::Equal   , { Op::NOP   , Op::NOP    } }, // OpNode knows if this is an assignment.
-    { Operator::AddSto  , { Op::ADD   , Op::ADD    } }, // so all the ...Sto operators (including
-    { Operator::SubSto  , { Op::SUB   , Op::SUB    } }, // Equal) just need the binary operation
-    { Operator::MulSto  , { Op::IMUL  , Op::UMUL   } }, // they need to perform. For equal there
-    { Operator::DivSto  , { Op::IDIV  , Op::UDIV   } }, // is no additional operation, so it is
-    { Operator::AndSto  , { Op::AND   , Op::AND    } }, //
-    { Operator::OrSto   , { Op::OR    , Op::OR     } }, //
-    { Operator::XorSto  , { Op::XOR   , Op::XOR    } }, //
-    { Operator::LOr     , { Op::NOP   , Op::NOP    } }, // Logical AND, OR and NOT don't have opcodes.
-    { Operator::LAnd    , { Op::NOP   , Op::NOP    } }, // They are short-circuited at compile time.
-    { Operator::LNot    , { Op::NOP   , Op::NOP    } },
-    { Operator::Or      , { Op::OR    , Op::XOR    } },
-    { Operator::Xor     , { Op::XOR   , Op::XOR    } },
-    { Operator::And     , { Op::AND   , Op::AND    } },
-    { Operator::EQ      , { Op::EQ    , Op::EQ     } },
-    { Operator::NE      , { Op::NE    , Op::NE     } },
-    { Operator::LT      , { Op::LT    , Op::LO     } },
-    { Operator::GT      , { Op::GT    , Op::HI     } },
-    { Operator::GE      , { Op::GE    , Op::HS     } },
-    { Operator::LE      , { Op::LE    , Op::LS     } },
-    { Operator::Plus    , { Op::ADD   , Op::ADD    } },
-    { Operator::Minus   , { Op::SUB   , Op::SUB    } },
-    { Operator::Mul     , { Op::IMUL  , Op::UMUL   } },
-    { Operator::Div     , { Op::IDIV  , Op::UDIV   } },
-    { Operator::Inc     , { Op::NOP   , Op::NOP    } },
-    { Operator::Dec     , { Op::NOP   , Op::NOP    } },
-    { Operator::BNot    , { Op::NOT   , Op::NOT    } },
-    { Operator::ArrIdx  , { Op::NOP   , Op::NOP    } },
-    { Operator::Dot     , { Op::NOP   , Op::NOP    } },
-    { Operator::AddrOf  , { Op::NOP   , Op::NOP    } },
-    { Operator::Deref   , { Op::NOP   , Op::NOP    } },
-    { Operator::UMinus  , { Op::NEG   , Op::NEG    } },
-};
-
-// This version is for opcodes where the lower 2 bits hold type info and the following
-// bytes hold values or addresses
-static void emitCode(std::vector<uint8_t>& code, Op opcode, Type type, Index index, int32_t value)
+void
+VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 {
-    code.push_back(uint8_t(opcode) | typeToSizeBits(type));
+    // If isLHS is true, code generated will be a Ref
+    Op op = isLHS ? Op::PUSHREF : Op::PUSH;
     
-    uint8_t extra = uint8_t(index);
+    // FIXME: We assume we're indexing from U, is this always true? What about using Y as the 'this' ptr?
+    code.push_back(uint8_t(op) | typeToSizeBits(_symbol->type()));
+    
+    int32_t value = _symbol->addr();
+    uint8_t extra = uint8_t(Index::U);
     uint8_t addedBytes = 0;
     
     if (value >= -16 && value <= 15) {
@@ -90,15 +58,6 @@ static void emitCode(std::vector<uint8_t>& code, Op opcode, Type type, Index ind
     }
 }
 
-void VarNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
-{
-    // If isLHS is true, code generated will be a Ref
-    Op op = isLHS ? Op::PUSHREF : Op::PUSH;
-    
-    // FIXME: We assume we're indexing from U, is this always true? What about using Y as the 'this' ptr?
-    emitCode(code, op, _symbol->type(), Index::U, _symbol->addr());
-}
-
 // If short, bytesInOperand is 0
 static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
 {
@@ -117,7 +76,8 @@ static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
     }
 }
 
-void ConstantNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+void
+ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     assert(!isLHS);
     
@@ -151,7 +111,8 @@ void ConstantNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
     }
 }
 
-void StringNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+void
+StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     // We will push a null terminator in addition to the size. Make room for it
     code.push_back(uint8_t(Op::PUSHS));
@@ -162,7 +123,8 @@ void StringNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
     code.push_back('\0');
 }
 
-void OpNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+void
+OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     // FIXME: If _isAssignment as op is not a NOP it means this is an
     // arithmethic assignment (e.g., +=). We need to handle that.
@@ -173,12 +135,14 @@ void OpNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
     code.push_back(uint8_t(op) | typeToSizeBits(_type));
 }
 
-void DotNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+void
+DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     // FIXME: Implement
 }
 
-void FunctionCallNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+void
+FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     // Add a function call. args will already be pushed
     int32_t addr = _function->addr();
@@ -215,7 +179,8 @@ void FunctionCallNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
     }
 }
 
-void EnterNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+void
+EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     uint16_t localSize = _function->localSize();
     if (localSize < 15) {
@@ -230,7 +195,8 @@ void EnterNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
     }
 }
 
-void TypeCastNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+void
+TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     code.push_back(uint8_t(castToOp(_type)));
 }

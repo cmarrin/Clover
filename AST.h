@@ -59,7 +59,7 @@ class ASTNode
     virtual const uint32_t numChildren() const { return 0; }
     virtual std::string toString() const { return ""; }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const { }
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const { }
     
     int32_t annotationIndex() const { return _annotationIndex; }
     
@@ -113,7 +113,7 @@ class VarNode : public ASTNode
 
     virtual std::string toString() const override { return _symbol ? _symbol->name() : ""; }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const override;
 
   private:
     SymbolPtr _symbol = nullptr;
@@ -146,7 +146,7 @@ class ConstantNode : public ASTNode
         return "";
     }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const override;
     
     void toFloat() { _f = float(_i); }
     void toUInt() { _i = uint32_t(_f); }
@@ -175,7 +175,7 @@ class StringNode : public ASTNode
 
     virtual std::string toString() const override { return _string; }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const override;
 
   private:
     std::string _string;
@@ -266,7 +266,7 @@ class OpNode : public ASTNode
     // FIXME: this only works for single character operators
     virtual std::string toString() const override { return std::string(1, char(_op)); }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const override;
     
     Op op() const { return _op; }
 
@@ -303,7 +303,7 @@ class DotNode : public ASTNode
 
     virtual std::string toString() const override { return "."; }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const override;
 
   private:
     std::shared_ptr<ASTNode> _operand;
@@ -353,7 +353,7 @@ class FunctionCallNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return uint32_t(_args.size()); }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const override;
 
     Function* function() const { return _function; }
     
@@ -370,7 +370,7 @@ class EnterNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Enter; }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const override;
     
   private:
     Function* _function;
@@ -391,7 +391,7 @@ class TypeCastNode : public ASTNode
         return nullptr;
     }
 
-    virtual void addCode(std::vector<uint8_t>& code, bool isLHS) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) const override;
     
   private:
     Type _type;
