@@ -151,7 +151,7 @@ Decompiler::statement()
         case Op::PUSHS   : {
             emitOp("PUSHS");
             _out->append(" \"");
-            uint8_t size = getUInt8();
+            uint8_t size = getUInt8() - 1;
             for (uint8_t i = 0; i < size; ++i) {
                 char c = getUInt8();
                 if (c == '\n') {
@@ -160,6 +160,10 @@ Decompiler::statement()
                     _out->append(&c, 1);
                 }
             }
+            
+            // Skip trailing nul
+            getUInt8();
+            
             _out->append("\"");
             break;
         }
