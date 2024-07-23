@@ -15,6 +15,18 @@
 using namespace lucid;
 
 void
+InterpreterBase::addArg(uint32_t v, Type type)
+{
+    _memMgr.stack().push(v, type);
+}
+
+void
+InterpreterBase::addArg(float v)
+{
+    _memMgr.stack().push(v);
+}
+
+void
 InterpreterBase::callNative(NativeId id)
 {
     // Add a dummy return address to make everything work
@@ -27,7 +39,7 @@ InterpreterBase::callNative(NativeId id)
         default: _error = Error::None; break;
         case NativeId::PrintF: {
             VarArg va(&_memMgr, 0, Type::String);
-            AddrType fmt = _memMgr.getAbs(_memMgr.arg(0), AddrOpSize);
+            AddrNativeType fmt = _memMgr.getAbs(_memMgr.local(0, AddrOpSize), AddrOpSize);
             fmt::Formatter::format([this](uint8_t c) { putc(c); }, fmt, va);
             break;
         }
@@ -38,9 +50,29 @@ InterpreterBase::callNative(NativeId id)
 }
 
 int32_t
-InterpreterBase::execute(uint16_t addr)
+InterpreterBase::execute()
 {
-    _pc = addr;
+    // Check signature
+    if (getUInt8ROM(0) != 'l' || getUInt8ROM(1) != 'u' || getUInt8ROM(2) != 'c' || getUInt8ROM(3) != 'd') {
+        _error = Error::InvalidSignature;
+        return -1;
+    }
+    
+    AddrNativeType entryPoint = 0;
+    entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
+    entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
+    entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
+    entryPoint |= uint32_t(getUInt8ROM(7));
+    
+    if (entryPoint == 0) {
+        _error = Error::NoEntryPoint;
+        return -1;
+    }
+    
+    // Push a dummy return address
+    _memMgr.stack().push(0, AddrOpSize);
+    
+    _pc = entryPoint;
     
     while(1) {
         if (_memMgr.error() != Memory::Error::None) {
@@ -62,10 +94,10 @@ InterpreterBase::execute(uint16_t addr)
         } else if (opInt < TwoBitOperandStart) {
             operand = opInt & 0x01;
             opcode = Op(opInt & 0xfe);
-            opSize = OpSize(operand);
         } else if (opInt < FoutBitOperandStart) {
             operand = opInt & 0x03;
             opcode = Op(opInt & 0xfc);
+            opSize = OpSize(operand);
         } else {
             operand = opInt & 0x0f;
             opcode = Op(opInt & 0xf0);
@@ -78,14 +110,16 @@ InterpreterBase::execute(uint16_t addr)
             case Op::NOP:
                 break;
             case Op::PUSHREF:
-                _memMgr.stack().push(ea(), AddrOpSize);
+                _memMgr.stack().push(ea(opSize), AddrOpSize);
                 break;
             case Op::RET:
                 _memMgr.restoreFrame();
-                if (_memMgr.stack().empty()) {
+                _pc = _memMgr.stack().pop(AddrOpSize);
+                
+                // If return address is 0, we exit
+                if (_pc == 0) {
                     return 0;
                 }
-                _pc = _memMgr.stack().pop(AddrOpSize);
                 break;
             case Op::DEREF: {
                 uint32_t v = _memMgr.stack().pop(opSize);
@@ -94,7 +128,7 @@ InterpreterBase::execute(uint16_t addr)
                 break;
             }
             case Op::PREINC:
-                addr = ea();
+                addr = ea(opSize);
             case Op::PREDEC  :
             case Op::POSTINC :
             case Op::POSTDEC :
@@ -172,13 +206,13 @@ InterpreterBase::execute(uint16_t addr)
             case Op::NCALL   : operand = getOpnd(operand);
             case Op::NCALLS  : callNative(NativeId(operand)); break;
             
-            case Op::PUSHK11 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i8); break;
-            case Op::PUSHK12 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i16); break;
-            case Op::PUSHK14 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i32); break;
-            case Op::PUSHK22 : left = getOpnd(2); _memMgr.stack().push(left, OpSize::i16); break;
-            case Op::PUSHK24 : left = getOpnd(2); _memMgr.stack().push(left, OpSize::i32); break;
-            case Op::PUSHK34 : left = getOpnd(3); _memMgr.stack().push(left, OpSize::i32); break;
-            case Op::PUSHK44 : left = getOpnd(4); _memMgr.stack().push(left, OpSize::i32); break;
+            case Op::PUSHK11 : left = getOpnd(0); _memMgr.stack().push(left, OpSize::i8); break;
+            case Op::PUSHK12 : left = getOpnd(0); _memMgr.stack().push(left, OpSize::i16); break;
+            case Op::PUSHK14 : left = getOpnd(0); _memMgr.stack().push(left, OpSize::i32); break;
+            case Op::PUSHK22 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i16); break;
+            case Op::PUSHK24 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i32); break;
+            case Op::PUSHK34 : left = getOpnd(2); _memMgr.stack().push(left, OpSize::i32); break;
+            case Op::PUSHK44 : left = getOpnd(3); _memMgr.stack().push(left, OpSize::i32); break;
             case Op::PUSHKS1:
                 left = operand;
                 if (left & 0x08) {

@@ -60,27 +60,34 @@ public:
     
     bool isNative() const { return _native; }
 
-    bool addArg(const std::string& name, Type type, uint16_t size, bool isPtr)
-    {
-        if (!addLocal(name, type, size, isPtr)) {
-            return false;
-        }
-        _argSize += size;
-        return true;
-    }
-    
-    bool addLocal(const std::string& name, Type type, uint16_t size, bool ptr)
+    SymbolPtr addArg(const std::string& name, Type type, uint16_t size, bool isPtr)
     {
         // Check for duplicates
         if (findLocal(name)) {
-            return false;
+            return nullptr;
         }
-        _locals.push_back(std::make_shared<Symbol>(name, type, size, _localSize, ptr));
+        
+        // args start at 0 and go positive. So just use the argSize as the addr
+        _locals.push_back(std::make_shared<Symbol>(name, type, size, _argSize, isPtr));
+        _argSize += size;
+        return _locals.back();
+    }
+    
+    SymbolPtr addLocal(const std::string& name, Type type, uint16_t size, bool ptr)
+    {
+        // Check for duplicates
+        if (findLocal(name)) {
+            return nullptr;
+        }
+        
+        // locals are negative starting at -1. So if the first local is int32 its
+        // address would be -4 (MSB is -1, LSB is -4).
+       _locals.push_back(std::make_shared<Symbol>(name, type, size, -_localSize - size, ptr));
         _localSize += size;
         if (_localHighWaterMark < _localSize) {
             _localHighWaterMark = _localSize;
         }
-        return true;
+        return _locals.back();
     }
 
     SymbolPtr findLocal(const std::string& s) const;

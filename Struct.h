@@ -41,16 +41,28 @@ public:
         return _structs.back();
     }
 
-    bool addLocal(const std::string& name, Type type, uint8_t size, bool ptr)
+    Function* addFunction(const std::string& name, Type returnType)
+    {
+        SymbolPtr symbol = findLocal(name);
+        if (symbol) {
+            return nullptr;
+        }
+        
+        Function* function = Module::addFunction(name, returnType);
+        _locals.push_back(std::make_shared<Symbol>(function));
+        return function;
+    }
+
+    SymbolPtr addLocal(const std::string& name, Type type, uint8_t size, bool ptr)
     {
         // Check for duplicates
         SymbolPtr symbol = findLocal(name);
         if (symbol) {
-            return false;
+            return nullptr;
         }
         _locals.push_back(std::make_shared<Symbol>(name, type, size, ptr));
         _localSize += size;
-        return true;
+        return _locals.back();
     }
 
     SymbolPtr findLocal(const std::string& s)
@@ -85,7 +97,7 @@ private:
     uint8_t _localSize = 0;
     uint8_t _size = 0;
     Type _type = Type::None;
-    ASTPtr _astNode = std::make_shared<StatementsNode>();
+    ASTPtr _astNode = std::make_shared<StatementsNode>(-1);
 };
 
 }

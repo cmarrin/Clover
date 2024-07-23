@@ -50,9 +50,6 @@ namespace lucid {
         return (b > a) ? b : a;
     }
     
-    //using String = std::string;
-    //static inline std::string to_string(int32_t v) { return std::to_string(v); }
-    //static inline std::string to_string(float v) { return std::to_string(v); }
 #endif
 
 static inline float intToFloat(uint32_t i)
@@ -95,7 +92,15 @@ Opcodes:
         
         ref     - Reference to a value on the stack or a constant.
 
-    Stack is 8 bit. 16 and 32 bit values are stored in consecutive locations (HI to LO)
+    Stack is 8 bit and grows down. 16 and 32 bit values are stored in consecutive
+    locations (HI to LO).
+    
+    A stack frame has a U register pointing at the previous U register value. Above
+    that is the return address, followed by args. The leftmost arg is pushed
+    last and is therefore right above the return address. Args are accessed by
+    negative offsets from U. Args are popped by the caller and therefore there
+    can always be a variable number of arguments passed. Locals start just below
+    the U register pointer and are accessed with positive offsets from U.
     
     Stack machine
     
@@ -105,26 +110,21 @@ Opcodes:
     int16 c = 20;
     int16 a = (b + 5) * (c + 6);
     
-    PUSHREF b,bp
-    PUSH2   #10
-    DEREF2
-    PUSHREF c,bp
-    PUSH2   #20
-    DEREF2
-    PUSHREF a,BP
-    PUSH2   b,BP
-    PUSH2   #5
-    ADD2
-    PUSH2   c,BP
-    PUSH2   #6
-    ADD2
-    IMUL2
-    DEREF2
-    
-    - Values are 8, 16 or 32 bit
-    - Has a base pointer (BP) register pointing to local vars and args
-    - Has a stack pointer that grows down
-    - Has a pc
+    PUSHREF   b,U
+    PUSHK<2>  #10
+    DEREF<2>
+    PUSHREF   c,U
+    PUSHK<2>  #20
+    DEREF<2>
+    PUSHREF   a,U
+    PUSH<2>   b,U
+    PUSHK<2>  #5
+    ADD<2>
+    PUSH<2>   c,BP
+    PUSHK<2>  #6
+    ADD<2>
+    MUL<2>
+    DEREF<2>
     
     All addresses can be 2 bytes for a 64KB range or 4 bytes for a 2^32 byte range.
     This is determined at compile time. Also at compile time you can specify
@@ -151,16 +151,16 @@ Opcodes:
     - Stack frame and Base pointer
     
     Stack grows down so when you push a value the current SP points to it. On a call
-    args are pushed from left to right so rightmost param is at the lowest address.
+    args are pushed from right to left so first param is at the lowest address.
     The caller then pushes the return address and calls the function.
     
     The first instruction of a function must be ENTER. This has a 4 bit (0-15), 1 or
     2 byte operand which is the number of bytes of local storage needed. The ENTER
-    instruction pushes the current BP, sets BP = SP and subtracts the number of
-    local bytes from SP. When indexing from BP, positive offsets starting at 4
-    address the args. Locals are addressed with negative offsets starting at -1.
+    instruction pushes the current U reg, sets U = SP and subtracts the number of
+    local bytes from SP. When indexing from BP, positive offsets address the args.
+    Locals are addressed with negative offsets.
     
-    On return, the callee sets SP = BP, pops the stack into BP and performs a
+    On return, the callee sets SP = U, pops the stack into U and performs a
     return operation. The caller then adds the number of bytes of args to SP.
     
     PUSHREF         - push EA of value (must be X, Y, or U addressing mode)
@@ -221,26 +221,24 @@ static constexpr uint8_t ExtOpcodeStart = 0x40;
 
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart = 0x10;
-static constexpr uint8_t TwoBitOperandStart = 0x20;
+static constexpr uint8_t TwoBitOperandStart = 0x1c;
 static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
-    PUSHREF = 0x01,
-    RET     = 0x02,
-    PUSHS   = 0x03, // Following byte is length, followed by length chars
-    PUSHK11 = 0x04, // 1 byte operand, push 1 byte
-    PUSHK12 = 0x05, // 1 byte operand, push 2 bytes
-    PUSHK14 = 0x06, // 1 byte operand, push 4 bytes
-    PUSHK22 = 0x07, // 2 byte operand, push 2 bytes
-    PUSHK24 = 0x08, // 2 byte operand, push 4 bytes
-    PUSHK34 = 0x09, // 3 byte operand, push 4 bytes
-    PUSHK44 = 0x0a, // 4 byte operand, push 4 bytes
+    RET     = 0x01,
+    PUSHS   = 0x02, // Following byte is length, followed by length chars
+    PUSHK11 = 0x03, // 1 byte operand, push 1 byte
+    PUSHK12 = 0x04, // 1 byte operand, push 2 bytes
+    PUSHK14 = 0x05, // 1 byte operand, push 4 bytes
+    PUSHK22 = 0x06, // 2 byte operand, push 2 bytes
+    PUSHK24 = 0x07, // 2 byte operand, push 4 bytes
+    PUSHK34 = 0x08, // 3 byte operand, push 4 bytes
+    PUSHK44 = 0x09, // 4 byte operand, push 4 bytes
     
-    DROP1   = 0x0b, // Next byte is count (1 - 256)
-    DROP2   = 0x0c, // Next 2 bytes are count (1 - 65536)
+    DROP1   = 0x0a, // Next byte is count (1 - 256)
+    DROP2   = 0x0b, // Next 2 bytes are count (1 - 65536)
 
-    
 // Bits 1:0 is the bytes that make up the operand (00=1, 01=2, 10=3, 11=4).
 // Operand is sign extended
     IF      = 0x10,
@@ -251,8 +249,9 @@ enum class Op: uint8_t {
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
+    PUSHREF = 0x1c, // Next byte is addr mode. Data width is used when computing negative offsets from U
     DEREF   = 0x20,
-    PUSH    = 0x24,
+    PUSH    = 0x24, // Next byte is addr mode
     DUP     = 0x28,
     SWAP    = 0x2c,
     
@@ -269,10 +268,10 @@ enum class Op: uint8_t {
     NOT     = 0x54,
     NEG     = 0x58,
 
-    PREINC  = 0x5c,
-    PREDEC  = 0x60,
-    POSTINC = 0x64,
-    POSTDEC = 0x68,
+    PREINC  = 0x5c, // Next byte is addr mode
+    PREDEC  = 0x60, // Next byte is addr mode
+    POSTINC = 0x64, // Next byte is addr mode
+    POSTDEC = 0x68, // Next byte is addr mode
     
     LE      = 0x6c,
     LS      = 0x70,
@@ -334,10 +333,25 @@ static constexpr uint8_t opSizeToBytes(OpSize opSize)
     }
 }
 
+static constexpr OpSize typeToOpSize(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return OpSize::i8;
+        case Type::UInt8    : return OpSize::i8;
+        case Type::Int16    : return OpSize::i16;
+        case Type::UInt16   : return OpSize::i16;
+        case Type::Int32    : return OpSize::i32;
+        case Type::UInt32   : return OpSize::i32;
+        case Type::Float    : return OpSize::i32;
+        default: return OpSize::i32;
+    }
+};
+
 // Defines for size of addresses
-constexpr OpSize AddrOpSize = OpSize::i32;
+using AddrNativeType = uint32_t;
+constexpr Type AddrType = Type::UInt32;
+constexpr OpSize AddrOpSize = typeToOpSize(AddrType);
 constexpr uint8_t AddrSize = opSizeToBytes(AddrOpSize);
-using AddrType = uint32_t;
 
 static inline uint8_t typeToBytes(Type type)
 {
@@ -365,20 +379,6 @@ static inline uint8_t typeToSizeBits(Type type)
         case Type::UInt32   : return 0x02;
         case Type::Float    : return 0x03;
         default: return 0;
-    }
-};
-
-static inline OpSize typeToOpSize(Type type)
-{
-    switch (type) {
-        case Type::Int8     : return OpSize::i8;
-        case Type::UInt8    : return OpSize::i8;
-        case Type::Int16    : return OpSize::i16;
-        case Type::UInt16   : return OpSize::i16;
-        case Type::Int32    : return OpSize::i32;
-        case Type::UInt32   : return OpSize::i32;
-        case Type::Float    : return OpSize::i32;
-        default: return OpSize::i32;
     }
 };
 
@@ -465,13 +465,13 @@ enum class Operator : uint8_t {
 enum class NativeId : uint8_t {
     None            = 0,
     PrintF          = 1,
-    Int8ToString    = 2,
-    UInt8ToString   = 3,
-    Int16ToString   = 4,
-    UInt16ToString  = 5,
-    Int32ToString   = 6,
-    UInt32ToString  = 7,
-    FloatToString   = 8,
+    MemSet          = 2,
+    RandomInt       = 3,
+    RandomFloat     = 4,
+    MinInt          = 5,
+    MaxInt          = 6,
+    MinFloat        = 7,
+    MaxFloat        = 8,
 };
 
 class ASTNode;

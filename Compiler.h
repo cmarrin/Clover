@@ -287,6 +287,8 @@ public:
         return _structTypes[i];
     }
     
+    void setAnnotation(int32_t index, uint32_t addr) { _scanner.setAnnotation(index, addr); }
+
 protected:
     bool statement();
     bool function();
@@ -379,12 +381,7 @@ private:
         return _currentFunction;
     }
     
-    void annotate()
-    {
-        if (_scanner.annotation() == -1) {
-            //_scanner.setAnnotation(int32_t(_rom8.size()));
-        }
-    }
+    uint32_t annotationIndex() const  { return _scanner.annotationIndex(); }
     
     uint8_t allocNativeId() { return _nextNativeId++; }
 

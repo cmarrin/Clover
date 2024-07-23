@@ -35,7 +35,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/cmarrin/Projects/git/LucidVM/examples"
+      customWorkingDirectory = "/Users/cmarrin/Projects/git/LucidVM"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -53,7 +53,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-d -x simple.lucid"
+            argument = "-d -x examples/simple.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -x Test/testCore.lucid"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

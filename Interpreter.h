@@ -24,6 +24,8 @@ class InterpreterBase
   public:
     enum class Error {
         None,
+        InvalidSignature,
+        NoEntryPoint,
         UnexpectedOpInIf,
 		InvalidOp,
         OnlyMemAddressesAllowed,
@@ -45,15 +47,18 @@ class InterpreterBase
     
     virtual void putc(uint8_t c) const = 0;
     
-    int32_t execute(uint16_t addr);
+    int32_t execute();
+
+    void addArg(uint32_t v, Type type);
+    void addArg(float v);
 
   protected:
     void callNative(NativeId);
 
-    // Index is in bytes
-    uint8_t getUInt8ROM(uint16_t index) const
+    // Addr is in bytes
+    uint8_t getUInt8ROM(uint16_t addr) const
     {
-        return rom(index);
+        return rom(addr);
     }
     
     uint32_t getOpnd(uint8_t bytes)
@@ -92,16 +97,16 @@ class InterpreterBase
         return v;
     }
     
-    AddrType ea()
+    AddrNativeType ea(OpSize opSize)
     {
         Index index;
-        AddrType addr = addrMode(index);
-        return _memMgr.index(addr, index);
+        int32_t addr = addrMode(index);
+        return _memMgr.index(addr, index, opSize);
     }
     
     uint32_t value(OpSize opSize)
     {
-        return _memMgr.getAbs(ea(), opSize);
+        return _memMgr.getAbs(ea(opSize), opSize);
     }
     
     uint32_t immed(uint8_t opnd, uint8_t& count)
@@ -137,7 +142,7 @@ public:
 
     int32_t interp()
     {
-        return execute(4);
+        return execute();
     }
 
     Error error() const { return _error; }

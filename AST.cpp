@@ -90,35 +90,12 @@ static void emitCode(std::vector<uint8_t>& code, Op opcode, Type type, Index ind
     }
 }
 
-//// This version is for opcodes where the LSB indicates 8 or 16 bit values that follow
-//static void emitCode(std::vector<uint8_t>& code, Op opcode, int32_t value)
-//{
-//    if (value <= 127 && value >= -128) {
-//        // 8 bit case
-//        code.push_back(uint8_t(opcode));
-//        code.push_back(value);
-//    } else {
-//        // 16 bit case
-//        code.push_back(uint8_t(opcode) | 0x01);
-//        code.push_back(value >> 8);
-//        code.push_back(value);
-//    }
-//}
-//
-//// This version is for opcodes where the value is in the lower 4 bits
-//static void emitCodeShort(std::vector<uint8_t>& code, Op opcode, int32_t value)
-//{
-//    code.push_back(uint8_t(opcode) | (value & 0x0f));
-//}
-
 void VarNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     // If isLHS is true, code generated will be a Ref
     Op op = isLHS ? Op::PUSHREF : Op::PUSH;
     
     // FIXME: We assume we're indexing from U, is this always true? What about using Y as the 'this' ptr?
-    // FIXME: Right now _symbol->addr() is a uint16_t. We need positive addrs for args and negative
-    // addrs for locals.
     emitCode(code, op, _symbol->type(), Index::U, _symbol->addr());
 }
 
@@ -143,10 +120,6 @@ static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
 void ConstantNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
     assert(!isLHS);
-    
-    // FIXME: What about Type::Int and Type::Float? These are generic int and float literals
-    // and we should auto convert them to the right type?
-    assert(_type != Type::None);
     
     uint8_t bytesInOperand;
     
@@ -191,7 +164,13 @@ void StringNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 
 void OpNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
-    code.push_back(uint8_t(_op));
+    // FIXME: If _isAssignment as op is not a NOP it means this is an
+    // arithmethic assignment (e.g., +=). We need to handle that.
+    Op op = _op;
+    if (_isAssignment && op == Op::NOP) {
+        op = Op::DEREF;
+    }
+    code.push_back(uint8_t(op) | typeToSizeBits(_type));
 }
 
 void DotNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
@@ -238,16 +217,20 @@ void FunctionCallNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 
 void EnterNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
 {
-    if (_localSize < 15) {
-        code.push_back(uint8_t(Op::ENTERS) | _localSize);
+    uint16_t localSize = _function->localSize();
+    if (localSize < 15) {
+        code.push_back(uint8_t(Op::ENTERS) | localSize);
     } else {
-        bool isLong = _localSize > 255;
+        bool isLong = localSize > 255;
         code.push_back(uint8_t(Op::ENTER) | (isLong ? 0x01 : 0x00));
         if (isLong) {
-            code.push_back(uint8_t(_localSize >> 8));
+            code.push_back(uint8_t(localSize >> 8));
         }
-        code.push_back(uint8_t(_localSize));
+        code.push_back(uint8_t(localSize));
     }
 }
 
-
+void TypeCastNode::addCode(std::vector<uint8_t>& code, bool isLHS) const
+{
+    code.push_back(uint8_t(castToOp(_type)));
+}

@@ -41,35 +41,29 @@ NOTE:   I'm also considering a bool type. It would be 8 bits, so maybe not
         to uint8, 1 and 0.
 */
 
+/*
+    Executable format
+    
+    Signature       4 bytes             "lucd"
+    Addr size       1 byte              0 - 16 bit, 1 - 32 bit
+    Entry point     Addr size bytes     Address of first instruction of
+                                        initialize function of top level
+                                        struct
+    Code            Rest of file        Executable code
+ */
+
+class Compiler;
+
 class Codegen {
 public:
-    Codegen(std::vector<uint8_t>* code) : _code(code) { }
+    Codegen(std::vector<uint8_t>* code);
   	
-    bool processAST(const ASTPtr&);
+    bool processAST(const ASTPtr&, Compiler* c);
+    
+    void setEntryPoint();
 
 private:
-    bool processNextASTNode(const ASTPtr&, bool isLHS);
-
-    // The ExprStack
-    //
-    // This is a stack of the operators being processed. Values can be:
-    //
-    //      Id      - string id
-    //      Scalae  - ineger or float constant
-    //      Dot     - index into a struct.
-
-    // ExprAction indicates what to do with the top entry on the ExprStack during baking
-    //
-    //      Right       - Entry is a RHS, so it can be a float, int or id and the value 
-    //                    is loaded into r0
-    //      Left        - Entry is a LHS, so it must be an id, value in r0 is stored at the id
-    //      Function    - Entry is the named function which has already been emitted so value
-    //                    is the return value in r0
-    //      Ref         - Value left in r0 must be an address to a value (Const or RAM)
-    //      Deref       = Value must be a Struct entry for the value in _stackEntry - 1
-    //      Dot         - Dot operator. TOS must be a struct id, TOS-1 must be a ref with
-    //                    a type. Struct id must be a member of the type of the ref.
-    //                    pop the two 
+    bool processNextASTNode(const ASTPtr&, bool isLHS, Compiler* c);
 
     std::vector<uint8_t>* _code;
 };

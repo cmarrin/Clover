@@ -13,132 +13,6 @@
 
 using namespace lucid;
 
-//bool Decompiler::printFirstPass(const Compiler& compiler)
-//{
-//    _compiler = &compiler;
-//    _out->append("\n");
-//
-//    // FIXME: Output constants
-//
-//    // Output top level structs
-//    for (auto &it : _compiler->structs()) {
-//        firstPassStruct(it);
-//    }
-//
-//    // Output entry point struct instance
-//    return true;
-//}
-//
-//const char* Decompiler::typeToString(Type type) const
-//{
-//    switch(type) {
-//        case Type::Int8:    return "int8";
-//        case Type::UInt8:   return "uint8";
-//        case Type::Int16:   return "int16";
-//        case Type::UInt16:  return "uint16";
-//        case Type::Int32:   return "int32";
-//        case Type::UInt32:  return "uint32";
-//        default: {
-//            if (uint8_t(type) < StructTypeStart) {
-//                return "**UNK**";
-//            }
-//            const StructPtr struc = _compiler->structFromType(type);
-//            return struc ? struc->name().c_str() : "**ILL**";
-//        }
-//    }
-//}
-//
-//void Decompiler::firstPassStruct(const StructPtr& struc)
-//{
-//    doIndent();
-//    incIndent();
-//    
-//    _out->append("struct ");
-//    _out->append(struc->name());
-//    _out->append(" {\n");
-//    
-//    // Print child structs
-//    for (auto& it : struc->structs()) {
-//        firstPassStruct(it);
-//    }
-//    
-//    // Print member vars
-//    for (auto& it : struc->locals()) {
-//        doIndent();
-//        _out->append(typeToString(it->type()));
-//        _out->append(it->isPointer() ? "* " : " ");
-//        _out->append(it->name() + " [");
-//        _out->append(std::to_string(it->size()) + " byte");
-//        if (it->size() != 1) {
-//            _out->append("s");
-//        }
-//        _out->append(" at ");
-//        _out->append(std::to_string(it->addr()));
-//        _out->append("]\n");
-//    }
-//    
-//    _out->append("\n");
-//
-//    // Print functions
-//    for (auto& it : struc->functions()) {
-//        doIndent();
-//        _out->append("function ");
-//        if (it.returnType() != Type::None) {
-//            _out->append(typeToString(it.returnType()));
-//            _out->append(" ");
-//        }
-//        _out->append(it.name());
-//        _out->append("( )");
-//        _out->append("\n");
-//        doIndent();
-//        incIndent();
-//        _out->append("{\n");
-//        
-//        printASTNode(it.astNode());
-//        decIndent();
-//        doIndent();
-//        _out->append("}\n");
-//    }
-//
-//    decIndent();
-//    doIndent();
-//    _out->append("}\n\n");
-//}
-//
-//void Decompiler::printASTNode(const ASTPtr& ast)
-//{
-//    if (!ast) {
-//        return;
-//    }
-//    
-//    if (ast->isTerminal()) {
-//        _out->append(ast->toString());
-//        return;
-//    }
-//
-//    if (ast->isList()) {
-//        // Just walk all the children. There can be no null child, seeing a null stops the iteration
-//        for (uint32_t i = 0; ; ++i) {
-//            ASTPtr child = ast->child(i);
-//            if (!child) {
-//                break;
-//            }
-//            doIndent();
-//            printASTNode(child);
-//            _out->append("\n");
-//        }
-//        return;
-//    }
-//    
-//    // Do an inorder traversal of the ast node. If isTerminal is true then
-//    // visit this node. Otherwise there can be one or two children. If
-//    // one then it can be on the left or right (for prefix or postfix unary
-//    // operations).
-//    printASTNode(ast->child(0));
-//    _out->append(ast->toString());
-//    printASTNode(ast->child(1));
-//}
-
 bool Decompiler::decompile()
 {
     // Output everything before the first addr
@@ -148,7 +22,7 @@ bool Decompiler::decompile()
             break;
         }
         
-        _out->append("//    ");
+        _out->append("                    //    ");
         _out->append(_annotations[_annotationIndex].second);
         _out->append("\n");
     }
@@ -159,6 +33,17 @@ bool Decompiler::decompile()
             _error = Error::InvalidSignature;
             return false;
         }
+        
+        // Emit entry point
+        uint32_t entryPoint = 0;
+        entryPoint |= uint32_t(getUInt8()) << 24;
+        entryPoint |= uint32_t(getUInt8()) << 16;
+        entryPoint |= uint32_t(getUInt8()) << 8;
+        entryPoint |= uint32_t(getUInt8());
+        
+        _out->append("\nEntry Point: ");
+        _out->append(std::to_string(entryPoint));
+        _out->append("\n\n");
         
         // Emit code
         while (!atEnd()) {
@@ -178,7 +63,7 @@ Decompiler::statement()
     uint16_t a = addr() - _codeOffset;
     if (!_annotations.empty() && (_annotations[_annotationIndex].first == -1 || _annotations[_annotationIndex].first < a)) {
         for ( ; _annotationIndex < _annotations.size(); ) {
-            _out->append("//    ");
+            _out->append("                    //    ");
             _out->append(_annotations[_annotationIndex++].second);
             if (_annotations[_annotationIndex].first != -1) {
                 break;
@@ -213,20 +98,20 @@ Decompiler::statement()
         case Op::TOI16   : emitOp("TOI16"); emitSize(size); break;
         case Op::TOU32   : emitOp("TOU32"); emitSize(size); break;
         case Op::TOI32   : emitOp("TOI32"); emitSize(size); break;
-        case Op::PUSHREF : emitOp("PUSHREF"); emitIndex(getUInt8()); break;
+        case Op::PUSHREF : emitOp("PUSHREF"); emitSizeIndex(size, getUInt8()); break;
         case Op::RET     : emitOp("RET"); break;
         case Op::DEREF   : emitOp("DEREF"); emitSize(size); break;
         case Op::PUSH    : emitOp("PUSH"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK11 : emitOp("PUSHK11"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK12 : emitOp("PUSHK12"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK14 : emitOp("PUSHK14"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK22 : emitOp("PUSHK22"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK24 : emitOp("PUSHK24"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK34 : emitOp("PUSHK34"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHK44 : emitOp("PUSHK44"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PUSHKS1 : emitOp("PUSHKS1"); emitSize(size); break;
-        case Op::PUSHKS2 : emitOp("PUSHKS2"); emitSize(size); break;
-        case Op::PUSHKS4 : emitOp("PUSHKS4"); emitSize(size); break;
+        case Op::PUSHK11 : emitOp("PUSHK11"); emitConstant(1); break;
+        case Op::PUSHK12 : emitOp("PUSHK12"); emitConstant(1); break;
+        case Op::PUSHK14 : emitOp("PUSHK14"); emitConstant(1); break;
+        case Op::PUSHK22 : emitOp("PUSHK22"); emitConstant(2); break;
+        case Op::PUSHK24 : emitOp("PUSHK24"); emitConstant(2); break;
+        case Op::PUSHK34 : emitOp("PUSHK34"); emitConstant(3); break;
+        case Op::PUSHK44 : emitOp("PUSHK44"); emitConstant(4); break;
+        case Op::PUSHKS1 : emitOp("PUSHKS1"); emitShortConstant(size); break;
+        case Op::PUSHKS2 : emitOp("PUSHKS2"); emitShortConstant(size); break;
+        case Op::PUSHKS4 : emitOp("PUSHKS4"); emitShortConstant(size); break;
         case Op::DUP     : emitOp("DUP"); emitSize(size); break;
         case Op::DROP1   : emitOp("DROP"); emitNumber(getUInt8()); break;
         case Op::DROP2   : emitOp("DROP"); emitNumber(getUInt16()); break;
@@ -324,24 +209,32 @@ void Decompiler::emitIndexValue(uint8_t index)
     if (value & 0x01) {
         // Long form
         uint8_t size = (value >> 1) & 0x03;
-        if (size == 0) {
-            value = (value << 8) | getUInt8();
-        } else {
-            value = int32_t(getInt16());
-            if (size == 2) {
-                value = (value << 8) | getUInt8();
-            } else if (size == 3) {
-                value = (value << 16) | getUInt16();
-            }
+
+        value = getUInt8();
+        if (value > 127) {
+            // sign extend
+            value |= 0xffffff80;
+        }
+        if (size > 0) {
+            value = (value < 8) | getUInt8();
+        }
+        if (size > 1) {
+            value = (value < 8) | getUInt8();
+        }
+        if (size > 2) {
+            value = (value < 8) | getUInt8();
         }
     } else {
         value >>= 1;
+        if (value > 15) {
+            // Sign extend
+            value |= 0xfffffff0;
+        }
     }
     
     if (mode == 0) {
-        // Immediate
-        _out->append("#");
-        _out->append(std::to_string(value));
+        // Reserved
+        _out->append("???");
     } else {
         _out->append(std::to_string(value));
         _out->append(",");
@@ -349,3 +242,35 @@ void Decompiler::emitIndexValue(uint8_t index)
     }
 }
 
+void
+Decompiler::emitConstant(uint8_t bytes)
+{
+    _out->append(" #");
+    int32_t value = getUInt8();
+    if (value > 127) {
+        // sign extend
+        value |= 0xffffff80;
+    }
+    if (bytes > 1) {
+        value = (value < 8) | getUInt8();
+    }
+    if (bytes > 2) {
+        value = (value < 8) | getUInt8();
+    }
+    if (bytes > 3) {
+        value = (value < 8) | getUInt8();
+    }
+    _out->append(std::to_string(value));
+}
+    
+void
+Decompiler::emitShortConstant(uint8_t v)
+{
+    _out->append(" #");
+    int32_t value = v;
+    if (value > 127) {
+        // sign extend
+        value |= 0xffffff80;
+    }
+    _out->append(std::to_string(value));
+}

@@ -56,6 +56,8 @@ private:
     void emitIndexValue(uint8_t index);
     void emitRelAddr(uint8_t size);
     void emitNumber(int32_t number);
+    void emitConstant(uint8_t bytes);
+    void emitShortConstant(uint8_t value);
     
     void emitSize(uint8_t size) { emitSizeValue(size); }
     void emitIndex(uint8_t index) { emitIndexValue(index); }
@@ -155,7 +157,7 @@ private:
     const std::vector<uint8_t>* _in;
     std::vector<uint8_t>::const_iterator _it;
     std::string* _out;
-    int32_t _indent = 1;
+    int32_t _indent = 0;
     uint16_t _codeOffset = 0; // Used by Call
     const AnnotationList& _annotations;
     int _annotationIndex = 0;

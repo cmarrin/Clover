@@ -22,7 +22,7 @@
 
 using namespace fmt;
 
-bool Formatter::toNumber(lucid::AddrType& s, uint32_t& n)
+bool Formatter::toNumber(lucid::AddrNativeType& s, uint32_t& n)
 {
     n = 0;
     bool haveNumber = false;
@@ -40,7 +40,7 @@ bool Formatter::toNumber(lucid::AddrType& s, uint32_t& n)
 enum class Signed { Yes, No };
 enum class FloatType { Float, Exp, Shortest };
  
-static void handleFlags(lucid::AddrType& format, uint8_t& flags)
+static void handleFlags(lucid::AddrNativeType& format, uint8_t& flags)
 {
     while (1) {
         switch (lucid::rom(format)) {
@@ -55,7 +55,7 @@ static void handleFlags(lucid::AddrType& format, uint8_t& flags)
     }
 }
 
-static int32_t handleWidth(lucid::AddrType& format, lucid::VarArg& va)
+static int32_t handleWidth(lucid::AddrNativeType& format, lucid::VarArg& va)
 {
     if (lucid::rom(format) == '*') {
         ++format;
@@ -68,7 +68,7 @@ static int32_t handleWidth(lucid::AddrType& format, lucid::VarArg& va)
 
 enum class Length { None, H, HH, L, LL, J, Z, T };
 
-static Length handleLength(lucid::AddrType& format)
+static Length handleLength(lucid::AddrNativeType& format)
 {
     Length length = Length::None;
     if (lucid::rom(format) == 'h') {
@@ -181,7 +181,7 @@ static int32_t outInteger(Generator gen, uintmax_t value, Signed sign, int32_t w
     return size;
 }
 
-static int32_t outString(Generator gen, lucid::AddrType addr, int32_t width, int32_t precision, uint8_t flags)
+static int32_t outString(Generator gen, lucid::AddrNativeType addr, int32_t width, int32_t precision, uint8_t flags)
 {
     // FIXME: Handle flags.leftJustify
     // FIXME: Handle width
@@ -209,7 +209,7 @@ static int32_t outString(Generator gen, lucid::AddrType addr, int32_t width, int
 //
 // 
  
-int32_t Formatter::format(Generator gen, lucid::AddrType fmt, lucid::VarArg& va)
+int32_t Formatter::format(Generator gen, lucid::AddrNativeType fmt, lucid::VarArg& va)
 {
     uint8_t flags = 0;
         

@@ -24,14 +24,16 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
 {
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>("core");
-    coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, 1, 0 }});
-//    coreModule->addNativeFunction("int8ToString", NativeId::Int8ToString, Type::String, {{ "v", Type::Int8, 1, 0 }});
-//    coreModule->addNativeFunction("uint8ToString", NativeId::UInt8ToString, Type::String, {{ "v", Type::UInt8, 1, 0 }});
-//    coreModule->addNativeFunction("int16ToString", NativeId::Int16ToString, Type::String, {{ "v", Type::Int16, 1, 0 }});
-//    coreModule->addNativeFunction("uint16ToString", NativeId::UInt16ToString, Type::String, {{ "v", Type::UInt16, 1, 0 }});
-//    coreModule->addNativeFunction("int32ToString", NativeId::Int32ToString, Type::String, {{ "v", Type::Int32, 1, 0 }});
-//    coreModule->addNativeFunction("uint32ToString", NativeId::UInt32ToString, Type::String, {{ "v", Type::UInt32, 1, 0 }});
-//    coreModule->addNativeFunction("floatToString", NativeId::FloatToString, Type::String, {{ "v", Type::Float, 1, 0 }});
+    coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, AddrSize, 0 }});
+    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::Ptr, AddrSize, 0 },
+                                                                           { "v", Type::UInt8, 1, 4 },
+                                                                           { "n", Type::UInt32, 4, 5 }});
+    coreModule->addNativeFunction("irand", NativeId::RandomInt, Type::Int32, {{ "min", Type::Int32, 4, 0 }, { "max", Type::Int32, 4, 4 }});
+    coreModule->addNativeFunction("frand", NativeId::RandomFloat, Type::Float, {{ "min", Type::Float, 4, 0 }, { "max", Type::Float, 4, 4 }});
+    coreModule->addNativeFunction("imin", NativeId::MinInt, Type::Int32, {{ "a", Type::Int32, 4, 0 }, { "b", Type::Int32, 4, 4 }});
+    coreModule->addNativeFunction("imax", NativeId::MaxInt, Type::Int32, {{ "a", Type::Int32, 4, 0 }, { "b", Type::Int32, 4, 4 }});
+    coreModule->addNativeFunction("fmin", NativeId::MinFloat, Type::Float, {{ "a", Type::Float, 4, 0 }, { "b", Type::Float, 4, 4 }});
+    coreModule->addNativeFunction("fmax", NativeId::MaxFloat, Type::Float, {{ "a", Type::Float, 4, 0 }, { "b", Type::Float, 4, 4 }});
 
     _modules.push_back(coreModule);
     
@@ -41,20 +43,23 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         _error = Error::ExecutableTooBig;
     }
     
+    if (_error != Error::None) {
+        return false;
+    }
+    
     // Do second pass
     Codegen codeGen(&executable);
     
-    // Write signature
-    executable.push_back('l');
-    executable.push_back('u');
-    executable.push_back('c');
-    executable.push_back('d');
-
     for (auto& itStruct : _structs) {
-        codeGen.processAST(itStruct->astNode());
+        codeGen.processAST(itStruct->astNode(), this);
         
         for (auto& itFunc : itStruct->functions()) {
-            codeGen.processAST(itFunc.astNode());
+            // If this is the initialize function of the top level
+            // struct, set the entry point
+            if (itStruct == _structs[0] && itFunc.name() == "") {
+                codeGen.setEntryPoint();
+            }
+            codeGen.processAST(itFunc.astNode(), this);
         }
         
         // FIXME: We need to tell the functions and the struct where their code starts
@@ -128,6 +133,7 @@ Compiler::strucT()
         _structStack.push_back(currentStruct()->addStruct(id, Type(_nextStructType++)));
         _structTypes.push_back(_structStack.back());
     } else {
+        // This is the top level struct
         _structStack.push_back(addStruct(id, Type(_nextStructType++)));
         _structTypes.push_back(_structStack.back());
     }
@@ -274,14 +280,14 @@ Compiler::var(Type type, bool isPointer)
     SymbolPtr idSym;
     
     if (_inFunction) {
-        expect(currentFunction()->addLocal(id, type, size, isPointer), Error::DuplicateIdentifier);
-        idSym = currentFunction()->findLocal(id);
+        idSym = currentFunction()->addLocal(id, type, size, isPointer);
+        expect(idSym != nullptr, Error::DuplicateIdentifier);
     } else {
         expect(!_structStack.empty(), Error::InternalError);
         
         // FIXME: Need to deal with ptr and size
-        expect(currentStruct()->addLocal(id, type, size, false), Error::DuplicateIdentifier);
-        idSym = currentStruct()->findLocal(id);
+        idSym = currentStruct()->addLocal(id, type, size, false);
+        expect(idSym != nullptr, Error::DuplicateIdentifier);
     }
     
     // Check for an initializer. We only allow initializers on Int and Float
@@ -308,8 +314,8 @@ Compiler::var(Type type, bool isPointer)
     }
     
     if (ast) {
-        ASTPtr idNode = std::make_shared<VarNode>(idSym);
-        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::DEREF, ast, true);
+        ASTPtr idNode = std::make_shared<VarNode>(idSym, annotationIndex());
+        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, true, annotationIndex());
     
         if (_inFunction) {
             currentFunction()->addASTNode(assignment);
@@ -337,7 +343,7 @@ Compiler::type(Type& t)
         return true;
     }
     if (match(Reserved::UInt8)) {
-        t = Type::Int8;
+        t = Type::UInt8;
         return true;
     }
     if (match(Reserved::Int16)) {
@@ -345,7 +351,7 @@ Compiler::type(Type& t)
         return true;
     }
     if (match(Reserved::UInt16)) {
-        t = Type::Int16;
+        t = Type::UInt16;
         return true;
     }
     if (match(Reserved::Int32)) {
@@ -353,7 +359,7 @@ Compiler::type(Type& t)
         return true;
     }
     if (match(Reserved::UInt32)) {
-        t = Type::Int32;
+        t = Type::UInt32;
         return true;
     }
         
@@ -411,25 +417,13 @@ Compiler::function()
     
     expect(Token::CloseParen);
     expect(Token::OpenBrace);
-    
-    
 
-    // SetFrame has to be the first instruction in the Function. Pass Params and
-    // set Locals byte to 0 and remember it's location so we can fix it at the
-    // end of the function
-//    addOpSingleByteIndex(Op::SetFrameS, currentFunction().args());
-//    auto localsIndex = _rom8.size();
-//    addInt(0);
-
-    // Remember the rom addr so we can check to see if we've emitted any code
-//    uint16_t size = romSize();
+    // ENTER has to be the first instruction in the Function.
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
     
     while(statement()) { }
     
     expect(Token::CloseBrace);
-
-    // Update locals size
-//    _rom8[localsIndex] = currentFunction().localSize();
 
     // Set the high water mark
     if (_nextMem > _localHighWaterMark) {
@@ -437,11 +431,12 @@ Compiler::function()
     }
     
     // Emit Return at the end if there's not already one
-//    if (size == romSize() || lastOp() != Op::Return) {
-//        addOpSingleByteIndex(Op::PushIntConstS, 0);
-//        addOp(Op::Return);
-//    }
-    
+    ASTPtr nodes = _currentFunction->astNode();
+    ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
+    if (lastNode->astNodeType() != ASTNodeType::Op || reinterpret_cast<OpNode*>(lastNode.get())->op() != Op::RET) {
+        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET, annotationIndex()));
+    }
+        
     _inFunction = false;
     _currentFunction = nullptr;
     return true;
@@ -468,14 +463,11 @@ Compiler::init()
     expect(Token::OpenBrace);
 
     // ENTER has to be the first instruction in the Function.
-    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction->localSize()));
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
 
     while(statement()) { }
     
     expect(Token::CloseBrace);
-
-    // Update locals size
-//    _rom8[localsIndex] = currentFunction().localSize();
 
     // Set the high water mark
     if (_nextMem > _localHighWaterMark) {
@@ -486,7 +478,7 @@ Compiler::init()
     ASTPtr nodes = _currentFunction->astNode();
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
     if (lastNode->astNodeType() != ASTNodeType::Op || reinterpret_cast<OpNode*>(lastNode.get())->op() != Op::RET) {
-        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET));
+        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET, annotationIndex()));
     }
     
     _inFunction = false;
@@ -603,7 +595,7 @@ Compiler::forStatement()
 
             // Generate an expression
             expect(_inFunction, Error::InternalError);
-            expect(currentFunction()->addLocal(id, t, sizeInBytes(t), false), Error::DuplicateIdentifier);
+            expect(currentFunction()->addLocal(id, t, sizeInBytes(t), false) != nullptr, Error::DuplicateIdentifier);
             _nextMem += 1;
 
             // FIXME: This needs to be an arithmeticExpression?
@@ -827,7 +819,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         // Generate an ASTNode
         Op opcode = lhs->isSigned() ? opInfo.opcodeS() : opInfo.opcodeU();
-        lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.assoc() == Assoc::Right);
+        lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.assoc() == Assoc::Right, annotationIndex());
     }
     
     return lhs;
@@ -859,7 +851,7 @@ Compiler::unaryExpression()
         return nullptr;
     }
     
-    return std::make_shared<OpNode>(opcode, unaryExpression());
+    return std::make_shared<OpNode>(opcode, unaryExpression(), annotationIndex());
 }
 
 ASTPtr
@@ -872,11 +864,12 @@ Compiler::postfixExpression()
     
     while (true) {
         if (match(Token::OpenParen)) {
+            // Function call
             expect(argumentList(lhs), Error::ExpectedArgList);
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
-            ASTPtr result = std::make_shared<OpNode>(lhs, Op::NOP, rhs, false); // FIXME: Implement
+            ASTPtr result = std::make_shared<OpNode>(lhs, Op::NOP, rhs, false, annotationIndex()); // FIXME: Implement
             expect(Token::CloseBracket);
             return result;
         } else if (match(Token::Dot)) {
@@ -887,15 +880,15 @@ Compiler::postfixExpression()
             if (lhs->astNodeType() == ASTNodeType::Module) {
                 Function* f = std::static_pointer_cast<ModuleNode>(lhs)->module()->findFunction(id);
                 expect(f, Error::UndefinedIdentifier);
-                lhs = std::make_shared<FunctionCallNode>(f);
+                lhs = std::make_shared<FunctionCallNode>(f, annotationIndex());
                 continue;
             }
             
-            return std::make_shared<DotNode>(lhs, id);
+            return std::make_shared<DotNode>(lhs, id, annotationIndex());
         } else if (match(Token::Inc)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTINC);
+            return std::make_shared<OpNode>(lhs, Op::POSTINC, annotationIndex());
         } else if (match(Token::Dec)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTDEC);
+            return std::make_shared<OpNode>(lhs, Op::POSTDEC, annotationIndex());
         } else {
             return lhs;
         }
@@ -912,23 +905,38 @@ Compiler::primaryExpression()
         return ast;
     }
     
+    // See if this is a type cast
+    Type t;
+    if (type(t)) {
+        // A type cast looks like a function with a single arg
+        expect(Token::OpenParen);
+        ASTPtr arg = expression();
+        expect(Token::CloseParen);        
+        return std::make_shared<TypeCastNode>(t, arg, annotationIndex());
+    }
+    
     std::string id;
     if (identifier(id)) {
         expect(_inFunction, Error::InternalError);
         SymbolPtr symbol = findSymbol(id);
         if (symbol) {
-            return std::make_shared<VarNode>(symbol);
+            // This could be a var or function. Create the proper ASTNode
+            if (symbol->type() == Type::Function) {
+                return std::make_shared<FunctionCallNode>(symbol->function(), annotationIndex());
+            } else {
+                return std::make_shared<VarNode>(symbol, annotationIndex());
+            }
         }
         
         Type t;
         uint32_t v;
         if (findConstant(id, t, v)) {
-            return std::make_shared<ConstantNode>(t, v);
+            return std::make_shared<ConstantNode>(t, v, annotationIndex());
         }
 
         ModulePtr module = findModule(id);
         if (module) {
-            return std::make_shared<ModuleNode>(module);
+            return std::make_shared<ModuleNode>(module, annotationIndex());
         }
 
         expect(false, Error::ExpectedVar);
@@ -936,7 +944,7 @@ Compiler::primaryExpression()
     
     float f;
     if (floatValue(f)) {
-        return std::make_shared<ConstantNode>(f);
+        return std::make_shared<ConstantNode>(f, annotationIndex());
     }
         
     uint32_t i;
@@ -951,12 +959,12 @@ Compiler::primaryExpression()
             type = Type::UInt32;
         }
         
-        return std::make_shared<ConstantNode>(type, i);
+        return std::make_shared<ConstantNode>(type, i, annotationIndex());
     }
     
     std::string s;
     if (stringValue(s)) {
-        return std::make_shared<StringNode>(s);
+        return std::make_shared<StringNode>(s, annotationIndex());
     }
     
     return nullptr;
@@ -966,11 +974,11 @@ bool
 Compiler::formalParameterList()
 {
     Type t;
+    if (!type(t)) {
+        return true;
+    }
+    
     while (true) {
-        if (!type(t)) {
-            return true;
-        }
-        
         bool isPointer = false;
         if (match(Token::Mul)) {
             isPointer = true;
@@ -978,11 +986,13 @@ Compiler::formalParameterList()
     
         std::string id;
         expect(identifier(id), Error::ExpectedIdentifier);
-        currentFunction()->addArg(id, t, sizeInBytes(t), isPointer);
+        expect(currentFunction()->addArg(id, t, sizeInBytes(t), isPointer) != nullptr, Error::DuplicateIdentifier);
         
         if (!match(Token::Comma)) {
             return true;
         }
+
+        expect(type(t), Error::ExpectedType);
     }
     
     return true;
