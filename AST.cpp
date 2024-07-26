@@ -260,3 +260,48 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 
     code.push_back(uint8_t(castToOp(_type)) | typeToSizeBits(_arg->type()));
 }
+
+void
+BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+{
+    // FIXME: For now all branches are long (16 bit, -32768 to 32767). Eventually we
+    // want to do 2 passes. _size will start out as None and The first pass will simply
+    // set the appropriate size according to how far the jump needs to be. The second
+    // pass will emit BRA and IF opcodes of the appropriate size.
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
+    switch (_kind) {
+        case Kind::IfStart:
+            // Emit the opcode with a 0 branch address and mark it
+            // FIXME: for now assume all long addresses
+            code.push_back(uint8_t(Op::IF) | 0x01);
+            _fixupIndex = AddrNativeType(code.size());
+            code.push_back(0);
+            code.push_back(0);
+            break;
+        case Kind::ElseStart:
+            // Emit the opcode with a 0 branch address and mark it
+            // FIXME: for now assume all long addresses
+            code.push_back(uint8_t(Op::BRA) | 0x01);
+            _fixupIndex = AddrNativeType(code.size());
+            code.push_back(0);
+            code.push_back(0);
+            
+        case Kind::IfEnd:
+            // Fixup branch
+            assert(_fixupNode != nullptr);
+            std::static_pointer_cast<BranchNode>(_fixupNode)->fixup(code, AddrNativeType(code.size()));
+            break;
+        default:
+            break;
+    }
+}
+
+void
+BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
+{
+    // FIXME: For now assume long addresses
+    int16_t rel = addr - _fixupIndex;
+    code[_fixupIndex] = rel >> 8;
+    code[_fixupIndex + 1] = rel;
+}

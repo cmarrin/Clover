@@ -550,36 +550,29 @@ Compiler::ifStatement()
     }
     
     expect(Token::OpenParen);
-    
-    expression();
+    currentFunction()->addASTNode(expression());
     expect(Token::CloseParen);
-
-//    auto ifJumpAddr = _rom8.size();
-//    addOpTarg(Op::If, 0);
+    
+    ASTPtr ifNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart, annotationIndex());
+    currentFunction()->addASTNode(ifNode);
 
     statement();
     
-    // This ifTargetAddr will be used if there is no else
-//    uint16_t ifTargetAddr = _rom8.size();
+    bool haveElse = false;
+    ASTPtr elseNode;
     
     if (match(Reserved::Else)) {
-//        auto elseJumpAddr = _rom8.size();
-//        addOpTarg(Op::Jump, 0);
-//        
-//        // Set ifTargetAddr to jump to else clause
-//        ifTargetAddr = _rom8.size();
+        haveElse = true;
+        elseNode = std::make_shared<BranchNode>(BranchNode::Kind::ElseStart, annotationIndex());
+        
+        std::static_pointer_cast<BranchNode>(elseNode)->setFixupNode(ifNode);
+        currentFunction()->addASTNode(elseNode);
         statement();
-
-        // Resolve the else address
-//        uint16_t offset = _rom8.size() - elseJumpAddr - 2;
-//        _rom8[elseJumpAddr] |= uint8_t((offset >> 8) & 0x0f);
-//        _rom8[elseJumpAddr + 1] = uint8_t(offset);
     }
-    
-    // Resolve the if address
-//    uint16_t offset = ifTargetAddr - ifJumpAddr - 2;
-//    _rom8[ifJumpAddr] |= uint8_t((offset >> 8) & 0x0f);
-//    _rom8[ifJumpAddr + 1] = uint8_t(offset);
+
+    ASTPtr endNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd, annotationIndex());
+    currentFunction()->addASTNode(endNode);
+    std::static_pointer_cast<BranchNode>(endNode)->setFixupNode(haveElse ? elseNode : ifNode);
 
     return true;
 }

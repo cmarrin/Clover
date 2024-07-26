@@ -32,6 +32,7 @@ enum class ASTNodeType {
     FunctionCall,
     Enter,
     TypeCast,
+    Branch,
 };
 
 class ASTNode;
@@ -389,4 +390,27 @@ class TypeCastNode : public ASTNode
     ASTPtr _arg;
 };
 
+class BranchNode : public ASTNode
+{
+  public:
+    enum class Kind { IfStart, ElseStart, IfEnd, LoopStart, LoopNext, LoopEnd, Break, Continue };
+    enum class Size { None, Short, Byte, Long };
+    
+    BranchNode(Kind k, int32_t annotationIndex) : ASTNode(annotationIndex), _kind(k) { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Branch; }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    
+    void setFixupNode(const ASTPtr& f) { _fixupNode = f; }
+    
+    // Address of where this node should branch to
+    void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
+    
+  private:
+    Kind _kind;
+    Size _size = Size::Long;
+    ASTPtr _fixupNode;
+    AddrNativeType _fixupIndex = 0;
+};
 }

@@ -204,27 +204,44 @@ InterpreterBase::execute()
             case Op::NEG     :
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(-left, opSize);
-            case Op::LE      :
-            case Op::LS      :
-            case Op::LT      :
-            case Op::LO      :
-            case Op::GE      :
-            case Op::HS      :
-            case Op::GT      :
-            case Op::HI      :
-            case Op::EQ      :
-            case Op::NE      :
-            
+            case Op::LE:
+            case Op::LS:
+            case Op::LT:
+            case Op::LO:
+            case Op::GE:
+            case Op::HS:
+            case Op::GT:
+            case Op::HI:
+            case Op::EQ:
+            case Op::NE:
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+                switch(opcode) {
+                    // FIXME: Handle floats
+                    case Op::LE: left = left <= right; break;
+                    case Op::LS: left = uint32_t(left) <= uint32_t(right); break;
+                    case Op::LT: left = left <= right; break;
+                    case Op::LO: left = uint32_t(left) <= uint32_t(right); break;
+                    case Op::GE: left = left <= right; break;
+                    case Op::HS: left = uint32_t(left) <= uint32_t(right); break;
+                    case Op::GT: left = left <= right; break;
+                    case Op::HI: left = uint32_t(left) <= uint32_t(right); break;
+                    case Op::EQ: left = left <= right; break;
+                    case Op::NE: left = left <= right; break;
+                    default: break;
+                }
+                _memMgr.stack().push(left, OpSize::i8);
+                break;
             case Op::IF:
                 right = getOpnd(operand);
                 left = _memMgr.stack().pop(OpSize::i8);
                 if (left == 0) {
-                    _pc += right;
+                    _pc += right - 2;
                 }
                 break;
             case Op::BRA:
                 right = getOpnd(operand);
-                _pc += right;
+                _pc += right - 2;
                 break;
             case Op::CALL:
                 right = getOpnd(operand);
