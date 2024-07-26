@@ -17,7 +17,7 @@
 using namespace lucid;
 
 void
-StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     for (auto& it : _statements) {
         it->emitCode(code, isLHS, c);
@@ -25,7 +25,7 @@ StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) co
 }
 
 void
-VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
@@ -89,7 +89,7 @@ static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
 }
 
 void
-ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
@@ -128,7 +128,7 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) cons
 }
 
 void
-StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
@@ -142,7 +142,7 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 }
 
 void
-OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     if (_left) {
         _left->emitCode(code, _isAssignment, c);
@@ -164,7 +164,7 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 }
 
 void
-DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     _operand->emitCode(code, isLHS, c);
     _property->emitCode(code, isLHS, c);
@@ -175,12 +175,12 @@ DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 }
 
 void
-ModuleNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+ModuleNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
 }
 
 void
-FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
@@ -234,7 +234,7 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) 
 }
 
 void
-EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
@@ -252,7 +252,7 @@ EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
 }
 
 void
-TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const
+TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     _arg->emitCode(code, isLHS, c);
     

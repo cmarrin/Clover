@@ -60,7 +60,7 @@ class ASTNode
     virtual const uint32_t numChildren() const { return 0; }
     virtual std::string toString() const { return ""; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) const { }
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) { }
     
     int32_t annotationIndex() const { return _annotationIndex; }
     
@@ -99,7 +99,7 @@ class StatementsNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return uint32_t(_statements.size()); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
   private:
     ASTNodeList _statements;
@@ -116,7 +116,7 @@ class VarNode : public ASTNode
 
     virtual std::string toString() const override { return _symbol ? _symbol->name() : ""; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
   private:
     SymbolPtr _symbol = nullptr;
@@ -149,7 +149,7 @@ class ConstantNode : public ASTNode
         return "";
     }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
     void toFloat() { _f = float(_i); }
     void toUInt() { _i = uint32_t(_f); }
@@ -178,7 +178,7 @@ class StringNode : public ASTNode
 
     virtual std::string toString() const override { return _string; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
   private:
     std::string _string;
@@ -269,7 +269,7 @@ class OpNode : public ASTNode
     // FIXME: this only works for single character operators
     virtual std::string toString() const override { return std::string(1, char(_op)); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
     Op op() const { return _op; }
 
@@ -306,7 +306,7 @@ class DotNode : public ASTNode
 
     virtual std::string toString() const override { return "."; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
   private:
     ASTPtr _operand;
@@ -324,7 +324,7 @@ class ModuleNode : public ASTNode
     
     const ModulePtr& module() const { return _module; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
   private:
     ModulePtr _module;
@@ -358,7 +358,7 @@ class FunctionCallNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return uint32_t(_args.size()); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
     FunctionPtr function() const { return _function; }
     
@@ -375,7 +375,7 @@ class EnterNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Enter; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
   private:
     FunctionPtr _function;
@@ -396,7 +396,7 @@ class TypeCastNode : public ASTNode
         return nullptr;
     }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) const override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
   private:
     Type _type;
