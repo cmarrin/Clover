@@ -50,10 +50,6 @@ class ASTNode
     virtual ASTNodeType astNodeType() const = 0;
     virtual void addNode(const std::shared_ptr<ASTNode>&) { }
     
-    virtual bool isTerminal() const { return false; }       // No children and is an operand
-    virtual bool isList() const { return false; }           // Can have many children and has no operation
-    virtual bool isAssignment() const { return false; }     // Is an assignment operation (needs to be a ref)
-    virtual bool isUnary() const { return false; }          // Has one child, either child[0] or child[1]
     virtual Type type() const { return Type::None; }
     
     virtual const ASTPtr child(uint32_t i) const { return nullptr; }
@@ -82,8 +78,6 @@ class StatementsNode : public ASTNode
     
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Statements; }
     
-    virtual bool isList() const override { return true; }
-
     virtual void addNode(const std::shared_ptr<ASTNode>& node) override
     {
         _statements.push_back(node);
@@ -111,7 +105,6 @@ class VarNode : public ASTNode
     VarNode(const SymbolPtr& symbol, int32_t annotationIndex) : ASTNode(annotationIndex), _symbol(symbol) { }
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Var; }
-    virtual bool isTerminal() const override { return true; }
     virtual Type type() const override { return _symbol->type(); }
 
     virtual std::string toString() const override { return _symbol ? _symbol->name() : ""; }
@@ -137,7 +130,6 @@ class ConstantNode : public ASTNode
     ConstantNode(float v, int32_t annotationIndex)  : ASTNode(annotationIndex), _type(Type::Float), _numeric(true), _f(v) { }
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Constant; }
-    virtual bool isTerminal() const override { return true; }
     virtual Type type() const override { return _type; }
 
     virtual std::string toString() const override
@@ -173,7 +165,6 @@ class StringNode : public ASTNode
     StringNode(char c, int32_t annotationIndex) : ASTNode(annotationIndex) { _string = c; }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Constant; }
-    virtual bool isTerminal() const override { return true; }
     virtual Type type() const override { return Type::String; }
 
     virtual std::string toString() const override { return _string; }
@@ -251,8 +242,6 @@ class OpNode : public ASTNode
     
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Op; }
 
-    virtual bool isAssignment() const override { return _isAssignment; }
-    virtual bool isUnary() const override { return _left == nullptr || _right == nullptr; }
     virtual Type type() const override { return _type; }
     
     virtual const ASTPtr child(uint32_t i) const override
@@ -319,8 +308,6 @@ class ModuleNode : public ASTNode
     ModuleNode(const ModulePtr& module, int32_t annotationIndex) : ASTNode(annotationIndex), _module(module) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Module; }
-    virtual bool isList() const override { return true; }
-    virtual bool isTerminal() const override { return true; }
     
     const ModulePtr& module() const { return _module; }
 
@@ -336,7 +323,6 @@ class FunctionCallNode : public ASTNode
     FunctionCallNode(FunctionPtr func, int32_t annotationIndex) : ASTNode(annotationIndex), _function(func) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::FunctionCall; }
-    virtual bool isList() const override { return true; }
     virtual Type type() const override { return _function ? _function->returnType() : Type::None; }
 
     virtual void addNode(const std::shared_ptr<ASTNode>& node) override
