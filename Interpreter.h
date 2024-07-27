@@ -133,6 +133,8 @@ class InterpreterBase
     int16_t _errorAddr = -1;
 
     Memory _memMgr;
+    
+    uint32_t _returnValue;
 };
 
 template <uint32_t memSize> class Interpreter : public InterpreterBase

@@ -24,7 +24,8 @@ Function::Function(const char* name, NativeId nativeId, Type returnType, const S
     }
 }
 
-void Function::addASTNode(const ASTPtr& node)
+void
+Function::addASTNode(const ASTPtr& node)
 {
     if (!_astNode) {
         _astNode = std::make_shared<StatementsNode>(-1);
@@ -32,7 +33,8 @@ void Function::addASTNode(const ASTPtr& node)
     _astNode->addNode(node);
 }
 
-void Function::pruneLocals(uint32_t n)
+void
+Function::pruneLocals(uint32_t n)
 {
     // remove the last n locals and reduce _localSize
     while (n-- > 0) {
@@ -41,7 +43,8 @@ void Function::pruneLocals(uint32_t n)
     }
 }
 
-SymbolPtr Function::findLocal(const std::string& s) const
+SymbolPtr
+Function::findLocal(const std::string& s) const
 {
     const auto& it = find_if(_locals.begin(), _locals.end(),
             [s](const SymbolPtr& p) { return p->name() == s; });
@@ -50,5 +53,14 @@ SymbolPtr Function::findLocal(const std::string& s) const
         return *it;
     }
     return nullptr;
+}
+
+Type
+Function::argType(uint32_t index) const
+{
+    if (index >= _argCount) {
+        return Type::None;
+    }
+    return _locals[index]->type();
 }
 

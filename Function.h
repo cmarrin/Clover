@@ -71,6 +71,7 @@ public:
         // args start at 0 and go positive. So just use the argSize as the addr
         _locals.push_back(std::make_shared<Symbol>(name, type, size, _argSize, isPtr));
         _argSize += size;
+        _argCount += 1;
         return _locals.back();
     }
     
@@ -92,6 +93,12 @@ public:
     }
 
     SymbolPtr findLocal(const std::string& s) const;
+    
+    Type argType(uint32_t index) const;
+    uint32_t argCount() const { return _argCount; }
+    
+    void setPushReturn(bool r) { _pushReturn = r; }
+    bool pushReturn() const { return _pushReturn; }
 
 private:
     std::string _name;
@@ -99,10 +106,12 @@ private:
     std::vector<SymbolPtr> _locals;
     uint16_t _argSize = 0;// Size in bytes of all args
     uint16_t _localSize = 0; // Size in bytes of all locals, including args
+    uint32_t _argCount = 0;
     Type _returnType = Type::None;
     bool _native = false;
     AddrNativeType _addr = 0;
     uint8_t _localHighWaterMark = 0;
+    bool _pushReturn = true;
 };
 
 }

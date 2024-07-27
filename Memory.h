@@ -155,6 +155,11 @@ class Memory
         return v;
     }
     
+    uint32_t getLocal(int32_t offset, Type type)
+    {
+        return getAbs(localAddr(offset, typeToOpSize(type)), typeToOpSize(type));
+    }
+    
     // On entry args are pushed on stack followed by retAddr.
     // Push _bp and then set _bp to _sp. The subtract locals
     // from _sp.
@@ -177,14 +182,14 @@ class Memory
         switch (idx) {
             case Index::X: return _x + offset;
             case Index::Y: return _y + offset;
-            case Index::U: return local(offset, opSize);
+            case Index::U: return localAddr(offset, opSize);
         }
     }
     
     // Local offsets are negative and args are non-negative so
     // the first local byte (or the LSB if 16 or 32 bit) is -1
     // and the first arg (or the MSB if 16 or 32 bit) is 0.
-    AddrNativeType local(int32_t offset, OpSize opSize) const
+    AddrNativeType localAddr(int32_t offset, OpSize opSize) const
     {
         if (offset < 0) {
             return _u + offset + opSizeToBytes(opSize) - 1;
@@ -210,7 +215,7 @@ class VarArg
     VarArg(Memory* memMgr, uint32_t lastArgOffset, Type lastArgType)
         : _memMgr(memMgr)
     {
-        _nextAddr = memMgr->local(lastArgOffset, typeToOpSize(lastArgType)) + typeToBytes(lastArgType);
+        _nextAddr = memMgr->localAddr(lastArgOffset, typeToOpSize(lastArgType)) + typeToBytes(lastArgType);
     }
     
     // Type returned is always uint32_t. Use reinterpret_cast to convert to the proper type

@@ -24,7 +24,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>("core");
     coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, AddrSize, 0 }});
-    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::Ptr, AddrSize, 0 },
+    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::UInt8, AddrSize, 0, true },
                                                                            { "v", Type::UInt8, 1, 4 },
                                                                            { "n", Type::UInt32, 4, 5 }});
     coreModule->addNativeFunction("irand", NativeId::RandomInt, Type::Int32, {{ "min", Type::Int32, 4, 0 }, { "max", Type::Int32, 4, 4 }});
@@ -793,6 +793,14 @@ Compiler::expressionStatement()
     expect(_inFunction, Error::InternalError);
     currentFunction()->addASTNode(node);
     expect(Token::Semicolon);
+    
+    // If this is a function call, a return value will have been
+    // pushed which we don't need. Tell the function call not to push it
+    if (node->astNodeType() == ASTNodeType::FunctionCall) {
+        FunctionPtr function = std::static_pointer_cast<FunctionCallNode>(node)->function();
+        function->setPushReturn(false);
+    }
+
     return true;
 }
 
@@ -849,13 +857,15 @@ Compiler::unaryExpression()
     } else if (match(Token::Twiddle)) {
         opcode = Op::NOT;
     } else if (match(Token::Bang)) {
-        opcode = Op::NOP;       // FIXME: Implement
+        opcode = Op::NOT;       // FIXME: Implement
     } else if (match(Token::Inc)) {
         opcode = Op::PREINC;
     } else if (match(Token::Dec)) {
         opcode = Op::PREDEC;
     } else if (match(Token::And)) {
-        opcode = Op::NOP;       // FIXME: Implement
+        opcode = Op::AND;       // FIXME: Implement
+    } else if (match(Token::Or)) {
+        opcode = Op::OR;       // FIXME: Implement
     } else {
         return nullptr;
     }
@@ -1012,7 +1022,6 @@ Compiler::argumentList(const ASTPtr& fun)
 {
     expect(fun->astNodeType() == ASTNodeType::FunctionCall, Error::ExpectedFunction);
     FunctionPtr function = std::static_pointer_cast<FunctionCallNode>(fun)->function();
-    (void) function;
     
     int i = 0;
     while (true) {

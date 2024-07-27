@@ -234,6 +234,8 @@ enum class Op: uint8_t {
     
     DROP1   = 0x0a, // Next byte is count (1 - 256)
     DROP2   = 0x0b, // Next 2 bytes are count (1 - 65536)
+    
+    PUSHR   = 0x0c, // Push _returnValue (4 bytes)
 
 // Bit 0 is 0 if the operand is a 8 bits and 1 if 16 bits.
 // Operand is sign extended

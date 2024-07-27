@@ -60,14 +60,27 @@ InterpreterBase::callNative(NativeId id)
         default: _error = Error::None; break;
         case NativeId::PrintF: {
             VarArg va(&_memMgr, 0, Type::String);
-            AddrNativeType fmt = _memMgr.getAbs(_memMgr.local(0, AddrOpSize), AddrOpSize);
+            AddrNativeType fmt = _memMgr.getLocal(0, AddrType);
             fmt::Formatter::format([this](uint8_t c) { putc(c); }, fmt, va);
+            break;
+        }
+        case NativeId::RandomInt: {
+            int32_t a = _memMgr.getLocal(0, Type::Int32);
+            int32_t b = _memMgr.getLocal(4, Type::Int32);
+            _returnValue = random(a, b);
+            break;
+        }
+        case NativeId::RandomFloat: {
+            float a = intToFloat(_memMgr.getLocal(0, Type::Float));
+            float b = intToFloat(_memMgr.getLocal(4, Type::Float));
+            _returnValue = floatToInt(float(random(int32_t(a * 1000), int32_t(b * 1000))) / 1000);
             break;
         }
     }
 
-    // Restore the frame
+    // Restore the frame and pop the dummy return address
     _memMgr.restoreFrame();
+    _memMgr.stack().pop(AddrOpSize);
 }
 
 int32_t
@@ -141,6 +154,9 @@ InterpreterBase::execute()
                 if (_pc == 0) {
                     return 0;
                 }
+                break;
+            case Op::PUSHR:
+                _memMgr.stack().push(_returnValue, OpSize::i32);
                 break;
             case Op::DEREF: {
                 uint32_t v = _memMgr.stack().pop(opSize);

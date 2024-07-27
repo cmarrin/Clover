@@ -221,6 +221,7 @@ class OpNode : public ASTNode
         , _op(op)
         , _left(left)
     {
+        assert(op != Op::NOP);
         _type = _left->type();
     }
     
@@ -229,6 +230,7 @@ class OpNode : public ASTNode
         , _op(op)
         , _right(right)
     {
+        assert(op != Op::NOP);
         _type = _right->type();
     }
     

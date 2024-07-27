@@ -100,6 +100,7 @@ Decompiler::statement()
         case Op::TOI32   : emitOp("TOI32"); emitSize(size); break;
         case Op::PUSHREF : emitOp("PUSHREF"); emitSizeIndex(size, getUInt8()); break;
         case Op::RET     : emitOp("RET"); break;
+        case Op::PUSHR   : emitOp("PUSHR"); break;
         case Op::DEREF   : emitOp("DEREF"); emitSize(size); break;
         case Op::PUSH    : emitOp("PUSH"); emitSizeIndex(size, getUInt8()); break;
         case Op::PUSHK11 : emitOp("PUSHK11"); emitConstant(1); break;

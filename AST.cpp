@@ -219,10 +219,7 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     // Pop the args after the call returns
-    uint16_t argSize = 0;
-    for (auto& it : _args) {
-        argSize += typeToBytes(it->type());
-    }
+    uint16_t argSize = _function->argSize();
 
     if (argSize) {
         code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
@@ -230,6 +227,11 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             code.push_back(argSize >> 8);
         }
         code.push_back(argSize);
+    }
+    
+    // If we want to use the _returnValue, push it
+    if (_function->pushReturn()) {
+        code.push_back(uint8_t(Op::PUSHR));
     }
 }
 
