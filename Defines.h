@@ -385,6 +385,20 @@ static inline uint8_t typeToSizeBits(Type type)
     }
 };
 
+static inline Op castToOp(Type type)
+{
+    switch (type) {
+        case Type::Float: return Op::TOF;
+        case Type::UInt8: return Op::TOU8;
+        case Type::Int8: return Op::TOI8;
+        case Type::UInt16: return Op::TOU16;
+        case Type::Int16: return Op::TOI16;
+        case Type::UInt32: return Op::TOU32;
+        case Type::Int32: return Op::TOI32;
+        default: return Op::NOP;
+    }
+}
+
 enum class Reserved {
     None,
     Struct,

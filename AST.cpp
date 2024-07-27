@@ -261,6 +261,33 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     code.push_back(uint8_t(castToOp(_type)) | typeToSizeBits(_arg->type()));
 }
 
+ASTPtr
+TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationIndex)
+{
+    // If types don't match, add a cast operator
+    assert(neededType != Type::None && node->type() != Type::None);
+    if (node->type() != neededType) {
+        // If node is a constant just change its type
+        if (node->astNodeType() == ASTNodeType::Constant) {
+            ConstantNode* constNode = reinterpret_cast<ConstantNode*>(node.get());
+            if (neededType == Type::Float) {
+                // Value must be an unsigned int
+                constNode->toFloat();
+            } else if (constNode->type() == Type::Float) {
+                // Convert value to int
+                constNode->toUInt();
+            }
+            constNode->setType(neededType);
+
+        } else {
+            Op castTo = castToOp(neededType);
+            node = std::make_shared<OpNode>(Op(uint8_t(castTo) | typeToSizeBits(node->type())), node, annotationIndex);
+        }
+    }
+    
+    return node;
+}
+
 void
 BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {

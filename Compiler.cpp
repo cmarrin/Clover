@@ -1023,8 +1023,19 @@ Compiler::argumentList(const ASTPtr& fun)
             }
             expect(false, Error::ExpectedExpr);
         }
+        
+        // Typecast arg as needed
+        Type neededType;
+        
+        if (function->argCount() > i) {
+            neededType = function->argType(i);
+            expect(neededType != Type::None, Error::MismatchedType);
+        } else {
+            // This is past the last arg, it can be any type
+            neededType = arg->type();
+        }
 
-        // FIXME: Validate type with expected arg type
+        arg = TypeCastNode::castIfNeeded(arg, neededType, annotationIndex());
         fun->addNode(arg);
         
         i++;

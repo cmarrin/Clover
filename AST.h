@@ -176,19 +176,31 @@ class StringNode : public ASTNode
     std::string _string;
 };
 
-static Op castToOp(Type type)
+class TypeCastNode : public ASTNode
 {
-    switch (type) {
-        case Type::Float: return Op::TOF;
-        case Type::UInt8: return Op::TOU8;
-        case Type::Int8: return Op::TOI8;
-        case Type::UInt16: return Op::TOU16;
-        case Type::Int16: return Op::TOI16;
-        case Type::UInt32: return Op::TOU32;
-        case Type::Int32: return Op::TOI32;
-        default: return Op::NOP;
+  public:
+    TypeCastNode(Type t, const std::shared_ptr<ASTNode>& arg, int32_t annotationIndex) : ASTNode(annotationIndex), _type(t), _arg(arg) { }
+
+    virtual Type type() const override { return _type; }
+    
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::TypeCast; }
+
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (i == 0) {
+            return _arg;
+        }
+        return nullptr;
     }
-}
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    
+    static ASTPtr castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationIndex);
+    
+  private:
+    Type _type;
+    ASTPtr _arg;
+};
 
 class OpNode : public ASTNode
 {
@@ -201,26 +213,7 @@ class OpNode : public ASTNode
         , _right(right)
     {
         _type = _left->type();
-        
-        // If types don't match, add a cast operator
-        if (_right->type() != _type) {
-            // If _right is a constant just change its type
-            if (_right->astNodeType() == ASTNodeType::Constant) {
-                ConstantNode* rightNode = reinterpret_cast<ConstantNode*>(_right.get());
-                if (_type == Type::Float) {
-                    // Value must be an unsigned int
-                    rightNode->toFloat();
-                } else if (rightNode->type() == Type::Float) {
-                    // Convert value to int
-                    rightNode->toUInt();
-                }
-                rightNode->setType(_type);
-
-            } else {
-                Op castTo = castToOp(_type);
-                _right = std::make_shared<OpNode>(Op(uint8_t(castTo) | typeToSizeBits(_right->type())), _right, annotationIndex);
-            }
-        }
+        _right = TypeCastNode::castIfNeeded(_right, _left->type(), annotationIndex);
     }
     
     OpNode(const std::shared_ptr<ASTNode>& left, Op op, int32_t annotationIndex)
@@ -366,28 +359,6 @@ class EnterNode : public ASTNode
     
   private:
     FunctionPtr _function;
-};
-
-class TypeCastNode : public ASTNode
-{
-  public:
-    TypeCastNode(Type t, const std::shared_ptr<ASTNode>& arg, int32_t annotationIndex) : ASTNode(annotationIndex), _type(t), _arg(arg) { }
-
-    virtual ASTNodeType astNodeType() const override { return ASTNodeType::TypeCast; }
-
-    virtual const ASTPtr child(uint32_t i) const override
-    {
-        if (i == 0) {
-            return _arg;
-        }
-        return nullptr;
-    }
-
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
-    
-  private:
-    Type _type;
-    ASTPtr _arg;
 };
 
 class BranchNode : public ASTNode
