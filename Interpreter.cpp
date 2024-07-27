@@ -18,7 +18,7 @@ static int32_t typeCast(int32_t v, OpSize from, Type to)
 {
     // handle from float case
     if (from == OpSize::flt) {
-        float f = *(reinterpret_cast<float*>(&v));
+        float f = intToFloat(v);
         if (to != Type::Float) {
             v = int32_t(f);
         }
@@ -28,7 +28,7 @@ static int32_t typeCast(int32_t v, OpSize from, Type to)
     // handle to float case (assume from is int)
     if (to == Type::Float) {
         float f = float(v);
-        return *(reinterpret_cast<int32_t*>(&f));
+        return floatToInt(f);
     }
     
     // This is just an int to int case, nothing to do
