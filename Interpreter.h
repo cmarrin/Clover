@@ -39,7 +39,7 @@ class InterpreterBase
         StackUnderrun,
         StackOutOfRange,
         ImmedNotAllowedHere,
-
+        InternalError,
     };
 
     InterpreterBase(uint8_t* mem, uint32_t memSize) : _memMgr(mem, memSize) { }

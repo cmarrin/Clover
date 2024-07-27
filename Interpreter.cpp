@@ -175,7 +175,12 @@ InterpreterBase::execute()
             case Op::ADD:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
-                _memMgr.stack().push(left + right, opSize);
+                
+                if (opSize == OpSize::flt) {
+                    _memMgr.stack().push(floatToInt(intToFloat(left) + intToFloat(right)), opSize);
+                } else {
+                    _memMgr.stack().push(left + right, opSize);
+                }
                 break;
             case Op::SUB:
                 right = _memMgr.stack().pop(opSize);
@@ -232,19 +237,36 @@ InterpreterBase::execute()
             case Op::NE:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
-                switch(opcode) {
-                    // FIXME: Handle floats
-                    case Op::LE: left = left <= right; break;
-                    case Op::LS: left = uint32_t(left) <= uint32_t(right); break;
-                    case Op::LT: left = left <= right; break;
-                    case Op::LO: left = uint32_t(left) <= uint32_t(right); break;
-                    case Op::GE: left = left <= right; break;
-                    case Op::HS: left = uint32_t(left) <= uint32_t(right); break;
-                    case Op::GT: left = left <= right; break;
-                    case Op::HI: left = uint32_t(left) <= uint32_t(right); break;
-                    case Op::EQ: left = left <= right; break;
-                    case Op::NE: left = left <= right; break;
-                    default: break;
+                if (opSize == OpSize::flt) {
+                    float l = intToFloat(left);
+                    float r = intToFloat(right);
+                    switch(opcode) {
+                        case Op::LE: l = l <= r; break;
+                        case Op::LS: _error = Error::InternalError; break;
+                        case Op::LT: l = l < r; break;
+                        case Op::LO: _error = Error::InternalError; break;
+                        case Op::GE: l = l >= r; break;
+                        case Op::HS: _error = Error::InternalError; break;
+                        case Op::GT: l = l > r; break;
+                        case Op::HI: _error = Error::InternalError; break;
+                        case Op::EQ: l = l == r; break;
+                        case Op::NE: l = l != r; break;
+                        default: break;
+                    }
+                } else {
+                    switch(opcode) {
+                        case Op::LE: left = left <= right; break;
+                        case Op::LS: left = uint32_t(left) <= uint32_t(right); break;
+                        case Op::LT: left = left < right; break;
+                        case Op::LO: left = uint32_t(left) < uint32_t(right); break;
+                        case Op::GE: left = left >= right; break;
+                        case Op::HS: left = uint32_t(left) >= uint32_t(right); break;
+                        case Op::GT: left = left > right; break;
+                        case Op::HI: left = uint32_t(left) > uint32_t(right); break;
+                        case Op::EQ: left = left == right; break;
+                        case Op::NE: left = left != right; break;
+                        default: break;
+                    }
                 }
                 _memMgr.stack().push(left, OpSize::i8);
                 break;

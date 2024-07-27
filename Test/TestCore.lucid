@@ -40,7 +40,7 @@ initialize()
 
     core.printf("\nTest Type Conversion\n");
     showIntResults(1, 5, int32(5.3));
-    //showFloatResults(2, 7.5, float(7) + 0.5);
+    showFloatResults(2, 7.5, float(7) + 0.5);
 
     core.printf("\nTest Random\n");
     
