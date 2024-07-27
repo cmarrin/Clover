@@ -218,8 +218,13 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         code.push_back(relAddr);
     }
     
-    // Pop the args after the call returns
-    uint16_t argSize = _function->argSize();
+    // Pop the args after the call returns. Args pushed is not necessarily the
+    // same as the arg list in the function. More or fewer args might be
+    // passed with VarArgs being used to access them.
+    uint16_t argSize = 0;
+    for (auto& it : _args) {
+        argSize += typeToBytes(it->type());
+    }
 
     if (argSize) {
         code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
