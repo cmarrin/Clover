@@ -54,16 +54,12 @@ namespace lucid {
 
 static inline float intToFloat(uint32_t i)
 {
-    float f;
-    memcpy(&f, &i, sizeof(float));
-    return f;
+    return *(reinterpret_cast<float*>(&i));
 }
 
 static inline uint32_t floatToInt(float f)
 {
-    uint32_t i;
-    memcpy(&i, &f, sizeof(float));
-    return i;
+    return *(reinterpret_cast<int32_t*>(&f));
 }
 
 // PointerSize is needed to know how much space is taken
