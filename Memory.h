@@ -146,9 +146,9 @@ class Memory
         
         switch (opSize) {
             case OpSize::flt:
-            case OpSize::i32: v |= uint32_t(_stack.abs(addr++)) >> 24;
-                              v |= uint32_t(_stack.abs(addr++)) >> 16;
-            case OpSize::i16: v |= uint32_t(_stack.abs(addr++)) >> 8;
+            case OpSize::i32: v |= uint32_t(_stack.abs(addr++)) << 24;
+                              v |= uint32_t(_stack.abs(addr++)) << 16;
+            case OpSize::i16: v |= uint32_t(_stack.abs(addr++)) << 8;
             case OpSize::i8 : v |= uint32_t(_stack.abs(addr++));
         }
         
