@@ -426,6 +426,7 @@ enum class Reserved {
     UInt16,
     Int32,
     UInt32,
+    Bool,
 };
 
 // These must match the values for Token
