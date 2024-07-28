@@ -12,67 +12,64 @@
 struct Test
 {
 
-//uint16 globalArray[20];
-//
-//function showIntResults(uint8 testNo, int32 exp, int32 act)
-//{
-//    core.printf("    Test %2hhi: ", testNo);
-//    if (exp != act) {
-//        core.printf("     FAIL: exp %i, got %i\n", exp, act);
-//    } else {
-//        core.printf("     Pass\n");
-//    }
-//}
-//
-//function showFloatResults(uint8 testNo, float exp, float act)
-//{
-//    core.printf("    Test %2hhi: ", testNo);
-//    if (exp != act) {
-//        core.printf("     FAIL: exp %f, got %f\n", exp, act);
-//    } else {
-//        core.printf("     Pass\n");
-//    }
-//}
+uint16 globalArray[20];
+
+function showIntResults(uint8 testNo, int32 exp, int32 act)
+{
+    core.printf("    Test %2hhi: ", testNo);
+    if (exp != act) {
+        core.printf("     FAIL: exp %i, got %i\n", exp, act);
+    } else {
+        core.printf("     Pass\n");
+    }
+}
+
+function showFloatResults(uint8 testNo, float exp, float act)
+{
+    core.printf("    Test %2hhi: ", testNo);
+    if (exp != act) {
+        core.printf("     FAIL: exp %f, got %f\n", exp, act);
+    } else {
+        core.printf("     Pass\n");
+    }
+}
 
 initialize()
 {
-    int8 a = 10;
-    int8 b = a >= 3 && a <= 33;
-    
-//    core.printf("\nTest Core Module\n");
-//
-//    core.printf("\nTest Type Conversion\n");
-//    showIntResults(1, 5, int32(5.3));
-//    showFloatResults(2, 7.5, float(7) + 0.5);
-//
-//    core.printf("\nTest Random\n");
-//
-//    int32 i = core.irand(3, 33);
-//    showIntResults(3, 1, i >= 3 && i <= 33);
-//
-//    float f = core.frand(3.5, 5.5);
-//    //showIntResults(4, 1, f >= 3.5 && f <= 5.5);
-//
-//    core.printf("\nTest memset\n");
-//
-//    uint8 localArray[10];
-//
-//    core.memset(&localArray, 200, 10);
-//    //showIntResults(5, 200, localArray[5]);
-//    core.memset(&globalArray, 2134, 20);
-//    //showIntResults(6, 2134, globalArray[9]);
-//
-//    core.printf("\nTest Min/Max\n");
-//    showIntResults(7, 20, core.imin(20, 21));
-//    showIntResults(8, 10, core.imin(11, 10));
-//    showIntResults(9, 21, core.imax(20, 21));
-//    showIntResults(10, 11, core.imax(11, 10));
-////    showFloatResults(11, 20.5, core.fmin(20.5, 21.5));
-////    showFloatResults(12, 10.5, core.fmin(11.5, 10.5));
-////    showFloatResults(13, 21.5, core.fmax(20.5, 21.5));
-////    showFloatResults(14, 11.5, core.fmax(11.5, 10.5));
-//
-//    core.printf("\nDone\n\n");
+    core.printf("\nTest Core Module\n");
+
+    core.printf("\nTest Type Conversion\n");
+    showIntResults(1, 5, int32(5.3));
+    showFloatResults(2, 7.5, float(7) + 0.5);
+
+    core.printf("\nTest Random\n");
+
+    int32 i = core.irand(3, 33);
+    showIntResults(3, 1, i >= 3 && i <= 33);
+
+    float f = core.frand(3.5, 5.5);
+    //showIntResults(4, 1, f >= 3.5 && f <= 5.5);
+
+    core.printf("\nTest memset\n");
+
+    uint8 localArray[10];
+
+    core.memset(&localArray, 200, 10);
+    //showIntResults(5, 200, localArray[5]);
+    core.memset(&globalArray, 2134, 20);
+    //showIntResults(6, 2134, globalArray[9]);
+
+    core.printf("\nTest Min/Max\n");
+    showIntResults(7, 20, core.imin(20, 21));
+    showIntResults(8, 10, core.imin(11, 10));
+    showIntResults(9, 21, core.imax(20, 21));
+    showIntResults(10, 11, core.imax(11, 10));
+//    showFloatResults(11, 20.5, core.fmin(20.5, 21.5));
+//    showFloatResults(12, 10.5, core.fmin(11.5, 10.5));
+//    showFloatResults(13, 21.5, core.fmax(20.5, 21.5));
+//    showFloatResults(14, 11.5, core.fmax(11.5, 10.5));
+
+    core.printf("\nDone\n\n");
 }
 
 };

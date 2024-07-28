@@ -144,11 +144,18 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    // _type is the result type not the type used for operation. We need
+    // to get that from the left or right operand
+    Type opType = Type::UInt8;
     bool isLogical = _op == Op::LAND || _op == Op::LOR || _op == Op::LNOT;
+    
     if (_left) {
         if (isLogical && _left->type() != Type::UInt8) {
             // Cast to uint8 (boolean)
             _left = TypeCastNode::castIfNeeded(_left, Type::UInt8, _annotationIndex);
+        }
+        if (!isLogical) {
+            opType = _left->type();
         }
         _left->emitCode(code, _isAssignment, c);
     }
@@ -157,6 +164,9 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         if (isLogical && _left->type() != Type::UInt8) {
             // Cast to uint8 (boolean)
             _right = TypeCastNode::castIfNeeded(_right, Type::UInt8, _annotationIndex);
+        }
+        if (!isLogical && _left == nullptr) {
+            opType = _right->type();
         }
         _right->emitCode(code, isLHS, c);
     }
@@ -173,7 +183,7 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     if (isLogical) {
         code.push_back(uint8_t(op));
     } else {
-        code.push_back(uint8_t(op) | typeToSizeBits(_type));
+        code.push_back(uint8_t(op) | typeToSizeBits(opType));
     }
 }
 
