@@ -358,7 +358,8 @@ Compiler::type(Type& t)
         t = Type::Int8;
         return true;
     }
-    if (match(Reserved::UInt8)) {
+    // 'bool' is just an alias for 'uint8'
+    if (match(Reserved::UInt8) || match(Reserved::Bool)) {
         t = Type::UInt8;
         return true;
     }
@@ -1225,6 +1226,7 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "uint16",     Reserved::UInt16 },
         { "int32",      Reserved::Int32 },
         { "uint32",     Reserved::UInt32 },
+        { "bool",       Reserved::Bool },
     };
 
     if (token != Token::Identifier) {
