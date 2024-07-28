@@ -269,6 +269,11 @@ int32_t Formatter::format(Generator gen, lucid::AddrNativeType fmt, lucid::VarAr
             case 'G': cap = Formatter::Capital::Yes; type = FloatType::Shortest; break;
             }
 
+            char buf[20];
+            lucid::toString(buf, lucid::intToFloat(va.arg(lucid::Type::Float)), width, (precision < 0) ? 6 : precision);
+            for (int i = 0; buf[i] != '\0'; ++i) {
+                gen(buf[i]);
+            }
             //size += outFloat(gen, flt::Float::fromArg(va_arg(va.value, flt::Float::arg_type)), width, precision, flags, cap, type);
             break;
         }
