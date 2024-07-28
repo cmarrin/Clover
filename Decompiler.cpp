@@ -126,8 +126,11 @@ Decompiler::statement()
         case Op::AND     : emitOp("AND"); emitSize(size); break;
         case Op::OR      : emitOp("OR"); emitSize(size); break;
         case Op::XOR     : emitOp("XOR"); emitSize(size); break;
+        case Op::LAND    : emitOp("LAND"); emitSize(size); break;
+        case Op::LOR     : emitOp("LOR"); emitSize(size); break;
         case Op::NOT     : emitOp("NOT"); emitSize(size); break;
         case Op::NEG     : emitOp("NEG"); emitSize(size); break;
+        case Op::LNOT    : emitOp("LNOT"); emitSize(size); break;
         case Op::PREINC  : emitOp("PREINC"); emitSizeIndex(size, getUInt8()); break;
         case Op::PREDEC  : emitOp("PREDEC"); emitSizeIndex(size, getUInt8()); break;
         case Op::POSTINC : emitOp("POSTINC"); emitSizeIndex(size, getUInt8()); break;

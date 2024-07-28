@@ -144,11 +144,20 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    bool isLogical = _op == Op::LAND || _op == Op::LOR || _op == Op::LNOT;
     if (_left) {
+        if (isLogical && _left->type() != Type::UInt8) {
+            // Cast to uint8 (boolean)
+            _left = TypeCastNode::castIfNeeded(_left, Type::UInt8, _annotationIndex);
+        }
         _left->emitCode(code, _isAssignment, c);
     }
     
     if (_right) {
+        if (isLogical && _left->type() != Type::UInt8) {
+            // Cast to uint8 (boolean)
+            _right = TypeCastNode::castIfNeeded(_right, Type::UInt8, _annotationIndex);
+        }
         _right->emitCode(code, isLHS, c);
     }
     
@@ -160,7 +169,12 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     if (_isAssignment && op == Op::NOP) {
         op = Op::DEREF;
     }
-    code.push_back(uint8_t(op) | typeToSizeBits(_type));
+    
+    if (isLogical) {
+        code.push_back(uint8_t(op));
+    } else {
+        code.push_back(uint8_t(op) | typeToSizeBits(_type));
+    }
 }
 
 void
@@ -288,7 +302,7 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
 
         } else {
             Op castTo = castToOp(neededType);
-            node = std::make_shared<OpNode>(Op(uint8_t(castTo) | typeToSizeBits(node->type())), node, annotationIndex);
+            node = std::make_shared<OpNode>(Op(uint8_t(castTo) | typeToSizeBits(node->type())), node, Type::None, annotationIndex);
         }
     }
     

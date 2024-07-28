@@ -211,20 +211,39 @@ InterpreterBase::execute()
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left & right, opSize);
+                break;
             case Op::OR:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left | right, opSize);
+                break;
             case Op::XOR:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left ^ right, opSize);
-            case Op::NOT     :
+                break;
+            case Op::LAND:
+                right = _memMgr.stack().pop(OpSize::i8);
+                left = _memMgr.stack().pop(OpSize::i8);
+                _memMgr.stack().push(left && right, OpSize::i8);
+                break;
+            case Op::LOR:
+                right = _memMgr.stack().pop(OpSize::i8);
+                left = _memMgr.stack().pop(OpSize::i8);
+                _memMgr.stack().push(left || right, OpSize::i8);
+                break;
+            case Op::NOT:
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(~left, opSize);
-            case Op::NEG     :
+                break;
+            case Op::NEG:
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(-left, opSize);
+                break;
+            case Op::LNOT:
+                left = _memMgr.stack().pop(OpSize::i8);
+                _memMgr.stack().push(left == 0, OpSize::i8);
+                break;
             case Op::LE:
             case Op::LS:
             case Op::LT:

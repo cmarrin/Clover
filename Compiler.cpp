@@ -331,7 +331,7 @@ Compiler::var(Type type, bool isPointer)
     
     if (ast) {
         ASTPtr idNode = std::make_shared<VarNode>(idSym, annotationIndex());
-        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, true, annotationIndex());
+        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, Type::None, true, annotationIndex());
     
         if (_inFunction) {
             currentFunction()->addASTNode(assignment);
@@ -827,7 +827,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         while (true) {
             OpInfo nextOpInfo;
-            if (!findOpInfo(Operator(_scanner.getToken()), nextOpInfo) || nextOpInfo.prec() < minPrec) {
+            if (!findOpInfo(Operator(_scanner.getToken()), nextOpInfo) || nextOpInfo.prec() < opInfo.prec()) {
                 break;
             }
             
@@ -836,7 +836,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         // Generate an ASTNode
         Op opcode = lhs->isSigned() ? opInfo.opcodeS() : opInfo.opcodeU();
-        lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.assoc() == Assoc::Right, annotationIndex());
+        lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), opInfo.assoc() == Assoc::Right, annotationIndex());
     }
     
     return lhs;
@@ -851,26 +851,26 @@ Compiler::unaryExpression()
     }
 
     Op opcode;
+    Type resultType = Type::None;
     
     if (match(Token::Minus)) {
         opcode = Op::NEG;
     } else if (match(Token::Twiddle)) {
         opcode = Op::NOT;
     } else if (match(Token::Bang)) {
-        opcode = Op::NOT;       // FIXME: Implement
+        opcode = Op::LNOT;
+        resultType = Type::UInt8;
     } else if (match(Token::Inc)) {
         opcode = Op::PREINC;
     } else if (match(Token::Dec)) {
         opcode = Op::PREDEC;
     } else if (match(Token::And)) {
-        opcode = Op::AND;       // FIXME: Implement
-    } else if (match(Token::Or)) {
-        opcode = Op::OR;       // FIXME: Implement
+        opcode = Op::PUSHREF; // FIXME::Implement addressof
     } else {
         return nullptr;
     }
     
-    return std::make_shared<OpNode>(opcode, unaryExpression(), annotationIndex());
+    return std::make_shared<OpNode>(opcode, unaryExpression(), resultType, annotationIndex());
 }
 
 ASTPtr
@@ -888,7 +888,7 @@ Compiler::postfixExpression()
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
-            ASTPtr result = std::make_shared<OpNode>(lhs, Op::NOP, rhs, false, annotationIndex()); // FIXME: Implement
+            ASTPtr result = std::make_shared<OpNode>(lhs, Op::NOP, rhs, Type::None, false, annotationIndex()); // FIXME: Implement
             expect(Token::CloseBracket);
             return result;
         } else if (match(Token::Dot)) {
@@ -905,9 +905,9 @@ Compiler::postfixExpression()
             
             return std::make_shared<DotNode>(lhs, id, annotationIndex());
         } else if (match(Token::Inc)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTINC, annotationIndex());
+            return std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, annotationIndex());
         } else if (match(Token::Dec)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTDEC, annotationIndex());
+            return std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, annotationIndex());
         } else {
             return lhs;
         }

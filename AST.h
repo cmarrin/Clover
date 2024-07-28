@@ -205,33 +205,33 @@ class TypeCastNode : public ASTNode
 class OpNode : public ASTNode
 {
   public:
-    OpNode(const std::shared_ptr<ASTNode>& left, Op op, const std::shared_ptr<ASTNode>& right, bool isAssignment, int32_t annotationIndex)
+    OpNode(const std::shared_ptr<ASTNode>& left, Op op, const std::shared_ptr<ASTNode>& right, Type resultType, bool isAssignment, int32_t annotationIndex)
         : ASTNode(annotationIndex)
         , _isAssignment(isAssignment)
         , _op(op)
         , _left(left)
         , _right(right)
     {
-        _type = _left->type();
+        _type = (resultType == Type::None) ? _left->type() : resultType;
         _right = TypeCastNode::castIfNeeded(_right, _left->type(), annotationIndex);
     }
     
-    OpNode(const std::shared_ptr<ASTNode>& left, Op op, int32_t annotationIndex)
+    OpNode(const std::shared_ptr<ASTNode>& left, Op op, Type resultType, int32_t annotationIndex)
         : ASTNode(annotationIndex)
         , _op(op)
         , _left(left)
     {
         assert(op != Op::NOP);
-        _type = _left->type();
+        _type = (resultType == Type::None) ? _left->type() : resultType;
     }
     
-    OpNode(Op op, const std::shared_ptr<ASTNode>& right, int32_t annotationIndex)
+    OpNode(Op op, const std::shared_ptr<ASTNode>& right, Type resultType, int32_t annotationIndex)
         : ASTNode(annotationIndex)
         , _op(op)
         , _right(right)
     {
         assert(op != Op::NOP);
-        _type = _right->type();
+        _type = (resultType == Type::None) ? _right->type() : resultType;
     }
     
     OpNode(Op op, int32_t annotationIndex) : ASTNode(annotationIndex), _op(op) { }
