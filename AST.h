@@ -55,7 +55,6 @@ class ASTNode
     
     virtual const ASTPtr child(uint32_t i) const { return nullptr; }
     virtual const uint32_t numChildren() const { return 0; }
-    virtual std::string toString() const { return ""; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) { }
     
@@ -108,8 +107,6 @@ class VarNode : public ASTNode
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Var; }
     virtual Type type() const override { return _symbol->type(); }
 
-    virtual std::string toString() const override { return _symbol ? _symbol->name() : ""; }
-
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
   private:
@@ -132,15 +129,6 @@ class ConstantNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Constant; }
     virtual Type type() const override { return _type; }
-
-    virtual std::string toString() const override
-    {
-        // FIXME: Need to handle Float, etc.
-        if (_numeric) {
-            return std::to_string(_i);
-        }
-        return "";
-    }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
@@ -167,8 +155,6 @@ class StringNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Constant; }
     virtual Type type() const override { return Type::String; }
-
-    virtual std::string toString() const override { return _string; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
@@ -251,9 +237,6 @@ class OpNode : public ASTNode
         return nullptr;
     }
 
-    // FIXME: this only works for single character operators
-    virtual std::string toString() const override { return std::string(1, char(_op)); }
-
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
     Op op() const { return _op; }
@@ -288,8 +271,6 @@ class DotNode : public ASTNode
         }
         return nullptr;
     }
-
-    virtual std::string toString() const override { return "."; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
