@@ -94,8 +94,8 @@ private:
             throw true;
         }
         
-        // Little endian
-        return uint32_t(*_it++) | (uint32_t(*_it++) << 8);
+        // Big endian
+        return (uint32_t(*_it++) << 8) | uint32_t(*_it++);
     }
     
     int8_t getInt8()
