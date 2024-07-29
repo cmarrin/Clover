@@ -146,7 +146,7 @@ Decompiler::statement()
         case Op::NE      : emitOp("NE"); emitSize(size); break;
         case Op::IF      : emitOp("IF"); emitRelAddr(size); break;
         case Op::BRA     : emitOp("BRA"); emitRelAddr(size); break;
-        case Op::CALL    : emitOp("CALL"); emitRelAddr(size); break;
+        case Op::CALL    : emitOp("CALL"); emitNumber(getUInt16()); break;
         case Op::ENTER   : emitOp("ENTER"); emitNumber(size ? getUInt16() : getUInt8()); break;
         case Op::ENTERS  : emitOp("ENTERS"); emitNumber(size); break;
         case Op::NCALL   : emitOp("NCALL"); emitNumber(size ? getUInt16() : getUInt8()); break;

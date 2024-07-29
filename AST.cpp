@@ -244,14 +244,9 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             }
         }
     } else {
-        int16_t relAddr = addr - code.size() - 2;
-        bool ext = relAddr < -128 || relAddr > 127;
-        code.push_back(uint8_t(Op::CALL) | (ext ? 0x01 : 0x00));
-        if (ext) {
-            relAddr -= 1;
-            code.push_back(relAddr >> 8);
-        }
-        code.push_back(relAddr);
+        code.push_back(uint8_t(Op::CALL));
+        code.push_back(addr >> 8);
+        code.push_back(addr);
     }
     
     // Pop the args after the call returns. Args pushed is not necessarily the

@@ -223,7 +223,7 @@ static constexpr uint16_t LocalSize = MaxIdSize - LocalStart;
 static constexpr uint8_t ExtOpcodeStart = 0x40;
 
 // 0 bit opcodes start at 0x00
-static constexpr uint8_t OneBitOperandStart = 0x10;
+static constexpr uint8_t OneBitOperandStart = 0x12;
 static constexpr uint8_t TwoBitOperandStart = 0x1c;
 static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
@@ -246,15 +246,17 @@ enum class Op: uint8_t {
     LAND    = 0x0d,
     LOR     = 0x0e,
     LNOT    = 0x0f,
+    
+    CALL    = 0x10, // Absolute address of callee (16 bit)
+    INDEX   = 0x11, // Array index (8 bit element size)
 
 // Bit 0 is 0 if the operand is a 8 bits and 1 if 16 bits.
 // Operand is sign extended
 // This limits branches to the range -32768 to 32767.
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
-    IF      = 0x10,
-    BRA     = 0x12,
-    CALL    = 0x14,
+    IF      = 0x12,
+    BRA     = 0x14,
     NCALL   = 0x16,
     ENTER   = 0x18,
 
