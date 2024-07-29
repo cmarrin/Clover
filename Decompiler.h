@@ -64,18 +64,7 @@ private:
     void emitSizeIndex(uint8_t size, uint8_t index) { emitSizeValue(size); emitIndexValue(index); }
     
     bool atEnd() { return (_in->end() - _it) <= 0; }
-    uint32_t getUInt32()
-    {
-        if (_in->end() - _it < 4) {
-            _error = Error::PrematureEOF;
-            throw true;
-        }
-        
-        // Little endian
-        return uint32_t(*_it++) | (uint32_t(*_it++) << 8) | 
-                (uint32_t(*_it++) << 16) | (uint32_t(*_it++) << 24);
-    }
-    
+
     int16_t getInt16()
     {
         if (_in->end() - _it < 2) {
