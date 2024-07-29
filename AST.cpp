@@ -262,8 +262,8 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     // Pop the args after the call returns. Args pushed is not necessarily the
-    // same as the arg list in the function. More or fewer args might be
-    // passed with VarArgs being used to access them.
+    // same as the arg list in the function. More args might be passed with
+    // VarArgs being used to access them.
     uint16_t argSize = 0;
     for (auto& it : _args) {
         argSize += typeToBytes(it->type());
