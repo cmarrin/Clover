@@ -96,6 +96,7 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     assert(!isLHS);
     
     uint8_t bytesInOperand;
+    uint8_t bytesPushed = typeToBytes(_type);
     
     if (_type == Type::Float) {
         bytesInOperand = 4;
@@ -110,8 +111,26 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     } else {
         bytesInOperand = 4;
     }
-
-    Op op = constantOp(bytesInOperand, typeToBytes(_type));
+    
+    // If we have a number that fits in bytesInOperand as unsigned
+    // but not as signed we have to make sure bytesInOperand is
+    // not less than typeToBytes(_type) or it will get sign extended
+    // and give the wrong value.
+//    if (!isSigned() && bytesInOperand < bytesPushed) {
+//        bytesInOperand += 1;
+//    }
+    
+    Op op = constantOp(bytesInOperand, bytesPushed);
+    
+    if (op == Op::NOP) {
+        // This is a case where bytesInOperand is > bytesPushed.
+        // This happens when the value is unsigned and is
+        // outside the signed range but inside the unsigned
+        // range. We just need to try again with a smaller
+        // bytesInOperand.
+        bytesInOperand = bytesPushed;
+        op = constantOp(bytesInOperand, bytesPushed);
+    }
     
     if (bytesInOperand == 0) {
         code.push_back(uint8_t(op) | _i);
