@@ -323,9 +323,6 @@ InterpreterBase::execute()
             case Op::PUSHK44 : left = getOpnd(3); _memMgr.stack().push(left, OpSize::i32); break;
             case Op::PUSHKS1:
                 left = operand;
-                if (left & 0x08) {
-                    left |= 0xfffffff0;
-                }
                 _memMgr.stack().push(left, OpSize::i8);
                 break;
             case Op::PUSHKS2:
