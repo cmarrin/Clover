@@ -48,14 +48,14 @@ initialize()
     showIntResults(3, 1, i >= 3 && i <= 33);
 
     float f = core.frand(3.5, 5.5);
-    //showIntResults(4, 1, f >= 3.5 && f <= 5.5);
+    showIntResults(4, 1, f >= 3.5 && f <= 5.5);
 
     core.printf("\nTest memset\n");
 
     uint8 localArray[10];
 
     core.memset(&localArray, 200, 10);
-    //showIntResults(5, 200, localArray[5]);
+    showIntResults(5, 200, localArray[5]);
     core.memset(&globalArray, 2134, 20);
     //showIntResults(6, 2134, globalArray[9]);
 

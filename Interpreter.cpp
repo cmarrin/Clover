@@ -76,6 +76,17 @@ InterpreterBase::callNative(NativeId id)
             _returnValue = floatToInt(float(random(int32_t(a * 1000), int32_t(b * 1000))) / 1000);
             break;
         }
+        case NativeId::MemSet: {
+            AddrNativeType addr = _memMgr.getLocal(0, AddrType);
+            uint8_t v = _memMgr.getLocal(AddrSize, Type::UInt8);
+            uint32_t n = _memMgr.getLocal(AddrSize + 1, Type::UInt32);
+            if (n == 0) {
+                break;
+            }
+            while (n--) {
+                _memMgr.setAbs(addr, v, OpSize::i8);
+            }
+        }
     }
 
     // Restore the frame and pop the dummy return address
