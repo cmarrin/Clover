@@ -163,6 +163,15 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    if (_op == Op::PUSHREF) {
+        // This is an addressof operator. There must only be an _right
+        // operand and it must be a Var.
+        if (_left == nullptr && _right->astNodeType() == ASTNodeType::Var) {
+            _right->emitCode(code, true, c);
+            return;
+        }
+    }
+    
     // _type is the result type not the type used for operation. We need
     // to get that from the left or right operand
     Type opType = Type::UInt8;
@@ -266,7 +275,7 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // VarArgs being used to access them.
     uint16_t argSize = 0;
     for (auto& it : _args) {
-        argSize += typeToBytes(it->type());
+        argSize += it->sizeInBytes();
     }
 
     if (argSize) {

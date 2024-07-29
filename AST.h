@@ -53,6 +53,10 @@ class ASTNode
     
     virtual Type type() const { return Type::None; }
     
+    // sizeInBytes is usually the same as typeToBytes(type). But if the
+    // node is a ptr to the type then it will be different.
+    virtual uint8_t sizeInBytes() const { return typeToBytes(type()); }
+    
     virtual const ASTPtr child(uint32_t i) const { return nullptr; }
     virtual const uint32_t numChildren() const { return 0; }
 
@@ -106,6 +110,10 @@ class VarNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Var; }
     virtual Type type() const override { return _symbol->type(); }
+    virtual uint8_t sizeInBytes() const override
+    {
+        return _symbol->isPointer() ? AddrSize : typeToBytes(type());
+    }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
@@ -225,7 +233,14 @@ class OpNode : public ASTNode
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Op; }
 
     virtual Type type() const override { return _type; }
-    
+
+    virtual uint8_t sizeInBytes() const override
+    {
+        // If the op is PUSHREF, this is an addressof, so it's the AddrSize of the underlying type
+        return (_op == Op::PUSHREF) ? AddrSize : typeToBytes(type());
+    }
+
+
     virtual const ASTPtr child(uint32_t i) const override
     {
         if (i == 0) {
