@@ -47,19 +47,14 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     } else if (value >= -32768 && value <= 32767) {
         extra |= 0x0c;
         addedBytes = 2;
-    } else if (value >= -8388608 && value <= 8388607) {
-        extra |= 0x14;
-        addedBytes = 3;
     } else {
         extra |= 0x1c;
         addedBytes = 4;
     }
     
     code.push_back(extra);
-    if (addedBytes > 3) {
-        code.push_back(uint8_t(value >> 24));
-    }
     if (addedBytes > 2) {
+        code.push_back(uint8_t(value >> 24));
         code.push_back(uint8_t(value >> 16));
     }
     if (addedBytes > 1) {
@@ -82,7 +77,6 @@ static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
         case 0x14: return Op::PUSHK14;
         case 0x22: return Op::PUSHK22;
         case 0x24: return Op::PUSHK24;
-        case 0x34: return Op::PUSHK34;
         case 0x44: return Op::PUSHK44;
         default: return Op::NOP;
     }
@@ -106,20 +100,10 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         bytesInOperand = 1;
     } else if (_i >= -32768 && _i <= 32767) {
         bytesInOperand = 2;
-    } else if (_i >= -8388608 && _i <= 8388607) {
-        bytesInOperand = 3;
     } else {
         bytesInOperand = 4;
     }
-    
-    // If we have a number that fits in bytesInOperand as unsigned
-    // but not as signed we have to make sure bytesInOperand is
-    // not less than typeToBytes(_type) or it will get sign extended
-    // and give the wrong value.
-//    if (!isSigned() && bytesInOperand < bytesPushed) {
-//        bytesInOperand += 1;
-//    }
-    
+
     Op op = constantOp(bytesInOperand, bytesPushed);
     
     if (op == Op::NOP) {
@@ -138,7 +122,7 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         code.push_back(uint8_t(op));
         switch(bytesInOperand) {
             case 4: code.push_back(_i >> 24);
-            case 3: code.push_back(_i >> 16);
+                    code.push_back(_i >> 16);
             case 2: code.push_back(_i >> 8);
             case 1: code.push_back(_i);
             default: break;

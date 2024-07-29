@@ -108,7 +108,6 @@ Decompiler::statement()
         case Op::PUSHK14 : emitOp("PUSHK14"); emitConstant(1); break;
         case Op::PUSHK22 : emitOp("PUSHK22"); emitConstant(2); break;
         case Op::PUSHK24 : emitOp("PUSHK24"); emitConstant(2); break;
-        case Op::PUSHK34 : emitOp("PUSHK34"); emitConstant(3); break;
         case Op::PUSHK44 : emitOp("PUSHK44"); emitConstant(4); break;
         case Op::PUSHKS1 : emitOp("PUSHKS1"); emitShortConstant(size); break;
         case Op::PUSHKS2 : emitOp("PUSHKS2"); emitShortConstant(size); break;

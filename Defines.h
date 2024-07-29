@@ -236,7 +236,6 @@ enum class Op: uint8_t {
     PUSHK14 = 0x05, // 1 byte operand, push 4 bytes
     PUSHK22 = 0x06, // 2 byte operand, push 2 bytes
     PUSHK24 = 0x07, // 2 byte operand, push 4 bytes
-    PUSHK34 = 0x08, // 3 byte operand, push 4 bytes
     PUSHK44 = 0x09, // 4 byte operand, push 4 bytes
     
     DROP1   = 0x0a, // Next byte is count (1 - 256)
