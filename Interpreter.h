@@ -61,20 +61,38 @@ class InterpreterBase
         return rom(addr);
     }
     
-    uint32_t getOpnd(uint8_t bytes)
+    uint32_t getUOpnd(OpSize opSize)
     {
         int32_t v = 0;
-        uint32_t sex = 0x01;
         
-        switch (bytes) {
-            case 3: v = getUInt8ROM(_pc++); sex <<= 8;
-            case 2: v = (v << 8) | getUInt8ROM(_pc++); sex <<= 8;
-            case 1: v = (v << 8) | getUInt8ROM(_pc++); sex <<= 8;
-            case 0: v = (v << 8) | getUInt8ROM(_pc++); sex <<= 8;
-                // Sign extend
-                sex >>= 1;
-                if ((v & sex) != 0) {
-                    v |= ~(sex - 1);
+        switch (opSize) {
+            case OpSize::i32:
+            case OpSize::flt: v = getUInt8ROM(_pc++);
+                              v = (v << 8) | getUInt8ROM(_pc++);
+            case OpSize::i16: v = (v << 8) | getUInt8ROM(_pc++);
+            case OpSize::i8 : v = (v << 8) | getUInt8ROM(_pc++);
+                break;
+        }
+        return v;
+    }
+    
+    int32_t getIOpnd(OpSize opSize)
+    {
+        int32_t v = getUOpnd(opSize);
+        
+        // Sign extend
+        switch (opSize) {
+            case OpSize::i32:
+            case OpSize::flt:
+                break;
+            case OpSize::i16:
+                if (v & 0x8000) {
+                    v |= 0xffff8000;
+                }
+                break;
+            case OpSize::i8 :
+                if (v & 0x80) {
+                    v |= 0xffffff80;
                 }
                 break;
         }
@@ -91,7 +109,7 @@ class InterpreterBase
             // Short
             v = mode >> 3;
         } else {
-            v = getOpnd((mode & 18) >> 3);
+            v = getIOpnd(OpSize((mode & 18) >> 3));
         }
         
         return v;
@@ -107,24 +125,6 @@ class InterpreterBase
     uint32_t value(OpSize opSize)
     {
         return _memMgr.getAbs(ea(opSize), opSize);
-    }
-    
-    uint32_t immed(uint8_t opnd, uint8_t& count)
-    {
-        uint8_t bytes;
-        
-        switch (opnd) {
-            case 0x00: bytes = 1; count = 1; break;
-            case 0x01: bytes = 1; count = 2; break;
-            case 0x02: bytes = 1; count = 4; break;
-            case 0x03: bytes = 2; count = 2; break;
-            case 0x04: bytes = 2; count = 4; break;
-            case 0x05: bytes = 3; count = 4; break;
-            case 0x06: bytes = 4; count = 4; break;
-            default: return 0;
-        }
-        
-        return getOpnd(bytes);
     }
     
     uint16_t _pc = 0;

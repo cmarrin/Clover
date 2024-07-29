@@ -139,6 +139,7 @@ InterpreterBase::execute()
         } else if (opInt < TwoBitOperandStart) {
             operand = opInt & 0x01;
             opcode = Op(opInt & 0xfe);
+            opSize = OpSize(operand);
         } else if (opInt < FoutBitOperandStart) {
             operand = opInt & 0x03;
             opcode = Op(opInt & 0xfc);
@@ -304,36 +305,36 @@ InterpreterBase::execute()
                 _memMgr.stack().push(left, OpSize::i8);
                 break;
             case Op::IF:
-                right = getOpnd(operand);
+                right = getIOpnd(opSize);
                 left = _memMgr.stack().pop(OpSize::i8);
                 if (left == 0) {
                     _pc += right - 2;
                 }
                 break;
             case Op::BRA:
-                right = getOpnd(operand);
+                right = getIOpnd(opSize);
                 _pc += right - 2;
                 break;
             case Op::CALL:
-                right = getOpnd(operand);
+                right = getUOpnd(OpSize::i16);
                 _memMgr.stack().push(_pc, AddrOpSize);
-                _pc += right;
+                _pc = right;
                 break;
-            case Op::DROP1   : left = getOpnd(0); _memMgr.stack().drop(left); break;
-            case Op::DROP2   : left = getOpnd(1); _memMgr.stack().drop(left); break;
+            case Op::DROP1   : left = getUOpnd(OpSize::i8); _memMgr.stack().drop(left); break;
+            case Op::DROP2   : left = getUOpnd(OpSize::i16); _memMgr.stack().drop(left); break;
 
-            case Op::ENTER   : operand = getOpnd(operand);
+            case Op::ENTER   : operand = getUOpnd(opSize);
             case Op::ENTERS  : _memMgr.setFrame(operand); break;
             
-            case Op::NCALL   : operand = getOpnd(operand);
+            case Op::NCALL   : operand = getUOpnd(opSize);
             case Op::NCALLS  : callNative(NativeId(operand)); break;
             
-            case Op::PUSHK11 : left = getOpnd(0); _memMgr.stack().push(left, OpSize::i8); break;
-            case Op::PUSHK12 : left = getOpnd(0); _memMgr.stack().push(left, OpSize::i16); break;
-            case Op::PUSHK14 : left = getOpnd(0); _memMgr.stack().push(left, OpSize::i32); break;
-            case Op::PUSHK22 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i16); break;
-            case Op::PUSHK24 : left = getOpnd(1); _memMgr.stack().push(left, OpSize::i32); break;
-            case Op::PUSHK44 : left = getOpnd(3); _memMgr.stack().push(left, OpSize::i32); break;
+            case Op::PUSHK11 : left = getIOpnd(OpSize::i8); _memMgr.stack().push(left, OpSize::i8); break;
+            case Op::PUSHK12 : left = getIOpnd(OpSize::i8); _memMgr.stack().push(left, OpSize::i16); break;
+            case Op::PUSHK14 : left = getIOpnd(OpSize::i8); _memMgr.stack().push(left, OpSize::i32); break;
+            case Op::PUSHK22 : left = getIOpnd(OpSize::i16); _memMgr.stack().push(left, OpSize::i16); break;
+            case Op::PUSHK24 : left = getIOpnd(OpSize::i16); _memMgr.stack().push(left, OpSize::i32); break;
+            case Op::PUSHK44 : left = getIOpnd(OpSize::i32); _memMgr.stack().push(left, OpSize::i32); break;
             case Op::PUSHKS1:
                 left = operand;
                 _memMgr.stack().push(left, OpSize::i8);
