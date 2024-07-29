@@ -175,6 +175,9 @@ InterpreterBase::execute()
                 _memMgr.setAbs(a, v, opSize);
                 break;
             }
+            case Op::INDEX:
+                _memMgr.stack().pop(OpSize::i8);
+                break;
             case Op::PREINC:
                 addr = ea(opSize);
             case Op::PREDEC  :
