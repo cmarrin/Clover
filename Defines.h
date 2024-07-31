@@ -13,6 +13,10 @@
 #include <stdlib.h>
 #include <memory>
 
+#ifndef ARDUINO
+#include <cstdio>
+#endif
+
 namespace lucid {
 
 #ifdef ARDUINO
@@ -32,7 +36,7 @@ namespace lucid {
     
     static inline void toString(char* s, float val, int8_t width = 0, uint8_t precision = 0)
     {
-        sprintf(s, "%*.*g", width, precision, val);
+        snprintf(s, 20, "%*.*g", width, precision, val);
     }
 
     static inline void randomSeed(uint32_t s) { srand(s); }

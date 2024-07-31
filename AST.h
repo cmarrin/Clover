@@ -12,6 +12,8 @@
 #include <vector>
 #include <string>
 
+#include <assert.h>
+
 #include "Defines.h"
 #include "Module.h"
 #include "Symbol.h"
