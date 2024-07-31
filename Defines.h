@@ -432,6 +432,8 @@ enum class Reserved {
     Else,
     Float,
     Fixed,
+    True,
+    False,
     Int8,
     UInt8,
     Int16,

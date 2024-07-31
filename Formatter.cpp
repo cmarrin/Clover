@@ -281,6 +281,14 @@ int32_t Formatter::format(Generator gen, lucid::AddrNativeType fmt, lucid::VarAr
             gen(static_cast<char>(va.arg(lucid::Type::UInt8)));
             size++;
             break;
+        case 'b': {
+            // Boolean
+            const char* s = va.arg(lucid::Type::UInt8) ? "true" : "false";
+            for (int i = 0; s[i] != '\0'; ++i) {
+                gen(s[i]);
+            }
+            break;
+        }
         case 's':
             size += outString(gen, va.arg(lucid::Type::String), width, precision, flags);
             break;

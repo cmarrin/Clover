@@ -961,6 +961,14 @@ Compiler::primaryExpression()
 
         expect(false, Error::ExpectedVar);
     }
+
+    if (match(Reserved::True)) {
+        return std::make_shared<ConstantNode>(Type::UInt8, 1, annotationIndex());
+    }
+    
+    if (match(Reserved::False)) {
+        return std::make_shared<ConstantNode>(Type::UInt8, 0, annotationIndex());
+    }
     
     float f;
     if (floatValue(f)) {
@@ -1218,6 +1226,8 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "continue",   Reserved::Continue },
         { "while",      Reserved::While },
         { "loop",       Reserved::Loop },
+        { "true",       Reserved::True },
+        { "false",      Reserved::False },
         { "float",      Reserved::Float },
         { "fixed",      Reserved::Fixed },
         { "int8",       Reserved::Int8 },
