@@ -321,7 +321,6 @@ enum class Op: uint8_t {
 enum class Type : uint8_t {
     None = 0,
     Float = 1,
-    Fixed = 2,
     
     Int8 = 10,
     UInt8 = 11,
@@ -331,11 +330,11 @@ enum class Type : uint8_t {
     UInt32 = 15,
     String = 18,
     Function = 19,
-    
-    Struct = 20,
-    
-    Ptr = 30
 };
+
+constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
+
+static inline bool isStruct(Type type) { return uint8_t(type) >= StructTypeStart; }
 
 enum class Index : uint8_t { X = 0x01, Y = 0x02, U = 0x03 };
 enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
@@ -381,7 +380,11 @@ static inline uint8_t typeToBytes(Type type)
         case Type::UInt32   : return 4;
         case Type::Float    : return 4;
         case Type::String   : return AddrSize;
-        default: return 0;
+        default:
+            if (uint8_t(type) >= StructTypeStart) {
+                return AddrSize;
+            }
+            return 0;
     }
 };
 

@@ -50,16 +50,16 @@ public:
         return function;
     }
 
-    SymbolPtr addLocal(const std::string& name, Type type, uint8_t size, bool ptr)
+    bool addLocal(const SymbolPtr& sym)
     {
         // Check for duplicates
-        SymbolPtr symbol = findLocal(name);
+        SymbolPtr symbol = findLocal(sym->name());
         if (symbol) {
-            return nullptr;
+            return false;
         }
-        _locals.push_back(std::make_shared<Symbol>(name, type, size, ptr));
-        _localSize += size;
-        return _locals.back();
+        _locals.push_back(sym);
+        _localSize += sym->size();
+        return true;
     }
 
     SymbolPtr findLocal(const std::string& s)
@@ -92,7 +92,6 @@ private:
     std::vector<StructPtr> _structs;
     std::vector<SymbolPtr> _locals;
     uint8_t _localSize = 0;
-    uint8_t _size = 0;
     Type _type = Type::None;
     ASTPtr _astNode = std::make_shared<StatementsNode>(-1);
 };

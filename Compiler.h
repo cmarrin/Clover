@@ -248,8 +248,6 @@ enum class Error {
     ConstMustBeSimpleType,
 };
 
-static constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
-
 class Compiler {
 public:
   	Compiler(std::istream* stream, AnnotationList* annotations)

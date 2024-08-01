@@ -10,6 +10,7 @@
 #include "Function.h"
 
 #include "AST.h"
+#include "Symbol.h"
 
 using namespace lucid;
 
@@ -20,7 +21,9 @@ Function::Function(const char* name, NativeId nativeId, Type returnType, const S
     , _addr(int32_t(nativeId))
 {
     for (const auto& it : locals) {
-        addArg(it.name(), it.type(), it.size(), it.isPointer());
+        // FIXME: set addr
+        SymbolPtr sym = std::make_shared<Symbol>(it.name(), it.type(), it.isPointer(), 1, 1);
+        addArg(sym);
     }
 }
 
@@ -38,7 +41,7 @@ Function::pruneLocals(uint32_t n)
 {
     // remove the last n locals and reduce _localSize
     while (n-- > 0) {
-        _localSize -= _locals.back()->size();
+        _localSize -= typeToBytes(_locals.back()->type());
         _locals.pop_back();
     }
 }
@@ -53,6 +56,40 @@ Function::findLocal(const std::string& s) const
         return *it;
     }
     return nullptr;
+}
+
+bool
+Function::addLocal(const SymbolPtr& sym)
+{
+    // Check for duplicates
+    if (findLocal(sym->name())) {
+        return false;
+    }
+    
+    _locals.push_back(sym);
+    
+    _localSize += sym->size();
+    
+    if (_localHighWaterMark < _localSize) {
+        _localHighWaterMark = _localSize;
+    }
+    return true;
+}
+
+bool
+Function::addArg(const SymbolPtr& sym)
+{
+    // Check for duplicates
+    if (findLocal(sym->name())) {
+        return false;
+    }
+    
+    // args start at 0 and go positive. So just use the argSize as the addr
+    _locals.push_back(sym);
+    
+    _argSize += sym->size();
+    _argCount += 1;
+    return true;
 }
 
 Type

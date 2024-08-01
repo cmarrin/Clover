@@ -23,16 +23,16 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
 {
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>("core");
-    coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, AddrSize, 0 }});
-    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::UInt8, AddrSize, 0, true },
-                                                                           { "v", Type::UInt8, 1, 4 },
-                                                                           { "n", Type::UInt32, 4, 5 }});
-    coreModule->addNativeFunction("irand", NativeId::RandomInt, Type::Int32, {{ "min", Type::Int32, 4, 0 }, { "max", Type::Int32, 4, 4 }});
-    coreModule->addNativeFunction("frand", NativeId::RandomFloat, Type::Float, {{ "min", Type::Float, 4, 0 }, { "max", Type::Float, 4, 4 }});
-    coreModule->addNativeFunction("imin", NativeId::MinInt, Type::Int32, {{ "a", Type::Int32, 4, 0 }, { "b", Type::Int32, 4, 4 }});
-    coreModule->addNativeFunction("imax", NativeId::MaxInt, Type::Int32, {{ "a", Type::Int32, 4, 0 }, { "b", Type::Int32, 4, 4 }});
-    coreModule->addNativeFunction("fmin", NativeId::MinFloat, Type::Float, {{ "a", Type::Float, 4, 0 }, { "b", Type::Float, 4, 4 }});
-    coreModule->addNativeFunction("fmax", NativeId::MaxFloat, Type::Float, {{ "a", Type::Float, 4, 0 }, { "b", Type::Float, 4, 4 }});
+    coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, false, 1, 1 }});
+    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::UInt8, true, 1, 1 },
+                                                                           { "v", Type::UInt8, false, 1, 1 },
+                                                                           { "n", Type::UInt32, false, 1, 1 }});
+    coreModule->addNativeFunction("irand", NativeId::RandomInt, Type::Int32, {{ "min", Type::Int32, false, 1, 1 }, { "max", Type::Int32, false, 1, 1 }});
+    coreModule->addNativeFunction("frand", NativeId::RandomFloat, Type::Float, {{ "min", Type::Float, false, 1, 1 }, { "max", Type::Float, false, 1, 1 }});
+    coreModule->addNativeFunction("imin", NativeId::MinInt, Type::Int32, {{ "a", Type::Int32, false, 1, 1 }, { "b", Type::Int32, false, 1, 1 }});
+    coreModule->addNativeFunction("imax", NativeId::MaxInt, Type::Int32, {{ "a", Type::Int32, false, 1, 1 }, { "b", Type::Int32, false, 1, 1 }});
+    coreModule->addNativeFunction("fmin", NativeId::MinFloat, Type::Float, {{ "a", Type::Float, false, 1, 1 }, { "b", Type::Float, false, 1, 1 }});
+    coreModule->addNativeFunction("fmax", NativeId::MaxFloat, Type::Float, {{ "a", Type::Float, false, 1, 1 }, { "b", Type::Float, false, 1, 1 }});
 
     _modules.push_back(coreModule);
     
@@ -283,30 +283,32 @@ Compiler::var(Type type, bool isPointer)
     std::string id;
     expect(identifier(id), Error::ExpectedIdentifier);
     
-    uint32_t size = 1;
+    StructPtr struc;
+    
+    if (isStruct(type)) {
+        struc = structFromType(type);
+    }
+    
+    SymbolPtr sym;
+    uint32_t nElements = 1;
 
     if (match(Token::OpenBracket)) {
-        expect(integerValue(size), Error::ExpectedValue);
+        expect(integerValue(nElements), Error::ExpectedValue);
         expect(Token::CloseBracket);
     }
     
-    size *= sizeInBytes(type);
-
-    // Put the var in the current struct unless we're in a function, then put it in _locals
-    SymbolPtr idSym;
+    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->size() : typeToBytes(type), nElements);
+    expect(sym != nullptr, Error::DuplicateIdentifier);
     
+    // Put the var in the current struct unless we're in a function, then put it in _locals    
     if (_inFunction) {
-        idSym = currentFunction()->addLocal(id, type, size, isPointer);
-        expect(idSym != nullptr, Error::DuplicateIdentifier);
+        currentFunction()->addLocal(sym);
     } else {
         expect(!_structStack.empty(), Error::InternalError);
-        
-        // FIXME: Need to deal with ptr and size
-        idSym = currentStruct()->addLocal(id, type, size, false);
-        expect(idSym != nullptr, Error::DuplicateIdentifier);
+        currentStruct()->addLocal(sym);
     }
     
-    // Check for an initializer. We only allow initializers on Int and Float
+    // Check for an initializer.
     ASTPtr ast;
     
     if (match(Token::Equal)) {
@@ -330,7 +332,7 @@ Compiler::var(Type type, bool isPointer)
     }
     
     if (ast) {
-        ASTPtr idNode = std::make_shared<VarNode>(idSym, annotationIndex());
+        ASTPtr idNode = std::make_shared<VarNode>(sym, annotationIndex());
         ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, Type::None, true, annotationIndex());
     
         if (_inFunction) {
@@ -348,10 +350,6 @@ Compiler::type(Type& t)
 {
     if (match(Reserved::Float)) {
         t = Type::Float;
-        return true;
-    }
-    if (match(Reserved::Fixed)) {
-        t = Type::Fixed;
         return true;
     }
     if (match(Reserved::Int8)) {
@@ -605,7 +603,8 @@ Compiler::forStatement()
 
             // Generate an expression
             expect(_inFunction, Error::InternalError);
-            expect(currentFunction()->addLocal(id, t, sizeInBytes(t), false) != nullptr, Error::DuplicateIdentifier);
+            SymbolPtr sym = std::make_shared<Symbol>(id, t, false, 1, 1);
+            expect(currentFunction()->addLocal(sym), Error::DuplicateIdentifier);
             _nextMem += 1;
 
             // FIXME: This needs to be an arithmeticExpression?
@@ -1014,7 +1013,10 @@ Compiler::formalParameterList()
     
         std::string id;
         expect(identifier(id), Error::ExpectedIdentifier);
-        expect(currentFunction()->addArg(id, t, sizeInBytes(t), isPointer) != nullptr, Error::DuplicateIdentifier);
+        
+        // FIXME: set addr
+        SymbolPtr sym = std::make_shared<Symbol>(id, t, isPointer, 1, 1);
+        expect(currentFunction()->addArg(sym), Error::DuplicateIdentifier);
         
         if (!match(Token::Comma)) {
             return true;
@@ -1397,7 +1399,6 @@ Compiler::sizeInBytes(Type type) const
     switch(type) {
         case Type::UInt8:
         case Type::Int8:    return 1;
-        case Type::Fixed:
         case Type::UInt16:
         case Type::Int16:   return 2;
         case Type::Float:

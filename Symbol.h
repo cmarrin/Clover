@@ -32,28 +32,55 @@ public:
     
     Symbol(const FunctionPtr& func) : _name(func->name()), _type(Type::Function), _function(func) { }
     
-    Symbol(const std::string& name, Type type, uint8_t size, int32_t addr, bool ptr = false)
+    // Symbol can be:
+    //
+    //      scalar              - size is derived from typeToBytes().
+    //      struct              - size comes from struct definition
+    //      array               - size is typeToBytes of underlying type * nElements
+    //      pointer to scalar   - size is AddrSize
+    //      pointer to struct   - size is AddrSize
+    //
+    // Pointer to array is not allowed. When an array is passed as an arg, you always pass
+    // a pointer to it. So the arg type is a pointer to the underlying type.
+
+    Symbol(const std::string& name, Type type, bool ptr, uint16_t size, uint16_t nElements)
         : _name(name)
         , _type(type)
         , _ptr(ptr)
-        , _size(size)
-        , _addr(addr)
+        , _structSize(size)
+        , _nElements(nElements)
     { }
+    
+    void setAddr(int32_t addr) { _addr = addr; }
     
     const std::string& name() const { return _name; }
     Type type() const { return _type; }
     bool isPointer() const { return _ptr; }
-    uint8_t size() const { return _size; }
     int32_t addr() const { return _addr; }
     FunctionPtr function() const { return _function; }
+    uint16_t nElements() const { return _nElements; }
+    uint16_t size() const
+    {
+        if (_ptr) {
+            return AddrSize;
+        }
+        
+        if (isStruct(_type)) {
+            // Might be an array of structs
+            return _structSize * _nElements;
+        }
+        
+        return typeToBytes(_type) * _nElements;
+    }
     
 private:
     std::string _name;
     Type _type = Type::None;
     bool _ptr = false;
-    uint8_t _size = 0;
     int32_t _addr = 0;
-    FunctionPtr _function = nullptr;
+    FunctionPtr _function;
+    uint16_t _nElements = 1;
+    uint16_t _structSize = 0;
 };
 
 }
