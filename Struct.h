@@ -57,7 +57,12 @@ public:
         if (symbol) {
             return false;
         }
+        
         _locals.push_back(sym);
+        
+        // Locals start at 0 and go positive. Their addresses are relative
+        // to the structure's self pointer, stored in the Y register.
+        sym->setAddr(_localSize);
         _localSize += sym->size();
         return true;
     }

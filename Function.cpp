@@ -68,6 +68,12 @@ Function::addLocal(const SymbolPtr& sym)
     
     _locals.push_back(sym);
     
+    // Locals start at -1 and go negative. The address is the -_localSize
+    // minus the size of the symbol. These are addresses relative to the
+    // base pointer (U) register, so are adjusted during code generation
+    // for the space taken up by the previous base pointer and return 
+    // address.
+    sym->setAddr(-_localSize - sym->size());
     _localSize += sym->size();
     
     if (_localHighWaterMark < _localSize) {
@@ -84,8 +90,10 @@ Function::addArg(const SymbolPtr& sym)
         return false;
     }
     
-    // args start at 0 and go positive. So just use the argSize as the addr
     _locals.push_back(sym);
+    
+    // Args start at 0 and go positive
+    sym->setAddr(_argSize);
     
     _argSize += sym->size();
     _argCount += 1;
