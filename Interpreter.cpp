@@ -84,7 +84,7 @@ InterpreterBase::callNative(NativeId id)
                 break;
             }
             while (n--) {
-                _memMgr.setAbs(addr, v, OpSize::i8);
+                _memMgr.setAbs(addr++, v, OpSize::i8);
             }
         }
     }
