@@ -56,8 +56,8 @@ initialize()
 
     core.memset(&localArray, 200, 10);
     showIntResults(5, 200, localArray[5]);
-    core.memset(&globalArray, 2134, 20);
-    //showIntResults(6, 2134, globalArray[9]);
+    core.memset(&globalArray, 0x55, 20 * 2);
+    showIntResults(6, 0x5555, globalArray[9]);
 
     core.printf("\nTest Min/Max\n");
     showIntResults(7, 20, core.imin(20, 21));
