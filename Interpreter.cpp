@@ -165,13 +165,19 @@ InterpreterBase::execute()
                 _memMgr.stack().push(ea(OpSize::i32), AddrOpSize);
                 break;
             case Op::DEREF1:
-                _memMgr.stack().push(ea(OpSize::i8), AddrOpSize);
+                left = _memMgr.stack().pop(AddrOpSize);
+                right = _memMgr.getAbs(left, OpSize::i8);
+                _memMgr.stack().push(right, OpSize::i8);
                 break;
             case Op::DEREF2:
-                _memMgr.stack().push(ea(OpSize::i16), AddrOpSize);
+                left = _memMgr.stack().pop(AddrOpSize);
+                right = _memMgr.getAbs(left, OpSize::i16);
+                _memMgr.stack().push(right, OpSize::i16);
                 break;
             case Op::DEREF4:
-                _memMgr.stack().push(ea(OpSize::i32), AddrOpSize);
+                left = _memMgr.stack().pop(AddrOpSize);
+                right = _memMgr.getAbs(left, OpSize::i16);
+                _memMgr.stack().push(right, OpSize::i16);
                 break;
             case Op::RET:
                 _memMgr.restoreFrame();
@@ -214,7 +220,7 @@ InterpreterBase::execute()
             case Op::PUSH4: _memMgr.stack().push(value(OpSize::i32), OpSize::i32); break;
             case Op::INDEX: {
                 uint8_t elementSize = getUOpnd(OpSize::i8);
-                uint32_t index = _memMgr.stack().pop(OpSize::i32);
+                uint32_t index = _memMgr.stack().pop(OpSize::i16);
                 AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
                 addr += index * elementSize;
                 _memMgr.stack().push(addr, AddrOpSize);
