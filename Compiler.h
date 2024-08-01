@@ -246,6 +246,7 @@ enum class Error {
     ExecutableTooBig,
     InitializerNotAllowed,
     ConstMustBeSimpleType,
+    ExpectedIndexable,
 };
 
 class Compiler {

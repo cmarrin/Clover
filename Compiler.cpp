@@ -888,7 +888,11 @@ Compiler::postfixExpression()
             expect(Token::CloseParen);
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
-            ASTPtr result = std::make_shared<OpNode>(lhs, Op::NOP, rhs, Type::None, false, annotationIndex()); // FIXME: Implement
+            
+            expect(lhs->isIndexable(), Error::ExpectedIndexable);
+            
+            // array index does a PUSHREF of the lhs, then a PUSH of the rhs and then an INDEX with element size as operand
+            ASTPtr result = std::make_shared<IndexNode>(lhs, rhs, annotationIndex());
             expect(Token::CloseBracket);
             return result;
         } else if (match(Token::Dot)) {

@@ -327,6 +327,15 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
 }
 
 void
+BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
+{
+    // FIXME: For now assume long addresses
+    int16_t rel = addr - _fixupIndex;
+    code[_fixupIndex] = rel >> 8;
+    code[_fixupIndex + 1] = rel;
+}
+
+void
 BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     // FIXME: For now all branches are long (16 bit, -32768 to 32767). Eventually we
@@ -363,10 +372,18 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
+IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
-    // FIXME: For now assume long addresses
-    int16_t rel = addr - _fixupIndex;
-    code[_fixupIndex] = rel >> 8;
-    code[_fixupIndex + 1] = rel;
+    _lhs->emitCode(code, true, c);
+    _rhs->emitCode(code, false, c);
+
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
+    code.push_back(uint8_t(Op::INDEX));
+    code.push_back(typeToBytes(_lhs->type()));
+    
+    // if isLHS is true then we're done, we have a ref on TOS. If not we need to DEREF
+    if (!isLHS) {
+        code.push_back(uint8_t(Op::DEREF) | typeToSizeBits(type()));
+    }
 }
