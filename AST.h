@@ -244,7 +244,7 @@ class OpNode : public ASTNode
     virtual uint8_t sizeInBytes() const override
     {
         // If the op is PUSHREF, this is an addressof, so it's the AddrSize of the underlying type
-        return (_op == Op::PUSHREF) ? AddrSize : typeToBytes(type());
+        return (_op == Op::PUSHREF1 || _op == Op::PUSHREF2 || _op == Op::PUSHREF4) ? AddrSize : typeToBytes(type());
     }
 
 

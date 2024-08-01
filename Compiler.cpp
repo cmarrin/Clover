@@ -865,7 +865,7 @@ Compiler::unaryExpression()
     } else if (match(Token::Dec)) {
         opcode = Op::PREDEC;
     } else if (match(Token::And)) {
-        opcode = Op::PUSHREF; // FIXME::Implement addressof
+        opcode = Op::PUSHREF1; // FIXME...
     } else {
         return nullptr;
     }

@@ -30,10 +30,16 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
     // If isLHS is true, code generated will be a Ref
-    Op op = isLHS ? Op::PUSHREF : Op::PUSH;
+    Op op;
+    switch (typeToOpSize(_symbol->type())) {
+        case OpSize::i8:  op = isLHS ? Op::PUSHREF1 : Op::PUSH1; break;
+        case OpSize::i16: op = isLHS ? Op::PUSHREF2 : Op::PUSH2; break;
+        case OpSize::i32:
+        case OpSize::flt: op = isLHS ? Op::PUSHREF4 : Op::PUSH4; break;
+    }
     
     // FIXME: We assume we're indexing from U, is this always true? What about using Y as the 'this' ptr?
-    code.push_back(uint8_t(op) | typeToSizeBits(_symbol->type()));
+    code.push_back(uint8_t(op));
     
     int32_t value = _symbol->addr();
     uint8_t extra = uint8_t(Index::U);
@@ -147,7 +153,7 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
-    if (_op == Op::PUSHREF) {
+    if (_op == Op::PUSHREF1 || _op == Op::PUSHREF2 || _op == Op::PUSHREF4) {
         // This is an addressof operator. There must only be an _right
         // operand and it must be a Var.
         if (_left == nullptr && _right->astNodeType() == ASTNodeType::Var) {
@@ -189,14 +195,17 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // arithmethic assignment (e.g., +=). We need to handle that.
     Op op = _op;
     if (_isAssignment && op == Op::NOP) {
-        op = Op::DEREF;
+        switch (typeToOpSize(opType)) {
+            case OpSize::i8:  op = Op::POPDEREF1; break;
+            case OpSize::i16: op = Op::POPDEREF2; break;
+            case OpSize::i32:
+            case OpSize::flt: op = Op::POPDEREF4; break;
+        }
+        code.push_back(uint8_t(op));
+        return;
     }
     
-    if (isLogical) {
-        code.push_back(uint8_t(op));
-    } else {
-        code.push_back(uint8_t(op) | typeToSizeBits(opType));
-    }
+    code.push_back(uint8_t(op) | typeToSizeBits(opType));
 }
 
 void
@@ -375,6 +384,9 @@ void
 IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     _lhs->emitCode(code, true, c);
+    
+    // ths must be uint16
+    _rhs = TypeCastNode::castIfNeeded(_rhs, Type::UInt16, _annotationIndex);
     _rhs->emitCode(code, false, c);
 
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
@@ -384,6 +396,14 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     // if isLHS is true then we're done, we have a ref on TOS. If not we need to DEREF
     if (!isLHS) {
-        code.push_back(uint8_t(Op::DEREF) | typeToSizeBits(type()));
+        Op op;
+        switch (typeToOpSize(type())) {
+            case OpSize::i8:  op = Op::DEREF1; break;
+            case OpSize::i16: op = Op::DEREF2; break;
+            case OpSize::i32:
+            case OpSize::flt: op = Op::DEREF4; break;
+        }
+        
+        code.push_back(uint8_t(op));
     }
 }
