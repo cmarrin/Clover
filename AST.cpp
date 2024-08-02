@@ -276,7 +276,12 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     // If we want to use the _returnValue, push it
     if (_function->pushReturn()) {
-        code.push_back(uint8_t(Op::PUSHR));
+        switch (typeToOpSize(_function->returnType())) {
+            case OpSize::i8:  code.push_back(uint8_t(Op::PUSHR1)); break;
+            case OpSize::i16: code.push_back(uint8_t(Op::PUSHR2)); break;
+            case OpSize::i32: 
+            case OpSize::flt: code.push_back(uint8_t(Op::PUSHR4)); break;
+        }
     }
 }
 

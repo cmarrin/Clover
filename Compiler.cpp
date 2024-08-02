@@ -762,7 +762,7 @@ Compiler::returnStatement()
     
     ASTPtr ast = expression();
     if (ast) {
-        // Push the return value
+        // FIXME: Return value goes in _returnValue
     } else {
         // If the function return type not None, we need a return value
         expect(currentFunction()->returnType() == Type::None, Error::MismatchedType);

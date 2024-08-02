@@ -322,6 +322,7 @@ class FunctionCallNode : public ASTNode
     FunctionCallNode(FunctionPtr func, int32_t annotationIndex) : ASTNode(annotationIndex), _function(func) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::FunctionCall; }
+    
     virtual Type type() const override { return _function ? _function->returnType() : Type::None; }
 
     virtual void addNode(const ASTPtr& node) override

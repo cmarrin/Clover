@@ -214,14 +214,14 @@ static constexpr uint16_t LocalSize = MaxIdSize - LocalStart;
 static constexpr uint8_t ExtOpcodeStart = 0x40;
 
 // 0 bit opcodes start at 0x00
-static constexpr uint8_t OneBitOperandStart = 0x20;
-static constexpr uint8_t TwoBitOperandStart = 0x28;
+static constexpr uint8_t OneBitOperandStart = 0x28;
+static constexpr uint8_t TwoBitOperandStart = 0x30;
 static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
     RET     = 0x01,
-    PUSHS   = 0x02, // Following byte is length, followed by length chars
+    PUSHS   = 0x02,
     PUSHK11 = 0x03, // 1 byte operand, push 1 byte
     PUSHK12 = 0x04, // 1 byte operand, push 2 bytes
     PUSHK14 = 0x05, // 1 byte operand, push 4 bytes
@@ -232,46 +232,52 @@ enum class Op: uint8_t {
     DROP1   = 0x09, // Next byte is count (1 - 256)
     DROP2   = 0x0a, // Next 2 bytes are count (1 - 65536)
     
-    PUSHR   = 0x0b, // Push _returnValue (4 bytes)
+    LAND    = 0x0b,
+    LOR     = 0x0c,
+    LNOT    = 0x0d,
     
-    LAND    = 0x0c,
-    LOR     = 0x0d,
-    LNOT    = 0x0e,
+    CALL    = 0x0e, // Absolute address of callee (16 bit)
+    INDEX   = 0x0f, // Stack has a ref and index. Operand is 8 bit element size in bytes, push new ref offset by index * operand
     
-    CALL    = 0x0f, // Absolute address of callee (16 bit)
-    INDEX   = 0x10, // Stack has a ref and index. Operand is 8 bit element size in bytes, push new ref offset by index * operand
-    
-    DEREF1  = 0x11, // TOS has ref, pop it, load the value at that address and push it
-    DEREF2  = 0x12,
-    DEREF4  = 0x13,
-    POP1    = 0x14, // Next byte is addr mode, pop TOS and store at address
-    POP2    = 0x15,
-    POP4    = 0x16,
-    PUSHREF1= 0x17, // Next byte is addr mode. Data width is used when computing negative offsets from U
-    PUSHREF2= 0x18,
-    PUSHREF4= 0x19,
-    POPDEREF1=0x1a, // TOS has value then addr. Store value at addr
-    POPDEREF2=0x1b, 
-    POPDEREF4=0x1c,
-    PUSH1   = 0x1d, // Next byte is addr mode, push value at addr
-    PUSH2   = 0x1e,
-    PUSH4   = 0x1f,
+    DEREF1  = 0x10, // TOS has ref, pop it, load the value at that address and push it
+    DEREF2  = 0x11,
+    DEREF4  = 0x12,
+    POP1    = 0x13, // Next byte is addr mode, pop TOS and store at address
+    POP2    = 0x14,
+    POP4    = 0x15,
+    PUSHREF1= 0x16, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    PUSHREF2= 0x17,
+    PUSHREF4= 0x18,
+    POPDEREF1=0x19, // TOS has value then addr. Store value at addr
+    POPDEREF2=0x1a, 
+    POPDEREF4=0x1b,
+    PUSH1   = 0x1c, // Next byte is addr mode, push value at addr
+    PUSH2   = 0x1d,
+    PUSH4   = 0x1e,
+
+    DUP1    = 0x1f,
+    DUP2    = 0x20,
+    DUP4    = 0x21,
+    SWAP1   = 0x22,
+    SWAP2   = 0x23,
+    SWAP4   = 0x24,
+
+    PUSHR1  = 0x25, // Push _returnValue (1 byte)
+    PUSHR2  = 0x26, // Push _returnValue (2 bytes)
+    PUSHR4  = 0x27, // Push _returnValue (4 bytes)
 
 // Bit 0 is 0 if the operand is a 8 bits and 1 if 16 bits.
 // Operand is sign extended
 // This limits branches to the range -32768 to 32767.
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
-    IF      = 0x20,
-    BRA     = 0x22,
-    NCALL   = 0x24,
-    ENTER   = 0x26,
+    IF      = 0x28,
+    BRA     = 0x2a,
+    NCALL   = 0x2c,
+    ENTER   = 0x2e,
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
-    DUP     = 0x28,
-    SWAP    = 0x2c,
-    
     ADD     = 0x30,
     SUB     = 0x34,
     IMUL    = 0x38,

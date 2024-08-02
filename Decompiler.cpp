@@ -103,7 +103,9 @@ Decompiler::statement()
         case Op::PUSHREF4: emitOp("PUSHREF4"); emitIndex(getUInt8()); break;
         case Op::INDEX   : emitOp("INDEX"); emitNumber(getUInt8()); break;
         case Op::RET     : emitOp("RET"); break;
-        case Op::PUSHR   : emitOp("PUSHR"); break;
+        case Op::PUSHR1  : emitOp("PUSHR1"); break;
+        case Op::PUSHR2  : emitOp("PUSHR2"); break;
+        case Op::PUSHR4  : emitOp("PUSHR4"); break;
         case Op::POPDEREF1: emitOp("POPDEREF1"); break;
         case Op::POPDEREF2: emitOp("POPDEREF2"); break;
         case Op::POPDEREF4: emitOp("POPDEREF4"); break;
@@ -125,10 +127,14 @@ Decompiler::statement()
         case Op::PUSHKS1 : emitOp("PUSHKS1"); emitShortConstant(size); break;
         case Op::PUSHKS2 : emitOp("PUSHKS2"); emitShortConstant(size); break;
         case Op::PUSHKS4 : emitOp("PUSHKS4"); emitShortConstant(size); break;
-        case Op::DUP     : emitOp("DUP"); emitSize(size); break;
+        case Op::DUP1    : emitOp("DUP1"); emitSize(size); break;
+        case Op::DUP2    : emitOp("DUP2"); emitSize(size); break;
+        case Op::DUP4    : emitOp("DUP4"); emitSize(size); break;
         case Op::DROP1   : emitOp("DROP"); emitNumber(getUInt8()); break;
         case Op::DROP2   : emitOp("DROP"); emitNumber(getUInt16()); break;
-        case Op::SWAP    : emitOp("SWAP"); emitSize(size); break;
+        case Op::SWAP1   : emitOp("SWAP1"); emitSize(size); break;
+        case Op::SWAP2   : emitOp("SWAP2"); emitSize(size); break;
+        case Op::SWAP4   : emitOp("SWAP4"); emitSize(size); break;
         case Op::ADD     : emitOp("ADD"); emitSize(size); break;
         case Op::SUB     : emitOp("SUB"); emitSize(size); break;
         case Op::IMUL    : emitOp("IMUL"); emitSize(size); break;

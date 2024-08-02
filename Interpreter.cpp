@@ -249,7 +249,13 @@ InterpreterBase::execute()
                     return 0;
                 }
                 break;
-            case Op::PUSHR:
+            case Op::PUSHR1:
+                _memMgr.stack().push(_returnValue, OpSize::i8);
+                break;
+            case Op::PUSHR2:
+                _memMgr.stack().push(_returnValue, OpSize::i16);
+                break;
+            case Op::PUSHR4:
                 _memMgr.stack().push(_returnValue, OpSize::i32);
                 break;
             case Op::POP1:
@@ -292,8 +298,12 @@ InterpreterBase::execute()
             case Op::PREDEC  :
             case Op::POSTINC :
             case Op::POSTDEC :
-            case Op::DUP     : _memMgr.stack().dup(opSize); break;
-            case Op::SWAP    : _memMgr.stack().swap(opSize); break;
+            case Op::DUP1    : _memMgr.stack().dup(OpSize::i8); break;
+            case Op::DUP2    : _memMgr.stack().dup(OpSize::i16); break;
+            case Op::DUP4    : _memMgr.stack().dup(OpSize::i32); break;
+            case Op::SWAP1   : _memMgr.stack().swap(OpSize::i8); break;
+            case Op::SWAP2   : _memMgr.stack().swap(OpSize::i16); break;
+            case Op::SWAP4   : _memMgr.stack().swap(OpSize::i32); break;
             case Op::ADD:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
