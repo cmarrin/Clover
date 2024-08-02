@@ -258,8 +258,10 @@ void Decompiler::emitIndexValue(uint8_t index)
     }
     
     if (mode == 0) {
-        // Reserved
-        _out->append("???");
+        // Global
+        _out->append("[");
+        _out->append(std::to_string(value));
+        _out->append("]");
     } else {
         _out->append(std::to_string(value));
         _out->append(",");

@@ -349,7 +349,7 @@ constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
 
 static inline bool isStruct(Type type) { return uint8_t(type) >= StructTypeStart; }
 
-enum class Index : uint8_t { X = 0x01, Y = 0x02, U = 0x03 };
+enum class Index : uint8_t { Global = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
 enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
 
 static constexpr uint8_t opSizeToBytes(OpSize opSize)
