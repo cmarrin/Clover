@@ -35,6 +35,38 @@ static int32_t typeCast(int32_t v, OpSize from, Type to)
     return v;
 }
 
+InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize) : _memMgr(mem, memSize)
+{
+    // Check signature
+    if (getUInt8ROM(0) != 'l' || getUInt8ROM(1) != 'u' || getUInt8ROM(2) != 'c' || getUInt8ROM(3) != 'd') {
+        _error = Error::InvalidSignature;
+        return;
+    }
+    
+    AddrNativeType entryPoint = 0;
+    entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
+    entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
+    entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
+    entryPoint |= uint32_t(getUInt8ROM(7));
+    
+    if (entryPoint == 0) {
+        _error = Error::NoEntryPoint;
+        return;
+    }
+
+    _pc = entryPoint;
+        
+    uint32_t topLevelStructSize = 0;
+    topLevelStructSize |= uint32_t(getUInt8ROM(8)) << 24;
+    topLevelStructSize |= uint32_t(getUInt8ROM(9)) << 16;
+    topLevelStructSize |= uint32_t(getUInt8ROM(10)) << 8;
+    topLevelStructSize |= uint32_t(getUInt8ROM(11));
+
+    // FIXME: For now we set Y to the top level struct.
+    _memMgr.setFrame(topLevelStructSize);
+    _memMgr.self() = _memMgr.stack().sp();
+}
+
 void
 InterpreterBase::addArg(uint32_t v, Type type)
 {
@@ -97,27 +129,8 @@ InterpreterBase::callNative(NativeId id)
 int32_t
 InterpreterBase::execute()
 {
-    // Check signature
-    if (getUInt8ROM(0) != 'l' || getUInt8ROM(1) != 'u' || getUInt8ROM(2) != 'c' || getUInt8ROM(3) != 'd') {
-        _error = Error::InvalidSignature;
-        return -1;
-    }
-    
-    AddrNativeType entryPoint = 0;
-    entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
-    entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
-    entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
-    entryPoint |= uint32_t(getUInt8ROM(7));
-    
-    if (entryPoint == 0) {
-        _error = Error::NoEntryPoint;
-        return -1;
-    }
-    
     // Push a dummy return address
     _memMgr.stack().push(0, AddrOpSize);
-    
-    _pc = entryPoint;
     
     while(1) {
         if (_memMgr.error() != Memory::Error::None) {

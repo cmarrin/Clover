@@ -77,6 +77,7 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
         case lucid::Error::ExecutableTooBig: err = "executable too big"; break;
         case lucid::Error::InitializerNotAllowed: err = "initializer not allowed for this type"; break;
         case lucid::Error::ConstMustBeSimpleType: err = "const must be simple type"; break;
+        case lucid::Error::ExpectedIndexable: err = "expected indexable variable"; break;
     }
     
     if (token == lucid::Token::EndOfFile) {
@@ -254,34 +255,41 @@ int main(int argc, char * const argv[])
             lucid::ROMBase = &(executable[0]);
             
             MyInterpreter interp;
-
-            std::cout << "Running '" << path << "' command...\n";
             
-            // Pass in 2 args, a uint8 command and a uint16 number.
-            // Push them backwards
-            interp.addArg(2, lucid::Type::UInt16);
-            interp.addArg('f', lucid::Type::UInt8);
-            int32_t result = interp.interp();
-            if (result == 0) {
-                std::cout << "Complete\n\n";
-            } else {
+            if (interp.error() == lucid::InterpreterBase::Error::None) {
+                std::cout << "Running '" << path << "' command...\n";
+            
+                // Pass in 2 args, a uint8 command and a uint16 number.
+                // Push them backwards
+                interp.addArg(2, lucid::Type::UInt16);
+                interp.addArg('f', lucid::Type::UInt8);
+                int32_t result = interp.interp();
+                if (result == 0) {
+                    std::cout << "Complete\n\n";
+                }
+            }
+            
+            if (interp.error() != lucid::InterpreterBase::Error::None) {
                 const char* err = "unknown";
-//                switch(interp.error()) {
-//                    case lucid::Interpreter::Error::None: err = "internal error"; break;
-//                    case lucid::Interpreter::Error::CmdNotFound: err = "command not found"; break;
-//                    case lucid::Interpreter::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
-//                    case lucid::Interpreter::Error::InvalidOp: err = "invalid opcode"; break;
-//                    case lucid::Interpreter::Error::InvalidNativeFunction: err = "invalid native function"; break;
-//                    case lucid::Interpreter::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
-//                    case lucid::Interpreter::Error::StackOverrun: err = "can't call, stack full"; break;
-//                    case lucid::Interpreter::Error::StackUnderrun: err = "stack underrun"; break;
-//                    case lucid::Interpreter::Error::StackOutOfRange: err = "stack access out of range"; break;
-//                    case lucid::Interpreter::Error::AddressOutOfRange: err = "address out of range"; break;
-//                    case lucid::Interpreter::Error::InvalidModuleOp: err = "invalid operation in module"; break;
-//                    case lucid::Interpreter::Error::ExpectedSetFrame: err = "expected SetFrame as first function op"; break;
-//                    case lucid::Interpreter::Error::NotEnoughArgs: err = "not enough args on stack"; break;
-//                    case lucid::Interpreter::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
-//                }
+                switch(interp.error()) {
+                    case lucid::InterpreterBase::Error::None: err = "no error"; break;
+                    case lucid::InterpreterBase::Error::InternalError: err = "internal error"; break;
+                    case lucid::InterpreterBase::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
+                    case lucid::InterpreterBase::Error::InvalidOp: err = "invalid opcode"; break;
+                    case lucid::InterpreterBase::Error::InvalidNativeFunction: err = "invalid native function"; break;
+                    case lucid::InterpreterBase::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
+                    case lucid::InterpreterBase::Error::StackOverrun: err = "can't call, stack full"; break;
+                    case lucid::InterpreterBase::Error::StackUnderrun: err = "stack underrun"; break;
+                    case lucid::InterpreterBase::Error::StackOutOfRange: err = "stack access out of range"; break;
+                    case lucid::InterpreterBase::Error::AddressOutOfRange: err = "address out of range"; break;
+                    case lucid::InterpreterBase::Error::InvalidModuleOp: err = "invalid operation in module"; break;
+                    case lucid::InterpreterBase::Error::ExpectedSetFrame: err = "expected SetFrame as first function op"; break;
+                    case lucid::InterpreterBase::Error::NotEnoughArgs: err = "not enough args on stack"; break;
+                    case lucid::InterpreterBase::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
+                    case lucid::InterpreterBase::Error::InvalidSignature: err = "invalid signature"; break;
+                    case lucid::InterpreterBase::Error::NoEntryPoint: err = "invalid entry point in executable"; break;
+                    case lucid::InterpreterBase::Error::ImmedNotAllowedHere: err = "immediate not allowed here"; break;
+                }
                 std::cout << "Interpreter failed: " << err;
                 
                 int16_t errorAddr = interp.errorAddr();

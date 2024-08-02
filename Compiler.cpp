@@ -59,6 +59,13 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     executable.push_back(0);
     executable.push_back(0);
     
+    // Write top level struct size, to be filled in later
+    int32_t topLevelSize = _structs[0]->size();
+    executable.push_back(topLevelSize >> 24);
+    executable.push_back(topLevelSize >> 16);
+    executable.push_back(topLevelSize >> 8);
+    executable.push_back(topLevelSize);
+    
     for (auto& itStruct : _structs) {
         itStruct->astNode()->emitCode(executable, false, this);
         
