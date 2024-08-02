@@ -62,7 +62,7 @@ public:
         
         // Locals start at 0 and go positive. Their addresses are relative
         // to the structure's self pointer, stored in the Y register.
-        sym->setAddr(_localSize);
+        sym->setAddr(_localSize, Index::Y);
         _localSize += sym->size();
         return true;
     }

@@ -196,6 +196,9 @@ class Memory
         }
         return _u + AddrSize * 2 + offset;
     }
+
+    const AddrNativeType& self() const { return _y; }
+    AddrNativeType& self() { return _y; }
     
   private:
     Stack _stack;

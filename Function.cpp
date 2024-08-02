@@ -73,7 +73,7 @@ Function::addLocal(const SymbolPtr& sym)
     // base pointer (U) register, so are adjusted during code generation
     // for the space taken up by the previous base pointer and return 
     // address.
-    sym->setAddr(-_localSize - sym->size());
+    sym->setAddr(-_localSize - sym->size(), Index::U);
     _localSize += sym->size();
     
     if (_localHighWaterMark < _localSize) {
@@ -93,7 +93,7 @@ Function::addArg(const SymbolPtr& sym)
     _locals.push_back(sym);
     
     // Args start at 0 and go positive
-    sym->setAddr(_argSize);
+    sym->setAddr(_argSize, Index::U);
     
     _argSize += sym->size();
     _argCount += 1;

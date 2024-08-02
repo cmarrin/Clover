@@ -38,11 +38,11 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         case OpSize::flt: op = isLHS ? Op::PUSHREF4 : Op::PUSH4; break;
     }
     
-    // FIXME: We assume we're indexing from U, is this always true? What about using Y as the 'this' ptr?
     code.push_back(uint8_t(op));
     
-    int32_t value = _symbol->addr();
-    uint8_t extra = uint8_t(Index::U);
+    Index index;
+    int32_t value = _symbol->addr(index);
+    uint8_t extra = uint8_t(index);
     uint8_t addedBytes = 0;
     
     if (value >= -16 && value <= 15) {
@@ -311,6 +311,14 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 ASTPtr
 TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationIndex)
 {
+    // FIXME: Hack to see if this is a pointer, we don't type case pointers
+    if (node->astNodeType() == ASTNodeType::Op) {
+        OpNode* opNode = reinterpret_cast<OpNode*>(node.get());
+        if (opNode->op() == Op::PUSHREF1) {
+            return node;
+        }
+    }
+    
     // If types don't match, add a cast operator
     assert(neededType != Type::None && node->type() != Type::None);
     if (node->type() != neededType) {

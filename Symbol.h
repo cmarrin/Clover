@@ -51,12 +51,12 @@ public:
         , _nElements(nElements)
     { }
     
-    void setAddr(int32_t addr) { _addr = addr; }
+    void setAddr(int32_t addr, Index index) { _addr = addr; _index = index; }
+    int32_t addr(Index& index) const { index = _index; return _addr; }
     
     const std::string& name() const { return _name; }
     Type type() const { return _type; }
     bool isPointer() const { return _ptr; }
-    int32_t addr() const { return _addr; }
     FunctionPtr function() const { return _function; }
     uint16_t nElements() const { return _nElements; }
     uint16_t size() const
@@ -78,6 +78,7 @@ private:
     Type _type = Type::None;
     bool _ptr = false;
     int32_t _addr = 0;
+    Index _index;
     FunctionPtr _function;
     uint16_t _nElements = 1;
     uint16_t _structSize = 0;
