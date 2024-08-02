@@ -118,6 +118,27 @@ InterpreterBase::callNative(NativeId id)
             while (n--) {
                 _memMgr.setAbs(addr++, v, OpSize::i8);
             }
+            break;
+        }
+        case NativeId::MinInt: {
+            int32_t a = _memMgr.getLocal(0, Type::Int32);
+            int32_t b = _memMgr.getLocal(4, Type::Int32);
+            
+            _returnValue = (a < b) ? a : b;
+            break;
+        }
+        case NativeId::MaxInt: {
+            int32_t a = _memMgr.getLocal(0, Type::Int32);
+            int32_t b = _memMgr.getLocal(4, Type::Int32);
+            
+            _returnValue = (a > b) ? a : b;
+            break;
+        }
+        case NativeId::MinFloat: {
+            float a = intToFloat(_memMgr.getLocal(0, Type::Float));
+            float b = intToFloat(_memMgr.getLocal(4, Type::Float));
+            _returnValue = floatToInt((a < b) ? a : b);
+            break;
         }
     }
 
