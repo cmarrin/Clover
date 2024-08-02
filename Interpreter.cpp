@@ -35,7 +35,9 @@ static int32_t typeCast(int32_t v, OpSize from, Type to)
     return v;
 }
 
-InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize) : _memMgr(mem, memSize)
+InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
+    : _memMgr(mem, memSize)
+    , _topLevelArgs(&_memMgr)
 {
     // Check signature
     if (getUInt8ROM(0) != 'l' || getUInt8ROM(1) != 'u' || getUInt8ROM(2) != 'c' || getUInt8ROM(3) != 'd') {
@@ -140,6 +142,27 @@ InterpreterBase::callNative(NativeId id)
             _returnValue = floatToInt((a < b) ? a : b);
             break;
         }
+        case NativeId::MaxFloat: {
+            float a = intToFloat(_memMgr.getLocal(0, Type::Float));
+            float b = intToFloat(_memMgr.getLocal(4, Type::Float));
+            _returnValue = floatToInt((a > b) ? a : b);
+            break;
+        }
+        case NativeId::InitArgs:
+            _topLevelArgs.reset();
+            break;
+        case NativeId::ArgInt8:
+            _returnValue = _topLevelArgs.arg(Type::Int8);
+            break;
+        case NativeId::ArgInt16:
+            _returnValue = _topLevelArgs.arg(Type::Int16);
+            break;
+        case NativeId::ArgInt32:
+            _returnValue = _topLevelArgs.arg(Type::Int32);
+            break;
+        case NativeId::ArgFloat:
+            _returnValue = _topLevelArgs.arg(Type::Float);
+            break;
     }
 
     // Restore the frame and pop the dummy return address
@@ -152,6 +175,10 @@ InterpreterBase::execute()
 {
     // Push a dummy return address
     _memMgr.stack().push(0, AddrOpSize);
+    
+    // Set the top level frame. Any params pushed will be accessible using _topLevelArgs
+    _memMgr.setFrame(0);
+    _topLevelArgs.initialize();
     
     while(1) {
         if (_memMgr.error() != Memory::Error::None) {

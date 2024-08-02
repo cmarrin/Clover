@@ -135,6 +135,8 @@ class InterpreterBase
     Memory _memMgr;
     
     uint32_t _returnValue;
+    
+    VarArg _topLevelArgs;
 };
 
 template <uint32_t memSize> class Interpreter : public InterpreterBase

@@ -33,6 +33,11 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     coreModule->addNativeFunction("imax", NativeId::MaxInt, Type::Int32, {{ "a", Type::Int32, false, 1, 1 }, { "b", Type::Int32, false, 1, 1 }});
     coreModule->addNativeFunction("fmin", NativeId::MinFloat, Type::Float, {{ "a", Type::Float, false, 1, 1 }, { "b", Type::Float, false, 1, 1 }});
     coreModule->addNativeFunction("fmax", NativeId::MaxFloat, Type::Float, {{ "a", Type::Float, false, 1, 1 }, { "b", Type::Float, false, 1, 1 }});
+    coreModule->addNativeFunction("initArgs", NativeId::InitArgs, Type::None, { });
+    coreModule->addNativeFunction("argint8", NativeId::ArgInt8, Type::Int8, { });
+    coreModule->addNativeFunction("argint16", NativeId::ArgInt16, Type::Int16, { });
+    coreModule->addNativeFunction("argint32", NativeId::ArgInt32, Type::Int32, { });
+    coreModule->addNativeFunction("argFloat", NativeId::ArgFloat, Type::Float, { });
 
     _modules.push_back(coreModule);
     

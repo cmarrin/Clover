@@ -48,19 +48,6 @@ namespace lucid {
         int r = rand() % (max - min);
         return r + min;
     }
-    
-    template<class T> 
-    const T& min(const T& a, const T& b)
-    {
-        return (b < a) ? b : a;
-    }
-
-    template<class T> 
-    const T& max(const T& a, const T& b)
-    {
-        return (b > a) ? b : a;
-    }
-    
 #endif
 
 static inline float intToFloat(uint32_t i)
@@ -522,6 +509,11 @@ enum class NativeId : uint8_t {
     MaxInt          = 6,
     MinFloat        = 7,
     MaxFloat        = 8,
+    InitArgs        = 9,
+    ArgInt8         = 10,
+    ArgInt16        = 11,
+    ArgInt32        = 12,
+    ArgFloat        = 13,
 };
 
 class ASTNode;

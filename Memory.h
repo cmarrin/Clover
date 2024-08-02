@@ -190,7 +190,7 @@ class Memory
     // Local offsets are negative and args are non-negative so
     // the first local byte (or the LSB if 16 or 32 bit) is -1
     // and the first arg (or the MSB if 16 or 32 bit) is 0.
-    AddrNativeType localAddr(int32_t offset, OpSize opSize) const
+    AddrNativeType localAddr(int32_t offset, OpSize opSize = OpSize::i8) const
     {
         if (offset < 0) {
             return _u + offset + opSizeToBytes(opSize) - 1;
@@ -222,6 +222,12 @@ class VarArg
         _nextAddr = memMgr->localAddr(lastArgOffset, typeToOpSize(lastArgType)) + typeToBytes(lastArgType);
     }
     
+    VarArg(Memory* memMgr)
+        : _memMgr(memMgr)
+    {
+        _nextAddr = memMgr->localAddr(0);
+    }
+    
     // Type returned is always uint32_t. Use reinterpret_cast to convert to the proper type
     uint32_t arg(Type type)
     {
@@ -229,10 +235,22 @@ class VarArg
         _nextAddr += typeToBytes(type);
         return _memMgr->getAbs(argAddr, typeToOpSize(type));
     }
+    
+    
+    void initialize() { _nextAddr = _memMgr->localAddr(0); _initialAddr = _nextAddr; }
+
+    void initialize(uint32_t lastArgOffset, Type lastArgType)
+    {
+        _nextAddr = _memMgr->localAddr(lastArgOffset, typeToOpSize(lastArgType)) + typeToBytes(lastArgType);
+        _initialAddr = _nextAddr;
+    }
+    
+    void reset() { _nextAddr = _initialAddr; }
 
   private:
     AddrNativeType _nextAddr;
     Memory* _memMgr;
+    AddrNativeType _initialAddr = 0;
 };
     
 }
