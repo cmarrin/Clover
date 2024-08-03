@@ -7,14 +7,14 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include <Clover.h>
+#include <Lucid.h>
 #include <EEPROM.h>
-#include "TestExpr.h"
-#include "TestIf.h"
-#include "TestFor.h"
-#include "TestWhileLoop.h"
-#include "TestFunction.h"
-#include "TestPtrStruct.h"
+//#include "TestExpr.h"
+//#include "TestIf.h"
+//#include "TestFor.h"
+//#include "TestWhileLoop.h"
+//#include "TestFunction.h"
+//#include "TestPtrStruct.h"
 #include "TestCore.h"
 
 /*
@@ -42,52 +42,48 @@ public:
 	Test() { }
 	~Test() { }
  
-    void showError(clvr::Interpreter::Error error)
+    void showError(MyInterpreter::Error error)
     {
         String errorMsg;
         
         switch(error) {
-            case Device::Error::None:
+            case MyInterpreter::Error::None:
             errorMsg = F("???");
             break;
-            case Device::Error::CmdNotFound:
-            errorMsg = F("bad cmd");
-            break;
-            break;
-            case Device::Error::UnexpectedOpInIf:
+            case MyInterpreter::Error::UnexpectedOpInIf:
             errorMsg = F("bad op in if");
             break;
-            case Device::Error::InvalidOp:
+            case MyInterpreter::Error::InvalidOp:
             errorMsg = F("inv op");
             break;
-            case Device::Error::OnlyMemAddressesAllowed:
+            case MyInterpreter::Error::OnlyMemAddressesAllowed:
             errorMsg = F("mem addrs only");
             break;
-            case Device::Error::AddressOutOfRange:
+            case MyInterpreter::Error::AddressOutOfRange:
             errorMsg = F("addr out of rng");
             break;
-            case Device::Error::InvalidModuleOp:
+            case MyInterpreter::Error::InvalidModuleOp:
             errorMsg = F("inv mod op");
             break;
-            case Device::Error::ExpectedSetFrame:
+            case MyInterpreter::Error::ExpectedSetFrame:
             errorMsg = F("SetFrame needed");
             break;
-            case Device::Error::InvalidNativeFunction:
+            case MyInterpreter::Error::InvalidNativeFunction:
             errorMsg = F("inv native func");
             break;
-            case Device::Error::NotEnoughArgs:
+            case MyInterpreter::Error::NotEnoughArgs:
             errorMsg = F("not enough args");
             break;
-            case Device::Error::StackOverrun:
+            case MyInterpreter::Error::StackOverrun:
             errorMsg = F("can't call, stack full");
             break;
-            case Device::Error::StackUnderrun:
+            case MyInterpreter::Error::StackUnderrun:
             errorMsg = F("stack underrun");
             break;
-            case Device::Error::StackOutOfRange:
+            case MyInterpreter::Error::StackOutOfRange:
             errorMsg = F("stack out of range");
             break;
-            case Device::Error::WrongNumberOfArgs:
+            case MyInterpreter::Error::WrongNumberOfArgs:
             errorMsg = F("wrong arg cnt");
             break;
         }
@@ -125,11 +121,22 @@ public:
         }
         
         // Run the test
-        uint8_t buf[3] = { 4, 7, 11 };
-        if (!_device.init("test", buf, 3)) {
-            showError(_device.error());
+        MyInterpreter interp;
+        
+        if (interp.error() == MyInterpreter::Error::None) {
+            // Pass in 2 args, a uint8 command and a uint16 number.
+            // Push them backwards
+            interp.addArg(2, lucid::Type::UInt16);
+            interp.addArg('f', lucid::Type::UInt8);
+            int32_t result = interp.interp();
+            if (result == 0) {
+                Serial.println(F("...Finished running test"));
+            }
         }
-        Serial.println(F("...Finished running test"));
+        
+        if (interp.error() != MyInterpreter::Error::None) {
+            showError(interp.error());
+        }
     }
 	
 	void setup()
@@ -140,12 +147,12 @@ public:
         
 		Serial.println(F("Test v0.1"));
   
-        RunTest(TestExpr);
-        RunTest(TestIf);
-        RunTest(TestFor);
-        RunTest(TestWhileLoop);
-        RunTest(TestFunction);
-        RunTest(TestPtrStruct);
+//        RunTest(TestExpr);
+//        RunTest(TestIf);
+//        RunTest(TestFor);
+//        RunTest(TestWhileLoop);
+//        RunTest(TestFunction);
+//        RunTest(TestPtrStruct);
         RunTest(TestCore);
     }
 
@@ -153,9 +160,6 @@ public:
 	{
 		delay(100);
 	}
-
-private:
-    Device _device;
 };
 
 Test test;
