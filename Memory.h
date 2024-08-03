@@ -193,7 +193,7 @@ class Memory
     AddrNativeType localAddr(int32_t offset, OpSize opSize = OpSize::i8) const
     {
         if (offset < 0) {
-            return _u + offset + opSizeToBytes(opSize) - 1;
+            return _u + offset - opSizeToBytes(opSize) + 1;
         }
         return _u + AddrSize * 2 + offset;
     }
