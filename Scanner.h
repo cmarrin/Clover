@@ -185,7 +185,7 @@ private:
   		_lastChar = c;
 	}
 
-  	Token scanString(char terminal);
+  	Token scanString(TokenType& tokenValue, char terminal);
   	Token scanIdentifier();
   	Token scanNumber(TokenType& tokenValue);
   	Token scanComment();

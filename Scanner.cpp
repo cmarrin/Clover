@@ -13,15 +13,21 @@
 
 using namespace lucid;
 
-Token Scanner::scanString(char terminal)
+Token Scanner::scanString(TokenType& tokenValue, char terminal)
 {    
 	uint8_t c;
 	_tokenString.clear();
+    tokenValue.integer = 0;
+    bool first = true;
 	
 	while ((c = get()) != C_EOF) {
 		if (c == terminal) {
-			break;
+            if (terminal == '\'') {
+                return Token::Integer;
+            }
+            break;
 		}
+  
         while (c == '\\') {
             switch((c = get())) {
                 case 'a': c = 0x07; break;
@@ -38,7 +44,11 @@ Token Scanner::scanString(char terminal)
                 case 'u':
                 case 'x': {
                     if ((c = get()) == C_EOF) {
-                        return Token::String;
+                        if (terminal != '\'') {
+                            tokenValue.str = _tokenString.c_str();
+                            return Token::String;
+                        }
+                        return Token::Integer;
                     }
                     
                     if (!isHex(c) && !isdigit(c)) {
@@ -50,6 +60,7 @@ Token Scanner::scanString(char terminal)
                     putback(c);
                     while ((c = get()) != C_EOF) {
                         if (!isHex(c) && !isdigit(c)) {
+                            putback(c);
                             break;
                         }
                         if (isdigit(c)) {
@@ -60,20 +71,24 @@ Token Scanner::scanString(char terminal)
                             num = (num << 4) | ((c - 'a') + 0x0a);
                         }
                     }
-                    if (num > 0xffffff) {
-                        _tokenString += static_cast<uint8_t>(num >> 24);
-                        _tokenString += static_cast<uint8_t>(num >> 16);
-                        _tokenString += static_cast<uint8_t>(num >> 8);
-                        _tokenString += static_cast<uint8_t>(num);
-                    } else if (num > 0xffff) {
-                        _tokenString += static_cast<uint8_t>(num >> 16);
-                        _tokenString += static_cast<uint8_t>(num >> 8);
-                        _tokenString += static_cast<uint8_t>(num);
-                    } else if (num > 0xff) {
-                        _tokenString += static_cast<uint8_t>(num >> 8);
-                        _tokenString += static_cast<uint8_t>(num);
+                    if (terminal == '\'') {
+                        c = uint8_t(num);
                     } else {
-                        _tokenString += static_cast<uint8_t>(num);
+                        if (num > 0xffffff) {
+                            _tokenString += static_cast<uint8_t>(num >> 24);
+                            _tokenString += static_cast<uint8_t>(num >> 16);
+                            _tokenString += static_cast<uint8_t>(num >> 8);
+                            _tokenString += static_cast<uint8_t>(num);
+                        } else if (num > 0xffff) {
+                            _tokenString += static_cast<uint8_t>(num >> 16);
+                            _tokenString += static_cast<uint8_t>(num >> 8);
+                            _tokenString += static_cast<uint8_t>(num);
+                        } else if (num > 0xff) {
+                            _tokenString += static_cast<uint8_t>(num >> 8);
+                            _tokenString += static_cast<uint8_t>(num);
+                        } else {
+                            _tokenString += static_cast<uint8_t>(num);
+                        }
                     }
                     break;
                 }
@@ -82,8 +97,20 @@ Token Scanner::scanString(char terminal)
                     break;
             }
         }
-		_tokenString += c;
+        
+        if (terminal == '\'') {
+            if (first) {
+                tokenValue.integer = uint8_t(c);
+                first = false;
+            } else {
+                return Token::Integer;
+            }
+        } else {
+            _tokenString += c;
+        }
 	}
+ 
+    tokenValue.str = _tokenString.c_str();
 	return Token::String;
 }
 
@@ -371,8 +398,7 @@ Token Scanner::getToken(TokenType& tokenValue)
 				
 			case '\"':
 			case '\'':
-				token = scanString(c);
-                tokenValue.str = _tokenString.c_str();
+				token = scanString(tokenValue, c);
 				break;
 
 			default:
