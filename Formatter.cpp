@@ -198,6 +198,14 @@ static int32_t outString(Generator gen, lucid::AddrNativeType addr, int32_t widt
         gen(c);
         ++size;
     }
+    
+    if (width > size) {
+        width -= size;
+        while (width--) {
+            gen(' ');
+        }
+    }
+
     return size;
 }
 
