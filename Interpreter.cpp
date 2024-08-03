@@ -176,8 +176,7 @@ InterpreterBase::execute()
     // Push a dummy return address
     _memMgr.stack().push(0, AddrOpSize);
     
-    // Set the top level frame. Any params pushed will be accessible using _topLevelArgs
-    _memMgr.setFrame(0);
+    // Init the top level arg pointer. Any params pushed will be accessible using _topLevelArgs
     _topLevelArgs.initialize();
     
     while(1) {
