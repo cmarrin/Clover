@@ -57,7 +57,7 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -x -h Test/testCore.lucid"
+            argument = "-d -x -h Test/TestCore.lucid"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
