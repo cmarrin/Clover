@@ -29,20 +29,11 @@ uploaded to EEPROM and then the test is run. All tests are named simply
 
 #define RunTest(name) runTest(#name, EEPROM_Upload_##name, sizeof(EEPROM_Upload_##name))
 
-class Device : public clvr::Interpreter
+static constexpr uint32_t MaxExecutableSize = 65536;
+static constexpr uint32_t StackSize = 1024;
+
+class MyInterpreter : public lucid::Interpreter<StackSize>
 {
-public:
-	Device() : Interpreter(nullptr, 0) { }
-	
-    virtual uint8_t rom(uint16_t i) const override
-    {
-        return EEPROM[i];
-    }
-    
-    virtual void log(const char* s) const override
-    {
-        Serial.print(s);
-    }
 };
 
 class Test

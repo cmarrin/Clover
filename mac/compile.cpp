@@ -23,11 +23,6 @@ static constexpr uint32_t StackSize = 2048;
 
 class MyInterpreter : public lucid::Interpreter<StackSize>
 {
-  public:
-    virtual void putc(uint8_t c) const override
-    {
-        ::putchar(c);
-    }
 };
 
 static void showError(lucid::Error error, lucid::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
