@@ -43,6 +43,17 @@ bool Decompiler::decompile()
         
         _out->append("\nEntry Point: ");
         _out->append(std::to_string(entryPoint));
+        _out->append("\n");
+        
+        // Emit size
+        uint32_t size = 0;
+        size |= uint32_t(getUInt8()) << 24;
+        size |= uint32_t(getUInt8()) << 16;
+        size |= uint32_t(getUInt8()) << 8;
+        size |= uint32_t(getUInt8());
+        
+        _out->append("Top-level struct size: ");
+        _out->append(std::to_string(size));
         _out->append("\n\n");
         
         // Emit code
