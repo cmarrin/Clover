@@ -15,13 +15,10 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <functional>
 
 #include "Memory.h"
 
 namespace fmt {
-
-using Generator = std::function<void(uint8_t)>;
 
     // Formatter - Formatted printer
 
@@ -42,15 +39,15 @@ using Generator = std::function<void(uint8_t)>;
         
         static constexpr uint32_t MaxIntegerBufferSize = 24; // Big enough for a 64 bit integer in octal
 
-        static int32_t format(Generator gen, lucid::AddrNativeType fmt, lucid::VarArg&);
+        static int32_t format(lucid::AddrNativeType fmt, lucid::VarArg&);
 
         static bool toNumber(lucid::AddrNativeType& s, uint32_t& n);
         
     private:
-        template<typename T> static void emitSign(Generator gen, T& v)
+        template<typename T> static void emitSign(T& v)
         {
             if (v < 0) {
-                gen('-');
+                lucid::putChar('-');
                 v = -v;
             }
         }

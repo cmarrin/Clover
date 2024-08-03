@@ -11,20 +11,22 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <memory>
 
-#ifndef ARDUINO
+#ifdef ARDUINO
+#include <Arduino.h>
+#include <EEPROM.h>
+#else
 #include <cstdio>
+#include <memory>
 #endif
 
 namespace lucid {
 
 #ifdef ARDUINO
-    #include <Arduino.h>
-    #include <EEPROM.h>
-
-    static inline uint8_t rom(uint32_t addr) { return EEPROM[addr]; }
+    static inline uint8_t rom(uint16_t addr) { return EEPROM.read(addr); }
     
+    static inline void putChar(uint8_t c) { Serial.print(char(c)); }
+
     static inline void toString(char* s, float val, int8_t width = 0, uint8_t precision = 0)
     {
         dtostrf(val, width, precision, s);
@@ -32,7 +34,9 @@ namespace lucid {
 #else
     extern uint8_t* ROMBase;
 
-    static inline uint8_t rom(uint32_t addr) { return ROMBase[addr]; }
+    static inline uint8_t rom(uint16_t addr) { return ROMBase[addr]; }
+
+    static inline void putChar(uint8_t c) { ::putchar(c); }
     
     static inline void toString(char* s, float val, int8_t width = 0, uint8_t precision = 0)
     {
@@ -347,26 +351,12 @@ enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
 
 static constexpr uint8_t opSizeToBytes(OpSize opSize)
 {
-    switch (opSize) {
-        case OpSize::i8:  return 1;
-        case OpSize::i16: return 2;
-        case OpSize::i32: return 4;
-        case OpSize::flt: return 4;
-    }
+    return (opSize == OpSize::i8) ? 1 : ((opSize == OpSize::i16) ? 2 : 4);
 }
 
 static constexpr OpSize typeToOpSize(Type type)
 {
-    switch (type) {
-        case Type::Int8     : return OpSize::i8;
-        case Type::UInt8    : return OpSize::i8;
-        case Type::Int16    : return OpSize::i16;
-        case Type::UInt16   : return OpSize::i16;
-        case Type::Int32    : return OpSize::i32;
-        case Type::UInt32   : return OpSize::i32;
-        case Type::Float    : return OpSize::i32;
-        default: return OpSize::i32;
-    }
+    return (type == Type::Int8 || type == Type::UInt8) ? OpSize::i8 : ((type == Type::Int16 || type == Type::UInt16) ? OpSize::i16 : OpSize::i32);
 };
 
 // Defines for size of addresses
@@ -522,6 +512,7 @@ enum class NativeId : uint8_t {
     ArgFloat        = 13,
 };
 
+#ifndef ARDUINO
 class ASTNode;
 using ASTPtr = std::shared_ptr<ASTNode>;
 
@@ -536,6 +527,6 @@ using FunctionList = std::vector<FunctionPtr>;
 class Struct;
 using StructPtr = std::shared_ptr<Struct>;
 using StructList = std::vector<StructPtr>;
-
+#endif
 
 }

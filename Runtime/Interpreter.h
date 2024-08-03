@@ -43,9 +43,6 @@ class InterpreterBase
     };
 
     InterpreterBase(uint8_t* mem, uint32_t memSize);
-    virtual ~InterpreterBase() { }
-    
-    virtual void putc(uint8_t c) const = 0;
     
     int32_t execute();
 

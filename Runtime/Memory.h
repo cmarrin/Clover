@@ -34,8 +34,8 @@ class Memory
         
         void setHeapEnd(int32_t addr) { _heapEnd = addr; }
         
-        const uint8_t& abs(uint32_t addr) const { return _mem[addr]; }
-        uint8_t& abs(uint32_t addr) { return _mem[addr]; }
+        const uint8_t& getAbs(uint32_t addr) const { return _mem[addr]; }
+        uint8_t& getAbs(uint32_t addr) { return _mem[addr]; }
         
         void push(uint32_t v, Type type) { push(v, typeToOpSize(type)); }
         void push(float v) { push(*(reinterpret_cast<uint32_t*>(&v)), typeToOpSize(Type::Float)); }
@@ -133,10 +133,10 @@ class Memory
     {
         switch (opSize) {
             case OpSize::flt:
-            case OpSize::i32: _stack.abs(addr++) = uint8_t(v >> 24);
-                              _stack.abs(addr++) = uint8_t(v >> 16);
-            case OpSize::i16: _stack.abs(addr++) = uint8_t(v >> 8);
-            case OpSize::i8 : _stack.abs(addr++) = uint8_t(v);
+            case OpSize::i32: _stack.getAbs(addr++) = uint8_t(v >> 24);
+                              _stack.getAbs(addr++) = uint8_t(v >> 16);
+            case OpSize::i16: _stack.getAbs(addr++) = uint8_t(v >> 8);
+            case OpSize::i8 : _stack.getAbs(addr++) = uint8_t(v);
         }
     }
     
@@ -146,10 +146,10 @@ class Memory
         
         switch (opSize) {
             case OpSize::flt:
-            case OpSize::i32: v |= uint32_t(_stack.abs(addr++)) << 24;
-                              v |= uint32_t(_stack.abs(addr++)) << 16;
-            case OpSize::i16: v |= uint32_t(_stack.abs(addr++)) << 8;
-            case OpSize::i8 : v |= uint32_t(_stack.abs(addr++));
+            case OpSize::i32: v |= uint32_t(_stack.getAbs(addr++)) << 24;
+                              v |= uint32_t(_stack.getAbs(addr++)) << 16;
+            case OpSize::i16: v |= uint32_t(_stack.getAbs(addr++)) << 8;
+            case OpSize::i8 : v |= uint32_t(_stack.getAbs(addr++));
         }
         
         return v;

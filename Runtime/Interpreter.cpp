@@ -10,7 +10,6 @@
 #include "Interpreter.h"
 
 #include "Formatter.h"
-#include "Module.h"
 
 using namespace lucid;
 
@@ -95,7 +94,7 @@ InterpreterBase::callNative(NativeId id)
         case NativeId::PrintF: {
             VarArg va(&_memMgr, 0, Type::String);
             AddrNativeType fmt = _memMgr.getLocal(0, AddrType);
-            fmt::Formatter::format([this](uint8_t c) { putc(c); }, fmt, va);
+            fmt::Formatter::format(fmt, va);
             break;
         }
         case NativeId::RandomInt: {
