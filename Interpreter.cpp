@@ -177,7 +177,12 @@ InterpreterBase::execute()
     _memMgr.stack().push(0, AddrOpSize);
     
     // Init the top level arg pointer. Any params pushed will be accessible using _topLevelArgs
+    // Since this is the top level, we have a return address pushed but not a U reg. VarArgs
+    // expects both in order to properly point to the first arg. use setFrame/restoreFrame
+    // to set the stack correctly
+    _memMgr.setFrame(0);
     _topLevelArgs.initialize();
+    _memMgr.restoreFrame();
     
     while(1) {
         if (_memMgr.error() != Memory::Error::None) {
