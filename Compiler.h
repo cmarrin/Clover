@@ -46,7 +46,7 @@ struct is instantiated and its ctor is called.
 BNF:
 
 program:
-    { import } { constant } struct ;
+    { import } struct ;
 
 import:
     'import' <id> [ 'as' <id> ] ;
@@ -57,11 +57,8 @@ struct:
 structEntry:
     struct | varStatement | function | init  ;
 
-constant:
-    'const' type <id> '=' value ';' ;
-    
 varStatement:
-    type [ '*' ] var ';' ;
+    [ 'const' ] type [ '*' ] var ';' ;
 
 var:
     <id> [ '[' <integer> ']' ] [ '=' initializer ] ;
@@ -245,8 +242,9 @@ enum class Error {
     DuplicateIdentifier,
     ExecutableTooBig,
     InitializerNotAllowed,
-    ConstMustBeSimpleType,
     ExpectedIndexable,
+    PointerConstantNotAllowed,
+    EmptyArrayRequiresInitializer,
 };
 
 class Compiler {
@@ -289,7 +287,7 @@ protected:
     bool type(Type&);
   
     bool varStatement();
-    bool var(Type, bool isPointer);
+    bool var(Type, bool isPointer, bool isConstant);
     bool init();
 
     bool value(uint32_t& i, Type);
@@ -299,7 +297,6 @@ private:
     bool strucT();
     
     bool structEntry();
-    bool constant();
     
     bool compoundStatement();
     bool ifStatement();
@@ -320,6 +317,8 @@ private:
 
     bool formalParameterList();
     bool argumentList(const ASTPtr& fun);
+    
+    void collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint32_t& size);
     
     bool isReserved(Token token, const std::string str, Reserved&);
 
@@ -392,38 +391,6 @@ private:
     Token _expectedToken = Token::None;
     std::string _expectedString;
     
-    struct Constant
-    {
-        Constant(Type t, const std::string& id, int32_t value) : _type(t), _id(id), _value(value) { }
-        
-        Type _type = Type::None;
-        std::string _id;
-        int32_t _value = 0;        // Value can be float, fixed, signed or unsigned int. Cast as needed
-    };
-    
-    bool findConstant(const std::string& id, Type& t, uint32_t& v)
-    {
-        const auto& it = find_if(_constants.begin(), _constants.end(),
-                [id](const Constant& c) { return c._id == id; });
-
-        if (it != _constants.end()) {
-            t = it->_type;
-            v = it->_value;
-            return true;
-        }
-        return false;
-    }
-    
-    struct ParamEntry
-    {
-        ParamEntry(const std::string& name, Type type)
-            : _name(name)
-            , _type(type)
-        { }
-        std::string _name;
-        Type _type;
-    };
-    
     bool structFromType(Type, StructPtr&);
 
     StructPtr currentStruct()
@@ -456,7 +423,7 @@ private:
 
     uint32_t _entryStructIndex;
     
-    std::vector<Constant> _constants;
+    std::vector<uint8_t> _constants;
     StructList _structs;
     StructList _structStack;
     std::vector<ModulePtr> _modules;

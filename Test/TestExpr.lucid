@@ -9,16 +9,16 @@
 
 // Test constants, vars, operands and expressions
 
-const uint8 TestSizeDef   12;
-const int16 TestIntConst 0xfc;
-const float TestFloatConst 3.5;
-
 struct Test
 {
 
-int8 testIntTable[ ] = { 1, 2, 3, 7, 8, 9, };
+const uint8 TestSizeDef = 12;
+const int16 TestIntConst = 0xfc;
+const float TestFloatConst = 3.5;
 
-float testFloatTable [ ] = { 1.5, 2.5, 3.5, 7.5, 8.5, 9.5, }
+const int8 testIntTable[ ] = { 1, 2, 3, 7, 8, 9, };
+
+float testFloatTable [ ] = { 1.5, 2.5, 3.5, 7.5, 8.5, 9.5, };
 
 int16 testIntGlobal;
 
@@ -75,7 +75,8 @@ function test()
     showIntResults(17, 1, TestIntConst >= testIntGlobal);
     showIntResults(18, 1, TestIntConst > testIntGlobal);
     
-    int i = 20, j = i++;
+    int8 i = 20;
+    int8 j = i++;
 
     showIntResults(19, 21, i);
     showIntResults(20, 20, j);
@@ -115,10 +116,10 @@ function test()
     showIntResults(43, 0, TestFloatConst > testFloatGlobal);
     
     core.printf("\nTest Float exprs\n");
-    showFloatResults(44, 38, testFloatTable[1] + Float(TestSizeDef) * TestFloatConst - testFloatGlobal);
-    showFloatResults(45, -43.5, (testFloatTable[1] + Float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
+    showFloatResults(44, 38, testFloatTable[1] + float(TestSizeDef) * TestFloatConst - testFloatGlobal);
+    showFloatResults(45, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
 
     core.printf("\nDone\n\n");
 }
 
-command test 3 test test;
+};

@@ -120,7 +120,7 @@ class VarNode : public ASTNode
         return _symbol->isPointer() ? AddrSize : typeToBytes(type());
     }
 
-    virtual bool isIndexable() const override { return _symbol->nElements() > 1; }
+    virtual bool isIndexable() const override { return _symbol->nElements() != 1; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
