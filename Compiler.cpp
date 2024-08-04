@@ -935,7 +935,7 @@ Compiler::primaryExpression()
 {
     if (match(Token::OpenParen)) {
         ASTPtr ast = expression();
-        expect(!ast, Error::ExpectedExpr);
+        expect(ast != nullptr, Error::ExpectedExpr);
         expect(Token::CloseParen);
         return ast;
     }
