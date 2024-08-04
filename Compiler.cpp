@@ -205,7 +205,7 @@ Compiler::constant()
     expect(value(val, t), Error::ExpectedValue);
     expect(Token::Semicolon);
 
-    expect(findConstant(id, t, val), Error::DuplicateIdentifier);
+    expect(!findConstant(id, t, val), Error::DuplicateIdentifier);
     
     _constants.emplace_back(t, id, val);
     
