@@ -179,7 +179,7 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     if (_right) {
-        if (isLogical && _left->type() != Type::UInt8) {
+        if (isLogical && _right->type() != Type::UInt8) {
             // Cast to uint8 (boolean)
             _right = TypeCastNode::castIfNeeded(_right, Type::UInt8, _annotationIndex);
         }
