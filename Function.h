@@ -62,7 +62,7 @@ public:
     bool isNative() const { return _native; }
 
     bool addArg(const SymbolPtr& sym);
-    bool addLocal(const SymbolPtr&);
+    bool addLocal(const SymbolPtr&, AddrNativeType addr = 0, uint16_t nElements = 0);
     
     SymbolPtr findLocal(const std::string& s) const;
     

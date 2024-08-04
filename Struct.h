@@ -50,7 +50,7 @@ public:
         return function;
     }
 
-    bool addLocal(const SymbolPtr& sym)
+    bool addLocal(const SymbolPtr& sym, AddrNativeType addr = 0, uint16_t nElements = 0)
     {
         // Check for duplicates
         SymbolPtr symbol = findLocal(sym->name());
@@ -59,6 +59,12 @@ public:
         }
         
         _locals.push_back(sym);
+        
+        if (sym->isConstant()) {
+            sym->setAddr(addr, Index::C);
+            sym->setNElements(nElements);
+            return true;
+        }
         
         // Locals start at 0 and go positive. Their addresses are relative
         // to the structure's self pointer, stored in the Y register.

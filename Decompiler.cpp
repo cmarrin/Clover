@@ -282,7 +282,13 @@ void Decompiler::emitIndexValue(uint8_t index)
     } else {
         _out->append(std::to_string(value));
         _out->append(",");
-        _out->append((mode == 1) ? "X" : ((mode == 2) ? "Y" : "U"));
+        switch (mode) {
+            case 0: _out->append("C"); break;
+            case 1: _out->append("C"); break;
+            case 2: _out->append("C"); break;
+            case 3: _out->append("C"); break;
+            default: _out->append("?"); break;
+        }
     }
 }
 

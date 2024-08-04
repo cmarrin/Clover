@@ -318,7 +318,7 @@ private:
     bool formalParameterList();
     bool argumentList(const ASTPtr& fun);
     
-    void collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint32_t& size);
+    void collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint16_t& nElements);
     
     bool isReserved(Token token, const std::string str, Reserved&);
 

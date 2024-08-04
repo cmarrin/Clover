@@ -55,12 +55,14 @@ public:
     void setAddr(int32_t addr, Index index) { _addr = addr; _index = index; }
     int32_t addr(Index& index) const { index = _index; return _addr; }
     
+    void setNElements(uint16_t n) { _nElements = n; }
+    uint16_t nElements() const { return _nElements; }
+    
     const std::string& name() const { return _name; }
     Type type() const { return _type; }
     bool isPointer() const { return _ptr; }
     bool isConstant() const { return _isConstant; }
     FunctionPtr function() const { return _function; }
-    uint16_t nElements() const { return _nElements; }
     uint16_t size() const
     {
         if (_ptr) {

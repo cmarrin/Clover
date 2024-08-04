@@ -180,7 +180,7 @@ class Memory
     AddrNativeType index(int32_t offset, Index idx, OpSize opSize) const
     {
         switch (idx) {
-            case Index::Global: return 0; // FIXME
+            case Index::C: return 0;
             case Index::X: return _x + offset;
             case Index::Y: return _y + offset;
             case Index::U: return localAddr(offset, opSize);

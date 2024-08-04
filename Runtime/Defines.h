@@ -208,14 +208,7 @@ Opcodes:
     POSTDEC<1,2,4,F>- Takes an index byte. Like PUSH, but decrements the value at EA and pushes the undecremented value
 */
 
-static constexpr uint16_t MaxIdSize = 4096;
-static constexpr uint16_t ConstStart = 0x00;
-static constexpr uint16_t ConstSize = 2048; // Max possible size
-static constexpr uint16_t GlobalStart = ConstStart + ConstSize;
-static constexpr uint16_t GlobalSize = 1024;
-static constexpr uint16_t LocalStart = GlobalStart + GlobalSize;
-static constexpr uint16_t LocalSize = MaxIdSize - LocalStart;
-static constexpr uint8_t ExtOpcodeStart = 0x40;
+static constexpr uint16_t ConstStart = 12; // Past signature, entry point and top level size
 
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart = 0x28;
@@ -346,7 +339,7 @@ constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
 
 static inline bool isStruct(Type type) { return uint8_t(type) >= StructTypeStart; }
 
-enum class Index : uint8_t { Global = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
+enum class Index : uint8_t { C = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
 enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
 
 static constexpr uint8_t opSizeToBytes(OpSize opSize)

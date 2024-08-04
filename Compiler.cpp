@@ -278,23 +278,15 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
     sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->size() : typeToBytes(type), nElements, isConstant);
     expect(sym != nullptr, Error::DuplicateIdentifier);
     
-    // Put the var in the current struct unless we're in a function, then put it in _locals    
-    if (_inFunction) {
-        currentFunction()->addLocal(sym);
-    } else {
-        expect(!_structStack.empty(), Error::InternalError);
-        currentStruct()->addLocal(sym);
-    }
-    
     // Check for an initializer.
     ASTPtr ast;
+    AddrNativeType addr = 0;
+    uint16_t nConstElements = 0;
     
     if (match(Token::Equal)) {
         if (isConstant) {
             // Collect the constant initializers
-            AddrNativeType addr;
-            uint32_t size;
-            collectConstants(type, nElements == 1, addr, size);
+            collectConstants(type, nElements == 1, addr, nConstElements);
         } else if (uint8_t(type) < StructTypeStart && nElements == 1) {
             // Built-in scalar type. Generate an expression
             ast = expression();
@@ -320,6 +312,14 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
         expect(nElements != 0, Error::EmptyArrayRequiresInitializer);
     }
 
+    // Put the var in the current struct unless we're in a function, then put it in _locals    
+    if (_inFunction) {
+        currentFunction()->addLocal(sym, addr, nConstElements);
+    } else {
+        expect(!_structStack.empty(), Error::InternalError);
+        currentStruct()->addLocal(sym, addr, nConstElements);
+    }
+    
     if (ast) {
         ASTPtr idNode = std::make_shared<VarNode>(sym, annotationIndex());
         ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, Type::None, true, annotationIndex());
@@ -335,29 +335,33 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
 }
 
 void
-Compiler::collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint32_t& size)
+Compiler::collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint16_t& nElements)
 {
     uint32_t i;
     addr = uint32_t(_constants.size());
     
     if (isScalar) {
         expect(value(i, type), Error::ExpectedValue);
-        size = typeToBytes(type);
+        nElements = 1;
         appendValue(_constants, i, type);
         return;
     }
-    
+        
     expect(Token::OpenBrace);
     expect(value(i, type), Error::ExpectedValue);
+
+    nElements = 1;
+
     while (match(Token::Comma)) {
         // Allow trailing comma
         if (!value(i, type)) {
             break;
         }
+        
+        nElements += 1;
         appendValue(_constants, i, type);
     }
     expect(Token::CloseBrace);
-    size = uint32_t(_constants.size()) - addr;
 }
 
 bool

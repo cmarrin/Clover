@@ -59,7 +59,7 @@ Function::findLocal(const std::string& s) const
 }
 
 bool
-Function::addLocal(const SymbolPtr& sym)
+Function::addLocal(const SymbolPtr& sym, AddrNativeType addr, uint16_t nElements)
 {
     // Check for duplicates
     if (findLocal(sym->name())) {
@@ -67,6 +67,12 @@ Function::addLocal(const SymbolPtr& sym)
     }
     
     _locals.push_back(sym);
+    
+    if (sym->isConstant()) {
+        sym->setAddr(addr, Index::C);
+        sym->setNElements(nElements);
+        return true;
+    }
     
     // Locals start at -1 and go negative. The address is the -_localSize
     // minus the size of the symbol. These are addresses relative to the
