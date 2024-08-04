@@ -66,10 +66,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     
     // Write top level struct size, to be filled in later
     int32_t topLevelSize = _structs[0]->size();
-    executable.push_back(topLevelSize >> 24);
-    executable.push_back(topLevelSize >> 16);
-    executable.push_back(topLevelSize >> 8);
-    executable.push_back(topLevelSize);
+    appendValue(executable, topLevelSize, Type::UInt32);
     
     for (auto& itStruct : _structs) {
         itStruct->astNode()->emitCode(executable, false, this);
@@ -102,7 +99,6 @@ Compiler::program()
     
     try {
         while(import()) { }
-        while(constant()) { }
         strucT();
 
         expect(Token::EndOfFile);
@@ -187,32 +183,6 @@ Compiler::structEntry()
 }
 
 bool
-Compiler::constant()
-{
-    if (!match(Reserved::Const)) {
-        return false;
-    }
-    
-    Type t;
-    std::string id;
-    uint32_t val;
-    
-    expect(type(t), Error::ExpectedType);
-    
-    // Only built-in types allowed for types
-    expect(uint8_t(t) < StructTypeStart, Error::ConstMustBeSimpleType);
-    expect(identifier(id), Error::ExpectedIdentifier);
-    expect(value(val, t), Error::ExpectedValue);
-    expect(Token::Semicolon);
-
-    expect(!findConstant(id, t, val), Error::DuplicateIdentifier);
-    
-    _constants.emplace_back(t, id, val);
-    
-    return true;
-}
-
-bool
 Compiler::value(uint32_t& i, Type t)
 {
     bool neg = false;
@@ -258,6 +228,12 @@ Compiler::value(uint32_t& i, Type t)
 bool
 Compiler::varStatement()
 {
+    bool isConstant = false;
+    
+    if (match(Reserved::Const)) {
+        isConstant = true;
+    }
+    
     Type t = Type::None;
     std::string id;
     
@@ -267,30 +243,18 @@ Compiler::varStatement()
 
     bool isPointer = false;
     if (match(Token::Mul)) {
+        expect(!isConstant, Error::PointerConstantNotAllowed);
         isPointer = true;
     }
     
-    bool haveOne = false;
-    while (true) {
-        if (!var(t, isPointer)) {
-            if (!haveOne) {
-                break;
-            }
-            expect(false, Error::ExpectedVar);
-        }
-        
-        haveOne = true;
-        if (!match(Token::Comma)) {
-            break;
-        }
-    }
+    expect(var(t, isPointer, isConstant), Error::ExpectedVar);
 
     expect(Token::Semicolon);
     return true;
 }
 
 bool
-Compiler::var(Type type, bool isPointer)
+Compiler::var(Type type, bool isPointer, bool isConstant)
 {
     std::string id;
     expect(identifier(id), Error::ExpectedIdentifier);
@@ -305,11 +269,13 @@ Compiler::var(Type type, bool isPointer)
     uint32_t nElements = 1;
 
     if (match(Token::OpenBracket)) {
-        expect(integerValue(nElements), Error::ExpectedValue);
+        if (!integerValue(nElements)) {
+            nElements = 0;
+        }
         expect(Token::CloseBracket);
     }
     
-    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->size() : typeToBytes(type), nElements);
+    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->size() : typeToBytes(type), nElements, isConstant);
     expect(sym != nullptr, Error::DuplicateIdentifier);
     
     // Put the var in the current struct unless we're in a function, then put it in _locals    
@@ -324,25 +290,36 @@ Compiler::var(Type type, bool isPointer)
     ASTPtr ast;
     
     if (match(Token::Equal)) {
-        if (uint8_t(type) < StructTypeStart) {
-            // Built-in type. Generate an expression
+        if (isConstant) {
+            // Collect the constant initializers
+            AddrNativeType addr;
+            uint32_t size;
+            collectConstants(type, nElements == 1, addr, size);
+        } else if (uint8_t(type) < StructTypeStart && nElements == 1) {
+            // Built-in scalar type. Generate an expression
             ast = expression();
             expect(ast != nullptr, Error::ExpectedExpr);
         } else {
-            // Struct type, collect initializers
+            // Struct or array type, collect initializers
             expect(Token::OpenBrace);
             ast = expression();
             if (ast) {
                 // FIXME: For now ignore the initializers
                 while (match(Token::Comma)) {
                     ast = expression();
-                    expect(ast != nullptr, Error::ExpectedExpr);
+                    
+                    // Allow trailing comma
+                    if (ast == nullptr) {
+                        break;
+                    }
                 }
             }
             expect(Token::CloseBrace);
         }
+    } else {
+        expect(nElements != 0, Error::EmptyArrayRequiresInitializer);
     }
-    
+
     if (ast) {
         ASTPtr idNode = std::make_shared<VarNode>(sym, annotationIndex());
         ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, Type::None, true, annotationIndex());
@@ -355,6 +332,32 @@ Compiler::var(Type type, bool isPointer)
     }
     
     return true;
+}
+
+void
+Compiler::collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint32_t& size)
+{
+    uint32_t i;
+    addr = uint32_t(_constants.size());
+    
+    if (isScalar) {
+        expect(value(i, type), Error::ExpectedValue);
+        size = typeToBytes(type);
+        appendValue(_constants, i, type);
+        return;
+    }
+    
+    expect(Token::OpenBrace);
+    expect(value(i, type), Error::ExpectedValue);
+    while (match(Token::Comma)) {
+        // Allow trailing comma
+        if (!value(i, type)) {
+            break;
+        }
+        appendValue(_constants, i, type);
+    }
+    expect(Token::CloseBrace);
+    size = uint32_t(_constants.size()) - addr;
 }
 
 bool
@@ -963,12 +966,6 @@ Compiler::primaryExpression()
             }
         }
         
-        Type t;
-        uint32_t v;
-        if (findConstant(id, t, v)) {
-            return std::make_shared<ConstantNode>(t, v, annotationIndex());
-        }
-
         ModulePtr module = findModule(id);
         if (module) {
             return std::make_shared<ModuleNode>(module, annotationIndex());
@@ -977,14 +974,6 @@ Compiler::primaryExpression()
         expect(false, Error::ExpectedVar);
     }
 
-    if (match(Reserved::True)) {
-        return std::make_shared<ConstantNode>(Type::UInt8, 1, annotationIndex());
-    }
-    
-    if (match(Reserved::False)) {
-        return std::make_shared<ConstantNode>(Type::UInt8, 0, annotationIndex());
-    }
-    
     float f;
     if (floatValue(f)) {
         return std::make_shared<ConstantNode>(f, annotationIndex());
@@ -1107,6 +1096,16 @@ Compiler::identifier(std::string& id, bool retire)
 bool
 Compiler::integerValue(uint32_t& i)
 {
+    if (match(Reserved::True)) {
+        i = 1;
+        return true;
+    }
+    
+    if (match(Reserved::False)) {
+        i = 0;
+        return true;
+    }
+    
     if (_scanner.getToken() != Token::Integer) {
         return false;
     }
@@ -1267,48 +1266,6 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         return true;
     }
     return false;
-}
-
-uint8_t
-Compiler::findInt(int32_t i)
-{
-    // Try to find an existing int const. If found, return
-    // its address. If not found, create one and return 
-    // that address.
-    
-// FIXME: How do we deal with constants
-//    auto it = find_if(_rom32.begin(), _rom32.end(),
-//                    [i](uint32_t v) { return uint32_t(i) == v; });
-//    if (it != _rom32.end()) {
-//        return it - _rom32.begin();
-//    }
-//    
-//    _rom32.push_back(uint32_t(i));
-//    return _rom32.size() - 1;
-
-    return 0;
-}
-
-uint8_t
-Compiler::findFloat(float f)
-{
-    // Try to find an existing fp const. If found, return
-    // its address. If not found, create one and return 
-    // that address.
-    uint32_t i = floatToInt(f);
-    (void) i;
-//    auto it = find_if(_rom32.begin(), _rom32.end(),
-//                    [i](uint32_t v) { return i == v; });
-//    if (it != _rom32.end()) {
-//        return it - _rom32.begin();
-//    }
-//    
-//    _rom32.push_back(i);
-//    return _rom32.size() - 1;
-
-// FIXME: How do we deal with constants
-
-    return 0;
 }
 
 StructPtr

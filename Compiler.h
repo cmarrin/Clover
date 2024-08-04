@@ -358,6 +358,17 @@ private:
     
     uint16_t sizeInBytes(Type type) const;
     
+    void appendValue(std::vector<uint8_t>& container, uint32_t v, Type t)
+    {
+        switch (typeToOpSize(t)) {
+            case OpSize::i32:
+            case OpSize::flt: container.push_back(v >> 24);
+                              container.push_back(v >> 16);
+            case OpSize::i16: container.push_back(v >> 8);
+            case OpSize::i8 : container.push_back(v);
+        }
+    }
+    
     struct Def
     {
         Def() { }
