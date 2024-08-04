@@ -68,6 +68,12 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     int32_t topLevelSize = _structs[0]->size();
     appendValue(executable, topLevelSize, Type::UInt32);
     
+    // Write constant size and then constants
+    appendValue(executable, uint16_t(_constants.size()), Type::UInt16);
+    for (auto it : _constants) {
+        executable.push_back(it);
+    }
+    
     for (auto& itStruct : _structs) {
         itStruct->astNode()->emitCode(executable, false, this);
         
@@ -86,8 +92,6 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
             itFunc->setAddr(AddrNativeType(executable.size()));
             itFunc->astNode()->emitCode(executable, false, this);
         }
-        
-        // FIXME: We need to tell the functions and the struct where their code starts
     }
 
     return _error == Error::None;
@@ -349,6 +353,7 @@ Compiler::collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint1
         
     expect(Token::OpenBrace);
     expect(value(i, type), Error::ExpectedValue);
+    appendValue(_constants, i, type);
 
     nElements = 1;
 

@@ -56,6 +56,21 @@ bool Decompiler::decompile()
         _out->append(std::to_string(size));
         _out->append("\n\n");
         
+        // Emit constants
+        uint16_t constSize = getUInt16();
+        
+        _out->append("Constants:");
+        for (uint16_t i = 0; i < constSize; ++i) {
+            if (i % 8 == 0) {
+                _out->append("\n        ");
+            }
+            char buf[8];
+            snprintf(buf, 7, "0x%02x ", getUInt8());
+            _out->append(buf);
+        }
+
+        _out->append("\n\n");
+        
         // Emit code
         while (!atEnd()) {
             statement();

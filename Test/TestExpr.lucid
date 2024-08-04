@@ -44,7 +44,7 @@ function showFloatResults(uint8 testNo, float exp, float act)
 
 float testFloatGlobal;
 
-function test()
+initialize()
 {    
     testIntGlobal = 42;
     testFloatGlobal = 6.5;
