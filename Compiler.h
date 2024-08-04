@@ -332,8 +332,6 @@ private:
     StructPtr findStruct(const std::string&);
     SymbolPtr findSymbol(const std::string&);
     ModulePtr findModule(const std::string&);
-    uint8_t findInt(int32_t);
-    uint8_t findFloat(float);
 
     // The expect methods validate the passed param and if
     // there is no match, the passed error is saved and
