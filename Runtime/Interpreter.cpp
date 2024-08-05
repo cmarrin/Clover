@@ -420,16 +420,16 @@ InterpreterBase::execute()
                     float l = intToFloat(left);
                     float r = intToFloat(right);
                     switch(opcode) {
-                        case Op::LE: l = l <= r; break;
+                        case Op::LE: left = l <= r; break;
                         case Op::LS: _error = Error::InternalError; break;
-                        case Op::LT: l = l < r; break;
+                        case Op::LT: left = l < r; break;
                         case Op::LO: _error = Error::InternalError; break;
-                        case Op::GE: l = l >= r; break;
+                        case Op::GE: left = l >= r; break;
                         case Op::HS: _error = Error::InternalError; break;
-                        case Op::GT: l = l > r; break;
+                        case Op::GT: left = l > r; break;
                         case Op::HI: _error = Error::InternalError; break;
-                        case Op::EQ: l = l == r; break;
-                        case Op::NE: l = l != r; break;
+                        case Op::EQ: left = l == r; break;
+                        case Op::NE: left = l != r; break;
                         default: break;
                     }
                 } else {
