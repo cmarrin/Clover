@@ -11,7 +11,7 @@
 #include <EEPROM.h>
 #include "TestCore.h"
 #include "TestExpr.h"
-//#include "TestIf.h"
+#include "TestIf.h"
 //#include "TestFor.h"
 //#include "TestWhileLoop.h"
 //#include "TestFunction.h"
@@ -149,7 +149,7 @@ public:
   
         RunTest(TestCore);
         RunTest(TestExpr);
-//        RunTest(TestIf);
+        RunTest(TestIf);
 //        RunTest(TestFor);
 //        RunTest(TestWhileLoop);
 //        RunTest(TestFunction);

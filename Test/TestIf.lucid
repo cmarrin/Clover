@@ -9,36 +9,22 @@
 
 // Test if
 
-function space(int n)
+struct Test
 {
-    while (n--) {
-        log(" ");
-    }
-}
 
-function showIntResults(int testNo, int exp, int act)
+function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
-    int n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    log("    Test %i: ", testNo);
-    space(n);
+    core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
-        log("FAIL: exp %i, got %i\n", exp, act);
+        core.printf("     FAIL: exp %i, got %i\n", exp, act);
     } else {
-        log("Pass\n");
+        core.printf("     Pass\n");
     }
 }
 
-function test()
+initialize()
 {    
-    log("\nTest if\n");
-
-    int i = 0, j = 0;
+    core.printf("\nTest if\n");
 
     if (0) {
         showIntResults(1, 0, 1);
@@ -52,7 +38,7 @@ function test()
         showIntResults(2, 0, 1);
     }
     
-    log("\nTest logical operators\n");
+    core.printf("\nTest logical operators\n");
     if (14 < 5) {
         showIntResults(3, 0, 1);
     } else {
@@ -89,7 +75,7 @@ function test()
         showIntResults(8, 0, 1);
     }
 
-    log("\nTest logical or/and/not\n");
+    core.printf("\nTest logical or/and/not\n");
     if (1 > 2 || 2 > 3) {
         showIntResults(9, 0, 1);
     } else {
@@ -150,7 +136,7 @@ function test()
         showIntResults(18, 0, 1);
     }
     
-    log("\nDone\n\n");
+    core.printf("\nDone\n\n");
 }
 
-command test 3 test test;
+};
