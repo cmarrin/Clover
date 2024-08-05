@@ -996,9 +996,9 @@ Compiler::primaryExpression()
     if (integerValue(i)) {
         // Set the type to the smallest type value fits in.
         Type type;
-        if (i <= 255) {
+        if (i <= 127) {
             type = Type::UInt8;
-        } else if (i <= 65535) {
+        } else if (i <= 32767) {
             type = Type::UInt16;
         } else {
             type = Type::UInt32;
