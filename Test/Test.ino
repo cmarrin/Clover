@@ -12,9 +12,9 @@
 #include "TestCore.h"
 #include "TestExpr.h"
 #include "TestIf.h"
+#include "TestFunction.h"
 //#include "TestFor.h"
 //#include "TestWhileLoop.h"
-//#include "TestFunction.h"
 //#include "TestPtrStruct.h"
 
 /*
@@ -150,9 +150,9 @@ public:
         RunTest(TestCore);
         RunTest(TestExpr);
         RunTest(TestIf);
+        RunTest(TestFunction);
 //        RunTest(TestFor);
 //        RunTest(TestWhileLoop);
-//        RunTest(TestFunction);
 //        RunTest(TestPtrStruct);
     }
 
