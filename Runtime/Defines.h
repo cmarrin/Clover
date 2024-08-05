@@ -486,7 +486,7 @@ static inline Op castOp(Type from, Type to)
     return Op::NOP;
 }
 
-static inline int32_t sex(uint32_t& v, OpSize opSize)
+static inline int32_t sex(int32_t& v, OpSize opSize)
 {
     switch (opSize) {
         case OpSize::i32:

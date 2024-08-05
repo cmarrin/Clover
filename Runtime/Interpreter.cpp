@@ -151,11 +151,11 @@ InterpreterBase::callNative(NativeId id)
 void
 InterpreterBase::typeCast(Type from, Type to)
 {
-    uint32_t v = _memMgr.stack().pop(typeToOpSize(from));
+    int32_t v = _memMgr.stack().pop(typeToOpSize(from));
     
     // handle from float case
     if (from == Type::Float) {
-        v = int32_t(intToFloat(v));
+        v = intToFloat(v);
     } else if (typeToBytes(from) < typeToBytes(to)) {
         // Handle widening
         if (from == Type::Int16 || from == Type::Int8) {

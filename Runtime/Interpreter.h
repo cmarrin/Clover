@@ -79,7 +79,7 @@ class InterpreterBase
     
     int32_t getIOpnd(OpSize opSize)
     {
-        uint32_t v = getUOpnd(opSize);
+        int32_t v = getUOpnd(opSize);
         
         // Sign extend
         sex(v, opSize);
