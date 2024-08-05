@@ -56,7 +56,7 @@
 		4914A4972C4DD665003DDADA /* Test.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Test.ino; path = ../Test/Test.ino; sourceTree = "<group>"; };
 		4914A4982C4DD665003DDADA /* TestFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFunction.h; path = ../Test/TestFunction.h; sourceTree = "<group>"; };
 		4914A4992C4DD665003DDADA /* TestIf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestIf.h; path = ../Test/TestIf.h; sourceTree = "<group>"; };
-		4914A49A2C4DD665003DDADA /* TestFunction.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.clvr; path = ../Test/TestFunction.clvr; sourceTree = "<group>"; };
+		4914A49A2C4DD665003DDADA /* TestFunction.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.lucid; path = ../Test/TestFunction.lucid; sourceTree = "<group>"; };
 		4914A49C2C4DD665003DDADA /* TestExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestExpr.lucid; path = ../Test/TestExpr.lucid; sourceTree = "<group>"; };
 		491886F42C5EDAE70053F2C0 /* Lucid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Lucid.h; path = ../Runtime/Lucid.h; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -111,7 +111,7 @@
 				4914A4952C4DD665003DDADA /* TestExpr.h */,
 				4914A4922C4DD665003DDADA /* TestFor.clvr */,
 				4914A4932C4DD665003DDADA /* TestFor.h */,
-				4914A49A2C4DD665003DDADA /* TestFunction.clvr */,
+				4914A49A2C4DD665003DDADA /* TestFunction.lucid */,
 				4914A4982C4DD665003DDADA /* TestFunction.h */,
 				4914A48F2C4DD665003DDADA /* TestIf.lucid */,
 				4914A4992C4DD665003DDADA /* TestIf.h */,

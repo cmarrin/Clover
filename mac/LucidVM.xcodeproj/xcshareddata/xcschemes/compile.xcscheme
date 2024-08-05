@@ -68,6 +68,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -x -h Test/TestIf.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -x -h Test/TestFunction.lucid"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -9,53 +9,33 @@
 
 // Test functions
 
-const int TestSizeDef   12;
-const int testIntConst 10;
-const float testFloatConst 3.5;
+struct Test
+{
 
-int testIntGlobal;
+const int16 TestSizeDef = 12;
+const int16 testIntConst = 10;
+const float testFloatConst = 3.5;
+
+int16 testIntGlobal;
 float testFloatGlobal;
 
-function space(int n)
+function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
-    while (n--) {
-        log(" ");
+    core.printf("%10sTest %2hhi: ", " ", testNo);
+    if (exp != act) {
+        core.printf("     FAIL: exp %i, got %i\n", exp, act);
+    } else {
+        core.printf("     Pass\n");
     }
 }
 
-function showIntResults(int testNo, int exp, int act)
+function showFloatResults(uint8 testNo, float exp, float act)
 {
-    int n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    log("    Test %i: ", testNo);
-    space(n);
+    core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
-        log("FAIL: exp %i, got %i\n", exp, act);
+        core.printf("     FAIL: exp %f, got %f\n", exp, act);
     } else {
-        log("Pass\n");
-    }
-}
-
-function showFloatResults(int testNo, float exp, float act)
-{
-    int n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    log("    Test %i: ", testNo);
-    space(n);
-    if (exp != act) {
-        log("FAIL: exp %f, got %f\n", exp, act);
-    } else {
-        log("Pass\n");
+        core.printf("     Pass\n");
     }
 }
 
@@ -65,9 +45,9 @@ function function1()
     showIntResults(1, 0, 0);
 }
 
-function int function2(int a, int b)
+function int16 function2(int16 a, int16 b)
 {
-    int c = 7;
+    int16 c = 7;
     return a + b + c + TestSizeDef + testIntConst + testIntGlobal;
 }
 
@@ -77,14 +57,14 @@ function float function3(float a, float b)
     return a + b + c + TestSizeDef + testFloatConst + testFloatGlobal;
 }
 
-function int function4(int a, float b)
+function int16 function4(int16 a, float b)
 {
-    return a + Int(b);
+    return a + int16(b);
 }
 
-function test()
+initialize()
 {
-    log("\nTest functions\n");
+    core.printf("\nTest functions\n");
 
     testIntGlobal = 42;
     testFloatGlobal = 6.5;
@@ -95,7 +75,7 @@ function test()
     showFloatResults(3, 195.5, function3( 20, 30.5));
     showIntResults(4, 110, function4( 50, 60.5));
 
-    log("\nDone\n\n");
+    core.printf("\nDone\n\n");
 }
 
-command test 3 test test;
+};
