@@ -212,83 +212,88 @@ static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
-    RET     = 0x01,
-    PUSHS   = 0x02,
-    PUSHK11 = 0x03, // 1 byte operand, push 1 byte
-    PUSHK12 = 0x04, // 1 byte operand, push 2 bytes
-    PUSHK14 = 0x05, // 1 byte operand, push 4 bytes
-    PUSHK22 = 0x06, // 2 byte operand, push 2 bytes
-    PUSHK24 = 0x07, // 2 byte operand, push 4 bytes
-    PUSHK44 = 0x08, // 4 byte operand, push 4 bytes
+    PUSHS   = 0x01,
+    PUSHK11 = 0x02, // 1 byte operand, push 1 byte
+    PUSHK12 = 0x03, // 1 byte operand, push 2 bytes
+    PUSHK14 = 0x04, // 1 byte operand, push 4 bytes
+    PUSHK22 = 0x05, // 2 byte operand, push 2 bytes
+    PUSHK24 = 0x06, // 2 byte operand, push 4 bytes
+    PUSHK44 = 0x07, // 4 byte operand, push 4 bytes
     
-    DROP1   = 0x09, // Next byte is count (1 - 256)
-    DROP2   = 0x0a, // Next 2 bytes are count (1 - 65536)
+    DROP1   = 0x08, // Next byte is count (1 - 256)
+    DROP2   = 0x09, // Next 2 bytes are count (1 - 65536)
     
-    LAND    = 0x0b,
-    LOR     = 0x0c,
-    LNOT    = 0x0d,
+    LAND    = 0x0a,
+    LOR     = 0x0b,
+    LNOT    = 0x0c,
     
-    CALL    = 0x0e, // Absolute address of callee (16 bit)
-    INDEX   = 0x0f, // Stack has a ref and index. Operand is 8 bit element size in bytes, push new ref offset by index * operand
+    CALL    = 0x0d, // Absolute address of callee (16 bit)
+    INDEX   = 0x0e, // Stack has a ref and index. Operand is 8 bit element size in bytes, push new ref offset by index * operand
     
-    DEREF1  = 0x10, // TOS has ref, pop it, load the value at that address and push it
-    DEREF2  = 0x11,
-    DEREF4  = 0x12,
-    POP1    = 0x13, // Next byte is addr mode, pop TOS and store at address
-    POP2    = 0x14,
-    POP4    = 0x15,
-    PUSHREF1= 0x16, // Next byte is addr mode. Data width is used when computing negative offsets from U
-    PUSHREF2= 0x17,
-    PUSHREF4= 0x18,
-    POPDEREF1=0x19, // TOS has value then addr. Store value at addr
-    POPDEREF2=0x1a, 
-    POPDEREF4=0x1b,
-    PUSH1   = 0x1c, // Next byte is addr mode, push value at addr
-    PUSH2   = 0x1d,
-    PUSH4   = 0x1e,
+    DEREF1  = 0x0f, // TOS has ref, pop it, load the value at that address and push it
+    DEREF2  = 0x10,
+    DEREF4  = 0x11,
+    POP1    = 0x12, // Next byte is addr mode, pop TOS and store at address
+    POP2    = 0x13,
+    POP4    = 0x14,
+    PUSHREF1= 0x15, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    PUSHREF2= 0x16,
+    PUSHREF4= 0x17,
+    POPDEREF1=0x18, // TOS has value then addr. Store value at addr
+    POPDEREF2=0x19,
+    POPDEREF4=0x1a,
+    PUSH1   = 0x1b, // Next byte is addr mode, push value at addr
+    PUSH2   = 0x1c,
+    PUSH4   = 0x1d,
 
-    DUP1    = 0x1f,
-    DUP2    = 0x20,
-    DUP4    = 0x21,
-    SWAP1   = 0x22,
-    SWAP2   = 0x23,
-    SWAP4   = 0x24,
+    DUP1    = 0x1e,
+    DUP2    = 0x1f,
+    DUP4    = 0x20,
+    SWAP1   = 0x21,
+    SWAP2   = 0x22,
+    SWAP4   = 0x23,
 
-    PUSHR1  = 0x25, // Push _returnValue (1 byte)
-    PUSHR2  = 0x26, // Push _returnValue (2 bytes)
-    PUSHR4  = 0x27, // Push _returnValue (4 bytes)
+    PUSHR1  = 0x24, // Push _returnValue (1 byte)
+    PUSHR2  = 0x25, // Push _returnValue (2 bytes)
+    PUSHR4  = 0x26, // Push _returnValue (4 bytes)
 
     // Cast operators are sparse. For narrowing cast you don't
     // need to worry about sign.
-    CASTF8  = 0x28,
-    CASTF16 = 0x29,
-    CASTF32 = 0x2a,
+    CASTF8  = 0x27,
+    CASTF16 = 0x28,
+    CASTF32 = 0x29,
     
-    CAST32F = 0x2b,
-    CAST3216= 0x2c,
-    CAST328 = 0x2d,
+    CAST32F = 0x2a,
+    CAST3216= 0x2b,
+    CAST328 = 0x2c,
     
-    CAST168 = 0x2e,
+    CAST168 = 0x2d,
     
     // For widening casts you need signed and unsigned
     // versions so you know when to sign extend
-    CASTU16F= 0x2f,
-    CASTU1632=0x30,
+    CASTU16F= 0x2e,
+    CASTU1632=0x2f,
     
-    CASTI16F= 0x31,
-    CASTI1632=0x32,
+    CASTI16F= 0x30,
+    CASTI1632=0x31,
+
+    CASTU8F = 0x32,
+    CASTU832= 0x33,
+    CASTU816= 0x34,
+
+    CASTI8F = 0x35,
+    CASTI832= 0x36,
+    CASTI816= 0x37,
     
-    CASTU8F = 0x33,
-    CASTU832= 0x34,
-    CASTU816= 0x35,
-    
-    CASTI8F = 0x36,
-    CASTI832= 0x37,
-    CASTI816= 0x38,
+    RET     = 0x38, // Return without popping anything from the stack
+    RETR1   = 0x39, // Return after popping TOS into _returnValue
+    RETR2   = 0x3a, // Return after popping TOS into _returnValue
+    RETR4   = 0x3b, // Return after popping TOS into _returnValue
+
     
 //
 //
-// Available opcodes 39 - 43
+// Available opcodes 3c - 43
 //
 //
 

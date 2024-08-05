@@ -196,7 +196,12 @@ InterpreterBase::execute()
             _errorAddr = _pc - 1;
             return -1;
         }
-        
+
+        // If address is 0, we exit
+        if (_pc == 0) {
+            return 0;
+        }
+
         uint8_t opInt = getUInt8ROM(_pc++);
         uint8_t operand = 0;
         Op opcode = Op::NOP;
@@ -246,14 +251,20 @@ InterpreterBase::execute()
                 right = _memMgr.getAbs(left, OpSize::i32);
                 _memMgr.stack().push(right, OpSize::i32);
                 break;
+            case Op::RETR1:
+                _returnValue = _memMgr.stack().pop(OpSize::i8);
+                handleReturn();
+                break;
+            case Op::RETR2:
+                _returnValue = _memMgr.stack().pop(OpSize::i16);
+                handleReturn();
+                break;
+            case Op::RETR4:
+                _returnValue = _memMgr.stack().pop(OpSize::i32);
+                handleReturn();
+                break;
             case Op::RET:
-                _memMgr.restoreFrame();
-                _pc = _memMgr.stack().pop(AddrOpSize);
-                
-                // If return address is 0, we exit
-                if (_pc == 0) {
-                    return 0;
-                }
+                handleReturn();
                 break;
             case Op::PUSHR1:
                 _memMgr.stack().push(_returnValue, OpSize::i8);

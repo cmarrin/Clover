@@ -114,6 +114,12 @@ class InterpreterBase
         return _memMgr.getAbs(ea(opSize), opSize);
     }
     
+    void handleReturn()
+    {
+        _memMgr.restoreFrame();
+        _pc = _memMgr.stack().pop(AddrOpSize);
+    }
+    
     uint16_t _pc = 0;
 
     Error _error = Error::None;

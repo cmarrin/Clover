@@ -36,6 +36,7 @@ enum class ASTNodeType {
     TypeCast,
     Branch,
     Index,
+    Return,
 };
 
 class ASTNode;
@@ -409,6 +410,23 @@ class IndexNode : public ASTNode
     
   private:
     ASTPtr _lhs, _rhs;
+};
+
+class ReturnNode : public ASTNode
+{
+  public:
+    ReturnNode(const ASTPtr& arg, int32_t annotationIndex)
+        : _arg(arg)
+        , ASTNode(annotationIndex)
+    { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Return; }
+    virtual Type type() const override { return _arg->type(); }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    
+  private:
+    ASTPtr _arg;
 };
 
 }

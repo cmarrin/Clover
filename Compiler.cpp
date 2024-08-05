@@ -472,8 +472,8 @@ Compiler::function()
     // Emit Return at the end if there's not already one
     ASTPtr nodes = _currentFunction->astNode();
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
-    if (lastNode->astNodeType() != ASTNodeType::Op || reinterpret_cast<OpNode*>(lastNode.get())->op() != Op::RET) {
-        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET, annotationIndex()));
+    if (lastNode->astNodeType() != ASTNodeType::Return) {
+        _currentFunction->addASTNode(std::make_shared<ReturnNode>(nullptr, annotationIndex()));
     }
         
     _inFunction = false;
@@ -516,8 +516,8 @@ Compiler::init()
     // Emit Return at the end if there's not already one
     ASTPtr nodes = _currentFunction->astNode();
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
-    if (lastNode->astNodeType() != ASTNodeType::Op || reinterpret_cast<OpNode*>(lastNode.get())->op() != Op::RET) {
-        _currentFunction->addASTNode(std::make_shared<OpNode>(Op::RET, annotationIndex()));
+    if (lastNode->astNodeType() != ASTNodeType::Return) {
+        _currentFunction->addASTNode(std::make_shared<ReturnNode>(nullptr, annotationIndex()));
     }
     
     _inFunction = false;
@@ -773,12 +773,8 @@ Compiler::returnStatement()
     }
     
     ASTPtr ast = expression();
-    if (ast) {
-        currentFunction()->addASTNode(std::make_shared<OpNode>(Op::RET, ast, currentFunction()->returnType(), false, annotationIndex()));
-    } else {
-        // If the function return type not None, we need a return value
-        expect(currentFunction()->returnType() == Type::None, Error::MismatchedType);
-    }
+    expect(ast != nullptr || currentFunction()->returnType() == Type::None, Error::MismatchedType);
+    currentFunction()->addASTNode(std::make_shared<ReturnNode>(ast, annotationIndex()));
     
     expect(Token::Semicolon);
     return true;

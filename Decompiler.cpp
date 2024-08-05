@@ -140,6 +140,9 @@ Decompiler::statement()
         case Op::PUSHREF4: emitOp("PUSHREF4"); emitIndex(getUInt8()); break;
         case Op::INDEX   : emitOp("INDEX"); emitNumber(getUInt8()); break;
         case Op::RET     : emitOp("RET"); break;
+        case Op::RETR1   : emitOp("RETR1"); break;
+        case Op::RETR2   : emitOp("RETR2"); break;
+        case Op::RETR4   : emitOp("RETR4"); break;
         case Op::PUSHR1  : emitOp("PUSHR1"); break;
         case Op::PUSHR2  : emitOp("PUSHR2"); break;
         case Op::PUSHR4  : emitOp("PUSHR4"); break;

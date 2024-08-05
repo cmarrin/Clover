@@ -421,3 +421,16 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         code.push_back(uint8_t(op));
     }
 }
+
+void
+ReturnNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+{
+    if (_arg == nullptr) {
+        code.push_back(uint8_t(Op::RET));
+    } else {
+        _arg->emitCode(code, false, c);
+        uint8_t size = typeToBytes(_arg->type());
+        Op op = (size == 1) ? Op::RETR1 : ((size == 2) ? Op::RETR2 : Op::RETR4);
+        code.push_back(uint8_t(op));
+    }
+}
