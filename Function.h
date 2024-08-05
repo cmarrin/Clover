@@ -27,8 +27,7 @@ namespace lucid {
 // pushes the current BP and then computes the new BP to be the
 // start of the args. Since there are 2 pointers between the
 // end of the args and the locals, the addresses of each local
-// is adjusted to account for this. The size of a pointer is
-// available in the PointerSize const in Defines.h.
+// is adjusted to account for this.
 
 class Function
 {
