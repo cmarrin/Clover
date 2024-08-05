@@ -94,6 +94,8 @@ class Memory
         
         const uint16_t& sp() const { return _sp; }
         uint16_t& sp() { return _sp; }
+        
+        int32_t size() const { return _size; }
                 
         void ensurePush(uint8_t n = 1) const
         {
@@ -148,12 +150,24 @@ class Memory
     {
         uint32_t v = 0;
         
-        switch (opSize) {
-            case OpSize::flt:
-            case OpSize::i32: v |= uint32_t(_stack.getAbs(addr++)) << 24;
-                              v |= uint32_t(_stack.getAbs(addr++)) << 16;
-            case OpSize::i16: v |= uint32_t(_stack.getAbs(addr++)) << 8;
-            case OpSize::i8 : v |= uint32_t(_stack.getAbs(addr++));
+        if (addr >= stack().size()) {
+            // This is a constant
+            addr -= stack().size();
+            switch (opSize) {
+                case OpSize::flt:
+                case OpSize::i32: v |= uint32_t(rom(addr++)) << 24;
+                                  v |= uint32_t(rom(addr++)) << 16;
+                case OpSize::i16: v |= uint32_t(rom(addr++)) << 8;
+                case OpSize::i8 : v |= uint32_t(rom(addr++));
+            }
+        } else {
+            switch (opSize) {
+                case OpSize::flt:
+                case OpSize::i32: v |= uint32_t(_stack.getAbs(addr++)) << 24;
+                                  v |= uint32_t(_stack.getAbs(addr++)) << 16;
+                case OpSize::i16: v |= uint32_t(_stack.getAbs(addr++)) << 8;
+                case OpSize::i8 : v |= uint32_t(_stack.getAbs(addr++));
+            }
         }
         
         return v;
@@ -184,7 +198,8 @@ class Memory
     AddrNativeType index(int32_t offset, Index idx, OpSize opSize) const
     {
         switch (idx) {
-            case Index::C: return 0;
+            // Constants offset addresses by the size of stack memory so you can distinguish them
+            case Index::C: return offset + ConstStart + stack().size();
             case Index::X: return _x + offset;
             case Index::Y: return _y + offset;
             case Index::U: return localAddr(offset, opSize);
