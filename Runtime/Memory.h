@@ -175,7 +175,7 @@ class Memory
     
     uint32_t getLocal(int32_t offset, Type type)
     {
-        return getAbs(localAddr(offset, typeToOpSize(type)), typeToOpSize(type));
+        return getAbs(localAddr(offset), typeToOpSize(type));
     }
     
     // On entry args are pushed on stack followed by retAddr.
@@ -202,17 +202,17 @@ class Memory
             case Index::C: return offset + ConstStart + stack().size();
             case Index::X: return _x + offset;
             case Index::Y: return _y + offset;
-            case Index::U: return localAddr(offset, opSize);
+            case Index::U: return localAddr(offset);
         }
     }
     
     // Local offsets are negative and args are non-negative so
     // the first local byte (or the LSB if 16 or 32 bit) is -1
     // and the first arg (or the MSB if 16 or 32 bit) is 0.
-    AddrNativeType localAddr(int32_t offset, OpSize opSize = OpSize::i8) const
+    AddrNativeType localAddr(int32_t offset) const
     {
         if (offset < 0) {
-            return _u + offset - opSizeToBytes(opSize) + 1;
+            return _u + offset;
         }
         return _u + AddrSize * 2 + offset;
     }
@@ -238,7 +238,7 @@ class VarArg
     VarArg(Memory* memMgr, uint32_t lastArgOffset, Type lastArgType)
         : _memMgr(memMgr)
     {
-        _nextAddr = memMgr->localAddr(lastArgOffset, typeToOpSize(lastArgType)) + typeToBytes(lastArgType);
+        _nextAddr = memMgr->localAddr(lastArgOffset) + typeToBytes(lastArgType);
     }
     
     VarArg(Memory* memMgr)
@@ -260,7 +260,7 @@ class VarArg
 
     void initialize(uint32_t lastArgOffset, Type lastArgType)
     {
-        _nextAddr = _memMgr->localAddr(lastArgOffset, typeToOpSize(lastArgType)) + typeToBytes(lastArgType);
+        _nextAddr = _memMgr->localAddr(lastArgOffset) + typeToBytes(lastArgType);
         _initialAddr = _nextAddr;
     }
     
