@@ -127,7 +127,7 @@ Opcodes:
         The byte following the opcode indicates the addressing mode. Bits1:0 indicate
         how the addressing value is used:
                         
-            00 - Reserved
+            00 - Constant
             01 - X. Add signed value to X to get EA
             10 - Y. Add signed value to Y to get EA
             11 - U. Add signed value to U to get EA
