@@ -64,11 +64,6 @@ static inline uint32_t floatToInt(float f)
     return *(reinterpret_cast<int32_t*>(&f));
 }
 
-// PointerSize is needed to know how much space is taken
-// by pointers on the stack and to compute function and
-// struct variable sizes.
-static constexpr uint8_t PointerSize = 2;
-
 /*
 
 Machine Code for LucidVM
