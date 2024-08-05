@@ -203,7 +203,7 @@ Opcodes:
     POSTDEC<1,2,4,F>- Takes an index byte. Like PUSH, but decrements the value at EA and pushes the undecremented value
 */
 
-static constexpr uint16_t ConstStart = 12; // Past signature, entry point and top level size
+static constexpr uint16_t ConstStart = 14; // Past signature, entry point and top level size
 
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart = 0x28;
