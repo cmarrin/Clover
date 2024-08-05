@@ -774,7 +774,7 @@ Compiler::returnStatement()
     
     ASTPtr ast = expression();
     if (ast) {
-        // FIXME: Return value goes in _returnValue
+        currentFunction()->addASTNode(std::make_shared<OpNode>(Op::RET, ast, currentFunction()->returnType(), false, annotationIndex()));
     } else {
         // If the function return type not None, we need a return value
         expect(currentFunction()->returnType() == Type::None, Error::MismatchedType);
