@@ -477,8 +477,8 @@ static inline Op castOp(Type from, Type to)
             case Type::Float: return Op::CASTI8F;
             case Type::Int32:
             case Type::UInt32: return Op::CASTI832;
-            case Type::Int8:
-            case Type::UInt8: return Op::CASTI816;
+            case Type::Int16:
+            case Type::UInt16: return Op::CASTI816;
             default: return Op::NOP;
         }
     }
