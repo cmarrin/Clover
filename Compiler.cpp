@@ -877,9 +877,11 @@ Compiler::unaryExpression()
     Op opcode;
     Type resultType = Type::None;
     bool isRef = false;
+    bool isSigned = false;
     
     if (match(Token::Minus)) {
         opcode = Op::NEG;
+        isSigned = true;
     } else if (match(Token::Twiddle)) {
         opcode = Op::NOT;
     } else if (match(Token::Bang)) {
@@ -898,7 +900,22 @@ Compiler::unaryExpression()
         return nullptr;
     }
     
-    return std::make_shared<OpNode>(opcode, unaryExpression(), resultType, isRef, annotationIndex());
+    node = unaryExpression();
+    
+    // If result needs to be signed (for Op::NEG) do a cast here
+    if (isSigned && !node->isSigned()) {
+        Type t = node->type();
+        if (t == Type::UInt8) {
+            t = Type::Int8;
+        } else if (t == Type::UInt16) {
+            t = Type::Int16;
+        } else if (t == Type::UInt32) {
+            t = Type::Int32;
+        }
+        node = TypeCastNode::castIfNeeded(node, t, annotationIndex());
+    }
+    
+    return std::make_shared<OpNode>(opcode, node, resultType, isRef, annotationIndex());
 }
 
 ASTPtr
