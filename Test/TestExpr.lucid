@@ -63,7 +63,7 @@ initialize()
     showIntResults(7, 6, TestIntConst / testIntGlobal);
     
     showIntResults(8, -42, -testIntGlobal);
-    showIntResults(8, 0, !TestIntConst);
+    showIntResults(9, 0, !TestIntConst);
     showIntResults(10, 0xffffff03, ~TestIntConst);
     
     showIntResults(11, 0, TestIntConst < testIntGlobal);
