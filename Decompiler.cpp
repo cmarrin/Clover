@@ -289,21 +289,15 @@ void Decompiler::emitIndexValue(uint8_t index)
         }
     }
     
-    if (mode == 0) {
-        // Global
-        _out->append("[");
-        _out->append(std::to_string(value));
-        _out->append("]");
-    } else {
-        _out->append(std::to_string(value));
-        _out->append(",");
-        switch (mode) {
-            case 0: _out->append("C"); break;
-            case 1: _out->append("C"); break;
-            case 2: _out->append("C"); break;
-            case 3: _out->append("C"); break;
-            default: _out->append("?"); break;
-        }
+    
+    _out->append(std::to_string(value));
+    _out->append(",");
+    switch (mode) {
+        case 0: _out->append("C"); break;
+        case 1: _out->append("X"); break;
+        case 2: _out->append("Y"); break;
+        case 3: _out->append("U"); break;
+        default: _out->append("?"); break;
     }
 }
 
