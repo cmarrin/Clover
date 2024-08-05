@@ -214,7 +214,6 @@ InterpreterBase::execute()
         }
         
         int32_t left, right;
-        uint32_t addr;
         
         switch (opcode) {
             case Op::NOP:
