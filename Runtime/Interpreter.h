@@ -75,24 +75,10 @@ class InterpreterBase
     
     int32_t getIOpnd(OpSize opSize)
     {
-        int32_t v = getUOpnd(opSize);
+        uint32_t v = getUOpnd(opSize);
         
         // Sign extend
-        switch (opSize) {
-            case OpSize::i32:
-            case OpSize::flt:
-                break;
-            case OpSize::i16:
-                if (v & 0x8000) {
-                    v |= 0xffff8000;
-                }
-                break;
-            case OpSize::i8 :
-                if (v & 0x80) {
-                    v |= 0xffffff80;
-                }
-                break;
-        }
+        sex(v, opSize);
         return v;
     }
 
