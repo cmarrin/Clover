@@ -240,8 +240,8 @@ InterpreterBase::execute()
                 break;
             case Op::DEREF4:
                 left = _memMgr.stack().pop(AddrOpSize);
-                right = _memMgr.getAbs(left, OpSize::i16);
-                _memMgr.stack().push(right, OpSize::i16);
+                right = _memMgr.getAbs(left, OpSize::i32);
+                _memMgr.stack().push(right, OpSize::i32);
                 break;
             case Op::RET:
                 _memMgr.restoreFrame();
