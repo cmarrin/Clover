@@ -9,13 +9,13 @@
 
 #include <Lucid.h>
 #include <EEPROM.h>
-//#include "TestExpr.h"
+#include "TestCore.h"
+#include "TestExpr.h"
 //#include "TestIf.h"
 //#include "TestFor.h"
 //#include "TestWhileLoop.h"
 //#include "TestFunction.h"
 //#include "TestPtrStruct.h"
-#include "TestCore.h"
 
 /*
 
@@ -147,13 +147,13 @@ public:
         
 		Serial.println(F("Test v0.1"));
   
-//        RunTest(TestExpr);
+        RunTest(TestCore);
+        RunTest(TestExpr);
 //        RunTest(TestIf);
 //        RunTest(TestFor);
 //        RunTest(TestWhileLoop);
 //        RunTest(TestFunction);
 //        RunTest(TestPtrStruct);
-        RunTest(TestCore);
     }
 
 	void loop()
