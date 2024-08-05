@@ -117,13 +117,24 @@ Decompiler::statement()
     
     switch (opcode) {
         case Op::NOP     : emitOp("NOP"); break;
-        case Op::TOF     : emitOp("TOF"); emitSize(size); break;
-        case Op::TOU8    : emitOp("TOU8"); emitSize(size); break;
-        case Op::TOI8    : emitOp("TOI8"); emitSize(size); break;
-        case Op::TOU16   : emitOp("TOU16"); emitSize(size); break;
-        case Op::TOI16   : emitOp("TOI16"); emitSize(size); break;
-        case Op::TOU32   : emitOp("TOU32"); emitSize(size); break;
-        case Op::TOI32   : emitOp("TOI32"); emitSize(size); break;
+        
+        case Op::CASTF8    : emitOp("CASTF8");    break;
+        case Op::CASTF16   : emitOp("CASTF16");   break;
+        case Op::CASTF32   : emitOp("CASTF32");   break;
+        case Op::CAST32F   : emitOp("CAST32F");   break;
+        case Op::CAST3216  : emitOp("CAST3216");  break;
+        case Op::CAST328   : emitOp("CAST328");   break;
+        case Op::CAST168   : emitOp("CAST168");   break;
+        case Op::CASTU16F  : emitOp("CASTU16F");  break;
+        case Op::CASTU1632 : emitOp("CASTU1632"); break;
+        case Op::CASTI16F  : emitOp("CASTI16F");  break;
+        case Op::CASTI1632 : emitOp("CASTI1632"); break;
+        case Op::CASTU8F   : emitOp("CASTU8F");   break;
+        case Op::CASTU832  : emitOp("CASTU832");  break;
+        case Op::CASTU816  : emitOp("CASTU816");  break;
+        case Op::CASTI8F   : emitOp("CASTI8F");   break;
+        case Op::CASTI832  : emitOp("CASTI832");  break;
+        case Op::CASTI816  : emitOp("CASTI816");  break;
         case Op::PUSHREF1: emitOp("PUSHREF1"); emitIndex(getUInt8()); break;
         case Op::PUSHREF2: emitOp("PUSHREF2"); emitIndex(getUInt8()); break;
         case Op::PUSHREF4: emitOp("PUSHREF4"); emitIndex(getUInt8()); break;

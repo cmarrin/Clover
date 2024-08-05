@@ -206,8 +206,8 @@ Opcodes:
 static constexpr uint16_t ConstStart = 14; // Past signature, entry point and top level size
 
 // 0 bit opcodes start at 0x00
-static constexpr uint8_t OneBitOperandStart = 0x28;
-static constexpr uint8_t TwoBitOperandStart = 0x30;
+static constexpr uint8_t OneBitOperandStart  = 0x44;
+static constexpr uint8_t TwoBitOperandStart  = 0x4c;
 static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
 enum class Op: uint8_t {
@@ -258,54 +258,80 @@ enum class Op: uint8_t {
     PUSHR2  = 0x26, // Push _returnValue (2 bytes)
     PUSHR4  = 0x27, // Push _returnValue (4 bytes)
 
+    // Cast operators are sparse. For narrowing cast you don't
+    // need to worry about sign.
+    CASTF8  = 0x28,
+    CASTF16 = 0x29,
+    CASTF32 = 0x2a,
+    
+    CAST32F = 0x2b,
+    CAST3216= 0x2c,
+    CAST328 = 0x2d,
+    
+    CAST168 = 0x2e,
+    
+    // For widening casts you need signed and unsigned
+    // versions so you know when to sign extend
+    CASTU16F= 0x2f,
+    CASTU1632=0x30,
+    
+    CASTI16F= 0x31,
+    CASTI1632=0x32,
+    
+    CASTU8F = 0x33,
+    CASTU832= 0x34,
+    CASTU816= 0x35,
+    
+    CASTI8F = 0x36,
+    CASTI832= 0x37,
+    CASTI816= 0x38,
+    
+//
+//
+// Available opcodes 39 - 43
+//
+//
+
 // Bit 0 is 0 if the operand is a 8 bits and 1 if 16 bits.
 // Operand is sign extended
 // This limits branches to the range -32768 to 32767.
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
-    IF      = 0x28,
-    BRA     = 0x2a,
-    NCALL   = 0x2c,
-    ENTER   = 0x2e,
+    IF      = 0x44,
+    BRA     = 0x46,
+    NCALL   = 0x48,
+    ENTER   = 0x4a,
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
-    ADD     = 0x30,
-    SUB     = 0x34,
-    IMUL    = 0x38,
-    UMUL    = 0x3c,
-    IDIV    = 0x40,
-    UDIV    = 0x44,
+    ADD     = 0x4c,
+    SUB     = 0x50,
+    IMUL    = 0x54,
+    UMUL    = 0x58,
+    IDIV    = 0x5c,
+    UDIV    = 0x60,
     
-    AND     = 0x48,
-    OR      = 0x4c,
-    XOR     = 0x50,
-    NOT     = 0x54,
-    NEG     = 0x58,
+    AND     = 0x64,
+    OR      = 0x68,
+    XOR     = 0x6c,
+    NOT     = 0x70,
+    NEG     = 0x74,
 
-    PREINC  = 0x5c, // Next byte is addr mode
-    PREDEC  = 0x60, // Next byte is addr mode
-    POSTINC = 0x64, // Next byte is addr mode
-    POSTDEC = 0x68, // Next byte is addr mode
+    PREINC  = 0x78, // Next byte is addr mode
+    PREDEC  = 0x7c, // Next byte is addr mode
+    POSTINC = 0x80, // Next byte is addr mode
+    POSTDEC = 0x84, // Next byte is addr mode
     
-    LE      = 0x6c,
-    LS      = 0x70,
-    LT      = 0x74,
-    LO      = 0x78,
-    GE      = 0x7c,
-    HS      = 0x80,
-    GT      = 0x84,
-    HI      = 0x88,
-    EQ      = 0x8c,
-    NE      = 0x90,
-
-    TOF     = 0x94,
-    TOU8    = 0x98,
-    TOI8    = 0x9c,
-    TOU16   = 0xa0,
-    TOI16   = 0xa4,
-    TOU32   = 0xa8,
-    TOI32   = 0xac,
+    LE      = 0x88,
+    LS      = 0x8c,
+    LT      = 0x90,
+    LO      = 0x94,
+    GE      = 0x98,
+    HS      = 0x9c,
+    GT      = 0xa0,
+    HI      = 0xa4,
+    EQ      = 0xa8,
+    NE      = 0xac,
 
 // These versions use the lower 4 bits of the opcode as a param (0-15)
     PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
@@ -386,18 +412,78 @@ static inline uint8_t typeToSizeBits(Type type)
     }
 };
 
-static inline Op castToOp(Type type)
+static inline Op castOp(Type from, Type to)
 {
-    switch (type) {
-        case Type::Float: return Op::TOF;
-        case Type::UInt8: return Op::TOU8;
-        case Type::Int8: return Op::TOI8;
-        case Type::UInt16: return Op::TOU16;
-        case Type::Int16: return Op::TOI16;
-        case Type::UInt32: return Op::TOU32;
-        case Type::Int32: return Op::TOI32;
-        default: return Op::NOP;
+    // Cast opcode are sparse, only the ones needed exist
+    // return NOP for all the rest.
+    if (from == Type::Float) {
+        switch (to) {
+            case Type::Int8:
+            case Type::UInt8: return Op::CASTF8;
+            case Type::Int16:
+            case Type::UInt16: return Op::CASTF16;
+            case Type::Int32:
+            case Type::UInt32: return Op::CASTF32;
+            default: return Op::NOP;
+        }
     }
+    
+    if (from == Type::Int32 || from == Type::UInt32) {
+        switch (to) {
+            case Type::Float: return Op::CAST32F;
+            case Type::Int16:
+            case Type::UInt16: return Op::CAST3216;
+            case Type::Int8:
+            case Type::UInt8: return Op::CAST328;
+            default: return Op::NOP;
+        }
+    }
+    
+    if (from == Type::UInt16) {
+        switch (to) {
+            case Type::Float: return Op::CASTU16F;
+            case Type::Int32:
+            case Type::UInt32: return Op::CASTU1632;
+            case Type::Int8:
+            case Type::UInt8: return Op::CAST168;
+            default: return Op::NOP;
+        }
+    }
+    
+    if (from == Type::Int16) {
+        switch (to) {
+            case Type::Float: return Op::CASTI16F;
+            case Type::Int32:
+            case Type::UInt32: return Op::CASTI1632;
+            case Type::Int8:
+            case Type::UInt8: return Op::CAST168;
+            default: return Op::NOP;
+        }
+    }
+
+    if (from == Type::UInt8) {
+        switch (to) {
+            case Type::Float: return Op::CASTU8F;
+            case Type::Int32:
+            case Type::UInt32: return Op::CASTU832;
+            case Type::Int16:
+            case Type::UInt16: return Op::CASTU816;
+            default: return Op::NOP;
+        }
+    }
+    
+    if (from == Type::Int8) {
+        switch (to) {
+            case Type::Float: return Op::CASTI8F;
+            case Type::Int32:
+            case Type::UInt32: return Op::CASTI832;
+            case Type::Int8:
+            case Type::UInt8: return Op::CASTI816;
+            default: return Op::NOP;
+        }
+    }
+    
+    return Op::NOP;
 }
 
 static inline int32_t sex(uint32_t& v, OpSize opSize)

@@ -51,6 +51,10 @@ class InterpreterBase
 
   protected:
     void callNative(NativeId);
+    
+    // TOS has from type value, type cast and push to type
+    void typeCast(Type from, Type to);
+
 
     // Addr is in bytes
     uint8_t getUInt8ROM(uint16_t addr) const

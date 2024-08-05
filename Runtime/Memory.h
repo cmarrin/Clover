@@ -66,9 +66,6 @@ class Memory
                 case OpSize::i8 : v |= uint32_t(pop());
             }
             
-            // Sign extend
-            sex(v, size);
-            
             return v;
         }
         

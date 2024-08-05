@@ -37,44 +37,53 @@ function showFloatResults(uint8 testNo, float exp, float act)
 initialize()
 {
     core.printf("\nTest Core Module\n");
+    
+    float f;
+    int32 i;
+    uint8 u;
 
     core.printf("\nTest Type Conversion\n");
-    showIntResults(1, 5, int32(5.3));
-    showFloatResults(2, 7.5, float(7) + 0.5);
+    
+    f = 5.3;
+    u = 200;
+    
+    showIntResults(1, 5, int32(f));
+    showIntResults(2, 200, int32(u));
+    showFloatResults(3, 7.5, float(7) + 0.5);
 
     core.printf("\nTest Random\n");
 
-    int32 i = core.irand(3, 33);
-    showIntResults(3, 1, i >= 3 && i <= 33);
+    i = core.irand(3, 33);
+    showIntResults(4, 1, i >= 3 && i <= 33);
 
-    float f = core.frand(3.5, 5.5);
-    showIntResults(4, 1, f >= 3.5 && f <= 5.5);
+    f = core.frand(3.5, 5.5);
+    showIntResults(5, 1, f >= 3.5 && f <= 5.5);
 
     core.printf("\nTest memset\n");
 
     uint8 localArray[10];
 
     core.memset(&localArray, 200, 10);
-    showIntResults(5, 200, localArray[5]);
+    showIntResults(6, 200, localArray[5]);
     core.memset(&globalArray, 0x55, 20 * 2);
-    showIntResults(6, 0x5555, globalArray[9]);
+    showIntResults(7, 0x5555, globalArray[9]);
 
     core.printf("\nTest Min/Max\n");
-    showIntResults(7, 20, core.imin(20, 21));
-    showIntResults(8, 10, core.imin(11, 10));
-    showIntResults(9, 21, core.imax(20, 21));
-    showIntResults(10, 11, core.imax(11, 10));
-    showFloatResults(11, 20.5, core.fmin(20.5, 21.5));
-    showFloatResults(12, 10.5, core.fmin(11.5, 10.5));
-    showFloatResults(13, 21.5, core.fmax(20.5, 21.5));
-    showFloatResults(14, 11.5, core.fmax(11.5, 10.5));
+    showIntResults(8, 20, core.imin(20, 21));
+    showIntResults(9, 10, core.imin(11, 10));
+    showIntResults(10, 21, core.imax(20, 21));
+    showIntResults(11, 11, core.imax(11, 10));
+    showFloatResults(12, 20.5, core.fmin(20.5, 21.5));
+    showFloatResults(13, 10.5, core.fmin(11.5, 10.5));
+    showFloatResults(14, 21.5, core.fmax(20.5, 21.5));
+    showFloatResults(15, 11.5, core.fmax(11.5, 10.5));
 
     core.printf("\nTest Args\n");
     
     // incoming args are an uint8 ('f') and uint16 (2)
     core.initArgs();
-    showIntResults(15, 'f', core.argint8());
-    showIntResults(16, 2, core.argint16());
+    showIntResults(16, 'f', core.argint8());
+    showIntResults(17, 2, core.argint16());
 
     core.printf("\nDone\n\n");
 }

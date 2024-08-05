@@ -13,27 +13,6 @@
 
 using namespace lucid;
 
-static int32_t typeCast(int32_t v, OpSize from, Type to)
-{
-    // handle from float case
-    if (from == OpSize::flt) {
-        float f = intToFloat(v);
-        if (to != Type::Float) {
-            v = int32_t(f);
-        }
-        return v;
-    }
-    
-    // handle to float case (assume from is int)
-    if (to == Type::Float) {
-        float f = float(v);
-        return floatToInt(f);
-    }
-    
-    // This is just an int to int case, nothing to do
-    return v;
-}
-
 InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
     : _memMgr(mem, memSize)
     , _topLevelArgs(&_memMgr)
@@ -167,6 +146,31 @@ InterpreterBase::callNative(NativeId id)
     // Restore the frame and pop the dummy return address
     _memMgr.restoreFrame();
     _memMgr.stack().pop(AddrOpSize);
+}
+
+void
+InterpreterBase::typeCast(Type from, Type to)
+{
+    uint32_t v = _memMgr.stack().pop(typeToOpSize(from));
+    
+    // handle from float case
+    if (from == Type::Float) {
+        v = int32_t(intToFloat(v));
+    } else if (typeToBytes(from) < typeToBytes(to)) {
+        // Handle widening
+        if (from == Type::Int16 || from == Type::Int8) {
+            sex(v, typeToOpSize(from));
+        }
+    }
+    
+    // v is now a 32 bit value, sign extended if needed
+    
+    // handle to float case
+    if (to == Type::Float) {
+        v = floatToInt(float(v));
+    }
+    
+    _memMgr.stack().push(v, typeToOpSize(to));
 }
 
 int32_t
@@ -505,13 +509,23 @@ InterpreterBase::execute()
                 _pc += size;
                 break;
             }
-            case Op::TOF   : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::Float), OpSize::flt); break;
-            case Op::TOU8  : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::UInt8), OpSize::i8); break;
-            case Op::TOI8  : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::Int8), OpSize::i8); break;
-            case Op::TOU16 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::UInt16), OpSize::i16); break;
-            case Op::TOI16 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::Int16), OpSize::i16); break;
-            case Op::TOU32 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::UInt32), OpSize::i32); break;
-            case Op::TOI32 : left = _memMgr.stack().pop(opSize); _memMgr.stack().push(typeCast(left, opSize, Type::Int32), OpSize::i32); break;
+            case Op::CASTF8   : typeCast(Type::Float,  Type::Int8); break;
+            case Op::CASTF16  : typeCast(Type::Float,  Type::Int16); break;
+            case Op::CASTF32  : typeCast(Type::Float,  Type::Int32); break;
+            case Op::CAST32F  : typeCast(Type::Int32,  Type::Float); break;
+            case Op::CAST3216 : typeCast(Type::Int32,  Type::Int16); break;
+            case Op::CAST328  : typeCast(Type::Int32,  Type::Int8); break;
+            case Op::CAST168  : typeCast(Type::Int16,  Type::Int8); break;
+            case Op::CASTU16F : typeCast(Type::UInt16, Type::Float); break;
+            case Op::CASTU1632: typeCast(Type::UInt16, Type::Int32); break;
+            case Op::CASTI16F : typeCast(Type::Int16,  Type::Float); break;
+            case Op::CASTI1632: typeCast(Type::Int16,  Type::Int32); break;
+            case Op::CASTU8F  : typeCast(Type::UInt8,  Type::Float); break;
+            case Op::CASTU832 : typeCast(Type::UInt8,  Type::Int32); break;
+            case Op::CASTU816 : typeCast(Type::UInt8,  Type::Int16); break;
+            case Op::CASTI8F  : typeCast(Type::Int8,   Type::Float); break;
+            case Op::CASTI832 : typeCast(Type::Int8,   Type::Int32); break;
+            case Op::CASTI816 : typeCast(Type::Int8,   Type::Int16); break;
         }
     }
 }

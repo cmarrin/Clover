@@ -312,7 +312,7 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
-    code.push_back(uint8_t(castToOp(_type)) | typeToSizeBits(_arg->type()));
+    code.push_back(uint8_t(castOp(_arg->type(), _type)));
 }
 
 ASTPtr
@@ -342,8 +342,7 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
             constNode->setType(neededType);
 
         } else {
-            Op castTo = castToOp(neededType);
-            node = std::make_shared<OpNode>(Op(uint8_t(castTo) | typeToSizeBits(node->type())), node, Type::None, false, annotationIndex);
+            node = std::make_shared<TypeCastNode>(neededType, node, annotationIndex);
         }
     }
     
