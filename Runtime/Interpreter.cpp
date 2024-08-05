@@ -326,12 +326,22 @@ InterpreterBase::execute()
             case Op::SUB:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
-                _memMgr.stack().push(left - right, opSize);
+                
+                if (opSize == OpSize::flt) {
+                    _memMgr.stack().push(floatToInt(intToFloat(left) - intToFloat(right)), opSize);
+                } else {
+                    _memMgr.stack().push(left - right, opSize);
+                }
                 break;
             case Op::IMUL:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
-                _memMgr.stack().push(left * right, opSize);
+
+                if (opSize == OpSize::flt) {
+                    _memMgr.stack().push(floatToInt(intToFloat(left) * intToFloat(right)), opSize);
+                } else {
+                    _memMgr.stack().push(left * right, opSize);
+                }
                 break;
             case Op::UMUL:
                 right = _memMgr.stack().pop(opSize);
@@ -341,7 +351,12 @@ InterpreterBase::execute()
             case Op::IDIV:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
-                _memMgr.stack().push(left / right, opSize);
+
+                if (opSize == OpSize::flt) {
+                    _memMgr.stack().push(floatToInt(intToFloat(left) / intToFloat(right)), opSize);
+                } else {
+                    _memMgr.stack().push(left / right, opSize);
+                }
                 break;
             case Op::UDIV:
                 right = _memMgr.stack().pop(opSize);
@@ -379,7 +394,11 @@ InterpreterBase::execute()
                 break;
             case Op::NEG:
                 left = _memMgr.stack().pop(opSize);
-                _memMgr.stack().push(-left, opSize);
+                if (opSize == OpSize::flt) {
+                    _memMgr.stack().push(floatToInt(-intToFloat(left)), opSize);
+                } else {
+                    _memMgr.stack().push(-left, opSize);
+                }
                 break;
             case Op::LNOT:
                 left = _memMgr.stack().pop(OpSize::i8);
