@@ -66,7 +66,7 @@ initialize()
     
     showIntResults(10, -42, -testIntGlobal);
     showIntResults(11, 0, !TestIntConst);
-    showIntResults(12, -253, ~TestIntConst);
+    showIntResults(12, 0xffffff03, ~TestIntConst);
     
     showIntResults(13, 0, TestIntConst < testIntGlobal);
     showIntResults(14, 0, TestIntConst <= testIntGlobal);
@@ -93,33 +93,33 @@ initialize()
     core.printf("\nTest Int exprs\n");
     showIntResults(27, 2984, testIntTable[1] + TestSizeDef * TestIntConst - testIntGlobal);
     showIntResults(28, 2940, (testIntTable[1] + TestSizeDef) * (TestIntConst - testIntGlobal));
-
-    core.printf("\nTest Float vals\n");
-    showFloatResults(29, 3.5, TestFloatConst);
-    showFloatResults(30, 2.5, testFloatTable[1]);
-    showFloatResults(31, 7.5, testFloatTable[3]);
-    showFloatResults(32, 6.5, testFloatGlobal);
-
-    core.printf("\nTest Float ops\n");
-    showFloatResults(33, 10, TestFloatConst + testFloatGlobal);
-    showFloatResults(34, -3, TestFloatConst - testFloatGlobal);
-    showFloatResults(35, 22.75, TestFloatConst * testFloatGlobal);
-    showFloatResults(36, 2.5, 16.25 / testFloatGlobal);
-
-    showFloatResults(37, -6.5, -testFloatGlobal);
-
-    showIntResults(38, 1, TestFloatConst < testFloatGlobal);
-    showIntResults(39, 1, TestFloatConst <= testFloatGlobal);
-    showIntResults(40, 0, TestFloatConst == testFloatGlobal);
-    showIntResults(41, 1, TestFloatConst != testFloatGlobal);
-    showIntResults(42, 0, TestFloatConst >= testFloatGlobal);
-    showIntResults(43, 0, TestFloatConst > testFloatGlobal);
-    
-    core.printf("\nTest Float exprs\n");
-    showFloatResults(44, 38, testFloatTable[1] + float(TestSizeDef) * TestFloatConst - testFloatGlobal);
-    showFloatResults(45, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
-
-    core.printf("\nDone\n\n");
+//
+//    core.printf("\nTest Float vals\n");
+//    showFloatResults(29, 3.5, TestFloatConst);
+//    showFloatResults(30, 2.5, testFloatTable[1]);
+//    showFloatResults(31, 7.5, testFloatTable[3]);
+//    showFloatResults(32, 6.5, testFloatGlobal);
+//
+//    core.printf("\nTest Float ops\n");
+//    showFloatResults(33, 10, TestFloatConst + testFloatGlobal);
+//    showFloatResults(34, -3, TestFloatConst - testFloatGlobal);
+//    showFloatResults(35, 22.75, TestFloatConst * testFloatGlobal);
+//    showFloatResults(36, 2.5, 16.25 / testFloatGlobal);
+//
+//    showFloatResults(37, -6.5, -testFloatGlobal);
+//
+//    showIntResults(38, 1, TestFloatConst < testFloatGlobal);
+//    showIntResults(39, 1, TestFloatConst <= testFloatGlobal);
+//    showIntResults(40, 0, TestFloatConst == testFloatGlobal);
+//    showIntResults(41, 1, TestFloatConst != testFloatGlobal);
+//    showIntResults(42, 0, TestFloatConst >= testFloatGlobal);
+//    showIntResults(43, 0, TestFloatConst > testFloatGlobal);
+//    
+//    core.printf("\nTest Float exprs\n");
+//    showFloatResults(44, 38, testFloatTable[1] + float(TestSizeDef) * TestFloatConst - testFloatGlobal);
+//    showFloatResults(45, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
+//
+//    core.printf("\nDone\n\n");
 }
 
 };

@@ -175,10 +175,10 @@ Decompiler::statement()
         case Op::NOT     : emitOp("NOT"); emitSize(size); break;
         case Op::NEG     : emitOp("NEG"); emitSize(size); break;
         case Op::LNOT    : emitOp("LNOT"); emitSize(size); break;
-        case Op::PREINC  : emitOp("PREINC"); emitSizeIndex(size, getUInt8()); break;
-        case Op::PREDEC  : emitOp("PREDEC"); emitSizeIndex(size, getUInt8()); break;
-        case Op::POSTINC : emitOp("POSTINC"); emitSizeIndex(size, getUInt8()); break;
-        case Op::POSTDEC : emitOp("POSTDEC"); emitSizeIndex(size, getUInt8()); break;
+        case Op::PREINC  : emitOp("PREINC"); emitSize(size); break;
+        case Op::PREDEC  : emitOp("PREDEC"); emitSize(size); break;
+        case Op::POSTINC : emitOp("POSTINC"); emitSize(size); break;
+        case Op::POSTDEC : emitOp("POSTDEC"); emitSize(size); break;
         case Op::LE      : emitOp("LE"); emitSize(size); break;
         case Op::LS      : emitOp("LS"); emitSize(size); break;
         case Op::LT      : emitOp("LT"); emitSize(size); break;

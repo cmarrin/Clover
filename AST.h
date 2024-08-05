@@ -217,8 +217,9 @@ class OpNode : public ASTNode
         _right = TypeCastNode::castIfNeeded(_right, _left->type(), annotationIndex);
     }
     
-    OpNode(const ASTPtr& left, Op op, Type resultType, int32_t annotationIndex)
+    OpNode(const ASTPtr& left, Op op, Type resultType, bool isAssignment, int32_t annotationIndex)
         : ASTNode(annotationIndex)
+        , _isAssignment(isAssignment)
         , _op(op)
         , _left(left)
     {
@@ -226,8 +227,9 @@ class OpNode : public ASTNode
         _type = (resultType == Type::None) ? _left->type() : resultType;
     }
     
-    OpNode(Op op, const ASTPtr& right, Type resultType, int32_t annotationIndex)
+    OpNode(Op op, const ASTPtr& right, Type resultType, bool isAssignment, int32_t annotationIndex)
         : ASTNode(annotationIndex)
+        , _isAssignment(isAssignment)
         , _op(op)
         , _right(right)
     {

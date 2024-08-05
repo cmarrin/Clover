@@ -186,7 +186,9 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         if (!isLogical && _left == nullptr) {
             opType = _right->type();
         }
-        _right->emitCode(code, isLHS, c);
+        
+        // If this is a unary operation (like INC) then _isAssignment is used
+        _right->emitCode(code, (_left == nullptr) ? _isAssignment : isLHS, c);
     }
     
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
@@ -341,7 +343,7 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
 
         } else {
             Op castTo = castToOp(neededType);
-            node = std::make_shared<OpNode>(Op(uint8_t(castTo) | typeToSizeBits(node->type())), node, Type::None, annotationIndex);
+            node = std::make_shared<OpNode>(Op(uint8_t(castTo) | typeToSizeBits(node->type())), node, Type::None, false, annotationIndex);
         }
     }
     

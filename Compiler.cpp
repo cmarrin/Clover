@@ -876,6 +876,7 @@ Compiler::unaryExpression()
 
     Op opcode;
     Type resultType = Type::None;
+    bool isRef = false;
     
     if (match(Token::Minus)) {
         opcode = Op::NEG;
@@ -886,15 +887,18 @@ Compiler::unaryExpression()
         resultType = Type::UInt8;
     } else if (match(Token::Inc)) {
         opcode = Op::PREINC;
+        isRef = true;
     } else if (match(Token::Dec)) {
         opcode = Op::PREDEC;
+        isRef = true;
     } else if (match(Token::And)) {
         opcode = Op::PUSHREF1; // FIXME...
+        isRef = true;
     } else {
         return nullptr;
     }
     
-    return std::make_shared<OpNode>(opcode, unaryExpression(), resultType, annotationIndex());
+    return std::make_shared<OpNode>(opcode, unaryExpression(), resultType, isRef, annotationIndex());
 }
 
 ASTPtr
@@ -933,9 +937,9 @@ Compiler::postfixExpression()
             
             return std::make_shared<DotNode>(lhs, id, annotationIndex());
         } else if (match(Token::Inc)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, annotationIndex());
+            return std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true, annotationIndex());
         } else if (match(Token::Dec)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, annotationIndex());
+            return std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, true, annotationIndex());
         } else {
             return lhs;
         }

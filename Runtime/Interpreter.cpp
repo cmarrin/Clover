@@ -297,10 +297,16 @@ InterpreterBase::execute()
                 break;
             }
             case Op::PREINC:
-                addr = ea(opSize);
-            case Op::PREDEC  :
-            case Op::POSTINC :
-            case Op::POSTDEC :
+            case Op::PREDEC:
+            case Op::POSTINC:
+            case Op::POSTDEC: {
+                AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
+                uint32_t oldValue = _memMgr.getAbs(addr, opSize);
+                uint32_t newValue = oldValue + ((opcode == Op::PREINC || opcode == Op::POSTINC) ? 1 : -1);
+                _memMgr.setAbs(addr, newValue, opSize);
+                _memMgr.stack().push((opcode == Op::PREINC || opcode == Op::PREDEC) ? newValue : oldValue, opSize);
+                break;
+            }
             case Op::DUP1    : _memMgr.stack().dup(OpSize::i8); break;
             case Op::DUP2    : _memMgr.stack().dup(OpSize::i16); break;
             case Op::DUP4    : _memMgr.stack().dup(OpSize::i32); break;
