@@ -324,7 +324,7 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
     
     if (ast) {
         ASTPtr idNode = std::make_shared<VarNode>(sym, annotationIndex());
-        ASTPtr assignment = std::make_shared<OpNode>(idNode, Op::NOP, ast, Type::None, true, annotationIndex());
+        ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, ast, annotationIndex());
     
         if (_inFunction) {
             currentFunction()->addASTNode(assignment);
@@ -839,8 +839,13 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         }
         
         // Generate an ASTNode
-        Op opcode = lhs->isSigned() ? opInfo.opcodeS() : opInfo.opcodeU();
-        lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), opInfo.assoc() == Assoc::Right, annotationIndex());
+        if (opInfo.assignment()) {
+            expect(lhs->isAssignable(), Error::ExpectedLHSExpr);
+            lhs = std::make_shared<AssignmentNode>(lhs, rhs, annotationIndex());
+        } else {
+            Op opcode = lhs->isSigned() ? opInfo.opcodeS() : opInfo.opcodeU();
+            lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false, annotationIndex());
+        }
     }
     
     return lhs;

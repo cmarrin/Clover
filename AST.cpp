@@ -175,7 +175,7 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         if (!isLogical) {
             opType = _left->type();
         }
-        _left->emitCode(code, _isAssignment, c);
+        _left->emitCode(code, _isRef, c);
     }
     
     if (_right) {
@@ -188,26 +188,30 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         }
         
         // If this is a unary operation (like INC) then _isAssignment is used
-        _right->emitCode(code, (_left == nullptr) ? _isAssignment : isLHS, c);
+        _right->emitCode(code, (_left == nullptr) ? _isRef : isLHS, c);
     }
     
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
-    // FIXME: If _isAssignment as op is not a NOP it means this is an
-    // arithmethic assignment (e.g., +=). We need to handle that.
-    Op op = _op;
-    if (_isAssignment && op == Op::NOP) {
-        switch (typeToOpSize(opType)) {
-            case OpSize::i8:  op = Op::POPDEREF1; break;
-            case OpSize::i16: op = Op::POPDEREF2; break;
-            case OpSize::i32:
-            case OpSize::flt: op = Op::POPDEREF4; break;
-        }
-        code.push_back(uint8_t(op));
-        return;
-    }
+    code.push_back(uint8_t(_op) | typeToSizeBits(opType));
+}
+
+void
+AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+{
+    _left->emitCode(code, true, c);
+    _right->emitCode(code, false, c);
     
-    code.push_back(uint8_t(op) | typeToSizeBits(opType));
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
+    Op op = Op::NOP;
+    switch (typeToOpSize(type())) {
+        case OpSize::i8:  op = Op::POPDEREF1; break;
+        case OpSize::i16: op = Op::POPDEREF2; break;
+        case OpSize::i32:
+        case OpSize::flt: op = Op::POPDEREF4; break;
+    }
+    code.push_back(uint8_t(op));
 }
 
 void
