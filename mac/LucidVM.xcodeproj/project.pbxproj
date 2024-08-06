@@ -48,7 +48,7 @@
 		4914A48F2C4DD665003DDADA /* TestIf.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestIf.lucid; path = ../Test/TestIf.lucid; sourceTree = "<group>"; };
 		4914A4902C4DD665003DDADA /* TestWhileLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestWhileLoop.h; path = ../Test/TestWhileLoop.h; sourceTree = "<group>"; };
 		4914A4912C4DD665003DDADA /* TestCore.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestCore.lucid; path = ../Test/TestCore.lucid; sourceTree = "<group>"; };
-		4914A4922C4DD665003DDADA /* TestFor.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFor.clvr; path = ../Test/TestFor.clvr; sourceTree = "<group>"; };
+		4914A4922C4DD665003DDADA /* TestFor.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFor.lucid; path = ../Test/TestFor.lucid; sourceTree = "<group>"; };
 		4914A4932C4DD665003DDADA /* TestFor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFor.h; path = ../Test/TestFor.h; sourceTree = "<group>"; };
 		4914A4942C4DD665003DDADA /* TestPtrStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestPtrStruct.h; path = ../Test/TestPtrStruct.h; sourceTree = "<group>"; };
 		4914A4952C4DD665003DDADA /* TestExpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestExpr.h; path = ../Test/TestExpr.h; sourceTree = "<group>"; };
@@ -109,7 +109,7 @@
 				4914A48D2C4DD665003DDADA /* TestCore.h */,
 				4914A49C2C4DD665003DDADA /* TestExpr.lucid */,
 				4914A4952C4DD665003DDADA /* TestExpr.h */,
-				4914A4922C4DD665003DDADA /* TestFor.clvr */,
+				4914A4922C4DD665003DDADA /* TestFor.lucid */,
 				4914A4932C4DD665003DDADA /* TestFor.h */,
 				4914A49A2C4DD665003DDADA /* TestFunction.lucid */,
 				4914A4982C4DD665003DDADA /* TestFunction.h */,

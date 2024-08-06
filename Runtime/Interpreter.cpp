@@ -467,12 +467,12 @@ InterpreterBase::execute()
                 right = getIOpnd(opSize);
                 left = _memMgr.stack().pop(OpSize::i8);
                 if (left == 0) {
-                    _pc += right - 2;
+                    _pc += right;
                 }
                 break;
             case Op::BRA:
                 right = getIOpnd(opSize);
-                _pc += right - 2;
+                _pc += right;
                 break;
             case Op::CALL:
                 right = getUOpnd(OpSize::i16);

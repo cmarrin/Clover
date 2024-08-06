@@ -620,6 +620,7 @@ Compiler::forStatement()
         std::string id;
         expect(identifier(id), Error::ExpectedIdentifier);
 
+        // Create or access iterator symbol
         if (t != Type::None) {
             expect(isScalar(t), Error::WrongType);
 
@@ -632,67 +633,72 @@ Compiler::forStatement()
             expect(sym != nullptr, Error::ExpectedVar);
         }
         
+        // Get assignment
         expect(Token::Equal);
         lhs = std::make_shared<VarNode>(sym, annotationIndex());
         
         rhs = expression();
         expect(rhs != nullptr, Error::ExpectedExpr);
 
-        ASTPtr assignment = std::make_shared<OpNode>(lhs, Op::NOP, rhs, Type::None, true, annotationIndex());
+        ASTPtr assignment = std::make_shared<AssignmentNode>(lhs, rhs, annotationIndex());
         currentFunction()->addASTNode(assignment);
 
         expect(Token::Semicolon);
     }
     
-    ASTPtr startNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopStart, annotationIndex());
+    // This is the start of the loop
+    ASTPtr loopStartNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopStart, annotationIndex());
+    currentFunction()->addASTNode(loopStartNode);
 
+    ASTPtr ifStartNode, ifEndNode, loopNextNode, iterNode, loopEndNode;
+
+    // See if we have a loop condition
     if (!match(Token::Semicolon)) {
-        ASTPtr loopTest = expression();
-
-        // At this point the expresssion has been executed and the result is on TOS
-        //addJumpEntry(Op::If, JumpEntry::Type::Break);
+        currentFunction()->addASTNode(expression());
         expect(Token::Semicolon);
+
+        ifStartNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart, annotationIndex());
+        currentFunction()->addASTNode(ifStartNode);
     }
-    
-    // If we don't have an iteration, contAddr is just the startAddr
-//    uint16_t contAddr = startAddr;
-    
+
     // Handle iteration
-//    uint8_t* iterBuf = nullptr;
-//    uint16_t iterSize = 0;
-    
     if (!match(Token::CloseParen)) {
-        expression();
-        
-        // This must not be an assignment expression, so it must have
-        // a leftover expr on the stack that we need to get rid of
+        // This will go at the bottom of the loop
+        iterNode = expression();
         expect(Token::CloseParen);
-        
-        // Move the iteration code into the iterBuf.
-//        iterSize = _rom8.size() - iterAddr;
-//        if (iterSize > 0) {
-//            iterBuf = new uint8_t[iterSize];
-//            memcpy(iterBuf, &(_rom8[iterAddr]), iterSize);
-//            _rom8.resize(iterAddr);
-//        }
     }
 
     statement();
     
-    // Retore the iteration code, if any
-//    if (iterSize > 0) {
-//        contAddr = _rom8.size();
-//        _rom8.resize(_rom8.size() + iterSize);
-//        memcpy(&_rom8[contAddr], iterBuf, iterSize);
-//        delete [ ] iterBuf;
-//    }
+    // Now emit the iteration. This is where continue goes
+    loopNextNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopNext, annotationIndex());
+    currentFunction()->addASTNode(loopNextNode);
+    currentFunction()->addASTNode(iterNode);
+    
+    // If the iterNode leaves something on the stack get rid of it
+    if (iterNode->valueLeftOnStack()) {
+        currentFunction()->addASTNode(std::make_shared<DropNode>(typeToBytes(iterNode->type()), annotationIndex()));
+    }
+    
+    // Now we're at the end of the loop
+    loopEndNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopEnd, annotationIndex());
+    currentFunction()->addASTNode(loopEndNode);
+    ifEndNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd, annotationIndex());
+    currentFunction()->addASTNode(ifEndNode);
+    
+    // Now hook it all up
 
-    //addJumpEntry(Op::Jump, JumpEntry::Type::Start);
+    // LoopEnd branches back to LoopStart
+    std::static_pointer_cast<BranchNode>(loopEndNode)->setFixupNode(loopStartNode);
+    
+    // IfStart branches to IfENd
+    std::static_pointer_cast<BranchNode>(ifEndNode)->setFixupNode(ifStartNode);
 
-//    uint16_t breakAddr = _rom8.size();
-
-    // Now resolve all the jumps
-//    exitJumpContext(startAddr, contAddr, breakAddr);
+    // FIXME: continue statement will have a BranchNode::Kind::Continue node. It needs to
+    // point to the loopNextNode for fixup. break statement will have a BranchNode::Kind::Break
+    // node. It needs to point to the ifEndNode for fixup. Probably Remember all the break
+    // and continue statements in a list in the compiler. It will actually need to be a stack
+    // of lists so we can handle nested loops.
     return true;
 }
 

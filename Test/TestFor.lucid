@@ -9,38 +9,35 @@
 
 // Test for, break, continue
 
-function space(int n)
+struct Test
 {
-    while (n--) {
-        log(" ");
-    }
-}
 
-function showIntResults(int testNo, int exp, int act)
+function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
-    int n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    log("    Test %i: ", testNo);
-    space(n);
+    core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
-        log("FAIL: exp %i, got %i\n", exp, act);
+        core.printf("     FAIL: exp %i, got %i\n", exp, act);
     } else {
-        log("Pass\n");
+        core.printf("     Pass\n");
     }
 }
 
-function test()
+initialize()
 {    
-    int i = 0, j = 0;
+    int8 i = 0;
+    int8 j = 0;
 
-    log("\nTest for, break, continue\n");
+    core.printf("\nTest for, break, continue\n");
 
-    log("\nTest all combinations of for (init; test; iter)\n");
+    core.printf("\nbasic test\n");
+    i = 1;
+    for (int8 x = 0; x < 5; ++x) {
+        i = i * 2;
+    }
+    
+    showIntResults(0, 32, i);
+
+    core.printf("\nTest all combinations of for (init; test; iter)\n");
     i = 0;
     j = 0;
     for ( ; ; ) {
@@ -98,13 +95,13 @@ function test()
     showIntResults(8, 45, j);
 
     j = 0;
-    
+
     for (int ii = 0; ii < 10; ii++) {
         j += ii;
     }
     showIntResults(9, 45, j);
-    
-    log("\nTest break and continue\n");
+
+    core.printf("\nTest break and continue\n");
 
     i = 0;
     j = 0;
@@ -127,7 +124,7 @@ function test()
     }
     showIntResults(11, 50, j);
 
-    log("\nDone\n\n");
+    core.printf("\nDone\n\n");
 }
 
-command test 3 test test;
+};

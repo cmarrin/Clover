@@ -443,6 +443,8 @@ class BranchNode : public ASTNode
     // Address of where this node should branch to
     void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
     
+    AddrNativeType fixupIndex() const { return _fixupIndex; }
+    
   private:
     Kind _kind;
     Size _size = Size::Long;

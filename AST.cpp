@@ -357,7 +357,7 @@ void
 BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 {
     // FIXME: For now assume long addresses
-    int16_t rel = addr - _fixupIndex;
+    int16_t rel = addr - _fixupIndex - 2;
     code[_fixupIndex] = rel >> 8;
     code[_fixupIndex + 1] = rel;
 }
@@ -393,6 +393,25 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             assert(_fixupNode != nullptr);
             std::static_pointer_cast<BranchNode>(_fixupNode)->fixup(code, AddrNativeType(code.size()));
             break;
+        case Kind::LoopStart:
+            // Save this for LoopEnd
+            _fixupIndex = AddrNativeType(code.size());
+            break;
+        case Kind::LoopEnd: {
+            // branch back to fixupNode
+            AddrNativeType addr = std::static_pointer_cast<BranchNode>(_fixupNode)->fixupIndex();
+            int16_t relAddr = int16_t(addr - AddrNativeType(code.size())) - 2;
+            
+            if (relAddr < 250) {
+                code.push_back(uint8_t(Op::BRA));
+                code.push_back(uint8_t(relAddr));
+            } else {
+                code.push_back(uint8_t(Op::BRA) | 0x01);
+                code.push_back(uint8_t(relAddr >> 8));
+                code.push_back(uint8_t(relAddr));
+            }
+            break;
+        }
         default:
             break;
     }
@@ -436,5 +455,17 @@ ReturnNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         uint8_t size = typeToBytes(_arg->type());
         Op op = (size == 1) ? Op::RETR1 : ((size == 2) ? Op::RETR2 : Op::RETR4);
         code.push_back(uint8_t(op));
+    }
+}
+
+void
+DropNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+{
+    if (_bytesToDrop) {
+        code.push_back((_bytesToDrop > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
+        if (_bytesToDrop > 256) {
+            code.push_back(_bytesToDrop >> 8);
+        }
+        code.push_back(_bytesToDrop);
     }
 }
