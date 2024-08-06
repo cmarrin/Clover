@@ -38,6 +38,7 @@ enum class ASTNodeType {
     Index,
     Return,
     Assignment,
+    Drop,
 };
 
 class ASTNode;
@@ -60,6 +61,8 @@ class ASTNode
     
     virtual bool isIndexable() const { return false; }
     virtual bool isAssignable() const { return false; }
+    
+    virtual bool valueLeftOnStack() const { return false; }
     
     // sizeInBytes is usually the same as typeToBytes(type). But if the
     // node is a ptr to the type then it will be different.
@@ -128,6 +131,8 @@ class VarNode : public ASTNode
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
+    virtual bool valueLeftOnStack() const override { return true; }
+
   private:
     SymbolPtr _symbol = nullptr;
 };
@@ -155,6 +160,8 @@ class ConstantNode : public ASTNode
     void toUInt() { _i = uint32_t(_f); }
     void setType(Type type) { _type = type; }
 
+    virtual bool valueLeftOnStack() const override { return true; }
+
   private:
     Type _type = Type::None;
     bool _numeric = false; // If true, type is a Float or UInt32 literal
@@ -176,6 +183,8 @@ class StringNode : public ASTNode
     virtual Type type() const override { return Type::String; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+
+    virtual bool valueLeftOnStack() const override { return true; }
 
   private:
     std::string _string;
@@ -202,6 +211,8 @@ class TypeCastNode : public ASTNode
     
     static ASTPtr castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationIndex);
     
+    virtual bool valueLeftOnStack() const override { return true; }
+
   private:
     Type _type;
     ASTPtr _arg;
@@ -301,6 +312,12 @@ class OpNode : public ASTNode
     
     Op op() const { return _op; }
 
+    virtual bool valueLeftOnStack() const override
+    {
+        // A value is left on the stack except in the case of assignment
+        return true;
+    }
+
   private:
     bool _isRef = false;
     Op _op;
@@ -335,6 +352,8 @@ class DotNode : public ASTNode
     }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+
+    virtual bool valueLeftOnStack() const override { return true; }
 
   private:
     ASTPtr _operand;
@@ -447,6 +466,8 @@ class IndexNode : public ASTNode
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
+    virtual bool valueLeftOnStack() const override { return true; }
+
   private:
     ASTPtr _lhs, _rhs;
 };
@@ -466,6 +487,22 @@ class ReturnNode : public ASTNode
     
   private:
     ASTPtr _arg;
+};
+
+class DropNode : public ASTNode
+{
+  public:
+    DropNode(uint16_t bytesToDrop, int32_t annotationIndex)
+        : _bytesToDrop(bytesToDrop)
+        , ASTNode(annotationIndex)
+    { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Drop; }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    
+  private:
+    uint16_t _bytesToDrop;
 };
 
 }
