@@ -137,8 +137,6 @@ Compiler::import()
     // if there are more structs? What about an entry struct?
     // Need to rename struct if there is an idAs. How do we deal with
     // duplicate struct names?
-    
-    
 
     expect(Token::Semicolon);
 
@@ -616,54 +614,40 @@ Compiler::forStatement()
         
         // If we have a type this is a var declaration and must be an assignment
         // expression. Otherwise it can be a general arithmeticExpression
-        ASTPtr ast;
+        ASTPtr lhs, rhs;
+        SymbolPtr sym;
         
+        std::string id;
+        expect(identifier(id), Error::ExpectedIdentifier);
+
         if (t != Type::None) {
-            //expect(t == Type::Int || t == Type::Float, Error::WrongType);
+            expect(isScalar(t), Error::WrongType);
 
-            std::string id;
-            expect(identifier(id), Error::ExpectedIdentifier);
-            expect(Token::Equal);
-
-            // Generate an expression
-            expect(_inFunction, Error::InternalError);
-            SymbolPtr sym = std::make_shared<Symbol>(id, t, false, 1, 1);
-            expect(currentFunction()->addLocal(sym), Error::DuplicateIdentifier);
-            _nextMem += 1;
-
-            // FIXME: This needs to be an arithmeticExpression?
-            ast = expression();
-            expect(ast != nullptr, Error::ExpectedExpr);
+            sym = std::make_shared<Symbol>(id, t, false, typeToBytes(t), 1, false);
+            expect(sym != nullptr, Error::DuplicateIdentifier);
+    
+            currentFunction()->addLocal(sym);
         } else {
-            ast = expression();
-            expect(ast != nullptr, Error::ExpectedExpr);
+            sym = findSymbol(id);
+            expect(sym != nullptr, Error::ExpectedVar);
         }
+        
+        expect(Token::Equal);
+        lhs = std::make_shared<VarNode>(sym, annotationIndex());
+        
+        rhs = expression();
+        expect(rhs != nullptr, Error::ExpectedExpr);
+
+        ASTPtr assignment = std::make_shared<OpNode>(lhs, Op::NOP, rhs, Type::None, true, annotationIndex());
+        currentFunction()->addASTNode(assignment);
+
         expect(Token::Semicolon);
     }
     
-    enterJumpContext();
-    
-    // The for loop has a loop test and an iteration expression. The loop expression
-    // appears first, followed by an if test which breaks out of the loop if
-    // false. The next instruction is a jump to the first intruction of the for
-    // loop contents. This is followed by the iteration expression and then a Loop
-    // instruction back to the first instruction of the loop expression. This is
-    // followed by the first instruction of the for loop contents then a Loop back 
-    // to the first instruction of the iteration expression. This tangled web looks
-    // like this:
-    //
-    //                  <init expression>
-    //      startAddr:  <loop expression>
-    //                  If breakAddr
-    //      stmtAddr:   <statement> (break jumps to breakAddr, continue jumps to contAddr)
-    //      contAddr:   <iteration expression>
-    //                  Jump startAddr
-    //      breakAddr:
-    //
-//    uint16_t startAddr = _rom8.size();
+    ASTPtr startNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopStart, annotationIndex());
 
     if (!match(Token::Semicolon)) {
-        expression();
+        ASTPtr loopTest = expression();
 
         // At this point the expresssion has been executed and the result is on TOS
         //addJumpEntry(Op::If, JumpEntry::Type::Break);

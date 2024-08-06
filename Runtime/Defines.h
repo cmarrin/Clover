@@ -347,19 +347,24 @@ enum class Op: uint8_t {
 };
 
 // Built-in types are 0x00-StructTypeStart-1, custom types are StructTypeStart-0xff
+// Order the types so scalar types are all together
+
 enum class Type : uint8_t {
     None = 0,
-    Float = 1,
     
-    Int8 = 10,
-    UInt8 = 11,
-    Int16 = 12,
-    UInt16 = 13,
-    Int32 = 14,
-    UInt32 = 15,
-    String = 18,
-    Function = 19,
+    Float  = 10,
+    Int8   = 11,
+    UInt8  = 12,
+    Int16  = 13,
+    UInt16 = 14,
+    Int32  = 15,
+    UInt32 = 16,
+    
+    String = 20,
+    Function = 21,
 };
+
+static constexpr bool isScalar(Type t) { return t >= Type::Float && t <= Type::UInt32; }
 
 constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
 
