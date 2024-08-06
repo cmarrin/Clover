@@ -399,19 +399,11 @@ private:
         return _structStack.back();
     }
 
-    struct JumpEntry
-    {
-        enum class Type { Start, Continue, Break };
-        
-        JumpEntry(Type type, uint16_t addr) : _type(type), _addr(addr) { }
-        
-        Type _type;
-        uint16_t _addr;
-    };
-
     void enterJumpContext() { _jumpList.emplace_back(); }
-    void exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr);
-    void addJumpEntry(Op, JumpEntry::Type);
+    void exitJumpContext() { _jumpList.pop_back(); }
+    void addJumpEntry(const ASTPtr& jump);
+    
+    void addJumpFixupNodes(BranchNode::Kind jumpKind, const BranchNode::Kind targetKind);
     
     Scanner _scanner;
 
@@ -432,7 +424,7 @@ private:
     // is a stack of active looping statements (for, loop, etc.). Each of these
     // has an array of break or continue statements that need to be resolved
     // when the looping statement ends.
-    std::vector<std::vector<JumpEntry>> _jumpList;
+    std::vector<std::vector<ASTPtr>> _jumpList;
 
     uint8_t _nextNativeId = 0;
     uint16_t _nextMem = 0; // next available location in mem

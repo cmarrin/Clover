@@ -95,6 +95,7 @@ class StatementsNode : public ASTNode
     
     virtual void addNode(const ASTPtr& node) override
     {
+        assert(node != nullptr);
         _statements.push_back(node);
     }
     
@@ -444,6 +445,8 @@ class BranchNode : public ASTNode
     void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
     
     AddrNativeType fixupIndex() const { return _fixupIndex; }
+    
+    Kind kind() const { return _kind; }
     
   private:
     Kind _kind;

@@ -380,6 +380,8 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             code.push_back(0);
             code.push_back(0);
             break;
+        case Kind::Break:
+        case Kind::Continue:
         case Kind::ElseStart:
             // Emit the opcode with a 0 branch address and mark it
             // FIXME: for now assume all long addresses
@@ -387,7 +389,7 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             _fixupIndex = AddrNativeType(code.size());
             code.push_back(0);
             code.push_back(0);
-            
+            break;
         case Kind::IfEnd:
             // Fixup branch
             assert(_fixupNode != nullptr);

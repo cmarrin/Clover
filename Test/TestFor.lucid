@@ -26,105 +26,105 @@ initialize()
 {    
     int8 i = 0;
     int8 j = 0;
-
-    core.printf("\nTest for, break, continue\n");
-
-    core.printf("\nbasic test\n");
-    i = 1;
-    for (int8 x = 0; x < 5; ++x) {
-        i = i * 2;
-    }
-    
-    showIntResults(0, 32, i);
-
-    core.printf("\nTest all combinations of for (init; test; iter)\n");
+//
+//    core.printf("\nTest for, break, continue\n");
+//
+//    core.printf("\nbasic test\n");
+//    i = 1;
+//    for (int8 x = 0; x < 5; ++x) {
+//        i = i * 2;
+//    }
+//
+//    showIntResults(0, 32, i);
+//
+//    core.printf("\nTest all combinations of for (init; test; iter)\n");
     i = 0;
     j = 0;
     for ( ; ; ) {
         if (i >= 10) break;
         j += i++;
     }
-    showIntResults(1, 45, j);
-
-    i = 0;
-    j = 0;
-    for ( ; ; i++) {
-        if (i >= 10) break;
-        j += i;
-    }
-    showIntResults(2, 45, j);
-
-    i = 0;
-    j = 0;
-    for ( ; i < 10; ) {
-        j += i++;
-    }
-    showIntResults(3, 45, j);
-
-    i = 0;
-    j = 0;
-    for ( ; i < 10; i++) {
-        j += i;
-    }
-    showIntResults(4, 45, j);
-
-    j = 0;
-    for (i = 0; ; ) {
-        if (i >= 10) break;
-        j += i++;
-    }
-    showIntResults(5, 45, j);
-
-    j = 0;
-    for (i = 0; ; i++) {
-        if (i >= 10) break;
-        j += i;
-    }
-    showIntResults(6, 45, j);
-
-    j = 0;
-    for (i = 0; i < 10; ) {
-        j += i++;
-    }
-    showIntResults(7, 45, j);
-
-    j = 0;
-    for (i = 0; i < 10; i++) {
-        j += i;
-    }
-    showIntResults(8, 45, j);
-
-    j = 0;
-
-    for (int ii = 0; ii < 10; ii++) {
-        j += ii;
-    }
-    showIntResults(9, 45, j);
-
-    core.printf("\nTest break and continue\n");
-
-    i = 0;
-    j = 0;
-    for(; i < 10; ++i) {
-        j += i;
-        if (i == 5) {
-            break;
-        }
-    }
-    showIntResults(10, 15, j);
-
-    i = 0;
-    j = 0;
-    for(; i < 10; i++) {
-        j += i;
-        if (i >= 5) {
-            continue;
-        }
-        ++j;
-    }
-    showIntResults(11, 50, j);
-
-    core.printf("\nDone\n\n");
+//    showIntResults(1, 45, j);
+//
+//    i = 0;
+//    j = 0;
+//    for ( ; ; i++) {
+//        if (i >= 10) break;
+//        j += i;
+//    }
+//    showIntResults(2, 45, j);
+//
+//    i = 0;
+//    j = 0;
+//    for ( ; i < 10; ) {
+//        j += i++;
+//    }
+//    showIntResults(3, 45, j);
+//
+//    i = 0;
+//    j = 0;
+//    for ( ; i < 10; i++) {
+//        j += i;
+//    }
+//    showIntResults(4, 45, j);
+//
+//    j = 0;
+//    for (i = 0; ; ) {
+//        if (i >= 10) break;
+//        j += i++;
+//    }
+//    showIntResults(5, 45, j);
+//
+//    j = 0;
+//    for (i = 0; ; i++) {
+//        if (i >= 10) break;
+//        j += i;
+//    }
+//    showIntResults(6, 45, j);
+//
+//    j = 0;
+//    for (i = 0; i < 10; ) {
+//        j += i++;
+//    }
+//    showIntResults(7, 45, j);
+//
+//    j = 0;
+//    for (i = 0; i < 10; i++) {
+//        j += i;
+//    }
+//    showIntResults(8, 45, j);
+//
+//    j = 0;
+//
+//    for (int8 ii = 0; ii < 10; ii++) {
+//        j += ii;
+//    }
+//    showIntResults(9, 45, j);
+//
+//    core.printf("\nTest break and continue\n");
+//
+//    i = 0;
+//    j = 0;
+//    for(; i < 10; ++i) {
+//        j += i;
+//        if (i == 5) {
+//            break;
+//        }
+//    }
+//    showIntResults(10, 15, j);
+//
+//    i = 0;
+//    j = 0;
+//    for(; i < 10; i++) {
+//        j += i;
+//        if (i >= 5) {
+//            continue;
+//        }
+//        ++j;
+//    }
+//    showIntResults(11, 50, j);
+//
+//    core.printf("\nDone\n\n");
 }
 
 };

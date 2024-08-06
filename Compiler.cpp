@@ -606,7 +606,9 @@ Compiler::forStatement()
     }
 
     expect(Token::OpenParen);
-    
+
+    enterJumpContext();
+
     // Handle iterator init
     if (!match(Token::Semicolon)) {
         Type t = Type::None;
@@ -673,32 +675,38 @@ Compiler::forStatement()
     // Now emit the iteration. This is where continue goes
     loopNextNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopNext, annotationIndex());
     currentFunction()->addASTNode(loopNextNode);
-    currentFunction()->addASTNode(iterNode);
+
+    // All continues branch to loopNextNode
+    addJumpFixupNodes(BranchNode::Kind::Continue, BranchNode::Kind::LoopNext);
+
+    if (iterNode) {
+        currentFunction()->addASTNode(iterNode);
+    }
     
     // If the iterNode leaves something on the stack get rid of it
-    if (iterNode->valueLeftOnStack()) {
+    if (iterNode && iterNode->valueLeftOnStack()) {
         currentFunction()->addASTNode(std::make_shared<DropNode>(typeToBytes(iterNode->type()), annotationIndex()));
     }
     
     // Now we're at the end of the loop
     loopEndNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopEnd, annotationIndex());
     currentFunction()->addASTNode(loopEndNode);
-    ifEndNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd, annotationIndex());
-    currentFunction()->addASTNode(ifEndNode);
     
-    // Now hook it all up
+    if (ifStartNode) {
+        // IfStart branches to IfEnd
+        ifEndNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd, annotationIndex());
+        currentFunction()->addASTNode(ifEndNode);
+        std::static_pointer_cast<BranchNode>(ifEndNode)->setFixupNode(ifStartNode);
+    }
+    
+    // All breaks branch to IfEnd
+    addJumpFixupNodes(BranchNode::Kind::Break, BranchNode::Kind::IfEnd);
 
     // LoopEnd branches back to LoopStart
     std::static_pointer_cast<BranchNode>(loopEndNode)->setFixupNode(loopStartNode);
     
-    // IfStart branches to IfENd
-    std::static_pointer_cast<BranchNode>(ifEndNode)->setFixupNode(ifStartNode);
+    exitJumpContext();
 
-    // FIXME: continue statement will have a BranchNode::Kind::Continue node. It needs to
-    // point to the loopNextNode for fixup. break statement will have a BranchNode::Kind::Break
-    // node. It needs to point to the ifEndNode for fixup. Probably Remember all the break
-    // and continue statements in a list in the compiler. It will actually need to be a stack
-    // of lists so we can handle nested loops.
     return true;
 }
 
@@ -728,7 +736,7 @@ Compiler::whileStatement()
     //addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
         
     // Now resolve all the jumps (stmtAddr will never be used so just reuse loopAddr)
-//    exitJumpContext(loopAddr, loopAddr, _rom8.size());
+    exitJumpContext();
 
     return true;
 }
@@ -750,7 +758,7 @@ Compiler::loopStatement()
     //addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
     
     // Now resolve all the jumps (stmtAddr will never be used so just reuse loopAddr)
-//    exitJumpContext(loopAddr, loopAddr, _rom8.size());
+    exitJumpContext();
 
     return true;
 }
@@ -773,23 +781,37 @@ Compiler::returnStatement()
 bool
 Compiler::jumpStatement()
 {
-    JumpEntry::Type type;
-    
+    BranchNode::Kind kind;
     if (match(Reserved::Break)) {
-        type = JumpEntry::Type::Break;
+        kind = BranchNode::Kind::Break;
     } else if (match(Reserved::Continue)) {
-        type = JumpEntry::Type::Continue;
+        kind = BranchNode::Kind::Continue;
     } else {
         return false;
     }
     
     // Make sure we're in a loop
     expect(!_jumpList.empty(), Error::OnlyAllowedInLoop);
-    
-    //addJumpEntry(Op::Jump, type);
+
+    ASTPtr jump = std::make_shared<BranchNode>(kind, annotationIndex());
+    addJumpEntry(jump);
+    currentFunction()->addASTNode(jump);
 
     expect(Token::Semicolon);
     return true;
+}
+
+void
+Compiler::addJumpFixupNodes(BranchNode::Kind jumpKind, const BranchNode::Kind targetKind)
+{
+    // Create a BranchNode for each branch of the right kind
+    for (auto& it : _jumpList.back()) {
+        if (std::reinterpret_pointer_cast<BranchNode>(it)->kind() == jumpKind) {
+            ASTPtr node = std::make_shared<BranchNode>(targetKind, annotationIndex());
+            currentFunction()->addASTNode(node);
+            std::reinterpret_pointer_cast<BranchNode>(node)->setFixupNode(it);
+        }
+    }
 }
 
 bool
@@ -1351,42 +1373,10 @@ Compiler::structFromType(Type type, StructPtr& s)
 }
 
 void
-Compiler::exitJumpContext(uint16_t startAddr, uint16_t contAddr, uint16_t breakAddr)
+Compiler::addJumpEntry(const ASTPtr& jump)
 {
     expect(!_jumpList.empty(), Error::InternalError);
-
-    // Go through all the entries in the last _jumpList entry and fill in
-    // the addresses.
-    for (const auto& it : _jumpList.back()) {
-        expect(it._addr < breakAddr, Error::InternalError);
-        
-        uint16_t addr;
-        
-        switch(it._type) {
-            case JumpEntry::Type::Start: addr = startAddr; break;
-            case JumpEntry::Type::Continue: addr = contAddr; break;
-            case JumpEntry::Type::Break: addr = breakAddr; break;
-        }         
-         
-//        int16_t offset = int16_t(addr) - int16_t(it._addr) - 2;
-         
-//        expect(_rom8[it._addr + 1] == 0, Error::InternalError);
-//        
-//        _rom8[it._addr] |= (offset >> 8) & 0x0f;
-//        _rom8[it._addr + 1] = uint8_t(offset);
-    }
-    
-    _jumpList.pop_back();
-}
-
-void
-Compiler::addJumpEntry(Op op, JumpEntry::Type type)
-{
-    expect(!_jumpList.empty(), Error::InternalError);
-    
-//    uint16_t addr = _rom8.size();
-//    addOpTarg(op, 0);
-//    _jumpList.back().emplace_back(type, addr);
+    _jumpList.back().emplace_back(jump);
 }
 
 uint16_t
