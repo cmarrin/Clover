@@ -403,11 +403,13 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             _fixupIndex = AddrNativeType(code.size());
             code.push_back(0);
             code.push_back(0);
-            break;
+            // Fallthrough to fixup the IfStartNode
+        case Kind::LoopNext:
         case Kind::IfEnd:
             // Fixup branch
-            assert(_fixupNode != nullptr);
-            std::static_pointer_cast<BranchNode>(_fixupNode)->fixup(code, AddrNativeType(code.size()));
+            if (_fixupNode != nullptr) {
+                std::static_pointer_cast<BranchNode>(_fixupNode)->fixup(code, AddrNativeType(code.size()));
+            }
             break;
         case Kind::LoopStart:
             // Save this for LoopEnd
