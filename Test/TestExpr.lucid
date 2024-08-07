@@ -24,7 +24,7 @@ int16 testIntGlobal;
 
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
-    core.printf("%10sTest %2hhi: ", " ", testNo);
+    core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %i, got %i\n", exp, act);
     } else {
@@ -34,7 +34,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
 
 function showFloatResults(uint8 testNo, float exp, float act)
 {
-    core.printf("%10sTest %2hhi: ", " ", testNo);
+    core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %f, got %f\n", exp, act);
     } else {
@@ -49,14 +49,14 @@ initialize()
     testIntGlobal = 42;
     testFloatGlobal = 6.5;
 
-    core.printf("\nTest exprs\n");
+    core.printf("\n  exprs\n");
 
-    core.printf("\nTest Int vals\n");
+    core.printf("\n  Int vals\n");
     showIntResults(1, 12, TestSizeDef);
     showIntResults(2, 0xfc, TestIntConst);
     showIntResults(3, 7, testIntTable[3]);
     
-    core.printf("\nTest Int ops\n");
+    core.printf("\n  Int ops\n");
     showIntResults(4, 294, TestIntConst + testIntGlobal);
     showIntResults(5, 210, TestIntConst - testIntGlobal);
     showIntResults(6, 10584, TestIntConst * testIntGlobal);
@@ -75,41 +75,46 @@ initialize()
     
     int8 i = 20;
     int8 j = i++;
-
-    showIntResults(17, 21, i);
-    showIntResults(18, 20, j);
-    j = i--;
-    showIntResults(19, 20, i);
-    showIntResults(20, 21, j);
     j = ++i;
-    showIntResults(21, 21, i);
-    showIntResults(22, 21, j);
+
+    showIntResults(17, 22, i);
+    j = i--;
     j = --i;
+    showIntResults(18, 20, i);
+    showIntResults(19, 20, j);
+
+    core.printf("\n  op assign\n");
+    i += 1;
+    showIntResults(20, 21, i);
+    i -= 1;
+    showIntResults(21, 20, i);
+    i *= 5;
+    showIntResults(22, 100, i);
+    i /= 5;
     showIntResults(23, 20, i);
-    showIntResults(24, 20, j);
-
-    core.printf("\nTest Int exprs\n");
-    showIntResults(25, 2984, int16(testIntTable[1]) + int16(TestSizeDef) * TestIntConst - testIntGlobal);
-    showIntResults(26, 2940, int16(testIntTable[1] + TestSizeDef) * (TestIntConst - testIntGlobal));
-
-    core.printf("\nTest Float ops\n");
-    showFloatResults(27, 10, TestFloatConst + testFloatGlobal);
-    showFloatResults(28, -3, TestFloatConst - testFloatGlobal);
-    showFloatResults(29, 22.75, TestFloatConst * testFloatGlobal);
-    showFloatResults(30, 2.5, 16.25 / testFloatGlobal);
-
-    showFloatResults(31, -6.5, -testFloatGlobal);
-
-    showIntResults(32, 1, TestFloatConst < testFloatGlobal);
-    showIntResults(33, 1, TestFloatConst <= testFloatGlobal);
-    showIntResults(34, 0, TestFloatConst == testFloatGlobal);
-    showIntResults(35, 1, TestFloatConst != testFloatGlobal);
-    showIntResults(36, 0, TestFloatConst >= testFloatGlobal);
-    showIntResults(37, 0, TestFloatConst > testFloatGlobal);
     
-    core.printf("\nTest Float exprs\n");
-    showFloatResults(38, 38, testFloatTable[1] + float(TestSizeDef) * TestFloatConst - testFloatGlobal);
-    showFloatResults(39, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
+    core.printf("\n  Int exprs\n");
+    showIntResults(24, 2984, int16(testIntTable[1]) + int16(TestSizeDef) * TestIntConst - testIntGlobal);
+    showIntResults(25, 2940, int16(testIntTable[1] + TestSizeDef) * (TestIntConst - testIntGlobal));
+
+    core.printf("\n  Float ops\n");
+    showFloatResults(26, 10, TestFloatConst + testFloatGlobal);
+    showFloatResults(27, -3, TestFloatConst - testFloatGlobal);
+    showFloatResults(28, 22.75, TestFloatConst * testFloatGlobal);
+    showFloatResults(29, 2.5, 16.25 / testFloatGlobal);
+
+    showFloatResults(30, -6.5, -testFloatGlobal);
+
+    showIntResults(31, 1, TestFloatConst < testFloatGlobal);
+    showIntResults(32, 1, TestFloatConst <= testFloatGlobal);
+    showIntResults(33, 0, TestFloatConst == testFloatGlobal);
+    showIntResults(34, 1, TestFloatConst != testFloatGlobal);
+    showIntResults(35, 0, TestFloatConst >= testFloatGlobal);
+    showIntResults(36, 0, TestFloatConst > testFloatGlobal);
+    
+    core.printf("\n  Float exprs\n");
+    showFloatResults(37, 38, testFloatTable[1] + float(TestSizeDef) * TestFloatConst - testFloatGlobal);
+    showFloatResults(38, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
 
     core.printf("\nDone\n\n");
 }
