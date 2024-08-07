@@ -9,79 +9,59 @@
 
 // Test pointer and struct
 
-function space(int n)
+struct Test
 {
-    while (n--) {
-        log(" ");
+
+function showIntResults(uint8 testNo, int32 exp, int32 act)
+{
+    core.printf("%10s-> %2hhi: ", " ", testNo);
+    if (exp != act) {
+        core.printf("     FAIL: exp %i, got %i\n", exp, act);
+    } else {
+        core.printf("     Pass\n");
     }
 }
 
-function showIntResults(int testNo, int exp, int act)
+function showFloatResults(uint8 testNo, float exp, float act)
 {
-    int n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    log("    Test %i: ", testNo);
-    space(n);
+    core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
-        log("FAIL: exp %i, got %i\n", exp, act);
+        core.printf("     FAIL: exp %f, got %f\n", exp, act);
     } else {
-        log("Pass\n");
-    }
-}
-
-function showFloatResults(int testNo, float exp, float act)
-{
-    int n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    log("    Test %i: ", testNo);
-    space(n);
-    if (exp != act) {
-        log("FAIL: exp %f, got %f\n", exp, act);
-    } else {
-        log("Pass\n");
+        core.printf("     Pass\n");
     }
 }
 
 struct TestStruct
 {
-    int a;
+    int16 a;
     float b;
-    int c;
+    int8 c;
+};
+
+function int8 testFunction(int8* p, float f)
+{
+    return p + int8(f);
 }
 
-function int testFunction(int* p, float f)
+initialize()
 {
-    return p + Int(f);
-}
-
-function test()
-{
-    log("\nTest Struct, Pointers and Refs\n");
+    core.printf("\nTest Struct, Pointers and Refs\n");
     
-    log("\nTest Pointer\n");
-    int c;
-    int* x;
+    core.printf("\nTest Pointer\n");
+    int8 c;
+    int8* x;
     x = &c;
     x = 22;
 
     showIntResults(1, 22, x);
     
-    log("\nTest Passing Pointer to Function\n");
+    core.printf("\nTest Passing Pointer to Function\n");
     showIntResults(2, 25, testFunction(x, 3.5));
     
-    log("\nTest Struct\n");
+    core.printf("\nTest Struct\n");
     TestStruct s;
-    int i = 22;
+    int8 i = 22;
     float f = 3.5;
     s.a = i;
     s.b = f;
@@ -91,7 +71,7 @@ function test()
     showFloatResults(4, 3.5, s.b);
     showIntResults(5, 5, s.c);
 
-    log("\nTest Pointer to Struct\n");
+    core.printf("\nTest Pointer to Struct\n");
     TestStruct* ss;
     ss = &s;
     ss.a = 17;
@@ -102,7 +82,7 @@ function test()
     showFloatResults(7, 17.5, ss.b);
     showIntResults(8, 18, ss.c);
 
-    log("\nDone\n\n");
+    core.printf("\nDone\n\n");
 }
 
-command test 3 test test;
+};

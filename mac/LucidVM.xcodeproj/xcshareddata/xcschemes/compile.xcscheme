@@ -78,6 +78,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -x -h Test/TestWhile.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -x -h Test/TestPtrStruct.lucid"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

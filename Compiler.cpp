@@ -925,7 +925,16 @@ Compiler::postfixExpression()
                 continue;
             }
             
-            return std::make_shared<DotNode>(lhs, id, annotationIndex());
+            // lhs must be a struct or pointer to struct. Find its definition
+            Type structType = lhs->type();
+            expect(isStruct(structType), Error::ExpectedStructType);
+            
+            // Get the property
+            SymbolPtr prop = structFromType(structType)->findLocal(id);
+            expect(prop != nullptr, Error::PropertyDoesNotExist);
+
+            // Make the node
+            return std::make_shared<DotNode>(lhs, prop, annotationIndex());
         } else if (match(Token::Inc)) {
             return std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true, annotationIndex());
         } else if (match(Token::Dec)) {

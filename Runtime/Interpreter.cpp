@@ -310,6 +310,14 @@ InterpreterBase::execute()
                 _memMgr.stack().push(addr, AddrOpSize);
                 break;
             }
+            case Op::OFFSET1:
+            case Op::OFFSET2: {
+                uint8_t offset = getUOpnd((opcode == Op::OFFSET1) ? OpSize::i8 : OpSize::i16);
+                AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
+                addr += offset;
+                _memMgr.stack().push(addr, AddrOpSize);
+                break;
+            }
             case Op::PREINC:
             case Op::PREDEC:
             case Op::POSTINC:

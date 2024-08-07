@@ -48,7 +48,6 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
         case lucid::Error::ExpectedStructType: err = "expected Struct type"; break;
         case lucid::Error::ExpectedVar: err = "expected var"; break;
         case lucid::Error::AssignmentNotAllowedHere: err = "assignment not allowed here"; break;
-        case lucid::Error::InvalidStructId: err = "invalid Struct identifier"; break;
         case lucid::Error::InvalidParamCount: err = "invalid param count"; break;
         case lucid::Error::UndefinedIdentifier: err = "undefined identifier"; break;
         case lucid::Error::ParamOutOfRange: err = "param must be 0..15"; break;
@@ -74,6 +73,7 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
         case lucid::Error::ExpectedIndexable: err = "expected indexable variable"; break;
         case lucid::Error::PointerConstantNotAllowed: err = "pointer constant not allowed"; break;
         case lucid::Error::EmptyArrayRequiresInitializer: err = "empty array requires initializer"; break;
+        case lucid::Error::PropertyDoesNotExist: err = "property does not exist"; break;
     }
     
     if (token == lucid::Token::EndOfFile) {

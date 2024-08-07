@@ -332,15 +332,11 @@ class OpNode : public ASTNode
 class DotNode : public ASTNode
 {
   public:
-    DotNode(const ASTPtr& operand, const std::string& id, int32_t annotationIndex)
-        : ASTNode(annotationIndex)
-        , _operand(operand)
-    {
-        // Create a StringNode for the id, for consistency
-        _property = std::make_shared<StringNode>(id, annotationIndex);
-    }
+    DotNode(const ASTPtr& operand, const SymbolPtr& struc, int32_t annotationIndex);
     
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Dot; }
+
+    virtual Type type() const override { return _type; }
 
     virtual bool isAssignable() const override { return true; }
 
@@ -348,9 +344,6 @@ class DotNode : public ASTNode
     {
         if (i == 0) {
             return _operand;
-        }
-        if (i == 1) {
-            return _property;
         }
         return nullptr;
     }
@@ -361,7 +354,8 @@ class DotNode : public ASTNode
 
   private:
     ASTPtr _operand;
-    ASTPtr _property;
+    SymbolPtr _property;
+    Type _type;
 };
 
 class ModuleNode : public ASTNode

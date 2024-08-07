@@ -219,7 +219,6 @@ enum class Error {
     ExpectedStructType,
     ExpectedVar,
     AssignmentNotAllowedHere,
-    InvalidStructId,
     InvalidParamCount,
     UndefinedIdentifier,
     ParamOutOfRange,
@@ -245,6 +244,7 @@ enum class Error {
     ExpectedIndexable,
     PointerConstantNotAllowed,
     EmptyArrayRequiresInitializer,
+    PropertyDoesNotExist,
 };
 
 class Compiler {

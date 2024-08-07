@@ -230,15 +230,30 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     code.push_back(uint8_t(op));
 }
 
+DotNode::DotNode(const ASTPtr& operand, const SymbolPtr& property, int32_t annotationIndex)
+    : ASTNode(annotationIndex)
+    , _operand(operand)
+    , _property(property)
+{
+    _type = _property->type();
+}
+
 void
 DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
-    _operand->emitCode(code, isLHS, c);
-    _property->emitCode(code, isLHS, c);
-    
-    // FIXME: Implement
+    _operand->emitCode(code, true, c);
+
+    Index index;
+    uint16_t offset = _property->addr(index);
+    if (offset) {
+        code.push_back((offset > 255) ? uint8_t(Op::OFFSET2) : uint8_t(Op::OFFSET1));
+        if (offset > 255) {
+            code.push_back(offset >> 8);
+        }
+        code.push_back(offset);
+    }
 }
 
 void
@@ -484,8 +499,8 @@ void
 DropNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     if (_bytesToDrop) {
-        code.push_back((_bytesToDrop > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
-        if (_bytesToDrop > 256) {
+        code.push_back((_bytesToDrop > 255) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
+        if (_bytesToDrop > 255) {
             code.push_back(_bytesToDrop >> 8);
         }
         code.push_back(_bytesToDrop);

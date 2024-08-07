@@ -290,10 +290,12 @@ enum class Op: uint8_t {
     RETR2   = 0x3a, // Return after popping TOS into _returnValue
     RETR4   = 0x3b, // Return after popping TOS into _returnValue
 
+    OFFSET1 = 0x3c, // 8 bit ubnsigned offset added to ref on TOS
+    OFFSET2 = 0x3d, // 16 bit ubnsigned offset added to ref on TOS
     
 //
 //
-// Available opcodes 3c - 43
+// Available opcodes 3e - 43
 //
 //
 
