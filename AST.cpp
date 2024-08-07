@@ -199,11 +199,25 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    // If op is not NOP this is operator assignment. Handle a += b like a = a + b
+    //
+    // 1) pushref lhs
+    // 2) push lhs
+    // 3) push rhs
+    // 4) op
+    // 5) popderef
     _left->emitCode(code, true, c);
-    _right->emitCode(code, false, c);
     
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    if (_op != Op::NOP) {
+        _left->emitCode(code, false, c);
+    }
+    
+    _right->emitCode(code, false, c);
 
+    if (_op != Op::NOP) {
+        code.push_back(uint8_t(_op) | typeToSizeBits(type()));
+    }
+    
     Op op = Op::NOP;
     switch (typeToOpSize(type())) {
         case OpSize::i8:  op = Op::POPDEREF1; break;

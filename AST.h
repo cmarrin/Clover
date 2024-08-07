@@ -222,9 +222,11 @@ class TypeCastNode : public ASTNode
 class AssignmentNode : public ASTNode
 {
   public:
-    AssignmentNode(const ASTPtr& left, const ASTPtr& right, int32_t annotationIndex)
+    // op is passed for operator assignment (like +=), NOP if simple assignment
+    AssignmentNode(const ASTPtr& left, Op op, const ASTPtr& right, int32_t annotationIndex)
         : ASTNode(annotationIndex)
         , _left(left)
+        , _op(op)
         , _right(right)
     {
         _right = TypeCastNode::castIfNeeded(_right, _left->type(), annotationIndex);
@@ -248,6 +250,7 @@ class AssignmentNode : public ASTNode
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
   private:
+    Op _op;
     ASTPtr _left, _right;
 };
 

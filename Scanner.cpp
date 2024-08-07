@@ -299,7 +299,12 @@ Token Scanner::scanComment()
 
     _tokenString.clear();
     _tokenString += c;
-	return Token('/');
+    
+    // This could be div or divsto
+    if (c != '=') {
+        return Token('/');
+    }
+	return Token(Token::DivSto);
 }
 
 Token Scanner::scanSpecial()
