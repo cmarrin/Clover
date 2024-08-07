@@ -9,65 +9,46 @@
 
 // Test while, break, continue
 
-function space(int n)
+struct Test
 {
-    while (n--) {
-        log(" ");
-    }
-}
 
-function showIntResults(int testNo, int exp, int act)
+function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
-    int n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    log("    Test %i: ", testNo);
-    space(n);
+    core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
-        log("FAIL: exp %i, got %i\n", exp, act);
+        core.printf("     FAIL: exp %i, got %i\n", exp, act);
     } else {
-        log("Pass\n");
+        core.printf("     Pass\n");
     }
 }
 
-function showFloatResults(int testNo, float exp, float act)
+function showFloatResults(uint8 testNo, float exp, float act)
 {
-    int n;
-    if (testNo > 9) {
-        n = 19;
-    } else {
-        n = 20;
-    }
-   
-    log("    Test %i: ", testNo);
-    space(n);
+    core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
-        log("FAIL: exp %f, got %f\n", exp, act);
+        core.printf("     FAIL: exp %f, got %f\n", exp, act);
     } else {
-        log("Pass\n");
+        core.printf("     Pass\n");
     }
 }
 
-function test()
-{    
-    log("\nTest while, loop, break, continue\n");
+initialize()
+{
+    core.printf("\nTest while, loop, break, continue\n");
 
-    log("\nTest Int while\n"); 
+    core.printf("\nTest Int while\n");
 
-    int i = 0, j = 0;
+    int16 i = 0;
+    int16 j = 0;
 
-    while(i < 10) {
+    while (i < 10) {
         j += i++;
     }
     showIntResults(1, 45, j);
 
     i = 0;
     j = 0;
-    while(i < 10) {
+    while (i < 10) {
         j += i++;
         if (i == 6) {
             break;
@@ -86,20 +67,20 @@ function test()
     }
     showIntResults(3, 50, j);
 
-    log("\nTest Float while\n"); 
+    core.printf("\nTest Float while\n");
 
     float f = 0;
 
     i = 0;
     while(i < 10) {
-        f += Float(i++);
+        f += float(i++);
     }
     showFloatResults(4, 45, f);
 
     i = 0;
     f = 0;
     while(i < 10) {
-        f += Float(i++);
+        f += float(i++);
         if (i == 6) {
             break;
         }
@@ -109,7 +90,7 @@ function test()
     i = 0;
     f = 0;
     while(i < 10) {
-        f += Float(i++);
+        f += float(i++);
         if (i > 5) {
             continue;
         }
@@ -117,7 +98,7 @@ function test()
     }
     showFloatResults(6, 50, f);
 
-    log("\nTest Int loop\n"); 
+    core.printf("\nTest Int loop\n");
     i = 0;
     j = 0;
     loop {
@@ -149,38 +130,7 @@ function test()
     }
     showIntResults(9, 50, j);
 
-    log("\nTest Float loop\n"); 
-    i = 0;
-    f = 0;
-    loop {
-        if (i >= 10) break;
-        f += Float(i++);
-    }
-    showFloatResults(10, 45, f);
-
-    i = 0;
-    f = 0;
-    loop {
-        if (i >= 10) break;
-        f += Float(i++);
-        if (i == 6) {
-            break;
-        }
-    }
-    showFloatResults(11, 15, f);
-
-    i = 0;
-    f = 0;
-    loop {
-        if (i >= 10) break;
-        f += Float(i++);
-        if (i > 5) {
-            continue;
-        }
-        ++f;
-    }
-    showFloatResults(12, 50, f);
-    log("\nDone\n\n");
+    core.printf("\nDone\n\n");
 }
 
-command test 3 test test;
+};

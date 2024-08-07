@@ -79,8 +79,12 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-h -x Test/TestCore.lucid Test/TestExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFor.lucid"
+            argument = "-d -x -h Test/TestWhile.lucid"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-h -x Test/TestCore.lucid Test/TestExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFor.lucid"
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>
