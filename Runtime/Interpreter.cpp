@@ -316,7 +316,15 @@ InterpreterBase::execute()
             case Op::POSTDEC: {
                 AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
                 uint32_t oldValue = _memMgr.getAbs(addr, opSize);
-                uint32_t newValue = oldValue + ((opcode == Op::PREINC || opcode == Op::POSTINC) ? 1 : -1);
+                uint32_t newValue;
+                
+                if (opSize == OpSize::flt) {
+                    float oldFloatValue = intToFloat(oldValue);
+                    float newFloatValue = oldFloatValue + ((opcode == Op::PREINC || opcode == Op::POSTINC) ? 1 : -1);
+                    newValue = floatToInt(newFloatValue);
+                } else {
+                    newValue = oldValue + ((opcode == Op::PREINC || opcode == Op::POSTINC) ? 1 : -1);
+                }
                 _memMgr.setAbs(addr, newValue, opSize);
                 _memMgr.stack().push((opcode == Op::PREINC || opcode == Op::PREDEC) ? newValue : oldValue, opSize);
                 break;
