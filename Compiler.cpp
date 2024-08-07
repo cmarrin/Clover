@@ -528,8 +528,6 @@ Compiler::statement()
 {
     if (compoundStatement()) return true;
     if (ifStatement()) return true;
-    if (forStatement()) return true;
-    if (whileStatement()) return true;
     if (loopStatement()) return true;
     if (returnStatement()) return true;
     if (jumpStatement()) return true;
@@ -599,53 +597,61 @@ Compiler::ifStatement()
 }
 
 bool
-Compiler::forStatement()
+Compiler::loopStatement()
 {
-    if (!match(Reserved::For)) {
+    bool forLoop;
+    
+    if (match(Reserved::For)) {
+        forLoop = true;
+    } else if (match(Reserved::While)) {
+        forLoop = false;
+    } else {
         return false;
     }
-
+    
     expect(Token::OpenParen);
 
     enterJumpContext();
 
-    // Handle iterator init
-    if (!match(Token::Semicolon)) {
-        Type t = Type::None;
-        type(t);
-        
-        // If we have a type this is a var declaration and must be an assignment
-        // expression. Otherwise it can be a general arithmeticExpression
-        ASTPtr lhs, rhs;
-        SymbolPtr sym;
-        
-        std::string id;
-        expect(identifier(id), Error::ExpectedIdentifier);
+    if (forLoop) {
+        // Handle iterator init
+        if (!match(Token::Semicolon)) {
+            Type t = Type::None;
+            type(t);
+            
+            // If we have a type this is a var declaration and must be an assignment
+            // expression. Otherwise it can be a general arithmeticExpression
+            ASTPtr lhs, rhs;
+            SymbolPtr sym;
+            
+            std::string id;
+            expect(identifier(id), Error::ExpectedIdentifier);
 
-        // Create or access iterator symbol
-        if (t != Type::None) {
-            expect(isScalar(t), Error::WrongType);
+            // Create or access iterator symbol
+            if (t != Type::None) {
+                expect(isScalar(t), Error::WrongType);
 
-            sym = std::make_shared<Symbol>(id, t, false, typeToBytes(t), 1, false);
-            expect(sym != nullptr, Error::DuplicateIdentifier);
-    
-            currentFunction()->addLocal(sym);
-        } else {
-            sym = findSymbol(id);
-            expect(sym != nullptr, Error::ExpectedVar);
+                sym = std::make_shared<Symbol>(id, t, false, typeToBytes(t), 1, false);
+                expect(sym != nullptr, Error::DuplicateIdentifier);
+        
+                currentFunction()->addLocal(sym);
+            } else {
+                sym = findSymbol(id);
+                expect(sym != nullptr, Error::ExpectedVar);
+            }
+            
+            // Get assignment
+            expect(Token::Equal);
+            lhs = std::make_shared<VarNode>(sym, annotationIndex());
+            
+            rhs = expression();
+            expect(rhs != nullptr, Error::ExpectedExpr);
+
+            ASTPtr assignment = std::make_shared<AssignmentNode>(lhs, Op::NOP, rhs, annotationIndex());
+            currentFunction()->addASTNode(assignment);
+
+            expect(Token::Semicolon);
         }
-        
-        // Get assignment
-        expect(Token::Equal);
-        lhs = std::make_shared<VarNode>(sym, annotationIndex());
-        
-        rhs = expression();
-        expect(rhs != nullptr, Error::ExpectedExpr);
-
-        ASTPtr assignment = std::make_shared<AssignmentNode>(lhs, Op::NOP, rhs, annotationIndex());
-        currentFunction()->addASTNode(assignment);
-
-        expect(Token::Semicolon);
     }
     
     // This is the start of the loop
@@ -655,21 +661,25 @@ Compiler::forStatement()
     ASTPtr ifStartNode, ifEndNode, loopNextNode, iterNode, loopEndNode;
 
     // See if we have a loop condition
-    if (!match(Token::Semicolon)) {
+    Token endToken = forLoop ? Token::Semicolon : Token::CloseParen;
+        
+    if (!match(endToken)) {
         currentFunction()->addASTNode(expression());
-        expect(Token::Semicolon);
+        expect(endToken);
 
         ifStartNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart, annotationIndex());
         currentFunction()->addASTNode(ifStartNode);
     }
 
-    // Handle iteration
-    if (!match(Token::CloseParen)) {
-        // This will go at the bottom of the loop
-        iterNode = expression();
-        expect(Token::CloseParen);
+    if (forLoop) {
+        // Handle iteration
+        if (!match(Token::CloseParen)) {
+            // This will go at the bottom of the loop
+            iterNode = expression();
+            expect(Token::CloseParen);
+        }
     }
-
+    
     statement();
     
     // Now emit the iteration. This is where continue goes
@@ -681,11 +691,11 @@ Compiler::forStatement()
 
     if (iterNode) {
         currentFunction()->addASTNode(iterNode);
-    }
     
-    // If the iterNode leaves something on the stack get rid of it
-    if (iterNode && iterNode->valueLeftOnStack()) {
-        currentFunction()->addASTNode(std::make_shared<DropNode>(typeToBytes(iterNode->type()), annotationIndex()));
+        // If the iterNode leaves something on the stack get rid of it
+        if (iterNode->valueLeftOnStack()) {
+            currentFunction()->addASTNode(std::make_shared<DropNode>(typeToBytes(iterNode->type()), annotationIndex()));
+        }
     }
     
     // Now we're at the end of the loop
@@ -705,59 +715,6 @@ Compiler::forStatement()
     // LoopEnd branches back to LoopStart
     std::static_pointer_cast<BranchNode>(loopEndNode)->setFixupNode(loopStartNode);
     
-    exitJumpContext();
-
-    return true;
-}
-
-bool
-Compiler::whileStatement()
-{
-    if (!match(Reserved::While)) {
-        return false;
-    }
-
-    enterJumpContext();
-
-    expect(Token::OpenParen);
-
-    // Loop starts with an if test of expr
-//    uint16_t loopAddr = _rom8.size();
-    
-    expression();
-
-    //addJumpEntry(Op::If, JumpEntry::Type::Break);
-
-    expect(Token::CloseParen);
-    
-    statement();
-
-    // Loop back to the beginning
-    //addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
-        
-    // Now resolve all the jumps (stmtAddr will never be used so just reuse loopAddr)
-    exitJumpContext();
-
-    return true;
-}
-
-bool
-Compiler::loopStatement()
-{
-    if (!match(Reserved::Loop)) {
-        return false;
-    }
-
-    enterJumpContext();
-
-//    uint16_t loopAddr = _rom8.size();
-    
-    statement();
-
-    // Loop back to the beginning
-    //addJumpEntry(Op::Jump, JumpEntry::Type::Continue);
-    
-    // Now resolve all the jumps (stmtAddr will never be used so just reuse loopAddr)
     exitJumpContext();
 
     return true;

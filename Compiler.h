@@ -300,8 +300,6 @@ private:
     
     bool compoundStatement();
     bool ifStatement();
-    bool forStatement();
-    bool whileStatement();
     bool loopStatement();
     bool returnStatement();
     bool jumpStatement();

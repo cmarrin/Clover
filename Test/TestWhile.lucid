@@ -98,38 +98,6 @@ initialize()
     }
     showFloatResults(6, 50, f);
 
-    core.printf("\nTest Int loop\n");
-    i = 0;
-    j = 0;
-    loop {
-        if (i >= 10) break;
-        j += i++;
-    }
-    showIntResults(7, 45, j);
-
-    i = 0;
-    j = 0;
-    loop {
-        if (i >= 10) break;
-        j += i++;
-        if (i == 6) {
-            break;
-        }
-    }
-    showIntResults(8, 15, j);
-
-    i = 0;
-    j = 0;
-    loop {
-        if (i >= 10) break;
-        j += i++;
-        if (i > 5) {
-            continue;
-        }
-        ++j;
-    }
-    showIntResults(9, 50, j);
-
     core.printf("\nDone\n\n");
 }
 
