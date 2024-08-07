@@ -13,8 +13,8 @@
 #include "TestExpr.h"
 #include "TestIf.h"
 #include "TestFunction.h"
-//#include "TestFor.h"
-//#include "TestWhileLoop.h"
+#include "TestFor.h"
+#include "TestWhile.h"
 //#include "TestPtrStruct.h"
 
 /*
@@ -44,11 +44,17 @@ public:
  
     void showError(MyInterpreter::Error error)
     {
-        String errorMsg;
+        String errorMsg("!!!");
         
         switch(error) {
             case MyInterpreter::Error::None:
             errorMsg = F("???");
+            break;
+            case MyInterpreter::Error::InvalidSignature:
+            errorMsg = F("bad signature");
+            break;
+            case MyInterpreter::Error::NoEntryPoint:
+            errorMsg = F("no entry point");
             break;
             case MyInterpreter::Error::UnexpectedOpInIf:
             errorMsg = F("bad op in if");
@@ -62,17 +68,20 @@ public:
             case MyInterpreter::Error::AddressOutOfRange:
             errorMsg = F("addr out of rng");
             break;
-            case MyInterpreter::Error::InvalidModuleOp:
-            errorMsg = F("inv mod op");
-            break;
             case MyInterpreter::Error::ExpectedSetFrame:
             errorMsg = F("SetFrame needed");
+            break;
+            case MyInterpreter::Error::InvalidModuleOp:
+            errorMsg = F("inv mod op");
             break;
             case MyInterpreter::Error::InvalidNativeFunction:
             errorMsg = F("inv native func");
             break;
             case MyInterpreter::Error::NotEnoughArgs:
             errorMsg = F("not enough args");
+            break;
+            case MyInterpreter::Error::WrongNumberOfArgs:
+            errorMsg = F("wrong arg cnt");
             break;
             case MyInterpreter::Error::StackOverrun:
             errorMsg = F("can't call, stack full");
@@ -83,8 +92,11 @@ public:
             case MyInterpreter::Error::StackOutOfRange:
             errorMsg = F("stack out of range");
             break;
-            case MyInterpreter::Error::WrongNumberOfArgs:
-            errorMsg = F("wrong arg cnt");
+            case MyInterpreter::Error::ImmedNotAllowedHere:
+            errorMsg = F("immed not allowed here");
+            break;
+            case MyInterpreter::Error::InternalError:
+            errorMsg = F("internal err");
             break;
         }
 
@@ -151,8 +163,8 @@ public:
         RunTest(TestExpr);
         RunTest(TestIf);
         RunTest(TestFunction);
-//        RunTest(TestFor);
-//        RunTest(TestWhileLoop);
+        RunTest(TestFor);
+        RunTest(TestWhile);
 //        RunTest(TestPtrStruct);
     }
 
