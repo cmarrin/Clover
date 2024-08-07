@@ -153,6 +153,8 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     if (_op == Op::PUSHREF1 || _op == Op::PUSHREF2 || _op == Op::PUSHREF4) {
         // This is an addressof operator. There must only be an _right
         // operand and it must be a Var.
@@ -191,14 +193,14 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         _right->emitCode(code, (_left == nullptr) ? _isRef : isLHS, c);
     }
     
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
     code.push_back(uint8_t(_op) | typeToSizeBits(opType));
 }
 
 void
 AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     // If op is not NOP this is operator assignment. Handle a += b like a = a + b
     //
     // 1) pushref lhs
@@ -231,11 +233,11 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     _operand->emitCode(code, isLHS, c);
     _property->emitCode(code, isLHS, c);
     
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
     // FIXME: Implement
 }
 
@@ -326,10 +328,10 @@ EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
-    _arg->emitCode(code, isLHS, c);
-    
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
+    _arg->emitCode(code, isLHS, c);
+    
     code.push_back(uint8_t(castOp(_arg->type(), _type)));
 }
 
@@ -383,12 +385,11 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // want to do 2 passes. _size will start out as None and The first pass will simply
     // set the appropriate size according to how far the jump needs to be. The second
     // pass will emit BRA and IF opcodes of the appropriate size.
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-    
     switch (_kind) {
         case Kind::IfStart:
             // Emit the opcode with a 0 branch address and mark it
             // FIXME: for now assume all long addresses
+            c->setAnnotation(_annotationIndex, uint32_t(code.size()));
             code.push_back(uint8_t(Op::IF) | 0x01);
             _fixupIndex = AddrNativeType(code.size());
             code.push_back(0);
@@ -399,6 +400,7 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         case Kind::ElseStart:
             // Emit the opcode with a 0 branch address and mark it
             // FIXME: for now assume all long addresses
+            c->setAnnotation(_annotationIndex, uint32_t(code.size()));
             code.push_back(uint8_t(Op::BRA) | 0x01);
             _fixupIndex = AddrNativeType(code.size());
             code.push_back(0);
@@ -438,14 +440,14 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
     _lhs->emitCode(code, true, c);
     
     // ths must be uint16
     _rhs = TypeCastNode::castIfNeeded(_rhs, Type::UInt16, _annotationIndex);
     _rhs->emitCode(code, false, c);
 
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-    
     code.push_back(uint8_t(Op::INDEX));
     code.push_back(typeToBytes(_lhs->type()));
     
@@ -466,6 +468,8 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 ReturnNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
     if (_arg == nullptr) {
         code.push_back(uint8_t(Op::RET));
     } else {
