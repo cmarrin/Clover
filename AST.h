@@ -63,6 +63,7 @@ class ASTNode
     
     virtual bool isIndexable() const { return false; }
     virtual bool isAssignable() const { return false; }
+    virtual bool isPointer() const { return false; }
     
     virtual bool valueLeftOnStack() const { return false; }
     
@@ -131,6 +132,8 @@ class VarNode : public ASTNode
 
     virtual bool isIndexable() const override { return _symbol->nElements() != 1; }
     virtual bool isAssignable() const override { return true; }
+
+    virtual bool isPointer() const override { return _symbol->isPointer(); }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
@@ -231,7 +234,11 @@ class AssignmentNode : public ASTNode
         , _op(op)
         , _right(right)
     {
-        _right = TypeCastNode::castIfNeeded(_right, _left->type(), annotationIndex);
+        // If _left is a pointer don't try to cast. We've already verified that
+        // both are pointers if one is.
+        if (!_left->isPointer()) {
+            _right = TypeCastNode::castIfNeeded(_right, _left->type(), annotationIndex);
+        }
     }
 
     virtual Type type() const override { return _left->type(); }
@@ -338,6 +345,7 @@ class DotNode : public ASTNode
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Dot; }
 
     virtual Type type() const override { return _type; }
+    virtual bool isPointer() const override { return _property->isPointer(); }
 
     virtual bool isAssignable() const override { return true; }
 
@@ -519,6 +527,7 @@ class RefNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Ref; }
     virtual Type type() const override { return _operand->type(); }
+    virtual bool isPointer() const override { return true; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
@@ -537,6 +546,7 @@ class DerefNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Deref; }
     virtual Type type() const override { return _operand->type(); }
+    virtual bool isAssignable() const override { return true; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     

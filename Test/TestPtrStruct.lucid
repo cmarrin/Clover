@@ -64,9 +64,9 @@ initialize()
     int8 c;
     int8* x;
     x = &c;
-    x = 22;
+    *x = 22;
 
-    showIntResults(4, 22, x);
+    showIntResults(4, 22, *x);
 //    
 //    core.printf("\nTest Passing Pointer to Function\n");
 //    showIntResults(5, 25, testFunction(x, 3.5));

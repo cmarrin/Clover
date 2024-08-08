@@ -324,6 +324,13 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
     
     if (ast) {
         ASTPtr idNode = std::make_shared<VarNode>(sym, annotationIndex());
+        
+        // If var is a pointer, the rhs must be a pointer too. And both must be the same type
+        if (isPointer) {
+            expect(ast->isPointer(), Error::ExpectedRef);
+            expect(type == ast->type(), Error::MismatchedType);
+        }
+        
         ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, Op::NOP, ast, annotationIndex());
     
         if (_inFunction) {
@@ -646,6 +653,10 @@ Compiler::loopStatement()
             
             rhs = expression();
             expect(rhs != nullptr, Error::ExpectedExpr);
+            
+            // Iterator must be a scalar
+            expect(!lhs->isPointer() && isScalar(lhs->type()), Error::IteratorMustBeScalar);
+            expect(!rhs->isPointer() && isScalar(rhs->type()), Error::IteratorMustBeScalar);
 
             ASTPtr assignment = std::make_shared<AssignmentNode>(lhs, Op::NOP, rhs, annotationIndex());
             currentFunction()->addASTNode(assignment);
@@ -830,6 +841,10 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         if (opInfo.assignment()) {
             expect(lhs->isAssignable(), Error::ExpectedLHSExpr);
+            if (lhs->isPointer() || rhs->isPointer()) {
+                expect(lhs->isPointer() && rhs->isPointer(), Error::PtrAssignmentMustMatch);
+                expect(lhs->type() == rhs->type(), Error::PtrAssignmentMustMatch);
+            }
             lhs = std::make_shared<AssignmentNode>(lhs, opcode, rhs, annotationIndex());
         } else {
             lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false, annotationIndex());
@@ -873,6 +888,9 @@ Compiler::unaryExpression()
     }  else if (match(Token::Mul)) {
         // Deref (*)
         node = unaryExpression();
+        
+        // Node must be a ref
+        expect(node->isPointer(), Error::ExpectedRef);
         return std::make_shared<DerefNode>(node, annotationIndex());
     } else {
         return nullptr;

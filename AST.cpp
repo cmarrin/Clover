@@ -29,9 +29,12 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
-    // If isLHS is true, code generated will be a Ref
+    // If this is a pointer then we push it as a AddrType not the underlying type
     Op op;
-    switch (typeToOpSize(_symbol->type())) {
+    Type t = isPointer() ? AddrType : _symbol->type();
+
+    // If isLHS is true, code generated will be a Ref
+    switch (typeToOpSize(t)) {
         case OpSize::i8:  op = isLHS ? Op::PUSHREF1 : Op::PUSH1; break;
         case OpSize::i16: op = isLHS ? Op::PUSHREF2 : Op::PUSH2; break;
         case OpSize::i32:
@@ -153,6 +156,8 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    assert(!isLHS);
+    
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
     // _type is the result type not the type used for operation. We need
@@ -211,8 +216,12 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         code.push_back(uint8_t(_op) | typeToSizeBits(type()));
     }
     
+    // If this is a pointer assignment, we need to use the pointer
+    // type for the POPDEREF
+    Type t = _left->isPointer() ? AddrType : type();
     Op op = Op::NOP;
-    switch (typeToOpSize(type())) {
+    
+    switch (typeToOpSize(t)) {
         case OpSize::i8:  op = Op::POPDEREF1; break;
         case OpSize::i16: op = Op::POPDEREF2; break;
         case OpSize::i32:
@@ -349,12 +358,9 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 ASTPtr
 TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationIndex)
 {
-    // FIXME: Hack to see if this is a pointer, we don't type case pointers
-    if (node->astNodeType() == ASTNodeType::Op) {
-        OpNode* opNode = reinterpret_cast<OpNode*>(node.get());
-        if (opNode->op() == Op::PUSHREF1) {
-            return node;
-        }
+    // We can only cast scalar nodes
+    if (!isScalar(node->type()) || !isScalar(neededType)) {
+        return node;
     }
     
     // If types don't match, add a cast operator
@@ -518,11 +524,13 @@ DerefNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
     
-    // The deref operand pushes the operand which must be a ref
-    // and then does a DEREF if this is rhs and just leaves the 
-    // ref if this is lhs
-    _operand->emitCode(code, true, c);
+    // We're guaranteed that _operand is a ref, so we want to push it
+    // as though it's not a LHS. This will push the ref itself and not 
+    // a reference to the reference.
+    _operand->emitCode(code, false, c);
     
+    // If this is LHS then we are done. The ref is on TOS, ready to be assigned to.
+    // Otherwise we need to get the refed value.
     if (!isLHS) {
         uint8_t bytes = typeToBytes(type());
         code.push_back(uint8_t((bytes == 1) ? Op::DEREF1 : ((bytes == 2) ? Op::DEREF2 : Op::DEREF4)));

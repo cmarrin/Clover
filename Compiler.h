@@ -245,6 +245,8 @@ enum class Error {
     PointerConstantNotAllowed,
     EmptyArrayRequiresInitializer,
     PropertyDoesNotExist,
+    IteratorMustBeScalar,
+    PtrAssignmentMustMatch,
 };
 
 class Compiler {
