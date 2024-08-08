@@ -15,7 +15,7 @@
 #include "TestFunction.h"
 #include "TestFor.h"
 #include "TestWhile.h"
-//#include "TestPtrStruct.h"
+#include "TestPtrStruct.h"
 
 /*
 
@@ -165,7 +165,7 @@ public:
         RunTest(TestFunction);
         RunTest(TestFor);
         RunTest(TestWhile);
-//        RunTest(TestPtrStruct);
+        RunTest(TestPtrStruct);
     }
 
 	void loop()
