@@ -1054,7 +1054,6 @@ Compiler::formalParameterList()
         std::string id;
         expect(identifier(id), Error::ExpectedIdentifier);
         
-        // FIXME: set addr
         SymbolPtr sym = std::make_shared<Symbol>(id, t, isPointer, 1, 1);
         expect(currentFunction()->addArg(sym), Error::DuplicateIdentifier);
         
@@ -1224,17 +1223,6 @@ Compiler::expect(bool passed, Error error)
     }
 }
 
-void
-Compiler::expectWithoutRetire(Token token)
-{
-    if (_scanner.getToken() != token) {
-        _expectedToken = token;
-        _expectedString = "";
-        _error = Error::ExpectedToken;
-        throw true;
-    }
-}
-
 bool
 Compiler::match(Reserved r)
 {
@@ -1359,19 +1347,6 @@ Compiler::findModule(const std::string& id)
         return *it;
     }
     return nullptr;
-}
-
-bool
-Compiler::structFromType(Type type, StructPtr& s)
-{
-    if (uint8_t(type) < StructTypeStart) {
-        return false;
-    }
-    uint8_t index = uint8_t(type) - StructTypeStart;
-    expect(index < _structs.size(), Error::InternalError);
-    
-    s = _structs[index];
-    return true;
 }
 
 void

@@ -30,8 +30,6 @@ public:
     Type type() const { return _type; }
     uint8_t size() const { return _localSize; }
     
-    const std::vector<StructPtr>& structs() const { return _structs; }
-    
     StructPtr addStruct(const std::string& name, Type type)
     {
         _structs.push_back(std::make_shared<Struct>(name, type));

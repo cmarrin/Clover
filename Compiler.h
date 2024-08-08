@@ -266,8 +266,6 @@ public:
     uint32_t lineno() const { return _scanner.lineno(); }
     uint32_t charno() const { return _scanner.charno(); }
 
-    const StructList& structs() const { return _structs; }
-    
     const StructPtr typeToStruct(Type type) const
     {
         uint8_t i = uint8_t(type);
@@ -306,9 +304,7 @@ private:
     bool returnStatement();
     bool jumpStatement();
     bool expressionStatement();
-    
-    enum class ArithType { Assign, Op };
-    
+
     ASTPtr expression();
     ASTPtr arithmeticExpression(const ASTPtr& lhs, uint8_t minPrec = 1);
     ASTPtr unaryExpression();
@@ -338,7 +334,6 @@ private:
     // current token.
     void expect(Token token, const char* str = nullptr);
     void expect(bool passed, Error error);
-    void expectWithoutRetire(Token token);
     bool match(Reserved r);
     bool match(Token r);
     void ignoreNewLines();
@@ -391,8 +386,6 @@ private:
     Token _expectedToken = Token::None;
     std::string _expectedString;
     
-    bool structFromType(Type, StructPtr&);
-
     StructPtr currentStruct()
     {
         expect(!_structStack.empty(), Error::InternalError);
