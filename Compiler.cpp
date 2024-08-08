@@ -289,7 +289,7 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
         if (isConstant) {
             // Collect the constant initializers
             collectConstants(type, nElements == 1, addr, nConstElements);
-        } else if (uint8_t(type) < StructTypeStart && nElements == 1) {
+        } else if ((uint8_t(type) < StructTypeStart && nElements == 1) || isPointer) {
             // Built-in scalar type. Generate an expression
             ast = expression();
             expect(ast != nullptr, Error::ExpectedExpr);
@@ -935,12 +935,18 @@ Compiler::postfixExpression()
         } else if (match(Token::OpenBracket)) {
             ASTPtr rhs = expression();
             
-            expect(lhs->isIndexable(), Error::ExpectedIndexable);
+            // If this is a pointer it might point at an array of the
+            // underlying type. Assume that and deref. That's not
+            // safe, but it's how C does it.
+            if (lhs->isPointer()) {
+                lhs = std::make_shared<DerefNode>(lhs, annotationIndex());
+            } else {
+                expect(lhs->isIndexable(), Error::ExpectedIndexable);
+            }
             
             // array index does a PUSHREF of the lhs, then a PUSH of the rhs and then an INDEX with element size as operand
-            ASTPtr result = std::make_shared<IndexNode>(lhs, rhs, annotationIndex());
+            lhs = std::make_shared<IndexNode>(lhs, rhs, annotationIndex());
             expect(Token::CloseBracket);
-            return result;
         } else if (match(Token::Dot)) {
             std::string id;
             expect(identifier(id), Error::ExpectedIdentifier);
@@ -956,17 +962,23 @@ Compiler::postfixExpression()
             // lhs must be a struct or pointer to struct. Find its definition
             Type structType = lhs->type();
             expect(isStruct(structType), Error::ExpectedStructType);
+            expect(!lhs->isIndexable(), Error::MismatchedType);
             
             // Get the property
             SymbolPtr prop = typeToStruct(structType)->findLocal(id);
             expect(prop != nullptr, Error::PropertyDoesNotExist);
-
+            
+            // If this is a pointer to struct, deref it
+            if (lhs->isPointer()) {
+                lhs = std::make_shared<DerefNode>(lhs, annotationIndex());
+            }
+            
             // Make the node
-            return std::make_shared<DotNode>(lhs, prop, annotationIndex());
+            lhs = std::make_shared<DotNode>(lhs, prop, annotationIndex());
         } else if (match(Token::Inc)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true, annotationIndex());
+            lhs = std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true, annotationIndex());
         } else if (match(Token::Dec)) {
-            return std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, true, annotationIndex());
+            lhs = std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, true, annotationIndex());
         } else {
             return lhs;
         }

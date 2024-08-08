@@ -548,6 +548,8 @@ class DerefNode : public ASTNode
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Deref; }
     virtual Type type() const override { return _operand->type(); }
     virtual bool isAssignable() const override { return true; }
+    //virtual bool isPointer() const override { return _operand->isPointer(); }
+    virtual bool isIndexable() const override { return true; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     

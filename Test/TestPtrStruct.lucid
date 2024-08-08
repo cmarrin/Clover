@@ -81,6 +81,23 @@ initialize()
     showIntResults(6, 17, ss.a);
     showFloatResults(7, 17.5, ss.b);
     showIntResults(8, 18, ss.c);
+    
+    core.printf("\nTest Arrays and Pointers\n");
+    
+    int32 arr[10];
+    int32* arrp = &arr;
+    arrp[5] = 100;
+    showIntResults(9, 100, arrp[5]);
+    
+    TestStruct testArray[5];
+    testArray[2].b = 5.5;
+    showFloatResults(10, 5.5, testArray[2].b);
+    
+    testArray[3].c = 12;
+    TestStruct* ts = &testArray[3];
+    ts.a = 4;
+    showIntResults(11, 12, ts.c);
+    showIntResults(12, 4, ts.a);
 
     core.printf("\nDone\n\n");
 }
