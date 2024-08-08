@@ -23,7 +23,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
 {
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>("core");
-    coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, false, 1, 1 }});
+    coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, true, 1, 1 }});
     coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::UInt8, true, 1, 1 },
                                                                            { "v", Type::UInt8, false, 1, 1 },
                                                                            { "n", Type::UInt32, false, 1, 1 }});
@@ -1088,8 +1088,16 @@ Compiler::argumentList(const ASTPtr& fun)
         Type neededType;
         
         if (function->argCount() > i) {
-            neededType = function->argType(i);
-            expect(neededType != Type::None, Error::MismatchedType);
+            SymbolPtr sym = function->arg(i);
+            expect(sym != nullptr, Error::InternalError);
+            neededType = sym->type();
+            
+            // If both the sym and arg are scalar then we can cast.
+            // Otherwise it's a type mismatch
+            if (sym->isPointer() || arg->isPointer()) {
+                expect(sym->isPointer() && arg->isPointer(), Error::MismatchedType);
+                expect(sym->type() == arg->type(), Error::MismatchedType);
+            }
         } else {
             // This is past the last arg, it can be any type
             neededType = arg->type();

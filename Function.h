@@ -65,7 +65,7 @@ public:
     
     SymbolPtr findLocal(const std::string& s) const;
     
-    Type argType(uint32_t index) const;
+    SymbolPtr arg(uint32_t index) const;
     uint32_t argCount() const { return _argCount; }
     
     void setPushReturn(bool r) { _pushReturn = r; }

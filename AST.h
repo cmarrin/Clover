@@ -187,6 +187,7 @@ class StringNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Constant; }
     virtual Type type() const override { return Type::String; }
+    virtual bool isPointer() const override { return true; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 

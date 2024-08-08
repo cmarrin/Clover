@@ -106,12 +106,12 @@ Function::addArg(const SymbolPtr& sym)
     return true;
 }
 
-Type
-Function::argType(uint32_t index) const
+SymbolPtr
+Function::arg(uint32_t index) const
 {
     if (index >= _argCount) {
-        return Type::None;
+        return nullptr;
     }
-    return _locals[index]->type();
+    return _locals[index];
 }
 
