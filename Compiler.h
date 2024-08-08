@@ -268,7 +268,7 @@ public:
 
     const StructList& structs() const { return _structs; }
     
-    const StructPtr structFromType(Type type) const
+    const StructPtr typeToStruct(Type type) const
     {
         uint8_t i = uint8_t(type);
         if (i < StructTypeStart) {

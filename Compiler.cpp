@@ -264,7 +264,7 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
     StructPtr struc;
     
     if (isStruct(type)) {
-        struc = structFromType(type);
+        struc = typeToStruct(type);
     }
     
     SymbolPtr sym;
@@ -953,7 +953,7 @@ Compiler::postfixExpression()
             expect(isStruct(structType), Error::ExpectedStructType);
             
             // Get the property
-            SymbolPtr prop = structFromType(structType)->findLocal(id);
+            SymbolPtr prop = typeToStruct(structType)->findLocal(id);
             expect(prop != nullptr, Error::PropertyDoesNotExist);
 
             // Make the node
