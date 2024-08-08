@@ -1113,7 +1113,11 @@ Compiler::argumentList(const ASTPtr& fun)
         }
     }
 
-    // FIXME: Handle case where fewer args are passed - push 0 if so
+    // if there are not enough args, pad with 0's
+    while (i < function->argCount()) {
+        fun->addNode(std::make_shared<ConstantNode>(function->arg(i)->type(), 0, annotationIndex()));
+        i += 1;
+    }
     return true;
 }
 
