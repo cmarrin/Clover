@@ -14,7 +14,7 @@ struct Test
 
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
-    core.printf("%10s-> %2hhi: ", " ", testNo);
+    core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %i, got %i\n", exp, act);
     } else {
@@ -24,7 +24,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
 
 function showFloatResults(uint8 testNo, float exp, float act)
 {
-    core.printf("%10s-> %2hhi: ", " ", testNo);
+    core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %f, got %f\n", exp, act);
     } else {
@@ -48,17 +48,6 @@ initialize()
 {
     core.printf("\nTest Struct, Pointers and Refs\n");
     
-    core.printf("\nTest Pointer\n");
-    int8 c;
-    int8* x;
-    x = &c;
-    x = 22;
-
-    showIntResults(1, 22, x);
-    
-    core.printf("\nTest Passing Pointer to Function\n");
-    showIntResults(2, 25, testFunction(x, 3.5));
-    
     core.printf("\nTest Struct\n");
     TestStruct s;
     int8 i = 22;
@@ -67,10 +56,21 @@ initialize()
     s.b = f;
     s.c = 5;
 
-    showIntResults(3, 22, s.a);
-    showFloatResults(4, 3.5, s.b);
-    showIntResults(5, 5, s.c);
+    showIntResults(1, 22, s.a);
+    showFloatResults(2, 3.5, s.b);
+    showIntResults(3, 5, s.c);
 
+    core.printf("\nTest Pointer\n");
+    int8 c;
+    int8* x;
+    x = &c;
+    x = 22;
+
+    showIntResults(4, 22, x);
+    
+    core.printf("\nTest Passing Pointer to Function\n");
+    showIntResults(5, 25, testFunction(x, 3.5));
+    
     core.printf("\nTest Pointer to Struct\n");
     TestStruct* ss;
     ss = &s;

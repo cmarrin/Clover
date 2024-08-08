@@ -8,17 +8,18 @@
 struct Simple
 {
 
+struct A
+{
+    int8 b;
+    int16 c;
+};
+
 initialize()
 {
-    int8 a;
-    if (1 == 2)
-        a = 0;
-    else
-        a = 1;
-
-    for (int8 i = 0; i < 10; ++i) {
-        int8 a = i + 1;
-    }
+    A a;
+    a.b = 2;
+    a.c = 3;
+    core.printf("A.b=%hhd, A.c=%hd\n", a.b, a.c);
 }
 
 };
