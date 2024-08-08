@@ -247,6 +247,7 @@ enum class Error {
     PropertyDoesNotExist,
     IteratorMustBeScalar,
     PtrAssignmentMustMatch,
+    PtrTypeNotAllowed,
 };
 
 class Compiler {

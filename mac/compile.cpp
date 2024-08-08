@@ -76,6 +76,7 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
         case lucid::Error::PropertyDoesNotExist: err = "property does not exist"; break;
         case lucid::Error::IteratorMustBeScalar: err = "iterator must be scalar"; break;
         case lucid::Error::PtrAssignmentMustMatch: err = "pointer assignment must match"; break;
+        case lucid::Error::PtrTypeNotAllowed: err = "pointer type not allowed"; break;
     }
     
     if (token == lucid::Token::EndOfFile) {

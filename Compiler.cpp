@@ -841,12 +841,17 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         if (opInfo.assignment()) {
             expect(lhs->isAssignable(), Error::ExpectedLHSExpr);
+            
+            // Validate types. Pointers are allowed for assignment as long as they match
             if (lhs->isPointer() || rhs->isPointer()) {
                 expect(lhs->isPointer() && rhs->isPointer(), Error::PtrAssignmentMustMatch);
                 expect(lhs->type() == rhs->type(), Error::PtrAssignmentMustMatch);
             }
             lhs = std::make_shared<AssignmentNode>(lhs, opcode, rhs, annotationIndex());
         } else {
+            // Validate types. Only scalars allowed for binary ops
+            expect(!lhs->isPointer() && !rhs->isPointer(), Error::PtrTypeNotAllowed);
+            expect(isScalar(lhs->type()) && isScalar(rhs->type()), Error::MismatchedType);
             lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false, annotationIndex());
         }
     }
