@@ -254,6 +254,11 @@ DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         }
         code.push_back(offset);
     }
+    
+    if (!isLHS) {
+        uint8_t bytes = typeToBytes(type());
+        code.push_back(uint8_t((bytes == 1) ? Op::DEREF1 : ((bytes == 2) ? Op::DEREF2 : Op::DEREF4)));
+    }
 }
 
 void
