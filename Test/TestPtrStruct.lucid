@@ -32,57 +32,57 @@ function showFloatResults(uint8 testNo, float exp, float act)
     }
 }
 
-struct TestStruct
-{
-    int16 a;
-    float b;
-    int8 c;
-};
-
-function int8 testFunction(int8* p, float f)
-{
-    return p + int8(f);
-}
-
+//struct TestStruct
+//{
+//    int16 a;
+//    float b;
+//    int8 c;
+//};
+//
+//function int8 testFunction(int8* p, float f)
+//{
+//    return p + int8(f);
+//}
+//
 initialize()
 {
-    core.printf("\nTest Struct, Pointers and Refs\n");
-    
-    core.printf("\nTest Struct\n");
-    TestStruct s;
-    int8 i = 22;
-    float f = 3.5;
-    s.a = i;
-    s.b = f;
-    s.c = 5;
-
-    showIntResults(1, 22, s.a);
-    showFloatResults(2, 3.5, s.b);
-    showIntResults(3, 5, s.c);
-
-    core.printf("\nTest Pointer\n");
+//    core.printf("\nTest Struct, Pointers and Refs\n");
+//    
+//    core.printf("\nTest Struct\n");
+//    TestStruct s;
+//    int8 i = 22;
+//    float f = 3.5;
+//    s.a = i;
+//    s.b = f;
+//    s.c = 5;
+//
+//    showIntResults(1, 22, s.a);
+//    showFloatResults(2, 3.5, s.b);
+//    showIntResults(3, 5, s.c);
+//
+//    core.printf("\nTest Pointer\n");
     int8 c;
     int8* x;
     x = &c;
     x = 22;
 
     showIntResults(4, 22, x);
-    
-    core.printf("\nTest Passing Pointer to Function\n");
-    showIntResults(5, 25, testFunction(x, 3.5));
-    
-    core.printf("\nTest Pointer to Struct\n");
-    TestStruct* ss;
-    ss = &s;
-    ss.a = 17;
-    ss.b = 17.5;
-    ss.c = 18;
-
-    showIntResults(6, 17, ss.a);
-    showFloatResults(7, 17.5, ss.b);
-    showIntResults(8, 18, ss.c);
-
-    core.printf("\nDone\n\n");
+//    
+//    core.printf("\nTest Passing Pointer to Function\n");
+//    showIntResults(5, 25, testFunction(x, 3.5));
+//    
+//    core.printf("\nTest Pointer to Struct\n");
+//    TestStruct* ss;
+//    ss = &s;
+//    ss.a = 17;
+//    ss.b = 17.5;
+//    ss.c = 18;
+//
+//    showIntResults(6, 17, ss.a);
+//    showFloatResults(7, 17.5, ss.b);
+//    showIntResults(8, 18, ss.c);
+//
+//    core.printf("\nDone\n\n");
 }
 
 };

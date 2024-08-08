@@ -39,6 +39,8 @@ enum class ASTNodeType {
     Return,
     Assignment,
     Drop,
+    Ref,
+    Deref,
 };
 
 class ASTNode;
@@ -296,8 +298,7 @@ class OpNode : public ASTNode
 
     virtual uint8_t sizeInBytes() const override
     {
-        // If the op is PUSHREF, this is an addressof, so it's the AddrSize of the underlying type
-        return (_op == Op::PUSHREF1 || _op == Op::PUSHREF2 || _op == Op::PUSHREF4) ? AddrSize : typeToBytes(type());
+        return typeToBytes(type());
     }
 
 
@@ -506,5 +507,42 @@ class DropNode : public ASTNode
   private:
     uint16_t _bytesToDrop;
 };
+
+// addressof (&) operator
+class RefNode : public ASTNode
+{
+  public:
+    RefNode(const ASTPtr& operand, int32_t annotationIndex)
+        : _operand(operand)
+        , ASTNode(annotationIndex)
+    { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Ref; }
+    virtual Type type() const override { return _operand->type(); }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    
+  private:
+    ASTPtr _operand;
+};
+
+// deref (*) operator
+class DerefNode : public ASTNode
+{
+  public:
+    DerefNode(const ASTPtr& operand, int32_t annotationIndex)
+        : _operand(operand)
+        , ASTNode(annotationIndex)
+    { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Deref; }
+    virtual Type type() const override { return _operand->type(); }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    
+  private:
+    ASTPtr _operand;
+};
+
 
 }

@@ -155,15 +155,6 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
-    if (_op == Op::PUSHREF1 || _op == Op::PUSHREF2 || _op == Op::PUSHREF4) {
-        // This is an addressof operator. There must only be an _right
-        // operand and it must be a Var.
-        if (_left == nullptr && _right->astNodeType() == ASTNodeType::Var) {
-            _right->emitCode(code, true, c);
-            return;
-        }
-    }
-    
     // _type is the result type not the type used for operation. We need
     // to get that from the left or right operand
     Type opType = Type::UInt8;
@@ -511,3 +502,30 @@ DropNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         code.push_back(_bytesToDrop);
     }
 }
+
+void
+RefNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+{
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
+    // The ref operand can only be used on a right-hand operand.
+    // We want to push a ref to it, thus passing 'true' here
+    _operand->emitCode(code, true, c);
+}
+
+void
+DerefNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+{
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
+    // The deref operand pushes the operand which must be a ref
+    // and then does a DEREF if this is rhs and just leaves the 
+    // ref if this is lhs
+    _operand->emitCode(code, true, c);
+    
+    if (!isLHS) {
+        uint8_t bytes = typeToBytes(type());
+        code.push_back(uint8_t((bytes == 1) ? Op::DEREF1 : ((bytes == 2) ? Op::DEREF2 : Op::DEREF4)));
+    }
+}
+

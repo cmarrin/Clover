@@ -867,8 +867,13 @@ Compiler::unaryExpression()
         opcode = Op::PREDEC;
         isRef = true;
     } else if (match(Token::And)) {
-        opcode = Op::PUSHREF1; // FIXME...
-        isRef = true;
+        // Ref (addressof)
+        node = unaryExpression();
+        return std::make_shared<RefNode>(node, annotationIndex());
+    }  else if (match(Token::Mul)) {
+        // Deref (*)
+        node = unaryExpression();
+        return std::make_shared<DerefNode>(node, annotationIndex());
     } else {
         return nullptr;
     }
