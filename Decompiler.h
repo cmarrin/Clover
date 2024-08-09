@@ -31,7 +31,7 @@ public:
         PrematureEOF,
     };
     
-    Decompiler(const std::vector<uint8_t>* in, std::string* out, const AnnotationList& annotations)
+    Decompiler(const std::vector<uint8_t>* in, std::string* out, const AnnotationList* annotations)
         : _in(in)
         , _out(out)
         , _annotations(annotations)
@@ -148,7 +148,7 @@ private:
     std::string* _out;
     int32_t _indent = 0;
     uint16_t _codeOffset = 0; // Used by Call
-    const AnnotationList& _annotations;
+    const AnnotationList* _annotations = nullptr;
     int _annotationIndex = 0;
     const Compiler* _compiler = nullptr;
 };

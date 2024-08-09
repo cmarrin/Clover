@@ -94,6 +94,7 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
 //
 //      -h      output in include file format. Output file is <root name>.h
 //      -d      decompile and print result
+//      -a      omit annotations in decompiled output
 //      -x      interpret resulting binary
 //
 // Multiple input files accepted. Output file(s) are placed in the same dir as input
@@ -115,12 +116,14 @@ int main(int argc, char * const argv[])
     bool execute = false;
     bool decompile = false;
     bool headerFile = false;
+    bool annotate = true;
     
-    while ((c = getopt(argc, argv, "dxh")) != -1) {
+    while ((c = getopt(argc, argv, "daxh")) != -1) {
         switch(c) {
             case 'd': decompile = true; break;
             case 'x': execute = true; break;
             case 'h': headerFile = true; break;
+            case 'a': annotate = false; break;
             default: break;
         }
     }
@@ -170,7 +173,7 @@ int main(int argc, char * const argv[])
 
         if (decompile) {
             std::string out;
-            lucid::Decompiler decompiler(&executable, &out, annotations);
+            lucid::Decompiler decompiler(&executable, &out, annotate ? &annotations : nullptr);
             bool success = decompiler.decompile();
             
             std::cout << "\nPrinting code:\n" << out << "\nEnd code\n\n";

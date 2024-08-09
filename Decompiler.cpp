@@ -16,15 +16,17 @@ using namespace lucid;
 bool Decompiler::decompile()
 {
     // Output everything before the first addr
-    _annotationIndex = 0;
-    for ( ; _annotationIndex < _annotations.size(); ++_annotationIndex) {
-        if (_annotations[_annotationIndex].first != -1) {
-            break;
+    if (_annotations) {
+        _annotationIndex = 0;
+        for ( ; _annotationIndex < _annotations->size(); ++_annotationIndex) {
+            if ((*_annotations)[_annotationIndex].first != -1) {
+                break;
+            }
+            
+            _out->append("                |    ");
+            _out->append((*_annotations)[_annotationIndex].second);
+            _out->append("\n");
         }
-        
-        _out->append("                |    ");
-        _out->append(_annotations[_annotationIndex].second);
-        _out->append("\n");
     }
     
     try {
@@ -87,19 +89,21 @@ void
 Decompiler::statement()
 {
     uint16_t a = addr() - _codeOffset;
-    if (!_annotations.empty() && (_annotations[_annotationIndex].first == -1 || _annotations[_annotationIndex].first < a)) {
-        for ( ; _annotationIndex < _annotations.size(); ) {
-            _out->append("                |    ");
-            _out->append(_annotations[_annotationIndex++].second);
-            if (_annotations[_annotationIndex].first != -1) {
-                break;
+    
+    if (_annotations) {
+        if (!_annotations->empty() && ((*_annotations)[_annotationIndex].first == -1 || (*_annotations)[_annotationIndex].first < a)) {
+            for ( ; _annotationIndex < _annotations->size(); ) {
+                _out->append("                |    ");
+                _out->append((*_annotations)[_annotationIndex++].second);
+                if ((*_annotations)[_annotationIndex].first != -1) {
+                    break;
+                }
+            }
+            if (_out->back() != '\n') {
+                _out->append("\n");
             }
         }
-        if (_out->back() != '\n') {
-            _out->append("\n");
-        }
-    }
-    
+   }
 
     uint8_t opInt = getUInt8();
     uint8_t size = 0;
