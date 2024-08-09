@@ -466,7 +466,15 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     _rhs->emitCode(code, false, c);
 
     code.push_back(uint8_t(Op::INDEX));
-    code.push_back(typeToBytes(_lhs->type()));
+    
+    // If the underlying type is struct, get that size
+    uint8_t size;
+    if (isStruct(type())) {
+        size = c->typeToStruct(type())->size();
+    } else {
+        size = typeToBytes(type());
+    }
+    code.push_back(size);
     
     // if isLHS is true then we're done, we have a ref on TOS. If not we need to DEREF
     if (!isLHS) {
