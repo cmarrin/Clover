@@ -616,6 +616,7 @@ enum class NativeId : uint8_t {
     ArgInt16        = 11,
     ArgInt32        = 12,
     ArgFloat        = 13,
+    Animate         = 14,
 };
 
 #ifndef ARDUINO

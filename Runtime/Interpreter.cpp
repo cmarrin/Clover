@@ -141,6 +141,43 @@ InterpreterBase::callNative(NativeId id)
         case NativeId::ArgFloat:
             _returnValue = _topLevelArgs.arg(Type::Float);
             break;
+        case NativeId::Animate: {
+            // Passes in a pointer to a struct with cur, inc, min and max
+            // values, all floats. Perform one animation iteration of cur
+            // by adding inc to it. When it hits min or max, negate inc
+            // to go the other direction next time. Return -1 if we just
+            // finished going down, or 1 if we just finished going up.
+            // Otherwise return 0.
+            float cur, inc, min, max;
+            AddrNativeType addr = _memMgr.getLocal(0, AddrType);
+            cur = intToFloat(_memMgr.getAbs(addr, OpSize::flt));
+            inc = intToFloat(_memMgr.getAbs(addr + 4, OpSize::flt));
+            min = intToFloat(_memMgr.getAbs(addr + 8, OpSize::flt));
+            max = intToFloat(_memMgr.getAbs(addr + 12, OpSize::flt));
+
+            cur += inc;
+            _memMgr.setAbs(addr, floatToInt(cur), OpSize::flt);
+            _returnValue = 0;
+
+            if (0 < inc) {
+                if (cur >= max) {
+                    cur = max;
+                    inc = -inc;
+                    _memMgr.setAbs(addr, floatToInt(cur), OpSize::flt);
+                    _memMgr.setAbs(addr + 4, floatToInt(inc), OpSize::flt);
+                    _returnValue = 1;
+                }
+            } else {
+                if (cur <= min) {
+                    cur = min;
+                    inc = -inc;
+                    _memMgr.setAbs(addr, floatToInt(cur), OpSize::flt);
+                    _memMgr.setAbs(addr + 4, floatToInt(inc), OpSize::flt);
+                    _returnValue = -1;
+                }
+            }
+            break;
+        }
     }
 
     // Restore the frame and pop the dummy return address
