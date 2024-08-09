@@ -39,6 +39,10 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     coreModule->addNativeFunction("argint32", NativeId::ArgInt32, Type::Int32, { });
     coreModule->addNativeFunction("argFloat", NativeId::ArgFloat, Type::Float, { });
     coreModule->addNativeFunction("animate", NativeId::Animate, Type::Int8, { });
+    coreModule->addNativeFunction("setLight", NativeId::SetLight, Type::None, {{ "i", Type::UInt8, false, 1, 1 },
+                                                                               { "h", Type::Float, false, 4, 1 },
+                                                                               { "s", Type::Float, false, 4, 1 },
+                                                                               { "v", Type::Float, false, 4, 1 }});
 
     _modules.push_back(coreModule);
     
