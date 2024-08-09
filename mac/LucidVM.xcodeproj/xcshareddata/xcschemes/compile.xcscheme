@@ -59,6 +59,10 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "-d -x -h examples/PostLightEffects.lucid"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-d -x -h Test/TestCore.lucid"
             isEnabled = "YES">
          </CommandLineArgument>

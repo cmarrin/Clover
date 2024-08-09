@@ -81,6 +81,7 @@
 		49C164B82C04EC6400981AD1 /* AST.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AST.cpp; path = ../AST.cpp; sourceTree = "<group>"; };
 		49C164B92C04EC6400981AD1 /* AST.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AST.h; path = ../AST.h; sourceTree = "<group>"; };
 		49C164BC2C0545D100981AD1 /* Struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Struct.h; path = ../Struct.h; sourceTree = "<group>"; };
+		49DF25DD2C65A14700CD7D55 /* PostLightEffects.lucid */ = {isa = PBXFileReference; lastKnownFileType = text; name = PostLightEffects.lucid; path = ../examples/PostLightEffects.lucid; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +175,7 @@
 		4941A1002BBA1CF300CE3C9E /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				49DF25DD2C65A14700CD7D55 /* PostLightEffects.lucid */,
 				4941A1012BBA1D2800CE3C9E /* Flicker.lucid */,
 				4941A1172BBB0B1200CE3C9E /* Effects.lucid */,
 				49C164A42C025CD500981AD1 /* simple.lucid */,
