@@ -20,7 +20,7 @@ struct AnimEntry
     float max;
 };
     
-uint8 globalArray[20];
+uint16 globalArray[20];
 
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
@@ -73,8 +73,8 @@ initialize()
 
     core.memset(&localArray, 200, 10);
     showIntResults(6, 200, localArray[5]);
-    core.memset(&globalArray, 0x55, 20);
-    showIntResults(7, 0x55, globalArray[9]);
+    core.memset(&globalArray, 0x55, 20 * 2);
+    showIntResults(7, 0x5555, globalArray[9]);
 
     core.printf("\nMin/Max\n");
     showIntResults(8, 20, core.imin(20, 21));

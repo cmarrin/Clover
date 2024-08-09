@@ -288,12 +288,13 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
     // Check for an initializer.
     ASTPtr ast;
     AddrNativeType addr = 0;
-    uint16_t nConstElements = 0;
+    uint16_t nConstElements = nElements;
     
     if (match(Token::Equal)) {
         if (isConstant) {
             // Collect the constant initializers
-            collectConstants(type, nElements == 1, addr, nConstElements);
+            collectConstants(type, nElements != 1, addr, nConstElements);
+            sym->setNElements(nConstElements);
         } else if ((uint8_t(type) < StructTypeStart && nElements == 1) || isPointer) {
             // Built-in scalar type. Generate an expression
             ast = expression();
@@ -348,34 +349,82 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
     return true;
 }
 
-void
-Compiler::collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint16_t& nElements)
+static Type nextStructProperty(const StructPtr& struc, uint16_t& propIndex)
 {
-    uint32_t i;
+    Type t;
+    
+    while (true) {
+        t = struc->localType(propIndex++);
+        if (t != Type::Function) {
+            break;
+        }
+    }
+    return t;
+}
+
+void
+Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16_t& nElements)
+{
+    uint32_t v;
     addr = uint32_t(_constants.size());
     
-    if (isScalar) {
-        expect(value(i, type), Error::ExpectedValue);
+    if (!isArray && isScalar(type)) {
+        expect(value(v, type), Error::ExpectedValue);
         nElements = 1;
-        appendValue(_constants, i, type);
+        appendValue(_constants, v, type);
         return;
     }
-        
+       
+    // This is an array of scalars, a struct or an array of structs
     expect(Token::OpenBrace);
-    expect(value(i, type), Error::ExpectedValue);
-    appendValue(_constants, i, type);
+    
+    // There is an underlying type. If it's an array of scalars the type
+    // is correct. Otherwise it's the type of the first struct property
+    Type underlyingType = type;
+    StructPtr struc = typeToStruct(type);
+    uint16_t propIndex = 0;
+    
+    if (struc) {
+        // Find the type of the next struct property
+        underlyingType = nextStructProperty(struc, propIndex);
+        
+        // If there are no properties in the struct, it's an error
+        expect(underlyingType != Type::None, Error::WrongNumberOfInitializers);
+    }
 
-    nElements = 1;
+    expect(value(v, type), Error::ExpectedValue);
+    appendValue(_constants, v, underlyingType);
+
+    uint16_t nCollectedElements = 1;
+    bool advanceNElements = false;
 
     while (match(Token::Comma)) {
+        if (struc) {
+            // Find the type of the next struct property
+            underlyingType = nextStructProperty(struc, propIndex);
+            if (underlyingType == Type::None) {
+                // Start over (this will go to the next element if there is one
+                propIndex = 0;
+                underlyingType = nextStructProperty(struc, propIndex);
+                if (isArray) {
+                    advanceNElements = true;
+                }
+            }
+        }
+        
         // Allow trailing comma
-        if (!value(i, type)) {
+        if (!value(v, underlyingType)) {
             break;
         }
         
-        nElements += 1;
-        appendValue(_constants, i, type);
+        if (struc == nullptr || advanceNElements) {
+            nCollectedElements += 1;
+            advanceNElements = false;
+        }
+        
+        appendValue(_constants, v, underlyingType);
     }
+    
     expect(Token::CloseBrace);
 }
 

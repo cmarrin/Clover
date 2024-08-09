@@ -25,7 +25,8 @@ public:
         , _type(type)
     { }
     
-    const std::vector<SymbolPtr>& locals() const { return _locals; }
+    Type localType(uint16_t i) const { return (i >= _locals.size()) ? Type::None : _locals[i]->type(); }
+    uint16_t numLocals() const { return _locals.size(); }
     
     Type type() const { return _type; }
     uint8_t size() const { return _localSize; }

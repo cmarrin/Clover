@@ -248,6 +248,7 @@ enum class Error {
     IteratorMustBeScalar,
     PtrAssignmentMustMatch,
     PtrTypeNotAllowed,
+    WrongNumberOfInitializers,
 };
 
 class Compiler {
@@ -315,7 +316,7 @@ private:
     bool formalParameterList();
     bool argumentList(const ASTPtr& fun);
     
-    void collectConstants(Type type, bool isScalar, AddrNativeType& addr, uint16_t& nElements);
+    void collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16_t& nElements);
     
     bool isReserved(Token token, const std::string str, Reserved&);
 

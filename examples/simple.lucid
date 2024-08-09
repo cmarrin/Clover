@@ -14,12 +14,11 @@ struct A
     int16 c;
 };
 
+const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
+
 initialize()
 {
-    A a;
-    a.b = 2;
-    a.c = 3;
-    core.printf("A.b=%hhd, A.c=%hd\n", a.b, a.c);
+    core.printf(" v1=%hhd, v2=%hd\n", arr[1].b, arr[2].c);
 }
 
 };
