@@ -24,7 +24,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>("core");
     coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, true, 1, 1 }});
-    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::UInt8, true, 1, 1 },
+    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::None, true, 1, 1 },
                                                                            { "v", Type::UInt8, false, 1, 1 },
                                                                            { "n", Type::UInt32, false, 1, 1 }});
     coreModule->addNativeFunction("irand", NativeId::RandomInt, Type::Int32, {{ "min", Type::Int32, false, 1, 1 }, { "max", Type::Int32, false, 1, 1 }});
@@ -1113,7 +1113,11 @@ Compiler::argumentList(const ASTPtr& fun)
             // Otherwise it's a type mismatch
             if (sym->isPointer() || arg->isPointer()) {
                 expect(sym->isPointer() && arg->isPointer(), Error::MismatchedType);
-                expect(sym->type() == arg->type(), Error::MismatchedType);
+                
+                // We have a special case. If the format arg is of Type::None it
+                // means it can take a pointer to any type. This is to allow
+                // core.memset to take any pointer and initialize it
+                expect(sym->type() == Type::None || sym->type() == arg->type(), Error::MismatchedType);
             }
         } else {
             // This is past the last arg, it can be any type
