@@ -108,10 +108,26 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 
     assert(!isLHS);
     
-    uint8_t bytesInOperand;
-    uint8_t bytesPushed = typeToBytes(_type);
+    // Small floating point numbers is a common case. We currently
+    // push these as float constants, which takes 5 bytes. If we
+    // push them as small integers and cast, that's only 2 bytes.
+    bool isSmallFloat = false;
+    Type t = _type;
     
-    if (_type == Type::Float) {
+    if (_type == Type::Float && _f >= -8 && _f <= 7) {
+        int32_t i = int32_t(_f);
+        if (float(i) == _f) {
+            // It's an integer
+            isSmallFloat = true;
+            _i = i;
+            t = Type::Int8;
+        }
+    }
+    
+    uint8_t bytesInOperand;
+    uint8_t bytesPushed = typeToBytes(t);
+    
+    if (t == Type::Float) {
         bytesInOperand = 4;
     } else if (_i >= -8 && _i <= 7) {
         bytesInOperand = 0;
@@ -146,6 +162,11 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             case 1: code.push_back(_i);
             default: break;
         }
+    }
+    
+    if (isSmallFloat) {
+        // Cast it
+        code.push_back(uint8_t(castOp(Type::Int8, Type::Float)));
     }
 }
 
