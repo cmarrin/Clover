@@ -1165,9 +1165,12 @@ Compiler::argumentList(const ASTPtr& fun)
             expect(sym != nullptr, Error::InternalError);
             neededType = sym->type();
             
-            // If both the sym and arg are scalar then we can cast.
-            // Otherwise it's a type mismatch
-            if (sym->isPointer() || arg->isPointer()) {
+            // If the arg is a struct and we're expecting a pointer ref it
+            if (sym->isPointer() && isStruct(arg->type())) {
+                arg = std::make_shared<RefNode>(arg, annotationIndex());
+            } else if (sym->isPointer() || arg->isPointer()) {
+                // If both the sym and arg are scalar then we can cast.
+                // Otherwise it's a type mismatch
                 expect(sym->isPointer() && arg->isPointer(), Error::MismatchedType);
                 
                 // We have a special case. If the format arg is of Type::None it

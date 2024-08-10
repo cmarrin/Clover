@@ -486,6 +486,13 @@ class IndexNode : public ASTNode
 
     virtual bool isAssignable() const override { return true; }
 
+    virtual bool isPointer() const override
+    {
+        // The underlying type of the array is what determines whether or not it's a
+        // pointer. If it's a pointer type or a struct it is, otherwise it's not
+        return _lhs->isPointer();
+    }
+
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     
     virtual bool valueLeftOnStack() const override { return true; }
