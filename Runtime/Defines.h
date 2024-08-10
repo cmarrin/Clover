@@ -228,9 +228,6 @@ enum class Op: uint8_t {
     LNOT    = 0x0c,
     
     CALL    = 0x0d, // Absolute address of callee (16 bit)
-    SWAP1   = 0x21,
-    SWAP2   = 0x22,
-    SWAP4   = 0x23,
     INDEX1  = 0x0e, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
     INDEX2  = 0x0f, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
     

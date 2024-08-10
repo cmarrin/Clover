@@ -387,9 +387,6 @@ InterpreterBase::execute()
             case Op::DUP1    : _memMgr.stack().dup(OpSize::i8); break;
             case Op::DUP2    : _memMgr.stack().dup(OpSize::i16); break;
             case Op::DUP4    : _memMgr.stack().dup(OpSize::i32); break;
-            case Op::SWAP1   : _memMgr.stack().swap(OpSize::i8); break;
-            case Op::SWAP2   : _memMgr.stack().swap(OpSize::i16); break;
-            case Op::SWAP4   : _memMgr.stack().swap(OpSize::i32); break;
             case Op::ADD:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
