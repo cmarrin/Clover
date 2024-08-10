@@ -999,6 +999,9 @@ Compiler::postfixExpression()
             }
             
             // array index does a PUSHREF of the lhs, then a PUSH of the rhs and then an INDEX with element size as operand
+            // Index can be 8 or 16 bit only
+            expect(rhs->type() == Type::Int8  || rhs->type() == Type::UInt8 ||
+                   rhs->type() == Type::Int16 || rhs->type() == Type::UInt16, Error::WrongType);
             lhs = std::make_shared<IndexNode>(lhs, rhs, annotationIndex());
             expect(Token::CloseBracket);
         } else if (match(Token::Dot)) {

@@ -348,9 +348,10 @@ InterpreterBase::execute()
             case Op::PUSH1: _memMgr.stack().push(value(OpSize::i8), OpSize::i8); break;
             case Op::PUSH2: _memMgr.stack().push(value(OpSize::i16), OpSize::i16); break;
             case Op::PUSH4: _memMgr.stack().push(value(OpSize::i32), OpSize::i32); break;
-            case Op::INDEX: {
+            case Op::INDEX1:
+            case Op::INDEX2: {
                 uint8_t elementSize = getUOpnd(OpSize::i8);
-                uint32_t index = _memMgr.stack().pop(OpSize::i16);
+                uint32_t index = _memMgr.stack().pop((opcode == Op::INDEX1) ? OpSize::i8 : OpSize::i16);
                 AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
                 addr += index * elementSize;
                 _memMgr.stack().push(addr, AddrOpSize);

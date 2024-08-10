@@ -487,11 +487,10 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     _lhs->emitCode(code, true, c);
     
-    // ths must be uint16
-    _rhs = TypeCastNode::castIfNeeded(_rhs, Type::UInt16, _annotationIndex);
+    // index can be 8 or 16 bit. We know its a valid type because the caller checked it
     _rhs->emitCode(code, false, c);
 
-    code.push_back(uint8_t(Op::INDEX));
+    code.push_back(uint8_t((_rhs->type() == Type::Int8 || _rhs->type() == Type::UInt8) ? Op::INDEX1 : Op::INDEX2));
     
     // If the underlying type is struct, get that size
     uint8_t size;

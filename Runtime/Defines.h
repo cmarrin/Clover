@@ -228,30 +228,37 @@ enum class Op: uint8_t {
     LNOT    = 0x0c,
     
     CALL    = 0x0d, // Absolute address of callee (16 bit)
-    INDEX   = 0x0e, // Stack has a ref and index. Operand is 8 bit element size in bytes, push new ref offset by index * operand
-    
-    DEREF1  = 0x0f, // TOS has ref, pop it, load the value at that address and push it
-    DEREF2  = 0x10,
-    DEREF4  = 0x11,
-    POP1    = 0x12, // Next byte is addr mode, pop TOS and store at address
-    POP2    = 0x13,
-    POP4    = 0x14,
-    PUSHREF1= 0x15, // Next byte is addr mode. Data width is used when computing negative offsets from U
-    PUSHREF2= 0x16,
-    PUSHREF4= 0x17,
-    POPDEREF1=0x18, // a = popaddr, v = pop1, mem1[a] = v
-    POPDEREF2=0x19, // a = popaddr, v = pop2, mem2[a] = v
-    POPDEREF4=0x1a, // a = popaddr, v = pop4, mem4[a] = v
-    PUSH1   = 0x1b, // Next byte is addr mode, push value at addr
-    PUSH2   = 0x1c,
-    PUSH4   = 0x1d,
-
-    DUP1    = 0x1e,
-    DUP2    = 0x1f,
-    DUP4    = 0x20,
     SWAP1   = 0x21,
     SWAP2   = 0x22,
     SWAP4   = 0x23,
+    INDEX1  = 0x0e, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    INDEX2  = 0x0f, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    
+    DEREF1  = 0x10, // TOS has ref, pop it, load the value at that address and push it
+    DEREF2  = 0x11,
+    DEREF4  = 0x12,
+    POP1    = 0x13, // Next byte is addr mode, pop TOS and store at address
+    POP2    = 0x14,
+    POP4    = 0x15,
+    PUSHREF1= 0x16, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    PUSHREF2= 0x17,
+    PUSHREF4= 0x18,
+    POPDEREF1=0x19, // a = popaddr, v = pop1, mem1[a] = v
+    POPDEREF2=0x1a, // a = popaddr, v = pop2, mem2[a] = v
+    POPDEREF4=0x1b, // a = popaddr, v = pop4, mem4[a] = v
+    PUSH1   = 0x1c, // Next byte is addr mode, push value at addr
+    PUSH2   = 0x1d,
+    PUSH4   = 0x1e,
+
+    DUP1    = 0x1f,
+    DUP2    = 0x20,
+    DUP4    = 0x21,
+
+//
+//
+// Available opcodes 22 - 23
+//
+//
 
     PUSHR1  = 0x24, // Push _returnValue (1 byte)
     PUSHR2  = 0x25, // Push _returnValue (2 bytes)

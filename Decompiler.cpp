@@ -145,7 +145,8 @@ Decompiler::statement()
         case Op::PUSHREF1  : emitOp("PUSHREF1"); emitIndex(getUInt8()); break;
         case Op::PUSHREF2  : emitOp("PUSHREF2"); emitIndex(getUInt8()); break;
         case Op::PUSHREF4  : emitOp("PUSHREF4"); emitIndex(getUInt8()); break;
-        case Op::INDEX     : emitOp("INDEX"); emitNumber(getUInt8()); break;
+        case Op::INDEX1    : emitOp("INDEX1"); emitNumber(getUInt8()); break;
+        case Op::INDEX2    : emitOp("INDEX2"); emitNumber(getUInt8()); break;
         case Op::OFFSET1   : emitOp("OFFSET1"); emitNumber(getUInt8()); break;
         case Op::OFFSET2   : emitOp("OFFSET2"); emitNumber(getUInt16()); break;
         case Op::RET     : emitOp("RET"); break;
