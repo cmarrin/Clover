@@ -158,9 +158,9 @@ Decompiler::statement()
         case Op::POPDEREF1: emitOp("POPDEREF1"); break;
         case Op::POPDEREF2: emitOp("POPDEREF2"); break;
         case Op::POPDEREF4: emitOp("POPDEREF4"); break;
-        case Op::POP1    : emitOp("POP1"); break;
-        case Op::POP2    : emitOp("POP2"); break;
-        case Op::POP4    : emitOp("POP4"); break;
+        case Op::POP1    : emitOp("POP1"); emitIndex(getUInt8()); break;
+        case Op::POP2    : emitOp("POP2"); emitIndex(getUInt8()); break;
+        case Op::POP4    : emitOp("POP4"); emitIndex(getUInt8()); break;
         case Op::DEREF1  : emitOp("DEREF1"); break;
         case Op::DEREF2  : emitOp("DEREF2"); break;
         case Op::DEREF4  : emitOp("DEREF4"); break;

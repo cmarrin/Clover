@@ -312,27 +312,36 @@ InterpreterBase::execute()
             case Op::PUSHR4:
                 _memMgr.stack().push(_returnValue, OpSize::i32);
                 break;
-            case Op::POP1:
-                break;
-            case Op::POP2:
-                break;
-            case Op::POP4:
-                break;
-            case Op::POPDEREF1: {
+            case Op::POP1: {
                 uint32_t v = _memMgr.stack().pop(OpSize::i8);
+                _memMgr.setAbs(ea(OpSize::i8), v, OpSize::i8);
+                break;
+            }
+            case Op::POP2: {
+                uint32_t v = _memMgr.stack().pop(OpSize::i16);
+                _memMgr.setAbs(ea(OpSize::i16), v, OpSize::i16);
+                break;
+            }
+            case Op::POP4: {
+                uint32_t v = _memMgr.stack().pop(OpSize::i32);
+                _memMgr.setAbs(ea(OpSize::i32), v, OpSize::i32);
+                break;
+            }
+            case Op::POPDEREF1: {
                 uint32_t a = _memMgr.stack().pop(AddrOpSize);
+                uint32_t v = _memMgr.stack().pop(OpSize::i8);
                 _memMgr.setAbs(a, v, OpSize::i8);
                 break;
             }
             case Op::POPDEREF2: {
-                uint32_t v = _memMgr.stack().pop(OpSize::i16);
                 uint32_t a = _memMgr.stack().pop(AddrOpSize);
+                uint32_t v = _memMgr.stack().pop(OpSize::i16);
                 _memMgr.setAbs(a, v, OpSize::i16);
                 break;
             }
             case Op::POPDEREF4: {
-                uint32_t v = _memMgr.stack().pop(OpSize::i32);
                 uint32_t a = _memMgr.stack().pop(AddrOpSize);
+                uint32_t v = _memMgr.stack().pop(OpSize::i32);
                 _memMgr.setAbs(a, v, OpSize::i32);
                 break;
             }

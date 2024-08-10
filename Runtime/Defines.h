@@ -239,9 +239,9 @@ enum class Op: uint8_t {
     PUSHREF1= 0x15, // Next byte is addr mode. Data width is used when computing negative offsets from U
     PUSHREF2= 0x16,
     PUSHREF4= 0x17,
-    POPDEREF1=0x18, // TOS has value then addr. Store value at addr
-    POPDEREF2=0x19,
-    POPDEREF4=0x1a,
+    POPDEREF1=0x18, // a = popaddr, v = pop1, mem1[a] = v
+    POPDEREF2=0x19, // a = popaddr, v = pop2, mem2[a] = v
+    POPDEREF4=0x1a, // a = popaddr, v = pop4, mem4[a] = v
     PUSH1   = 0x1b, // Next byte is addr mode, push value at addr
     PUSH2   = 0x1c,
     PUSH4   = 0x1d,

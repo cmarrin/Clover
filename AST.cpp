@@ -25,7 +25,7 @@ StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+VarNode::emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
@@ -33,27 +33,37 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     Op op;
     Type t = isPointer() ? AddrType : _symbol->type();
 
-    // If isLHS is true, code generated will be a Ref
-    switch (typeToOpSize(t)) {
-        case OpSize::i8:  op = isLHS ? Op::PUSHREF1 : Op::PUSH1; break;
-        case OpSize::i16: op = isLHS ? Op::PUSHREF2 : Op::PUSH2; break;
-        case OpSize::i32:
-        case OpSize::flt: op = isLHS ? Op::PUSHREF4 : Op::PUSH4; break;
+    if (pop) {
+        // Generate POP optimization
+        switch (typeToOpSize(t)) {
+            case OpSize::i8:  op = Op::POP1; break;
+            case OpSize::i16: op = Op::POP2; break;
+            case OpSize::i32:
+            case OpSize::flt: op = Op::POP4; break;
+        }
+    } else {
+        // If ref is true, code generated will be a Ref
+        switch (typeToOpSize(t)) {
+            case OpSize::i8:  op = ref ? Op::PUSHREF1 : Op::PUSH1; break;
+            case OpSize::i16: op = ref ? Op::PUSHREF2 : Op::PUSH2; break;
+            case OpSize::i32:
+            case OpSize::flt: op = ref ? Op::PUSHREF4 : Op::PUSH4; break;
+        }
     }
     
     code.push_back(uint8_t(op));
     
     Index index;
-    int32_t value = _symbol->addr(index);
+    int32_t relAddr = _symbol->addr(index);
     uint8_t extra = uint8_t(index);
     uint8_t addedBytes = 0;
     
-    if (value >= -16 && value <= 15) {
-        extra |= uint8_t(value << 3);
-    } else if (value >= -128 && value <= 127) {
+    if (relAddr >= -16 && relAddr <= 15) {
+        extra |= uint8_t(relAddr << 3);
+    } else if (relAddr >= -128 && relAddr <= 127) {
         extra |= 0x4;
         addedBytes = 1;
-    } else if (value >= -32768 && value <= 32767) {
+    } else if (relAddr >= -32768 && relAddr <= 32767) {
         extra |= 0x0c;
         addedBytes = 2;
     } else {
@@ -63,14 +73,14 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     code.push_back(extra);
     if (addedBytes > 2) {
-        code.push_back(uint8_t(value >> 24));
-        code.push_back(uint8_t(value >> 16));
+        code.push_back(uint8_t(relAddr >> 24));
+        code.push_back(uint8_t(relAddr >> 16));
     }
     if (addedBytes > 1) {
-        code.push_back(uint8_t(value >> 8));
+        code.push_back(uint8_t(relAddr >> 8));
     }
     if (addedBytes > 0) {
-        code.push_back(uint8_t(value));
+        code.push_back(uint8_t(relAddr));
     }
 }
 
@@ -199,21 +209,37 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 
     // If op is not NOP this is operator assignment. Handle a += b like a = a + b
     //
-    // 1) pushref lhs
-    // 2) push lhs
-    // 3) push rhs
-    // 4) op
-    // 5) popderef
-    _left->emitCode(code, true, c);
-    
+    // 1) push lhs
+    // 2) push rhs
+    // 3) op
+    // 4) handle like normal assignment
+    //
+    // Otherwise push rhs
+    //
+    // Now TOS has the value. do a pushref of the lhs and then popderef
     if (_op != Op::NOP) {
         _left->emitCode(code, false, c);
     }
     
     _right->emitCode(code, false, c);
-
+    
     if (_op != Op::NOP) {
         code.push_back(uint8_t(_op) | typeToSizeBits(type()));
+    }
+
+    // If lhs is a VarNode, we can optimize to turn this:
+    //
+    //      PUSHREFx i,U
+    //      POPDEREFx
+    
+    // into:
+    //
+    //      POPx i,U
+    if (_left->astNodeType() == ASTNodeType::Var) {
+        std::reinterpret_pointer_cast<VarNode>(_left)->emitPopCode(code, c);
+        return;
+    } else {
+        _left->emitCode(code, true, c);
     }
     
     // If this is a pointer assignment, we need to use the pointer

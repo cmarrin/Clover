@@ -135,11 +135,21 @@ class VarNode : public ASTNode
 
     virtual bool isPointer() const override { return _symbol->isPointer(); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) override
+    {
+        emitCode(code, isLHS, false, c);
+    }
+    
+    void emitPopCode(std::vector<uint8_t>& code, Compiler* c)
+    {
+        emitCode(code, false, true, c);
+    }
 
     virtual bool valueLeftOnStack() const override { return true; }
 
   private:
+    void emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler*);
+    
     SymbolPtr _symbol = nullptr;
 };
 
