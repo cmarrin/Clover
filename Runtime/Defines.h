@@ -621,7 +621,9 @@ enum class NativeId : uint8_t {
     ArgInt32        = 12,
     ArgFloat        = 13,
     Animate         = 14,
-    SetLight        = 15,
+    LoadColorArg    = 15,
+    SetLight        = 16,
+    SetAllLights    = 17,
 };
 
 #ifndef ARDUINO

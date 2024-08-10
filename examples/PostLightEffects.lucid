@@ -76,25 +76,6 @@ int16 multiColorIndex;
 bool isCrossfading;
 float brightnessMod;
 
-function loadColorArg(uint8 index)
-{
-    colors[index].h = float(core.argint8()) / 255;
-    colors[index].s = float(core.argint8()) / 255;
-    colors[index].v = float(core.argint8()) / 255;
-}
-
-function setLight(uint8 lightIndex, uint8 colorIndex)
-{
-    core.setLight(lightIndex, colors[colorIndex].h, colors[colorIndex].s, colors[colorIndex].v);
-}
-
-function setAllLights(uint8 colorIndex)
-{
-    for (uint8 i = 0; i < NumLights; ++i) {
-        setLight(i, colorIndex);
-    }
-}
-
 function initFade(int8 c, bool fadeIn)
 {
     led.min = 0.0;
@@ -119,12 +100,12 @@ function initFade(int8 c, bool fadeIn)
 
 function constantInit()
 {
-	loadColorArg(0);
+	core.loadColorArg(colors[0]);
 }
 
 function int16 constantLoop()
 {
-	setAllLights(0);
+	core.setAllLights(colors[0]);
     return Delay;
 }
 
@@ -140,10 +121,10 @@ uint8 duration;
 
 function multicolorInit()
 {
-    loadColorArg(0);
-    loadColorArg(1);
-    loadColorArg(2);
-    loadColorArg(3);
+	core.loadColorArg(colors[0]);
+	core.loadColorArg(colors[1]);
+	core.loadColorArg(colors[2]);
+	core.loadColorArg(colors[3]);
     
     duration = core.argint8();
 
@@ -157,7 +138,7 @@ function multicolorInit()
     // Start by fading in the first color
     initFade(multiColorIndex, true);
 
-    isCrossfading = 1;
+    isCrossfading = true;
 
     // Start at a random place in the delay
     durationCur = core.irand(0, durationMax);
@@ -179,14 +160,14 @@ function int16 multicolorLoop()
             initFade(multiColorIndex, true);
         } else if (animateResult > 0) {
             // The new light has completed fading in
-            isCrossfading = 0;
+            isCrossfading = false;
             if (durationCur >= durationMax) {
                 durationCur = 0;
             }
         }
 
         colors[multiColorIndex].v = led.cur;
-        setAllLights(multiColorIndex);
+        core.setAllLights(colors[multiColorIndex]);
         return Delay;
     }
 
@@ -195,7 +176,7 @@ function int16 multicolorLoop()
     }
 
     // We've hit the desired duration, transition
-    isCrossfading = 1;
+    isCrossfading = true;
     
     // Add random amount to duration
     durationMax = int16(float(duration * 1000) * core.frand(1, 1.5)) / Delay;
@@ -212,7 +193,7 @@ function int16 multicolorLoop()
 //
 function pulseInit()
 {
-	loadColorArg(0);
+	core.loadColorArg(colors[0]);
  
     uint8 duration = core.argint8();
     uint8 speed = core.argint8();
@@ -235,7 +216,7 @@ function int16 pulseLoop()
 
     led = &leds[0];
     colors[0].v = led.cur;
-    setAllLights(0);
+    core.setAllLights(colors[0]);
     return Delay;
 }
 
@@ -248,7 +229,7 @@ function int16 pulseLoop()
 //
 function flickerInit()
 {
-	loadColorArg(0);
+	core.loadColorArg(colors[0]);
     uint8 speed = core.argint8();
     
     core.memset(&leds, 0, NumLights * 4);
@@ -279,7 +260,7 @@ function int16 flickerLoop()
         }
 
         colors[0].v = led.cur;
-        setLight(i, 0);
+        core.setLight(i, colors[0]);
     }
     
     return Delay;
@@ -298,7 +279,7 @@ function int16 flickerLoop()
 
 function rainbowInit()
 {
-	loadColorArg(0);
+	core.loadColorArg(colors[0]);
  
     uint8 speed = core.argint8();
     uint8 rng = core.argint8();
@@ -331,7 +312,7 @@ function int16 rainbowLoop()
     core.animate(led);
 
     colors[0].h = led.cur;
-    setAllLights(0);
+    core.setAllLights(colors[0]);
     return Delay;
 }
 
