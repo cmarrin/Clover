@@ -178,6 +178,11 @@ InterpreterBase::callNative(NativeId id)
             }
             break;
         }
+        
+//        LoadColorArg    = 15,
+//    SetLight        = 16,
+//    SetAllLights    = 17,
+
     }
 
     // Restore the frame and pop the dummy return address

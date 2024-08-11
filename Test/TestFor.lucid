@@ -12,11 +12,14 @@
 struct Test
 {
 
+uint8 errors;
+
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
     core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %i, got %i\n", exp, act);
+        errors++;
     } else {
         core.printf("     Pass\n");
     }
@@ -24,6 +27,8 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
 
 initialize()
 {    
+    errors = 0;
+    
     int8 i = 0;
     int8 j = 0;
 
@@ -124,7 +129,12 @@ initialize()
     }
     showIntResults(11, 50, j);
 
-    core.printf("\nDone\n\n");
+    core.printf("\nDone.%40s", " ");
+    if (errors) {
+        core.printf("FAILED\n\n");
+    } else {
+        core.printf("Passed\n\n");
+    }
 }
 
 };

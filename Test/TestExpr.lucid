@@ -22,11 +22,14 @@ const float testFloatTable [ ] = { 1.5, 2.5, 3.5, 7.5, };
 
 int16 testIntGlobal;
 
+uint8 errors;
+
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %i, got %i\n", exp, act);
+        errors++;
     } else {
         core.printf("     Pass\n");
     }
@@ -37,6 +40,7 @@ function showFloatResults(uint8 testNo, float exp, float act)
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %f, got %f\n", exp, act);
+        errors++;
     } else {
         core.printf("     Pass\n");
     }
@@ -45,7 +49,9 @@ function showFloatResults(uint8 testNo, float exp, float act)
 float testFloatGlobal;
 
 initialize()
-{    
+{
+    errors = 0;
+    
     testIntGlobal = 42;
     testFloatGlobal = 6.5;
 
@@ -116,7 +122,12 @@ initialize()
     showFloatResults(37, 38, testFloatTable[1] + float(TestSizeDef) * TestFloatConst - testFloatGlobal);
     showFloatResults(38, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
 
-    core.printf("\nDone\n\n");
+    core.printf("\nDone.%40s", " ");
+    if (errors) {
+        core.printf("FAILED\n\n");
+    } else {
+        core.printf("Passed\n\n");
+    }
 }
 
 };

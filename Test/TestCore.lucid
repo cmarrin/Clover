@@ -22,11 +22,14 @@ struct AnimEntry
     
 uint16 globalArray[20];
 
+uint8 errors;
+
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
     core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %i, got %i\n", exp, act);
+        errors++;
     } else {
         core.printf("     Pass\n");
     }
@@ -37,6 +40,7 @@ function showFloatResults(uint8 testNo, float exp, float act)
     core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %f, got %f\n", exp, act);
+        errors++;
     } else {
         core.printf("     Pass\n");
     }
@@ -44,6 +48,8 @@ function showFloatResults(uint8 testNo, float exp, float act)
 
 initialize()
 {
+    errors = 0;
+    
     core.printf("\nTest Core Module\n");
 
     float f;
@@ -122,7 +128,12 @@ initialize()
     showIntResults(32, 0, core.animate(&entry));
     showFloatResults(33, 1.5, entry.cur);
 
-    core.printf("\nDone\n\n");
+    core.printf("\nDone.%40s", " ");
+    if (errors) {
+        core.printf("FAILED\n\n");
+    } else {
+        core.printf("Passed\n\n");
+    }
 }
 
 };
