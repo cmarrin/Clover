@@ -317,6 +317,21 @@ ModuleNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
 }
 
+static void emitDrop(std::vector<uint8_t>& code, uint16_t argSize)
+{
+    if (argSize) {
+        if (argSize <= 16) {
+            code.push_back(uint8_t(Op::DROPS) | (argSize - 1));
+        } else {
+            code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
+            if (argSize > 256) {
+                code.push_back(argSize >> 8);
+            }
+            code.push_back(argSize);
+        }
+    }
+}
+
 void
 FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
@@ -354,15 +369,9 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     for (auto& it : _args) {
         argSize += it->sizeInBytes();
     }
-
-    if (argSize) {
-        code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
-        if (argSize > 256) {
-            code.push_back(argSize >> 8);
-        }
-        code.push_back(argSize);
-    }
     
+    emitDrop(code, argSize);
+
     // If we want to use the _returnValue, push it
     if (_function->pushReturn()) {
         switch (typeToOpSize(_function->returnType())) {
@@ -557,13 +566,7 @@ ReturnNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 DropNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
-    if (_bytesToDrop) {
-        code.push_back((_bytesToDrop > 255) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
-        if (_bytesToDrop > 255) {
-            code.push_back(_bytesToDrop >> 8);
-        }
-        code.push_back(_bytesToDrop);
-    }
+    emitDrop(code, _bytesToDrop);
 }
 
 void

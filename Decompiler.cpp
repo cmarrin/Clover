@@ -180,8 +180,9 @@ Decompiler::statement()
         case Op::DUP1    : emitOp("DUP1"); emitSize(size); break;
         case Op::DUP2    : emitOp("DUP2"); emitSize(size); break;
         case Op::DUP4    : emitOp("DUP4"); emitSize(size); break;
-        case Op::DROP1   : emitOp("DROP"); emitNumber(getUInt8()); break;
-        case Op::DROP2   : emitOp("DROP"); emitNumber(getUInt16()); break;
+        case Op::DROPS   : emitOp("DROPS"); emitNumber(size + 1); break;
+        case Op::DROP1   : emitOp("DROP1"); emitNumber(getUInt8()); break;
+        case Op::DROP2   : emitOp("DROP2"); emitNumber(getUInt16()); break;
         case Op::ADD     : emitOp("ADD"); emitSize(size); break;
         case Op::SUB     : emitOp("SUB"); emitSize(size); break;
         case Op::IMUL    : emitOp("IMUL"); emitSize(size); break;

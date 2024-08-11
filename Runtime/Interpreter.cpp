@@ -539,6 +539,7 @@ InterpreterBase::execute()
                 _memMgr.stack().push(_pc, AddrOpSize);
                 _pc = right;
                 break;
+            case Op::DROPS   : _memMgr.stack().drop(operand + 1); break;
             case Op::DROP1   : left = getUOpnd(OpSize::i8); _memMgr.stack().drop(left); break;
             case Op::DROP2   : left = getUOpnd(OpSize::i16); _memMgr.stack().drop(left); break;
 
