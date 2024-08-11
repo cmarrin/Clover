@@ -53,6 +53,10 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler* c)
     
     code.push_back(uint8_t(op));
     
+    // if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 15. If bit 2 is 1
+    // and bit 3 is 0, bits 7:4 are prepended to a following byte for a 12 bit
+    // address (-2048 to 2047). If bit 3 is 1 then if bit 4 is 0 the next 2 bytes
+    // is a signed address. If bit 4 is 1 then the next 4 bytes is a signed address.
     Index index;
     int32_t relAddr = _symbol->addr(index);
     uint8_t extra = uint8_t(index);
@@ -60,8 +64,8 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler* c)
     
     if (relAddr >= -16 && relAddr <= 15) {
         extra |= uint8_t(relAddr << 3);
-    } else if (relAddr >= -128 && relAddr <= 127) {
-        extra |= 0x4;
+    } else if (relAddr >= -2048 && relAddr <= 2047) {
+        extra |= uint8_t((relAddr & 0xf00) >> 4) | 0x04;
         addedBytes = 1;
     } else if (relAddr >= -32768 && relAddr <= 32767) {
         extra |= 0x0c;

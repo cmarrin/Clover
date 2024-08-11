@@ -142,9 +142,9 @@ Decompiler::statement()
         case Op::CASTI8F   : emitOp("CASTI8F");   break;
         case Op::CASTI832  : emitOp("CASTI832");  break;
         case Op::CASTI816  : emitOp("CASTI816");  break;
-        case Op::PUSHREF1  : emitOp("PUSHREF1"); emitIndex(getUInt8()); break;
-        case Op::PUSHREF2  : emitOp("PUSHREF2"); emitIndex(getUInt8()); break;
-        case Op::PUSHREF4  : emitOp("PUSHREF4"); emitIndex(getUInt8()); break;
+        case Op::PUSHREF1  : emitOp("PUSHREF1"); emitIndex(); break;
+        case Op::PUSHREF2  : emitOp("PUSHREF2"); emitIndex(); break;
+        case Op::PUSHREF4  : emitOp("PUSHREF4"); emitIndex(); break;
         case Op::INDEX1    : emitOp("INDEX1"); emitNumber(getUInt8()); break;
         case Op::INDEX2    : emitOp("INDEX2"); emitNumber(getUInt8()); break;
         case Op::OFFSET1   : emitOp("OFFSET1"); emitNumber(getUInt8()); break;
@@ -159,15 +159,15 @@ Decompiler::statement()
         case Op::POPDEREF1: emitOp("POPDEREF1"); break;
         case Op::POPDEREF2: emitOp("POPDEREF2"); break;
         case Op::POPDEREF4: emitOp("POPDEREF4"); break;
-        case Op::POP1    : emitOp("POP1"); emitIndex(getUInt8()); break;
-        case Op::POP2    : emitOp("POP2"); emitIndex(getUInt8()); break;
-        case Op::POP4    : emitOp("POP4"); emitIndex(getUInt8()); break;
+        case Op::POP1    : emitOp("POP1"); emitIndex(); break;
+        case Op::POP2    : emitOp("POP2"); emitIndex(); break;
+        case Op::POP4    : emitOp("POP4"); emitIndex(); break;
         case Op::DEREF1  : emitOp("DEREF1"); break;
         case Op::DEREF2  : emitOp("DEREF2"); break;
         case Op::DEREF4  : emitOp("DEREF4"); break;
-        case Op::PUSH1   : emitOp("PUSH1"); emitIndex(getUInt8()); break;
-        case Op::PUSH2   : emitOp("PUSH2"); emitIndex(getUInt8()); break;
-        case Op::PUSH4   : emitOp("PUSH4"); emitIndex(getUInt8()); break;
+        case Op::PUSH1   : emitOp("PUSH1"); emitIndex(); break;
+        case Op::PUSH2   : emitOp("PUSH2"); emitIndex(); break;
+        case Op::PUSH4   : emitOp("PUSH4"); emitIndex(); break;
         case Op::PUSHK11 : emitOp("PUSHK11"); emitConstant(1); break;
         case Op::PUSHK12 : emitOp("PUSHK12"); emitConstant(1); break;
         case Op::PUSHK14 : emitOp("PUSHK14"); emitConstant(1); break;
@@ -279,46 +279,49 @@ void Decompiler::emitSizeValue(uint8_t size)
     _out->append(">");
 }
 
-void Decompiler::emitIndexValue(uint8_t index)
+// if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 15. If bit 2 is 1
+// and bit 3 is 0, bits 7:4 are prepended to a following byte for a 12 bit
+// address (-2048 to 2047). If bit 3 is 1 then if bit 4 is 0 the next 2 bytes
+// is a signed address. If bit 4 is 1 then the next 4 bytes is a signed address.
+int32_t
+Decompiler::addrMode(Index& index)
 {
-    _out->append(" ");
-    uint8_t mode = index & 0x03;
-    int32_t value = int32_t(index) >> 2;
-    if (value & 0x01) {
-        // Long form
-        uint8_t size = (value >> 1) & 0x03;
-
-        value = getUInt8();
-        if (value > 127) {
-            // sign extend
-            value |= 0xffffff80;
-        }
-        if (size > 0) {
-            value = (value < 8) | getUInt8();
-        }
-        if (size > 1) {
-            value = (value < 8) | getUInt8();
-        }
-        if (size > 2) {
-            value = (value < 8) | getUInt8();
-        }
-    } else {
-        value >>= 1;
-        if (value > 15) {
+    uint8_t mode = getUInt8();
+    index = Index(mode & 0x03);
+    int32_t v;
+    
+    if ((mode & 0x04) == 0) {
+        // Short
+        v = mode >> 3;
+    } else if ((mode & 0x08) == 0) {
+        // Upper 4 bits of mode prepended to next byte
+        v = (int32_t(mode & 0xf0) << 4) | getUInt8();
+        if ((v & 0x800) != 0) {
             // Sign extend
-            value |= 0xfffffff0;
+            v |= 0xfffff000;
         }
+    } else if (((mode & 0x10) == 0)) {
+        v = getInt16();
+    } else {
+        v = getInt32();
     }
     
-    
+    return v;
+}
+
+void Decompiler::emitIndex()
+{
+    _out->append(" ");
+    Index index;
+    int32_t value = addrMode(index);
+
     _out->append(std::to_string(value));
     _out->append(",");
-    switch (mode) {
-        case 0: _out->append("C"); break;
-        case 1: _out->append("X"); break;
-        case 2: _out->append("Y"); break;
-        case 3: _out->append("U"); break;
-        default: _out->append("?"); break;
+    switch (index) {
+        case Index::C: _out->append("C"); break;
+        case Index::X: _out->append("X"); break;
+        case Index::Y: _out->append("Y"); break;
+        case Index::U: _out->append("U"); break;
     }
 }
 
