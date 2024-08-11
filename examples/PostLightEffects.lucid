@@ -61,8 +61,6 @@ struct Color
     float v;
 };
 
-Color colors[4];
-
 const float FadeInc         = 0.04;
 const float PulseMin        = 0.3;
 const float BrightestMin    = 0.6;
@@ -86,15 +84,18 @@ const FlickerSpeedEntry FlickerSpeedTable[ ] =
     14, 16,
 };
 
-LedEntry leds[8];
 LedEntry* led;
+
 float flickerStepsMin;
 float flickerStepsMax;
-int16 durationMax; // Number of counts between fade (based on Delay)
-int16 durationCur;
+float flickerBrightnessMod;
+int16 multiColorDurationMax; // Number of counts between fade (based on Delay)
+int16 multiColorDurationCur;
 int16 multiColorIndex;
-bool isCrossfading;
-float brightnessMod;
+bool multiColorIsCrossfading;
+
+Color colors[4];
+LedEntry leds[8];
 
 function initFade(int8 c, bool fadeIn)
 {
@@ -148,7 +149,7 @@ function multicolorInit()
     
     duration = core.argint8();
 
-    durationMax = duration * 1000 / Delay;
+    multiColorDurationMax = duration * 1000 / Delay;
     
     led = &leds[0];
 
@@ -158,15 +159,15 @@ function multicolorInit()
     // Start by fading in the first color
     initFade(multiColorIndex, true);
 
-    isCrossfading = true;
+    multiColorIsCrossfading = true;
 
     // Start at a random place in the delay
-    durationCur = core.irand(0, durationMax);
+    multiColorDurationCur = core.irand(0, multiColorDurationMax);
 }
 
 function int16 multicolorLoop()
 {
-    if (isCrossfading) {
+    if (multiColorIsCrossfading) {
         int8 animateResult = core.animate(led);
         if (animateResult < 0) {
             // The current light has faded out
@@ -180,9 +181,9 @@ function int16 multicolorLoop()
             initFade(multiColorIndex, true);
         } else if (animateResult > 0) {
             // The new light has completed fading in
-            isCrossfading = false;
-            if (durationCur >= durationMax) {
-                durationCur = 0;
+            multiColorIsCrossfading = false;
+            if (multiColorDurationCur >= multiColorDurationMax) {
+                multiColorDurationCur = 0;
             }
         }
 
@@ -191,15 +192,15 @@ function int16 multicolorLoop()
         return Delay;
     }
 
-    if (++durationCur < durationMax) {
+    if (++multiColorDurationCur < multiColorDurationMax) {
         return Delay;
     }
 
     // We've hit the desired duration, transition
-    isCrossfading = true;
+    multiColorIsCrossfading = true;
     
     // Add random amount to duration
-    durationMax = int16(float(duration * 1000) * core.frand(1, 1.5)) / Delay;
+    multiColorDurationMax = int16(float(duration * 1000) * core.frand(1, 1.5)) / Delay;
 
     return Delay;
 }
@@ -257,7 +258,7 @@ function flickerInit()
     flickerStepsMax = float(FlickerSpeedTable[speed].max) * 255;
     
     // Modify the brightness to make it between 0.5 and 1.0
-    brightnessMod = colors[0].v / 2.0 + 0.5;
+    flickerBrightnessMod = colors[0].v / 2.0 + 0.5;
 }
 
 function int16 flickerLoop()
@@ -275,7 +276,7 @@ function int16 flickerLoop()
             
             // Adjust max by brightness
             led.max = core.frand(BrightestMin, BrightestMax);
-            led.max  *= brightnessMod;
+            led.max  *= flickerBrightnessMod;
         }
 
         colors[0].v = led.cur;
