@@ -216,7 +216,6 @@ Decompiler::statement()
         case Op::ENTER   : emitOp("ENTER"); emitNumber(size ? getUInt16() : getUInt8()); break;
         case Op::ENTERS  : emitOp("ENTERS"); emitNumber(size); break;
         case Op::NCALL   : emitOp("NCALL"); emitNumber(size ? getUInt16() : getUInt8()); break;
-        case Op::NCALLS  : emitOp("NCALLS"); emitNumber(size); break;
         case Op::PUSHS   : {
             emitOp("PUSHS");
             _out->append(" \"");

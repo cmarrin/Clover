@@ -545,8 +545,7 @@ InterpreterBase::execute()
             case Op::ENTER   : operand = getUOpnd(opSize);
             case Op::ENTERS  : _memMgr.setFrame(operand); break;
             
-            case Op::NCALL   : operand = getUOpnd(OpSize::i16);
-            case Op::NCALLS  : callNative(NativeId(operand)); break;
+            case Op::NCALL   : callNative(NativeId(getUOpnd(opSize))); break;
             
             case Op::PUSHK11 : left = getIOpnd(OpSize::i8); _memMgr.stack().push(left, OpSize::i8); break;
             case Op::PUSHK12 : left = getIOpnd(OpSize::i8); _memMgr.stack().push(left, OpSize::i16); break;

@@ -333,17 +333,13 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // Add a function call. args will already be pushed
     int32_t addr = _function->addr();
     if (_function->isNative()) {
-        if (addr <= 15) {
-            code.push_back(uint8_t(Op::NCALLS) | addr);
+        if (addr <= 255) {
+            code.push_back(uint8_t(Op::NCALL));
+            code.push_back(addr);
         } else {
-            if (addr <= 255) {
-                code.push_back(uint8_t(Op::NCALL));
-                code.push_back(addr);
-            } else {
-                code.push_back(uint8_t(Op::NCALL) | 0x01);
-                code.push_back(addr >> 8);
-                code.push_back(addr);
-            }
+            code.push_back(uint8_t(Op::NCALL) | 0x01);
+            code.push_back(addr >> 8);
+            code.push_back(addr);
         }
     } else {
         code.push_back(uint8_t(Op::CALL));

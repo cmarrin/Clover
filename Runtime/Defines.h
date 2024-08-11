@@ -350,7 +350,6 @@ enum class Op: uint8_t {
     PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
     PUSHKS2 = 0xc0, // lower 4 bits is value from -8 to 7, push 2 bytes
     PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
-    NCALLS  = 0xe0,
     ENTERS  = 0xf0,
 };
 
