@@ -403,7 +403,10 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 
     _arg->emitCode(code, isLHS, c);
     
-    code.push_back(uint8_t(castOp(_arg->type(), _type)));
+    Op op = castOp(_arg->type(), _type);
+    if (op != Op::NOP) {
+        code.push_back(uint8_t(op));
+    }
 }
 
 ASTPtr
