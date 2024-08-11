@@ -12,10 +12,30 @@
 // Current effects:
 //
 //      'c' - Constant color
+//              Args:   0, 1, 2       Color
+//
 //      'm' - Multicolor: rotate between 4 passed color at passed rate
+//              Args:   0..2       Color 1
+//                      3..5       Color 2
+//                      6..8       Color 3
+//                      9..11      Color 4
+//                      12         Duration between cross fades in 1 second intervals (0-255)
+//
 //      'p' - Pulse: Single color pulses dim and bright at passed speed
+//              Args:   0, 1, 2     Color
+//                      3           Speed
+//                      4           Duration
+//
 //      'f' - Flicker: Single color flickers randomly at passed speed
+//              Args:   0, 1, 2     Color
+//                      3           Speed (0-7)
+//
 //      'r' - Rainbow: cycle colors through part of entire rainbow at passed speed
+//              Args:   0, 1, 2     Color
+//                      3           Speed of color change (0-15)
+//                      4           Range how far from passed color to change.
+//                                  0 - small change, 7 - full range
+//                                  0-6 colors bounce back and forth, 7 colors loop around
 
 struct PostLightEffects
 {
@@ -223,9 +243,8 @@ function int16 pulseLoop()
 //
 // Flicker effect
 //
-// Pass HSV color and a speed value (0-7).
-// Speed indexes into a table with a min, max and delay value.
-// 
+// Args:    0, 1, 2     Color
+//          3           Speed (0-7)
 //
 function flickerInit()
 {
@@ -269,13 +288,11 @@ function int16 flickerLoop()
 //
 // Rainbow Effect
 //
-//      color, speed, range, mode       Change color through the rainbow by changing hue 
-//                                      from the passed color at the passed speed (0-15). Range
-//										is how far from the passed color to go, 0 (very little)
-//										to 7 (full range). If mode is 0 colors bounce 
-//										back and forth between start color through range. If
-//										it is 1 colors cycle the full color spectrum and
-//										range is ignored.
+//              Args:   0, 1, 2     Color
+//                      3           Speed of color change (0-15)
+//                      4           Range how far from passed color to change.
+//                                  0 - small change, 7 - full range
+//                                  0-6 colors bounce back and forth, 7 colors loop around
 
 function rainbowInit()
 {
