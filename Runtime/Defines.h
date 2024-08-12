@@ -594,39 +594,27 @@ enum class Operator : uint8_t {
     UMinus  = 0xe2,
 };
 
-// Native functions
+// Native Modules contain native functions that can be called
+// by the interpreter. Modules are numbered starting at 0. There
+// is a 'core' module always available as module 0. Others are
+// loaded with an 'import' statement and are numbered starting
+// at 1. The interpreter has a fixed array of modules which
+// contain a CallNative function to execute the code. A NCALL
+// opcode is used to incate the module function to call. The
+// opcode has am 8 or 16 bit operand which encodes which module
+// has the function and the id of the function.
 //
-// These are implemented in the ExecutionUnit and are recognized by the Compiler.
-// CallNative op has an operand which is the Native enum value. All params are
-// passed on the stack and must be the expected size and type. Return value is
-// sent back as an int32_t but can represent any type of value as defined in the
-// native function signature
-//
-// Functions:
-//
-//      void    print(string)       - prints the passed string to the console
-//      string  int8ToString(int8)  - return passed int8 value converted to string
+// The number of bits used for the module index and function id
+// as well as the max number of modules that can be loaded is
+// contained in constants below.
 
-enum class NativeId : uint8_t {
-    None            = 0,
-    PrintF          = 1,
-    MemSet          = 2,
-    RandomInt       = 3,
-    RandomFloat     = 4,
-    MinInt          = 5,
-    MaxInt          = 6,
-    MinFloat        = 7,
-    MaxFloat        = 8,
-    InitArgs        = 9,
-    ArgInt8         = 10,
-    ArgInt16        = 11,
-    ArgInt32        = 12,
-    ArgFloat        = 13,
-    Animate         = 14,
-    LoadColorArg    = 15,
-    SetLight        = 16,
-    SetAllLights    = 17,
-};
+class InterpreterBase;
+
+using CallNative = void (*)(uint16_t id, InterpreterBase*);
+
+static constexpr uint8_t ModuleCountMax     = 10;
+static constexpr uint8_t BitsPerFunctionId  = 5;
+static constexpr uint8_t FunctionIdMask     = (1 << BitsPerFunctionId) - 1;
 
 #ifndef ARDUINO
 class ASTNode;

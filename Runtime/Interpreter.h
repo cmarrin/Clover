@@ -49,8 +49,11 @@ class InterpreterBase
     void addArg(uint32_t v, Type type);
     void addArg(float v);
 
+    Memory* memMgr() { return &_memMgr; }
+    VarArg* topLevelArgs() { return &_topLevelArgs; }
+    void setReturnValue(uint32_t v) { _returnValue = v; }
   protected:
-    void callNative(NativeId);
+    void callNative(uint16_t);
     
     // TOS has from type value, type cast and push to type
     void typeCast(Type from, Type to);
@@ -137,6 +140,7 @@ class InterpreterBase
     int16_t _errorAddr = -1;
 
     Memory _memMgr;
+    CallNative _modules[ModuleCountMax];
     
     uint32_t _returnValue;
     
