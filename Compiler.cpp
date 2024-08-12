@@ -840,7 +840,8 @@ Compiler::expressionStatement()
 {
     ASTPtr node = expression();
     if (!node) {
-        return false;
+        // allow empty statement
+        return (match(Token::Semicolon));
     }
     
     expect(_inFunction, Error::InternalError);
