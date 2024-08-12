@@ -20,7 +20,9 @@ namespace lucid {
 class Module
 {
   public:
-    Module(const std::string& name) : _name(name) { }
+    Module(const std::string& name)
+        : _name(name)
+    { }
     
     const std::string& name() const { return _name; }
     const FunctionList& functions() const { return _functions; }
@@ -31,7 +33,7 @@ class Module
         return _functions.back();
     }
 
-    void addNativeFunction(const char* name, NativeId nativeId, Type returnType, const Symbols& locals)
+    void addNativeFunction(const char* name, uint16_t nativeId, Type returnType, const Symbols& locals)
     {
         _functions.push_back(std::make_shared<Function>(name, nativeId, returnType, locals));
     }

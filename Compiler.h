@@ -328,7 +328,7 @@ private:
 
     StructPtr findStruct(const std::string&);
     SymbolPtr findSymbol(const std::string&);
-    ModulePtr findModule(const std::string&);
+    int16_t findModuleId(const std::string&);
 
     // The expect methods validate the passed param and if
     // there is no match, the passed error is saved and
@@ -381,8 +381,6 @@ private:
     }
     
     uint32_t annotationIndex() const  { return _scanner.annotationIndex(); }
-    
-    uint8_t allocNativeId() { return _nextNativeId++; }
 
     Error _error = Error::None;
     Token _expectedToken = Token::None;
@@ -421,7 +419,6 @@ private:
     // when the looping statement ends.
     std::vector<std::vector<ASTPtr>> _jumpList;
 
-    uint8_t _nextNativeId = 0;
     uint16_t _nextMem = 0; // next available location in mem
     uint16_t _localHighWaterMark = 0;
 };

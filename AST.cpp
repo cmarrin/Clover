@@ -348,6 +348,9 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // Add a function call. args will already be pushed
     int32_t addr = _function->addr();
     if (_function->isNative()) {
+        // Add moduleId to addr
+        addr |= _moduleId << BitsPerFunctionId;
+        
         if (addr <= 255) {
             code.push_back(uint8_t(Op::NCALL));
             code.push_back(addr);
