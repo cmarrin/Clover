@@ -19,12 +19,11 @@
 //                      3..5       Color 2
 //                      6..8       Color 3
 //                      9..11      Color 4
-//                      12         Duration between cross fades in 1 second intervals (0-255)
+//                      12         Speed between cross fades in 1 second intervals (0-255)
 //
 //      'p' - Pulse: Single color pulses dim and bright at passed speed
 //              Args:   0, 1, 2     Color
-//                      3           Speed
-//                      4           Duration
+//                      3           Speed (0-7)
 //
 //      'f' - Flicker: Single color flickers randomly at passed speed
 //              Args:   0, 1, 2     Color
@@ -94,6 +93,9 @@ int16 multiColorDurationCur;
 int16 multiColorIndex;
 bool multiColorIsCrossfading;
 
+uint8 speed;
+uint8 range;
+
 Color colors[4];
 LedEntry leds[8];
 
@@ -110,6 +112,92 @@ function initFade(int8 c, bool fadeIn)
     }
 }
 
+function init(uint8 cmd)
+{
+	core.loadColorArg(colors[0]);
+ 
+    if (cmd == 'm') {
+        core.loadColorArg(colors[1]);
+        core.loadColorArg(colors[2]);
+        core.loadColorArg(colors[3]);
+    }
+    
+    if (cmd != 'c') {
+        speed = core.argint8();
+    }
+    
+    if (cmd == 'r') {
+        range = core.argint8();
+    }
+    
+    led = &leds[0];
+    
+    if (cmd == 'm') {
+        multiColorDurationMax = speed * 1000 / Delay;
+        
+        // Start on a random color
+        multiColorIndex = core.irand(0, 4);
+
+        // Start by fading in the first color
+        initFade(multiColorIndex, true);
+
+        multiColorIsCrossfading = true;
+
+        // Start at a random place in the delay
+        multiColorDurationCur = core.irand(0, multiColorDurationMax);
+        
+        return;
+    }
+    
+    if (cmd == 'p') {
+        led.max = colors[0].v;
+        led.min = led.max - (float(speed + 1) / 8.0 * (led.max - PulseMin));
+        
+        // add some randomization to the duration
+        led.inc = (led.max - led.min) / (float((NumLevels - speed) * PulseSpeedMult) * core.frand(1, 2));
+
+        // Start with a random value for cur
+        led.cur = core.frand(led.min, led.max);
+        
+        return;
+    }
+    
+    if (cmd == 'f') {
+        core.memset(&leds, 0, NumLights * 4);
+
+        flickerStepsMin = float(FlickerSpeedTable[speed].min) * 255;
+        flickerStepsMax = float(FlickerSpeedTable[speed].max) * 255;
+        
+        // Modify the brightness to make it between 0.5 and 1.0
+        flickerBrightnessMod = colors[0].v / 2.0 + 0.5;
+        
+        return;
+    }
+    
+    if (cmd == 'r') {
+        led.min = colors[0].h;
+        
+        float range = 1.0 - led.min;
+        float r = float(range + 1) / 8;
+        if (r > 1) {
+            r = 1;
+        }
+        led.max = led.min + range * r;
+        
+        speed = 16 - speed;
+        if (speed < 1 || speed > 16) {
+            speed = 16;
+        }
+        speed *= RainbowSpeedMult;
+        led.inc = (led.max - led.min) / float(speed);
+
+        // Start with a random value for cur
+        led.cur = core.frand(led.min, led.max);
+        
+        return;
+    }
+}
+
 // Effects take one or more colors and possibly other args
 // Colors are hue, saturation, brightness (uint8). 0 is
 // 0%, 255 is 100%.
@@ -118,11 +206,6 @@ function initFade(int8 c, bool fadeIn)
 // Constant color
 //
 // Args:  0, 1, 2       Color
-
-function constantInit()
-{
-	core.loadColorArg(colors[0]);
-}
 
 function int16 constantLoop()
 {
@@ -137,33 +220,6 @@ function int16 constantLoop()
 //        6..8       Color 3
 //        9..11      Color 4
 //        12         Duration between cross fades in 1 second intervals (0-255)
-
-uint8 duration;
-
-function multicolorInit()
-{
-	core.loadColorArg(colors[0]);
-	core.loadColorArg(colors[1]);
-	core.loadColorArg(colors[2]);
-	core.loadColorArg(colors[3]);
-    
-    duration = core.argint8();
-
-    multiColorDurationMax = duration * 1000 / Delay;
-    
-    led = &leds[0];
-
-    // Start on a random color
-    multiColorIndex = core.irand(0, 4);
-
-    // Start by fading in the first color
-    initFade(multiColorIndex, true);
-
-    multiColorIsCrossfading = true;
-
-    // Start at a random place in the delay
-    multiColorDurationCur = core.irand(0, multiColorDurationMax);
-}
 
 function int16 multicolorLoop()
 {
@@ -200,7 +256,7 @@ function int16 multicolorLoop()
     multiColorIsCrossfading = true;
     
     // Add random amount to duration
-    multiColorDurationMax = int16(float(duration * 1000) * core.frand(1, 1.5)) / Delay;
+    multiColorDurationMax = int16(float(speed * 1000) * core.frand(1, 1.5)) / Delay;
 
     return Delay;
 }
@@ -212,25 +268,6 @@ function int16 multicolorLoop()
 //          3           Speed
 //          4           Duration
 //
-function pulseInit()
-{
-	core.loadColorArg(colors[0]);
- 
-    uint8 duration = core.argint8();
-    uint8 speed = core.argint8();
-	
-    led = &leds[0];
-    
-    led.max = colors[0].v;
-    led.min = led.max - (float(speed + 1) / 8.0 * (led.max - PulseMin));
-    
-    // add some randomization to the duration
-    led.inc = (led.max - led.min) / (float((NumLevels - duration) * PulseSpeedMult) * core.frand(1, 2));
-
-    // Start with a random value for cur
-    led.cur = core.frand(led.min, led.max);
-}
-
 function int16 pulseLoop()
 {
     core.animate(&leds[0]);
@@ -247,20 +284,6 @@ function int16 pulseLoop()
 // Args:    0, 1, 2     Color
 //          3           Speed (0-7)
 //
-function flickerInit()
-{
-	core.loadColorArg(colors[0]);
-    uint8 speed = core.argint8();
-    
-    core.memset(&leds, 0, NumLights * 4);
-
-    flickerStepsMin = float(FlickerSpeedTable[speed].min) * 255;
-    flickerStepsMax = float(FlickerSpeedTable[speed].max) * 255;
-    
-    // Modify the brightness to make it between 0.5 and 1.0
-    flickerBrightnessMod = colors[0].v / 2.0 + 0.5;
-}
-
 function int16 flickerLoop()
 {
     for (uint8 i = 0; i < NumLights; ++i) {
@@ -295,36 +318,6 @@ function int16 flickerLoop()
 //                                  0 - small change, 7 - full range
 //                                  0-6 colors bounce back and forth, 7 colors loop around
 
-function rainbowInit()
-{
-	core.loadColorArg(colors[0]);
- 
-    uint8 speed = core.argint8();
-    uint8 rng = core.argint8();
-    uint8 mode = core.argint8();
-
-    led = &leds[0];
-    
-    led.min = colors[0].h;
-    
-    float range = 1.0 - led.min;
-    float r = float(rng + 1) / 8;
-    if (r > 1) {
-        r = 1;
-    }
-    led.max = led.min + range * r;
-    
-    speed = 16 - speed;
-    if (speed < 1 || speed > 16) {
-        speed = 16;
-    }
-    speed *= RainbowSpeedMult;
-    led.inc = (led.max - led.min) / float(speed);
-
-    // Start with a random value for cur
-    led.cur = core.frand(led.min, led.max);
-}
-
 function int16 rainbowLoop()
 {
     core.animate(led);
@@ -353,7 +346,7 @@ initialize()
     }
     
     // Init
-    flickerInit();
+    init(cmd);
 }
 
 };
