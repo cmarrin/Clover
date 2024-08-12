@@ -128,7 +128,7 @@ jumpStatement:
     ;
 
 expressionStatement:
-    arithmeticExpression ';' ;
+    [ arithmeticExpression ] ';' ;
     
 arithmeticExpression:
       unaryExpression
