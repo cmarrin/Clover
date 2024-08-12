@@ -883,7 +883,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         while (true) {
             OpInfo nextOpInfo;
-            if (!findOpInfo(Operator(_scanner.getToken()), nextOpInfo) || nextOpInfo.prec() < opInfo.prec()) {
+            if (!findOpInfo(Operator(_scanner.getToken()), nextOpInfo) || nextOpInfo.prec() <= opInfo.prec()) {
                 break;
             }
             
