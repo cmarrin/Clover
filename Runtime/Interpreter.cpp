@@ -34,18 +34,18 @@ InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
         return;
     }
     
-    AddrNativeType entryPoint = 0;
-    entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
-    entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
-    entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
-    entryPoint |= uint32_t(getUInt8ROM(7));
+    _entryPoint = 0;
+    _entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
+    _entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
+    _entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
+    _entryPoint |= uint32_t(getUInt8ROM(7));
     
-    if (entryPoint == 0) {
+    if (_entryPoint == 0) {
         _error = Error::NoEntryPoint;
         return;
     }
 
-    _pc = entryPoint;
+    _pc = _entryPoint;
         
     uint32_t topLevelStructSize = 0;
     topLevelStructSize |= uint32_t(getUInt8ROM(8)) << 24;
@@ -125,8 +125,12 @@ InterpreterBase::typeCast(Type from, Type to)
 }
 
 int32_t
-InterpreterBase::execute()
+InterpreterBase::execute(ExecMode mode)
 {
+    if (mode == ExecMode::Start) {
+        _pc = _entryPoint;
+    }
+    
     // Push a dummy return address
     _memMgr.stack().push(0, AddrOpSize);
     

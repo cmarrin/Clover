@@ -44,14 +44,17 @@ class InterpreterBase
 
     InterpreterBase(uint8_t* mem, uint32_t memSize);
     
-    int32_t execute();
+    enum class ExecMode : uint8_t { Start, Continue };
+    int32_t execute(ExecMode);
 
     void addArg(uint32_t v, Type type);
     void addArg(float v);
-
+    void dropArgs(uint32_t bytes);
+    
     Memory* memMgr() { return &_memMgr; }
     VarArg* topLevelArgs() { return &_topLevelArgs; }
     void setReturnValue(uint32_t v) { _returnValue = v; }
+    
   protected:
     void callNative(uint16_t);
     
@@ -145,6 +148,7 @@ class InterpreterBase
     uint32_t _returnValue;
     
     VarArg _topLevelArgs;
+    AddrNativeType _entryPoint;
 };
 
 template <uint32_t memSize> class Interpreter : public InterpreterBase
@@ -152,9 +156,9 @@ template <uint32_t memSize> class Interpreter : public InterpreterBase
 public:
     Interpreter() : InterpreterBase(_mem, memSize) { }
 
-    int32_t interp()
+    int32_t interp(ExecMode mode)
     {
-        return execute();
+        return execute(mode);
     }
 
     Error error() const { return _error; }

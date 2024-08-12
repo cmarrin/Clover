@@ -90,7 +90,7 @@ float flickerStepsMax;
 float flickerBrightnessMod;
 int16 multiColorDurationMax; // Number of counts between fade (based on Delay)
 int16 multiColorDurationCur;
-int16 multiColorIndex;
+uint8 multiColorIndex;
 bool multiColorIsCrossfading;
 
 uint8 speed;
@@ -99,7 +99,7 @@ uint8 range;
 Color colors[4];
 LedEntry leds[8];
 
-function initFade(int8 c, bool fadeIn)
+function initFade(uint8 c, bool fadeIn)
 {
     led.min = 0.0;
     led.max = colors[c].v;
@@ -112,14 +112,24 @@ function initFade(int8 c, bool fadeIn)
     }
 }
 
+function setAllLights(uint8 colorIndex)
+{
+    Color* color = &colors[colorIndex];
+    for (uint8 i = 0; i < NumLights; ++i) {
+        clr.setLight(i, color);
+    }
+}
+
 function init(uint8 cmd)
 {
-	core.loadColorArg(colors[0]);
+	clr.loadColorArg(colors[0]);
  
+    clr.setLight(0, colors[0]);
+    
     if (cmd == 'm') {
-        core.loadColorArg(colors[1]);
-        core.loadColorArg(colors[2]);
-        core.loadColorArg(colors[3]);
+        clr.loadColorArg(colors[1]);
+        clr.loadColorArg(colors[2]);
+        clr.loadColorArg(colors[3]);
     }
     
     if (cmd != 'c') {
@@ -209,7 +219,7 @@ function init(uint8 cmd)
 
 function int16 constantLoop()
 {
-	core.setAllLights(colors[0]);
+	setAllLights(0);
     return Delay;
 }
 
@@ -244,7 +254,7 @@ function int16 multicolorLoop()
         }
 
         colors[multiColorIndex].v = led.cur;
-        core.setAllLights(colors[multiColorIndex]);
+        setAllLights(multiColorIndex);
         return Delay;
     }
 
@@ -274,7 +284,7 @@ function int16 pulseLoop()
 
     led = &leds[0];
     colors[0].v = led.cur;
-    core.setAllLights(colors[0]);
+    setAllLights(0);
     return Delay;
 }
 
@@ -303,7 +313,7 @@ function int16 flickerLoop()
         }
 
         colors[0].v = led.cur;
-        core.setLight(i, colors[0]);
+        clr.setLight(i, colors[0]);
     }
     
     return Delay;
@@ -323,7 +333,7 @@ function int16 rainbowLoop()
     core.animate(led);
 
     colors[0].h = led.cur;
-    core.setAllLights(colors[0]);
+    setAllLights(0);
     return Delay;
 }
 

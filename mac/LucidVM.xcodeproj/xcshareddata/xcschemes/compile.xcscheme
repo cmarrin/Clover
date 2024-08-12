@@ -55,44 +55,44 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-d -x -h examples/simple.lucid"
+            argument = "-d -t -h examples/simple.lucid"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -a -x -h examples/PostLightEffects.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -x -h Test/TestCore.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -x -h Test/TestExpr.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -x -h Test/TestIf.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -x -h Test/TestFunction.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -x -h Test/TestFor.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -x -h Test/TestWhile.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -x -h Test/TestPtrStruct.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-h -x Test/TestCore.lucid Test/TestExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestPtrStruct.lucid"
+            argument = "-d -a -l -h examples/PostLightEffects.lucid"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestCore.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestExpr.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestIf.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestFunction.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestFor.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestWhile.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestPtrStruct.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-h -t Test/TestCore.lucid Test/TestExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestPtrStruct.lucid"
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

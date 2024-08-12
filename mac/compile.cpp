@@ -96,7 +96,8 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
 //      -h      output in include file format. Output file is <root name>.h
 //      -d      decompile and print result
 //      -a      omit annotations in decompiled output
-//      -x      interpret resulting binary
+//      -t      execute resulting binary as a single pass test
+//      -l      execute resulting binary as a looping test
 //
 // Multiple input files accepted. Output file(s) are placed in the same dir as input
 // files with extension .arlx or .h. If segmented (-s), filename has 2 digit suffix
@@ -114,15 +115,17 @@ int main(int argc, char * const argv[])
     std::cout << "Lucid Compiler v0.1\n\n";
     
     int c;
-    bool execute = false;
+    bool singlePass = false;
+    bool looping = false;
     bool decompile = false;
     bool headerFile = false;
     bool annotate = true;
     
-    while ((c = getopt(argc, argv, "daxh")) != -1) {
+    while ((c = getopt(argc, argv, "dahtl")) != -1) {
         switch(c) {
             case 'd': decompile = true; break;
-            case 'x': execute = true; break;
+            case 't': singlePass = true; break;
+            case 'l': looping = true; break;
             case 'h': headerFile = true; break;
             case 'a': annotate = false; break;
             default: break;
@@ -253,20 +256,49 @@ int main(int argc, char * const argv[])
         std::cout << "Executables saved\n";
 
         // Execute if needed
-        if (execute) {
+        if (looping || singlePass) {
             // Setup executable pointer
             lucid::ROMBase = &(executable[0]);
             
             MyInterpreter interp;
             
             if (interp.error() == lucid::InterpreterBase::Error::None) {
-                std::cout << "Running '" << path << "' command...\n";
-            
-                // Pass in 2 args, a uint8 command and a uint16 number.
-                // Push them backwards
-                interp.addArg(2, lucid::Type::UInt16);
-                interp.addArg('f', lucid::Type::UInt8);
-                int32_t result = interp.interp();
+                int32_t result = 0;
+                
+                if (looping) {
+                    std::cout << "Running looping test on '" << path << "'\n";
+                
+                    // Pass in 5 args, a uint8 command, speed, value, saturation and hue.
+                    // Push them backwards
+                    interp.addArg(3, lucid::Type::UInt8); // speed (0-7)
+                    interp.addArg(150, lucid::Type::UInt8); // value
+                    interp.addArg(200, lucid::Type::UInt8); // saturation
+                    interp.addArg(128, lucid::Type::UInt8); // hue
+                    interp.addArg('f', lucid::Type::UInt8); // cmd
+                    
+                    std::cout << "\nInit\n";
+                    result = interp.interp(MyInterpreter::ExecMode::Start);
+
+                    if (result == 0) {
+                        interp.dropArgs(5);
+                        interp.addArg('*', lucid::Type::UInt8);
+                        for (int i = 0; i < 10; ++i) {
+                            std::cout << "Pass " << i << "\n";
+                            result = interp.interp(MyInterpreter::ExecMode::Start);
+                            if (result != 0) {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    std::cout << "Running single pass test on '" << path << "'\n";
+                    // Pass in 2 args, a uint8 command and a uint16 number.
+                    // Push them backwards
+                    interp.addArg(2, lucid::Type::UInt16);
+                    interp.addArg('f', lucid::Type::UInt8);
+                    result = interp.interp(MyInterpreter::ExecMode::Start);
+                }
+                
                 if (result == 0) {
                     std::cout << "Complete\n\n";
                 }

@@ -15,6 +15,8 @@
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
 		4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
 		4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* Compiler.cpp */; };
+		49C469C92C6A8C2900588838 /* NativeCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C82C6A83B100588838 /* NativeCore.cpp */; };
+		49C469CA2C6A8C2C00588838 /* NativeColor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C52C6A769E00588838 /* NativeColor.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -81,6 +83,10 @@
 		49C164B82C04EC6400981AD1 /* AST.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AST.cpp; path = ../AST.cpp; sourceTree = "<group>"; };
 		49C164B92C04EC6400981AD1 /* AST.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AST.h; path = ../AST.h; sourceTree = "<group>"; };
 		49C164BC2C0545D100981AD1 /* Struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Struct.h; path = ../Struct.h; sourceTree = "<group>"; };
+		49C469C52C6A769E00588838 /* NativeColor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeColor.cpp; path = ../Runtime/NativeColor.cpp; sourceTree = "<group>"; };
+		49C469C62C6A769E00588838 /* NativeColor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeColor.h; path = ../Runtime/NativeColor.h; sourceTree = "<group>"; };
+		49C469C72C6A83B100588838 /* NativeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeCore.h; path = ../Runtime/NativeCore.h; sourceTree = "<group>"; };
+		49C469C82C6A83B100588838 /* NativeCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCore.cpp; path = ../Runtime/NativeCore.cpp; sourceTree = "<group>"; };
 		49DF25DD2C65A14700CD7D55 /* PostLightEffects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.lucid; path = ../examples/PostLightEffects.lucid; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -127,9 +133,6 @@
 		4941A0E62BB6F59900CE3C9E = {
 			isa = PBXGroup;
 			children = (
-				491886F42C5EDAE70053F2C0 /* Lucid.h */,
-				4914A4892C44A132003DDADA /* Formatter.cpp */,
-				4914A48A2C44A132003DDADA /* Formatter.h */,
 				49C164B82C04EC6400981AD1 /* AST.cpp */,
 				49C164B92C04EC6400981AD1 /* AST.h */,
 				4941A10D2BBA290B00CE3C9E /* Compiler.cpp */,
@@ -137,12 +140,19 @@
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
 				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
 				4941A1042BBA28F000CE3C9E /* Defines.h */,
+				4914A4892C44A132003DDADA /* Formatter.cpp */,
+				4914A48A2C44A132003DDADA /* Formatter.h */,
 				4914A4842C2E0F92003DDADA /* Function.cpp */,
 				49C164B22C03E84700981AD1 /* Function.h */,
 				4941A1052BBA28F000CE3C9E /* Interpreter.cpp */,
 				4941A1062BBA28F000CE3C9E /* Interpreter.h */,
+				491886F42C5EDAE70053F2C0 /* Lucid.h */,
 				4914A4872C3B624D003DDADA /* Memory.h */,
 				49C164B42C0409D700981AD1 /* Module.h */,
+				49C469C52C6A769E00588838 /* NativeColor.cpp */,
+				49C469C62C6A769E00588838 /* NativeColor.h */,
+				49C469C82C6A83B100588838 /* NativeCore.cpp */,
+				49C469C72C6A83B100588838 /* NativeCore.h */,
 				49C164B52C04463000981AD1 /* OpInfo.h */,
 				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
 				4941A10F2BBA290B00CE3C9E /* Scanner.h */,
@@ -267,7 +277,9 @@
 				4914A4852C2E0F92003DDADA /* Function.cpp in Sources */,
 				4914A4882C3E0752003DDADA /* Interpreter.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
+				49C469CA2C6A8C2C00588838 /* NativeColor.cpp in Sources */,
 				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
+				49C469C92C6A8C2900588838 /* NativeCore.cpp in Sources */,
 				4914A48B2C44A13B003DDADA /* Formatter.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
