@@ -103,7 +103,7 @@ initialize()
     showIntResults(24, 2984, int16(testIntTable[1]) + int16(TestSizeDef) * TestIntConst - testIntGlobal);
     showIntResults(25, 2940, int16(testIntTable[1] + TestSizeDef) * (TestIntConst - testIntGlobal));
 
-    core.printf("\n  Float ops\n");
+    core.printf("\n  Flt ops\n");
     showFloatResults(26, 10, TestFloatConst + testFloatGlobal);
     showFloatResults(27, -3, TestFloatConst - testFloatGlobal);
     showFloatResults(28, 22.75, TestFloatConst * testFloatGlobal);
@@ -118,7 +118,7 @@ initialize()
     showIntResults(35, 0, TestFloatConst >= testFloatGlobal);
     showIntResults(36, 0, TestFloatConst > testFloatGlobal);
     
-    core.printf("\n  Float exprs\n");
+    core.printf("\n  Flt exprs\n");
     showFloatResults(37, 38, testFloatTable[1] + float(TestSizeDef) * TestFloatConst - testFloatGlobal);
     showFloatResults(38, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
 
