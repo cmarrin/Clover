@@ -33,7 +33,7 @@ NativeCore::createModule()
     coreModule->addNativeFunction("argint16", uint16_t(Id::ArgInt16), Type::Int16, { });
     coreModule->addNativeFunction("argint32", uint16_t(Id::ArgInt32), Type::Int32, { });
     coreModule->addNativeFunction("argFloat", uint16_t(Id::ArgFloat), Type::Float, { });
-    coreModule->addNativeFunction("animate", uint16_t(Id::Animate), Type::Int8, { });
+    coreModule->addNativeFunction("animate", uint16_t(Id::Animate), Type::Int8, { { "p", Type::None, true, 1, 1 } });
     return coreModule;
 }
 
