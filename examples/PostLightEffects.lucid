@@ -124,8 +124,6 @@ function init(uint8 cmd)
 {
 	clr.loadColorArg(colors[0]);
  
-    clr.setLight(0, colors[0]);
-    
     if (cmd == 'm') {
         clr.loadColorArg(colors[1]);
         clr.loadColorArg(colors[2]);
