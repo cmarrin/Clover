@@ -526,6 +526,13 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     _lhs->emitCode(code, true, c);
     
+    // Optimization. If rhs is a constant 0, we can skip the index. Just emit the lhs.
+    if (_rhs->astNodeType() == ASTNodeType::Constant) {
+        if (std::reinterpret_pointer_cast<ConstantNode>(_rhs)->integerValue() == 0) {
+            return;
+        }
+    }
+
     // index can be 8 or 16 bit. We know its a valid type because the caller checked it
     _rhs->emitCode(code, false, c);
 

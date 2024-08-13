@@ -178,6 +178,17 @@ class ConstantNode : public ASTNode
 
     virtual bool valueLeftOnStack() const override { return true; }
 
+    int32_t integerValue() const
+    {
+        if (isScalar(_type)) {
+            if (_type == Type::Float) {
+                return int32_t(_f);
+            }
+            return _i;
+        }
+        return -1; // Don't return 0. Some callers want to know if value is 0 or not.
+    }
+    
   private:
     Type _type = Type::None;
     bool _numeric = false; // If true, type is a Float or UInt32 literal
