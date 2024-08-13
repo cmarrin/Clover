@@ -68,9 +68,6 @@ public:
     SymbolPtr arg(uint32_t index) const;
     uint32_t argCount() const { return _argCount; }
     
-    void setPushReturn(bool r) { _pushReturn = r; }
-    bool pushReturn() const { return _pushReturn; }
-
 private:
     std::string _name;
     ASTPtr _astNode;
@@ -82,7 +79,6 @@ private:
     bool _native = false;
     AddrNativeType _addr = 0;
     uint8_t _localHighWaterMark = 0;
-    bool _pushReturn = true;
 };
 
 }

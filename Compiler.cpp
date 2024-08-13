@@ -837,8 +837,7 @@ Compiler::expressionStatement()
     // If this is a function call, a return value will be pushed by
     // default. We don't need that so tell the function call to skip it
     if (node->astNodeType() == ASTNodeType::FunctionCall) {
-        FunctionPtr function = std::static_pointer_cast<FunctionCallNode>(node)->function();
-        function->setPushReturn(false);
+        std::static_pointer_cast<FunctionCallNode>(node)->setPushReturn(false);
     } else if (node->valueLeftOnStack()) {
         // We don't need the value, toss it
         currentFunction()->addASTNode(std::make_shared<DropNode>(typeToBytes(node->type()), annotationIndex()));

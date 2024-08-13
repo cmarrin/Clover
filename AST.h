@@ -433,11 +433,13 @@ class FunctionCallNode : public ASTNode
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
     FunctionPtr function() const { return _function; }
+    void setPushReturn(bool r) { _pushReturn = r; }
     
   private:
     FunctionPtr _function;
     uint8_t _moduleId = 0;
     ASTNodeList _args;
+    bool _pushReturn = true;
 
 };
 

@@ -376,7 +376,7 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     emitDrop(code, argSize);
 
     // If we want to use the _returnValue, push it
-    if (_function->pushReturn()) {
+    if (_pushReturn) {
         switch (typeToOpSize(_function->returnType())) {
             case OpSize::i8:  code.push_back(uint8_t(Op::PUSHR1)); break;
             case OpSize::i16: code.push_back(uint8_t(Op::PUSHR2)); break;
@@ -500,11 +500,14 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             // branch back to fixupNode
             AddrNativeType addr = std::static_pointer_cast<BranchNode>(_fixupNode)->fixupIndex();
             int16_t relAddr = int16_t(addr - AddrNativeType(code.size())) - 2;
+            assert(relAddr < 0);
             
-            if (relAddr < 250) {
+            if (relAddr >= -128) {
                 code.push_back(uint8_t(Op::BRA));
                 code.push_back(uint8_t(relAddr));
             } else {
+                // Need subtract 1 to account for size of long branch
+                relAddr -= 1;
                 code.push_back(uint8_t(Op::BRA) | 0x01);
                 code.push_back(uint8_t(relAddr >> 8));
                 code.push_back(uint8_t(relAddr));
