@@ -286,7 +286,7 @@ void Decompiler::emitSizeValue(uint8_t size)
 int32_t
 Decompiler::addrMode(Index& index)
 {
-    uint8_t mode = getUInt8();
+    int8_t mode = getUInt8();
     index = Index(mode & 0x03);
     int32_t v;
     
