@@ -25,7 +25,7 @@ StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+VarNode::emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
@@ -33,27 +33,41 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     Op op;
     Type t = isPointer() ? AddrType : _symbol->type();
 
-    // If isLHS is true, code generated will be a Ref
-    switch (typeToOpSize(t)) {
-        case OpSize::i8:  op = isLHS ? Op::PUSHREF1 : Op::PUSH1; break;
-        case OpSize::i16: op = isLHS ? Op::PUSHREF2 : Op::PUSH2; break;
-        case OpSize::i32:
-        case OpSize::flt: op = isLHS ? Op::PUSHREF4 : Op::PUSH4; break;
+    if (pop) {
+        // Generate POP optimization
+        switch (typeToOpSize(t)) {
+            case OpSize::i8:  op = Op::POP1; break;
+            case OpSize::i16: op = Op::POP2; break;
+            case OpSize::i32:
+            case OpSize::flt: op = Op::POP4; break;
+        }
+    } else {
+        // If ref is true, code generated will be a Ref
+        switch (typeToOpSize(t)) {
+            case OpSize::i8:  op = ref ? Op::PUSHREF1 : Op::PUSH1; break;
+            case OpSize::i16: op = ref ? Op::PUSHREF2 : Op::PUSH2; break;
+            case OpSize::i32:
+            case OpSize::flt: op = ref ? Op::PUSHREF4 : Op::PUSH4; break;
+        }
     }
     
     code.push_back(uint8_t(op));
     
+    // if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 15. If bit 2 is 1
+    // and bit 3 is 0, bits 7:4 are prepended to a following byte for a 12 bit
+    // address (-2048 to 2047). If bit 3 is 1 then if bit 4 is 0 the next 2 bytes
+    // is a signed address. If bit 4 is 1 then the next 4 bytes is a signed address.
     Index index;
-    int32_t value = _symbol->addr(index);
+    int32_t relAddr = _symbol->addr(index);
     uint8_t extra = uint8_t(index);
     uint8_t addedBytes = 0;
     
-    if (value >= -16 && value <= 15) {
-        extra |= uint8_t(value << 3);
-    } else if (value >= -128 && value <= 127) {
-        extra |= 0x4;
+    if (relAddr >= -16 && relAddr <= 15) {
+        extra |= uint8_t(relAddr << 3);
+    } else if (relAddr >= -2048 && relAddr <= 2047) {
+        extra |= uint8_t((relAddr & 0xf00) >> 4) | 0x04;
         addedBytes = 1;
-    } else if (value >= -32768 && value <= 32767) {
+    } else if (relAddr >= -32768 && relAddr <= 32767) {
         extra |= 0x0c;
         addedBytes = 2;
     } else {
@@ -63,14 +77,14 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     code.push_back(extra);
     if (addedBytes > 2) {
-        code.push_back(uint8_t(value >> 24));
-        code.push_back(uint8_t(value >> 16));
+        code.push_back(uint8_t(relAddr >> 24));
+        code.push_back(uint8_t(relAddr >> 16));
     }
     if (addedBytes > 1) {
-        code.push_back(uint8_t(value >> 8));
+        code.push_back(uint8_t(relAddr >> 8));
     }
     if (addedBytes > 0) {
-        code.push_back(uint8_t(value));
+        code.push_back(uint8_t(relAddr));
     }
 }
 
@@ -98,10 +112,26 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 
     assert(!isLHS);
     
-    uint8_t bytesInOperand;
-    uint8_t bytesPushed = typeToBytes(_type);
+    // Small floating point numbers is a common case. We currently
+    // push these as float constants, which takes 5 bytes. If we
+    // push them as small integers and cast, that's only 2 bytes.
+    bool isSmallFloat = false;
+    Type t = _type;
     
-    if (_type == Type::Float) {
+    if (_type == Type::Float && _f >= -8 && _f <= 7) {
+        int32_t i = int32_t(_f);
+        if (float(i) == _f) {
+            // It's an integer
+            isSmallFloat = true;
+            _i = i;
+            t = Type::Int8;
+        }
+    }
+    
+    uint8_t bytesInOperand;
+    uint8_t bytesPushed = typeToBytes(t);
+    
+    if (t == Type::Float) {
         bytesInOperand = 4;
     } else if (_i >= -8 && _i <= 7) {
         bytesInOperand = 0;
@@ -136,6 +166,11 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             case 1: code.push_back(_i);
             default: break;
         }
+    }
+    
+    if (isSmallFloat) {
+        // Cast it
+        code.push_back(uint8_t(castOp(Type::Int8, Type::Float)));
     }
 }
 
@@ -199,21 +234,37 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 
     // If op is not NOP this is operator assignment. Handle a += b like a = a + b
     //
-    // 1) pushref lhs
-    // 2) push lhs
-    // 3) push rhs
-    // 4) op
-    // 5) popderef
-    _left->emitCode(code, true, c);
-    
+    // 1) push lhs
+    // 2) push rhs
+    // 3) op
+    // 4) handle like normal assignment
+    //
+    // Otherwise push rhs
+    //
+    // Now TOS has the value. do a pushref of the lhs and then popderef
     if (_op != Op::NOP) {
         _left->emitCode(code, false, c);
     }
     
     _right->emitCode(code, false, c);
-
+    
     if (_op != Op::NOP) {
         code.push_back(uint8_t(_op) | typeToSizeBits(type()));
+    }
+
+    // If lhs is a VarNode, we can optimize to turn this:
+    //
+    //      PUSHREFx i,U
+    //      POPDEREFx
+    
+    // into:
+    //
+    //      POPx i,U
+    if (_left->astNodeType() == ASTNodeType::Var) {
+        std::reinterpret_pointer_cast<VarNode>(_left)->emitPopCode(code, c);
+        return;
+    } else {
+        _left->emitCode(code, true, c);
     }
     
     // If this is a pointer assignment, we need to use the pointer
@@ -266,6 +317,21 @@ ModuleNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
 }
 
+static void emitDrop(std::vector<uint8_t>& code, uint16_t argSize)
+{
+    if (argSize) {
+        if (argSize <= 16) {
+            code.push_back(uint8_t(Op::DROPS) | (argSize - 1));
+        } else {
+            code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
+            if (argSize > 256) {
+                code.push_back(argSize >> 8);
+            }
+            code.push_back(argSize);
+        }
+    }
+}
+
 void
 FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
@@ -282,17 +348,16 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // Add a function call. args will already be pushed
     int32_t addr = _function->addr();
     if (_function->isNative()) {
-        if (addr <= 15) {
-            code.push_back(uint8_t(Op::NCALLS) | addr);
+        // Add moduleId to addr
+        addr |= _moduleId << BitsPerFunctionId;
+        
+        if (addr <= 255) {
+            code.push_back(uint8_t(Op::NCALL));
+            code.push_back(addr);
         } else {
-            if (addr <= 255) {
-                code.push_back(uint8_t(Op::NCALL));
-                code.push_back(addr);
-            } else {
-                code.push_back(uint8_t(Op::NCALL) | 0x01);
-                code.push_back(addr >> 8);
-                code.push_back(addr);
-            }
+            code.push_back(uint8_t(Op::NCALL) | 0x01);
+            code.push_back(addr >> 8);
+            code.push_back(addr);
         }
     } else {
         code.push_back(uint8_t(Op::CALL));
@@ -307,15 +372,9 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     for (auto& it : _args) {
         argSize += it->sizeInBytes();
     }
-
-    if (argSize) {
-        code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
-        if (argSize > 256) {
-            code.push_back(argSize >> 8);
-        }
-        code.push_back(argSize);
-    }
     
+    emitDrop(code, argSize);
+
     // If we want to use the _returnValue, push it
     if (_function->pushReturn()) {
         switch (typeToOpSize(_function->returnType())) {
@@ -352,7 +411,10 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 
     _arg->emitCode(code, isLHS, c);
     
-    code.push_back(uint8_t(castOp(_arg->type(), _type)));
+    Op op = castOp(_arg->type(), _type);
+    if (op != Op::NOP) {
+        code.push_back(uint8_t(op));
+    }
 }
 
 ASTPtr
@@ -461,11 +523,10 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     _lhs->emitCode(code, true, c);
     
-    // ths must be uint16
-    _rhs = TypeCastNode::castIfNeeded(_rhs, Type::UInt16, _annotationIndex);
+    // index can be 8 or 16 bit. We know its a valid type because the caller checked it
     _rhs->emitCode(code, false, c);
 
-    code.push_back(uint8_t(Op::INDEX));
+    code.push_back(uint8_t((_rhs->type() == Type::Int8 || _rhs->type() == Type::UInt8) ? Op::INDEX1 : Op::INDEX2));
     
     // If the underlying type is struct, get that size
     uint8_t size;
@@ -508,13 +569,7 @@ ReturnNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 void
 DropNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
-    if (_bytesToDrop) {
-        code.push_back((_bytesToDrop > 255) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
-        if (_bytesToDrop > 255) {
-            code.push_back(_bytesToDrop >> 8);
-        }
-        code.push_back(_bytesToDrop);
-    }
+    emitDrop(code, _bytesToDrop);
 }
 
 void

@@ -132,8 +132,10 @@ Opcodes:
             10 - Y. Add signed value to Y to get EA
             11 - U. Add signed value to U to get EA
                         
-        if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 16. If bit 2 is 1
-        then bits 4:3 are the number of bytes that follow, from 1 (00) to 4 (11).
+        if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 15. If bit 2 is 1
+        and bit 3 is 0, bits 7:4 are prepended to a following byte for a 12 bit
+        address (-2048 to 2047). If bit 3 is 1 then if bit 4 is 0 the next 2 bytes
+        is a signed address. If bit 4 is 1 then the next 4 bytes is a signed address.
 
     - Immediate value
         PUSHK<width><size> pushes an immediate operand. <width> indicates the number
@@ -228,30 +230,34 @@ enum class Op: uint8_t {
     LNOT    = 0x0c,
     
     CALL    = 0x0d, // Absolute address of callee (16 bit)
-    INDEX   = 0x0e, // Stack has a ref and index. Operand is 8 bit element size in bytes, push new ref offset by index * operand
+    INDEX1  = 0x0e, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    INDEX2  = 0x0f, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
     
-    DEREF1  = 0x0f, // TOS has ref, pop it, load the value at that address and push it
-    DEREF2  = 0x10,
-    DEREF4  = 0x11,
-    POP1    = 0x12, // Next byte is addr mode, pop TOS and store at address
-    POP2    = 0x13,
-    POP4    = 0x14,
-    PUSHREF1= 0x15, // Next byte is addr mode. Data width is used when computing negative offsets from U
-    PUSHREF2= 0x16,
-    PUSHREF4= 0x17,
-    POPDEREF1=0x18, // TOS has value then addr. Store value at addr
-    POPDEREF2=0x19,
-    POPDEREF4=0x1a,
-    PUSH1   = 0x1b, // Next byte is addr mode, push value at addr
-    PUSH2   = 0x1c,
-    PUSH4   = 0x1d,
+    DEREF1  = 0x10, // TOS has ref, pop it, load the value at that address and push it
+    DEREF2  = 0x11,
+    DEREF4  = 0x12,
+    POP1    = 0x13, // Next byte is addr mode, pop TOS and store at address
+    POP2    = 0x14,
+    POP4    = 0x15,
+    PUSHREF1= 0x16, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    PUSHREF2= 0x17,
+    PUSHREF4= 0x18,
+    POPDEREF1=0x19, // a = popaddr, v = pop1, mem1[a] = v
+    POPDEREF2=0x1a, // a = popaddr, v = pop2, mem2[a] = v
+    POPDEREF4=0x1b, // a = popaddr, v = pop4, mem4[a] = v
+    PUSH1   = 0x1c, // Next byte is addr mode, push value at addr
+    PUSH2   = 0x1d,
+    PUSH4   = 0x1e,
 
-    DUP1    = 0x1e,
-    DUP2    = 0x1f,
-    DUP4    = 0x20,
-    SWAP1   = 0x21,
-    SWAP2   = 0x22,
-    SWAP4   = 0x23,
+    DUP1    = 0x1f,
+    DUP2    = 0x20,
+    DUP4    = 0x21,
+
+//
+//
+// Available opcodes 22 - 23
+//
+//
 
     PUSHR1  = 0x24, // Push _returnValue (1 byte)
     PUSHR2  = 0x25, // Push _returnValue (2 bytes)
@@ -344,7 +350,7 @@ enum class Op: uint8_t {
     PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
     PUSHKS2 = 0xc0, // lower 4 bits is value from -8 to 7, push 2 bytes
     PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
-    NCALLS  = 0xe0,
+    DROPS   = 0xe0, // lower 4 bits is bytes to drop from 1 to 16
     ENTERS  = 0xf0,
 };
 
@@ -588,37 +594,27 @@ enum class Operator : uint8_t {
     UMinus  = 0xe2,
 };
 
-// Native functions
+// Native Modules contain native functions that can be called
+// by the interpreter. Modules are numbered starting at 0. There
+// is a 'core' module always available as module 0. Others are
+// loaded with an 'import' statement and are numbered starting
+// at 1. The interpreter has a fixed array of modules which
+// contain a CallNative function to execute the code. A NCALL
+// opcode is used to incate the module function to call. The
+// opcode has am 8 or 16 bit operand which encodes which module
+// has the function and the id of the function.
 //
-// These are implemented in the ExecutionUnit and are recognized by the Compiler.
-// CallNative op has an operand which is the Native enum value. All params are
-// passed on the stack and must be the expected size and type. Return value is
-// sent back as an int32_t but can represent any type of value as defined in the
-// native function signature
-//
-// Functions:
-//
-//      void    print(string)       - prints the passed string to the console
-//      string  int8ToString(int8)  - return passed int8 value converted to string
+// The number of bits used for the module index and function id
+// as well as the max number of modules that can be loaded is
+// contained in constants below.
 
-enum class NativeId : uint8_t {
-    None            = 0,
-    PrintF          = 1,
-    MemSet          = 2,
-    RandomInt       = 3,
-    RandomFloat     = 4,
-    MinInt          = 5,
-    MaxInt          = 6,
-    MinFloat        = 7,
-    MaxFloat        = 8,
-    InitArgs        = 9,
-    ArgInt8         = 10,
-    ArgInt16        = 11,
-    ArgInt32        = 12,
-    ArgFloat        = 13,
-    Animate         = 14,
-    SetLight        = 15,
-};
+class InterpreterBase;
+
+using CallNative = void (*)(uint16_t id, InterpreterBase*);
+
+static constexpr uint8_t ModuleCountMax     = 10;
+static constexpr uint8_t BitsPerFunctionId  = 5;
+static constexpr uint8_t FunctionIdMask     = (1 << BitsPerFunctionId) - 1;
 
 #ifndef ARDUINO
 class ASTNode;

@@ -14,11 +14,11 @@
 
 using namespace lucid;
 
-Function::Function(const char* name, NativeId nativeId, Type returnType, const Symbols& locals)
+Function::Function(const char* name, uint16_t nativeId, Type returnType, const Symbols& locals)
     : _name(name)
     , _returnType(returnType)
     , _native(true)
-    , _addr(int32_t(nativeId))
+    , _addr(nativeId)
 {
     for (const auto& it : locals) {
         // FIXME: set addr

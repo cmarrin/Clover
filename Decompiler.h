@@ -53,18 +53,29 @@ private:
     
     void emitOp(const char* opString);
     void emitSizeValue(uint8_t size);
-    void emitIndexValue(uint8_t index);
     void emitRelAddr(uint8_t size);
     void emitNumber(int32_t number);
     void emitConstant(uint8_t bytes);
     void emitShortConstant(uint8_t value);
     
     void emitSize(uint8_t size) { emitSizeValue(size); }
-    void emitIndex(uint8_t index) { emitIndexValue(index); }
-    void emitSizeIndex(uint8_t size, uint8_t index) { emitSizeValue(size); emitIndexValue(index); }
+    void emitIndex();
     
     bool atEnd() { return (_in->end() - _it) <= 0; }
 
+    int32_t addrMode(Index& index);
+
+    int32_t getInt32()
+    {
+        if (_in->end() - _it < 2) {
+            _error = Error::PrematureEOF;
+            throw true;
+        }
+        
+        // Big endian
+        return (int32_t(getUInt16()) << 16) | int32_t(getUInt16());
+    }
+    
     int16_t getInt16()
     {
         if (_in->end() - _it < 2) {

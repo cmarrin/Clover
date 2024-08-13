@@ -12,11 +12,14 @@
 struct Test
 {
 
+uint8 errors;
+
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
     core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %i, got %i\n", exp, act);
+        errors++;
     } else {
         core.printf("     Pass\n");
     }
@@ -27,6 +30,7 @@ function showFloatResults(uint8 testNo, float exp, float act)
     core.printf("%10sTest %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %f, got %f\n", exp, act);
+        errors++;
     } else {
         core.printf("     Pass\n");
     }
@@ -34,6 +38,8 @@ function showFloatResults(uint8 testNo, float exp, float act)
 
 initialize()
 {
+    errors = 0;
+    
     core.printf("\nTest while, loop, break, continue\n");
 
     core.printf("\nTest Int while\n");
@@ -98,7 +104,12 @@ initialize()
     }
     showFloatResults(6, 50, f);
 
-    core.printf("\nDone\n\n");
+    core.printf("\nDone.%40s", " ");
+    if (errors) {
+        core.printf("FAILED\n\n");
+    } else {
+        core.printf("Passed\n\n");
+    }
 }
 
 };

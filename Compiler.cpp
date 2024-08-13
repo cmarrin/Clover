@@ -14,6 +14,8 @@
 #include <cmath>
 
 #include "AST.h"
+#include "NativeColor.h"
+#include "NativeCore.h"
 #include "OpInfo.h"
 
 using namespace lucid;
@@ -22,29 +24,12 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
                             const std::vector<Module*>& modules)
 {
     // Add built-in native modules
-    ModulePtr coreModule = std::make_shared<Module>("core");
-    coreModule->addNativeFunction("printf", NativeId::PrintF, Type::None, {{ "s", Type::String, true, 1, 1 }});
-    coreModule->addNativeFunction("memset", NativeId::MemSet, Type::None, {{ "p", Type::None, true, 1, 1 },
-                                                                           { "v", Type::UInt8, false, 1, 1 },
-                                                                           { "n", Type::UInt32, false, 1, 1 }});
-    coreModule->addNativeFunction("irand", NativeId::RandomInt, Type::Int32, {{ "min", Type::Int32, false, 1, 1 }, { "max", Type::Int32, false, 1, 1 }});
-    coreModule->addNativeFunction("frand", NativeId::RandomFloat, Type::Float, {{ "min", Type::Float, false, 1, 1 }, { "max", Type::Float, false, 1, 1 }});
-    coreModule->addNativeFunction("imin", NativeId::MinInt, Type::Int32, {{ "a", Type::Int32, false, 1, 1 }, { "b", Type::Int32, false, 1, 1 }});
-    coreModule->addNativeFunction("imax", NativeId::MaxInt, Type::Int32, {{ "a", Type::Int32, false, 1, 1 }, { "b", Type::Int32, false, 1, 1 }});
-    coreModule->addNativeFunction("fmin", NativeId::MinFloat, Type::Float, {{ "a", Type::Float, false, 1, 1 }, { "b", Type::Float, false, 1, 1 }});
-    coreModule->addNativeFunction("fmax", NativeId::MaxFloat, Type::Float, {{ "a", Type::Float, false, 1, 1 }, { "b", Type::Float, false, 1, 1 }});
-    coreModule->addNativeFunction("initArgs", NativeId::InitArgs, Type::None, { });
-    coreModule->addNativeFunction("argint8", NativeId::ArgInt8, Type::Int8, { });
-    coreModule->addNativeFunction("argint16", NativeId::ArgInt16, Type::Int16, { });
-    coreModule->addNativeFunction("argint32", NativeId::ArgInt32, Type::Int32, { });
-    coreModule->addNativeFunction("argFloat", NativeId::ArgFloat, Type::Float, { });
-    coreModule->addNativeFunction("animate", NativeId::Animate, Type::Int8, { });
-    coreModule->addNativeFunction("setLight", NativeId::SetLight, Type::None, {{ "i", Type::UInt8, false, 1, 1 },
-                                                                               { "h", Type::Float, false, 4, 1 },
-                                                                               { "s", Type::Float, false, 4, 1 },
-                                                                               { "v", Type::Float, false, 4, 1 }});
-
+    ModulePtr coreModule = NativeCore::createModule();
     _modules.push_back(coreModule);
+    
+    // FIXME: Modules other than core should be loaded somehow by 'import'
+    ModulePtr colorModule = NativeColor::createModule();
+    _modules.push_back(colorModule);
     
     program();
     
@@ -841,7 +826,8 @@ Compiler::expressionStatement()
 {
     ASTPtr node = expression();
     if (!node) {
-        return false;
+        // allow empty statement
+        return (match(Token::Semicolon));
     }
     
     expect(_inFunction, Error::InternalError);
@@ -883,7 +869,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         while (true) {
             OpInfo nextOpInfo;
-            if (!findOpInfo(Operator(_scanner.getToken()), nextOpInfo) || nextOpInfo.prec() < opInfo.prec()) {
+            if (!findOpInfo(Operator(_scanner.getToken()), nextOpInfo) || nextOpInfo.prec() <= opInfo.prec()) {
                 break;
             }
             
@@ -999,6 +985,9 @@ Compiler::postfixExpression()
             }
             
             // array index does a PUSHREF of the lhs, then a PUSH of the rhs and then an INDEX with element size as operand
+            // Index can be 8 or 16 bit only
+            expect(rhs->type() == Type::Int8  || rhs->type() == Type::UInt8 ||
+                   rhs->type() == Type::Int16 || rhs->type() == Type::UInt16, Error::WrongType);
             lhs = std::make_shared<IndexNode>(lhs, rhs, annotationIndex());
             expect(Token::CloseBracket);
         } else if (match(Token::Dot)) {
@@ -1007,9 +996,12 @@ Compiler::postfixExpression()
             
             // If lhs is a module, this has to be a function inside that module.
             if (lhs->astNodeType() == ASTNodeType::Module) {
-                FunctionPtr f = std::static_pointer_cast<ModuleNode>(lhs)->module()->findFunction(id);
+                uint8_t moduleId = std::static_pointer_cast<ModuleNode>(lhs)->id();
+                
+                expect(moduleId < _modules.size(), Error::InternalError);
+                FunctionPtr f = _modules[moduleId]->findFunction(id);
                 expect(f != nullptr, Error::UndefinedIdentifier);
-                lhs = std::make_shared<FunctionCallNode>(f, annotationIndex());
+                lhs = std::make_shared<FunctionCallNode>(f, moduleId, annotationIndex());
                 continue;
             }
             
@@ -1072,9 +1064,9 @@ Compiler::primaryExpression()
             }
         }
         
-        ModulePtr module = findModule(id);
-        if (module) {
-            return std::make_shared<ModuleNode>(module, annotationIndex());
+        int16_t moduleId = findModuleId(id);
+        if (moduleId >= 0) {
+            return std::make_shared<ModuleNode>(moduleId, annotationIndex());
         }
 
         expect(false, Error::ExpectedVar);
@@ -1162,9 +1154,12 @@ Compiler::argumentList(const ASTPtr& fun)
             expect(sym != nullptr, Error::InternalError);
             neededType = sym->type();
             
-            // If both the sym and arg are scalar then we can cast.
-            // Otherwise it's a type mismatch
-            if (sym->isPointer() || arg->isPointer()) {
+            // If the arg is a struct and we're expecting a pointer ref it
+            if (sym->isPointer() && isStruct(arg->type())) {
+                arg = std::make_shared<RefNode>(arg, annotationIndex());
+            } else if (sym->isPointer() || arg->isPointer()) {
+                // If both the sym and arg are scalar then we can cast.
+                // Otherwise it's a type mismatch
                 expect(sym->isPointer() && arg->isPointer(), Error::MismatchedType);
                 
                 // We have a special case. If the format arg is of Type::None it
@@ -1413,15 +1408,15 @@ Compiler::findSymbol(const std::string& s)
     return nullptr;
 }
 
-ModulePtr
-Compiler::findModule(const std::string& id)
+int16_t
+Compiler::findModuleId(const std::string& id)
 {
     auto it = find_if(_modules.begin(), _modules.end(),
                     [id](const ModulePtr& m) { return m->name() == id; });
     if (it != _modules.end()) {
-        return *it;
+        return it - _modules.begin();
     }
-    return nullptr;
+    return -1;
 }
 
 void

@@ -135,11 +135,21 @@ class VarNode : public ASTNode
 
     virtual bool isPointer() const override { return _symbol->isPointer(); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) override
+    {
+        emitCode(code, isLHS, false, c);
+    }
+    
+    void emitPopCode(std::vector<uint8_t>& code, Compiler* c)
+    {
+        emitCode(code, false, true, c);
+    }
 
     virtual bool valueLeftOnStack() const override { return true; }
 
   private:
+    void emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler*);
+    
     SymbolPtr _symbol = nullptr;
 };
 
@@ -371,22 +381,31 @@ class DotNode : public ASTNode
 class ModuleNode : public ASTNode
 {
   public:
-    ModuleNode(const ModulePtr& module, int32_t annotationIndex) : ASTNode(annotationIndex), _module(module) { }
+    ModuleNode(uint8_t id, int32_t annotationIndex) : ASTNode(annotationIndex), _id(id) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Module; }
     
-    const ModulePtr& module() const { return _module; }
+    uint8_t id() const { return _id; }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
   private:
-    ModulePtr _module;
+    uint8_t _id;
 };
 
 class FunctionCallNode : public ASTNode
 {
   public:
-    FunctionCallNode(FunctionPtr func, int32_t annotationIndex) : ASTNode(annotationIndex), _function(func) { }
+    FunctionCallNode(FunctionPtr func, int32_t annotationIndex)
+        : ASTNode(annotationIndex)
+        , _function(func)
+    { }
+    
+    FunctionCallNode(FunctionPtr func, uint8_t moduleId, int32_t annotationIndex)
+        : ASTNode(annotationIndex)
+        , _moduleId(moduleId)
+        , _function(func)
+    { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::FunctionCall; }
     
@@ -417,6 +436,7 @@ class FunctionCallNode : public ASTNode
     
   private:
     FunctionPtr _function;
+    uint8_t _moduleId = 0;
     ASTNodeList _args;
 
 };
@@ -475,6 +495,13 @@ class IndexNode : public ASTNode
     virtual Type type() const override { return _lhs->type(); }
 
     virtual bool isAssignable() const override { return true; }
+
+    virtual bool isPointer() const override
+    {
+        // The underlying type of the array is what determines whether or not it's a
+        // pointer. If it's a pointer type or a struct it is, otherwise it's not
+        return _lhs->isPointer();
+    }
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
     

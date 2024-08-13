@@ -10,6 +10,8 @@
 #include "Interpreter.h"
 
 #include "Formatter.h"
+#include "NativeColor.h"
+#include "NativeCore.h"
 
 using namespace lucid;
 
@@ -17,24 +19,33 @@ InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
     : _memMgr(mem, memSize)
     , _topLevelArgs(&_memMgr)
 {
+    // Init module list
+    memset(_modules, 0, sizeof(CallNative) * ModuleCountMax);
+    
+    // Install core
+    _modules[0] = NativeCore::callNative;
+    
+    // FIXME: For now install NativeColor
+    _modules[1] = NativeColor::callNative;
+    
     // Check signature
     if (getUInt8ROM(0) != 'l' || getUInt8ROM(1) != 'u' || getUInt8ROM(2) != 'c' || getUInt8ROM(3) != 'd') {
         _error = Error::InvalidSignature;
         return;
     }
     
-    AddrNativeType entryPoint = 0;
-    entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
-    entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
-    entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
-    entryPoint |= uint32_t(getUInt8ROM(7));
+    _entryPoint = 0;
+    _entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
+    _entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
+    _entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
+    _entryPoint |= uint32_t(getUInt8ROM(7));
     
-    if (entryPoint == 0) {
+    if (_entryPoint == 0) {
         _error = Error::NoEntryPoint;
         return;
     }
 
-    _pc = entryPoint;
+    _pc = _entryPoint;
         
     uint32_t topLevelStructSize = 0;
     topLevelStructSize |= uint32_t(getUInt8ROM(8)) << 24;
@@ -60,126 +71,29 @@ InterpreterBase::addArg(float v)
 }
 
 void
-InterpreterBase::callNative(NativeId id)
+InterpreterBase::dropArgs(uint32_t bytes)
+{
+    _memMgr.stack().drop(bytes);
+}
+
+void
+InterpreterBase::callNative(uint16_t id)
 {
     // Add a dummy return address to make everything work
     _memMgr.stack().push(0, AddrOpSize);
     
     // Set the frame
     _memMgr.setFrame(0);
-    
-    switch (id) {
-        default: _error = Error::None; break;
-        case NativeId::PrintF: {
-            VarArg va(&_memMgr, 0, Type::String);
-            AddrNativeType fmt = _memMgr.getLocal(0, AddrType);
-            fmt::Formatter::format(fmt, va);
-            break;
-        }
-        case NativeId::RandomInt: {
-            int32_t a = _memMgr.getLocal(0, Type::Int32);
-            int32_t b = _memMgr.getLocal(4, Type::Int32);
-            _returnValue = random(a, b);
-            break;
-        }
-        case NativeId::RandomFloat: {
-            float a = intToFloat(_memMgr.getLocal(0, Type::Float));
-            float b = intToFloat(_memMgr.getLocal(4, Type::Float));
-            _returnValue = floatToInt(float(random(int32_t(a * 1000), int32_t(b * 1000))) / 1000);
-            break;
-        }
-        case NativeId::MemSet: {
-            AddrNativeType addr = _memMgr.getLocal(0, AddrType);
-            uint8_t v = _memMgr.getLocal(AddrSize, Type::UInt8);
-            uint32_t n = _memMgr.getLocal(AddrSize + 1, Type::UInt32);
-            if (n == 0) {
-                break;
-            }
-            while (n--) {
-                _memMgr.setAbs(addr++, v, OpSize::i8);
-            }
-            break;
-        }
-        case NativeId::MinInt: {
-            int32_t a = _memMgr.getLocal(0, Type::Int32);
-            int32_t b = _memMgr.getLocal(4, Type::Int32);
-            
-            _returnValue = (a < b) ? a : b;
-            break;
-        }
-        case NativeId::MaxInt: {
-            int32_t a = _memMgr.getLocal(0, Type::Int32);
-            int32_t b = _memMgr.getLocal(4, Type::Int32);
-            
-            _returnValue = (a > b) ? a : b;
-            break;
-        }
-        case NativeId::MinFloat: {
-            float a = intToFloat(_memMgr.getLocal(0, Type::Float));
-            float b = intToFloat(_memMgr.getLocal(4, Type::Float));
-            _returnValue = floatToInt((a < b) ? a : b);
-            break;
-        }
-        case NativeId::MaxFloat: {
-            float a = intToFloat(_memMgr.getLocal(0, Type::Float));
-            float b = intToFloat(_memMgr.getLocal(4, Type::Float));
-            _returnValue = floatToInt((a > b) ? a : b);
-            break;
-        }
-        case NativeId::InitArgs:
-            _topLevelArgs.reset();
-            break;
-        case NativeId::ArgInt8:
-            _returnValue = _topLevelArgs.arg(Type::Int8);
-            break;
-        case NativeId::ArgInt16:
-            _returnValue = _topLevelArgs.arg(Type::Int16);
-            break;
-        case NativeId::ArgInt32:
-            _returnValue = _topLevelArgs.arg(Type::Int32);
-            break;
-        case NativeId::ArgFloat:
-            _returnValue = _topLevelArgs.arg(Type::Float);
-            break;
-        case NativeId::Animate: {
-            // Passes in a pointer to a struct with cur, inc, min and max
-            // values, all floats. Perform one animation iteration of cur
-            // by adding inc to it. When it hits min or max, negate inc
-            // to go the other direction next time. Return -1 if we just
-            // finished going down, or 1 if we just finished going up.
-            // Otherwise return 0.
-            float cur, inc, min, max;
-            AddrNativeType addr = _memMgr.getLocal(0, AddrType);
-            cur = intToFloat(_memMgr.getAbs(addr, OpSize::flt));
-            inc = intToFloat(_memMgr.getAbs(addr + 4, OpSize::flt));
-            min = intToFloat(_memMgr.getAbs(addr + 8, OpSize::flt));
-            max = intToFloat(_memMgr.getAbs(addr + 12, OpSize::flt));
 
-            cur += inc;
-            _memMgr.setAbs(addr, floatToInt(cur), OpSize::flt);
-            _returnValue = 0;
-
-            if (0 < inc) {
-                if (cur >= max) {
-                    cur = max;
-                    inc = -inc;
-                    _memMgr.setAbs(addr, floatToInt(cur), OpSize::flt);
-                    _memMgr.setAbs(addr + 4, floatToInt(inc), OpSize::flt);
-                    _returnValue = 1;
-                }
-            } else {
-                if (cur <= min) {
-                    cur = min;
-                    inc = -inc;
-                    _memMgr.setAbs(addr, floatToInt(cur), OpSize::flt);
-                    _memMgr.setAbs(addr + 4, floatToInt(inc), OpSize::flt);
-                    _returnValue = -1;
-                }
-            }
-            break;
+    uint8_t moduleId = id >> BitsPerFunctionId;
+    uint8_t functionId = id & FunctionIdMask;
+    if (moduleId < ModuleCountMax) {
+        CallNative call = _modules[moduleId];
+        if (call) {
+            call(functionId, this);
         }
     }
-
+    
     // Restore the frame and pop the dummy return address
     _memMgr.restoreFrame();
     _memMgr.stack().pop(AddrOpSize);
@@ -211,8 +125,12 @@ InterpreterBase::typeCast(Type from, Type to)
 }
 
 int32_t
-InterpreterBase::execute()
+InterpreterBase::execute(ExecMode mode)
 {
+    if (mode == ExecMode::Start) {
+        _pc = _entryPoint;
+    }
+    
     // Push a dummy return address
     _memMgr.stack().push(0, AddrOpSize);
     
@@ -312,36 +230,46 @@ InterpreterBase::execute()
             case Op::PUSHR4:
                 _memMgr.stack().push(_returnValue, OpSize::i32);
                 break;
-            case Op::POP1:
-                break;
-            case Op::POP2:
-                break;
-            case Op::POP4:
-                break;
-            case Op::POPDEREF1: {
+            case Op::POP1: {
                 uint32_t v = _memMgr.stack().pop(OpSize::i8);
+                _memMgr.setAbs(ea(OpSize::i8), v, OpSize::i8);
+                break;
+            }
+            case Op::POP2: {
+                uint32_t v = _memMgr.stack().pop(OpSize::i16);
+                _memMgr.setAbs(ea(OpSize::i16), v, OpSize::i16);
+                break;
+            }
+            case Op::POP4: {
+                uint32_t v = _memMgr.stack().pop(OpSize::i32);
+                _memMgr.setAbs(ea(OpSize::i32), v, OpSize::i32);
+                break;
+            }
+            case Op::POPDEREF1: {
                 uint32_t a = _memMgr.stack().pop(AddrOpSize);
+                uint32_t v = _memMgr.stack().pop(OpSize::i8);
                 _memMgr.setAbs(a, v, OpSize::i8);
                 break;
             }
             case Op::POPDEREF2: {
-                uint32_t v = _memMgr.stack().pop(OpSize::i16);
                 uint32_t a = _memMgr.stack().pop(AddrOpSize);
+                uint32_t v = _memMgr.stack().pop(OpSize::i16);
                 _memMgr.setAbs(a, v, OpSize::i16);
                 break;
             }
             case Op::POPDEREF4: {
-                uint32_t v = _memMgr.stack().pop(OpSize::i32);
                 uint32_t a = _memMgr.stack().pop(AddrOpSize);
+                uint32_t v = _memMgr.stack().pop(OpSize::i32);
                 _memMgr.setAbs(a, v, OpSize::i32);
                 break;
             }
             case Op::PUSH1: _memMgr.stack().push(value(OpSize::i8), OpSize::i8); break;
             case Op::PUSH2: _memMgr.stack().push(value(OpSize::i16), OpSize::i16); break;
             case Op::PUSH4: _memMgr.stack().push(value(OpSize::i32), OpSize::i32); break;
-            case Op::INDEX: {
+            case Op::INDEX1:
+            case Op::INDEX2: {
                 uint8_t elementSize = getUOpnd(OpSize::i8);
-                uint32_t index = _memMgr.stack().pop(OpSize::i16);
+                uint32_t index = _memMgr.stack().pop((opcode == Op::INDEX1) ? OpSize::i8 : OpSize::i16);
                 AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
                 addr += index * elementSize;
                 _memMgr.stack().push(addr, AddrOpSize);
@@ -377,9 +305,6 @@ InterpreterBase::execute()
             case Op::DUP1    : _memMgr.stack().dup(OpSize::i8); break;
             case Op::DUP2    : _memMgr.stack().dup(OpSize::i16); break;
             case Op::DUP4    : _memMgr.stack().dup(OpSize::i32); break;
-            case Op::SWAP1   : _memMgr.stack().swap(OpSize::i8); break;
-            case Op::SWAP2   : _memMgr.stack().swap(OpSize::i16); break;
-            case Op::SWAP4   : _memMgr.stack().swap(OpSize::i32); break;
             case Op::ADD:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
@@ -532,14 +457,14 @@ InterpreterBase::execute()
                 _memMgr.stack().push(_pc, AddrOpSize);
                 _pc = right;
                 break;
+            case Op::DROPS   : _memMgr.stack().drop(operand + 1); break;
             case Op::DROP1   : left = getUOpnd(OpSize::i8); _memMgr.stack().drop(left); break;
             case Op::DROP2   : left = getUOpnd(OpSize::i16); _memMgr.stack().drop(left); break;
 
             case Op::ENTER   : operand = getUOpnd(opSize);
             case Op::ENTERS  : _memMgr.setFrame(operand); break;
             
-            case Op::NCALL   : operand = getUOpnd(OpSize::i16);
-            case Op::NCALLS  : callNative(NativeId(operand)); break;
+            case Op::NCALL   : callNative(getUOpnd(opSize)); break;
             
             case Op::PUSHK11 : left = getIOpnd(OpSize::i8); _memMgr.stack().push(left, OpSize::i8); break;
             case Op::PUSHK12 : left = getIOpnd(OpSize::i8); _memMgr.stack().push(left, OpSize::i16); break;
