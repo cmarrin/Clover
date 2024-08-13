@@ -1154,7 +1154,7 @@ Compiler::argumentList(const ASTPtr& fun)
             neededType = sym->type();
             
             // If the arg is a struct and we're expecting a pointer ref it
-            if (sym->isPointer() && isStruct(arg->type())) {
+            if (sym->isPointer() && isStruct(arg->type()) && !arg->isPointer()) {
                 arg = std::make_shared<RefNode>(arg, annotationIndex());
             } else if (sym->isPointer() || arg->isPointer()) {
                 // If both the sym and arg are scalar then we can cast.
