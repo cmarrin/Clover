@@ -471,7 +471,7 @@ class BranchNode : public ASTNode
 {
   public:
     enum class Kind { IfStart, ElseStart, IfEnd, LoopStart, LoopNext, LoopEnd, Break, Continue };
-    enum class Size { None, Short, Byte, Long };
+    enum class BranchSize { Unknown, Short, Long };
     
     BranchNode(Kind k, int32_t annotationIndex) : ASTNode(annotationIndex), _kind(k) { }
 
@@ -482,7 +482,7 @@ class BranchNode : public ASTNode
     void setFixupNode(const ASTPtr& f) { _fixupNode = f; }
     
     // Address of where this node should branch to
-    void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
+    void fixup(std::vector<uint8_t>& code, AddrNativeType addr, Compiler* c);
     
     AddrNativeType fixupIndex() const { return _fixupIndex; }
     
@@ -490,7 +490,7 @@ class BranchNode : public ASTNode
     
   private:
     Kind _kind;
-    Size _size = Size::Long;
+    BranchSize _branchSize = BranchSize::Unknown;
     ASTPtr _fixupNode;
     AddrNativeType _fixupIndex = 0;
 };
