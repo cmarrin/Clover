@@ -18,14 +18,11 @@
 static uint32_t gamma(uint32_t rgb) { return Adafruit_NeoPixel::gamma32(rgb); }
 #else
 static uint32_t gamma(uint32_t rgb) { return rgb; }
-static void setLight(uint8_t i, uint32_t rgb)
-{
-    printf("    setLight[%d] <== 0x%08x\n", i, rgb);
-}
 #endif
 
 using namespace lucid;
 
+#ifndef ARDUINO
 ModulePtr
 NativeColor::createModule()
 {
@@ -34,6 +31,7 @@ NativeColor::createModule()
     module->addNativeFunction("setLight", uint16_t(Id::SetLight), Type::None, {{ "i", Type::UInt8, false, 1, 1 }, { "c", Type::None, true, 1, 1 }});
     return module;
 }
+#endif
 
 void
 NativeColor::callNative(uint16_t id, InterpreterBase* interp)
@@ -59,7 +57,7 @@ NativeColor::callNative(uint16_t id, InterpreterBase* interp)
             float fs = intToFloat(interp->memMgr()->getAbs(addr + 4, OpSize::flt));
             float fv = intToFloat(interp->memMgr()->getAbs(addr + 8, OpSize::flt));
             
-            setLight(i, hsvToRGB(fh, fs, fv));
+            interp->setLight(i, hsvToRGB(fh, fs, fv));
             break;
         }
     }

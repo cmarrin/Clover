@@ -13,13 +13,20 @@
 
 #pragma once
 
+#ifndef ARDUINO
 #include "Module.h"
+#endif
+
+#include <stdint.h>
 
 namespace lucid {
 
 class InterpreterBase;
 
-class NativeColor : public Module
+class NativeColor
+#ifndef ARDUINO
+    : public Module
+#endif
 {
 public:
     enum class Id {
@@ -28,12 +35,14 @@ public:
     };
     
     NativeColor()
+#ifndef ARDUINO
         : Module("clr")
+#endif
     { }
-    
-    virtual ~NativeColor() { }
 
+#ifndef ARDUINO
     static ModulePtr createModule();
+#endif
 
     static void callNative(uint16_t id, InterpreterBase* interp);
     

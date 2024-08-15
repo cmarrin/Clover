@@ -23,6 +23,11 @@ static constexpr uint32_t StackSize = 2048;
 
 class MyInterpreter : public lucid::Interpreter<StackSize>
 {
+  public:
+    virtual void setLight(uint8_t i, uint32_t rgb) override
+    {
+        printf("    setLight[%d] <== 0x%08x\n", i, rgb);
+    }
 };
 
 static void showError(lucid::Error error, lucid::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
@@ -261,6 +266,8 @@ int main(int argc, char * const argv[])
             lucid::ROMBase = &(executable[0]);
             
             MyInterpreter interp;
+            
+            interp.init();
             
             if (interp.error() == lucid::InterpreterBase::Error::None) {
                 int32_t result = 0;

@@ -26,16 +26,23 @@
 
 #pragma once
 
+#ifndef ARDUINO
 #include "Module.h"
+#endif
+
+#include <stdint.h>
 
 namespace lucid {
 
 class InterpreterBase;
 
-class NativeCore : public Module
+class NativeCore
+#ifndef ARDUINO
+    : public Module
+#endif
 {
   public:
-    enum class Id : uint8_t {
+    enum class Id {
         None            = 0,
         PrintF          = 1,
         MemSet          = 2,
@@ -53,11 +60,18 @@ class NativeCore : public Module
         Animate         = 14,
     };
     
-    NativeCore() : Module("core") { }
+    NativeCore()
+#ifndef ARDUINO
+        : Module("core")
+#endif
+    { }
+    
+#ifndef ARDUINO
+    static ModulePtr createModule();
+#endif
 
     static void callNative(uint16_t id, InterpreterBase* interp);
 
-    static ModulePtr createModule();
 
   private:
 };

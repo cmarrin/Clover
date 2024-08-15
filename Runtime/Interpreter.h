@@ -44,6 +44,12 @@ class InterpreterBase
 
     InterpreterBase(uint8_t* mem, uint32_t memSize);
     
+    virtual ~InterpreterBase() { }
+    
+    void init();
+
+    virtual void setLight(uint8_t i, uint32_t rgb) = 0;
+
     enum class ExecMode : uint8_t { Start, Continue };
     int32_t execute(ExecMode);
 
@@ -56,6 +62,12 @@ class InterpreterBase
     void setReturnValue(uint32_t v) { _returnValue = v; }
     
   protected:
+    bool isNextOpcodeSetFrame() const
+    {
+        uint8_t op = getUInt8ROM(_pc);
+        return (Op(op & 0xfe) == Op::ENTER) || (Op(op & 0xf0) == Op::ENTERS);
+    }
+    
     void callNative(uint16_t);
     
     // TOS has from type value, type cast and push to type
@@ -148,14 +160,14 @@ class InterpreterBase
     uint32_t _returnValue;
     
     VarArg _topLevelArgs;
-    AddrNativeType _entryPoint;
+    AddrNativeType _entryPoint = 0;
 };
 
 template <uint32_t memSize> class Interpreter : public InterpreterBase
 {
 public:
     Interpreter() : InterpreterBase(_mem, memSize) { }
-
+    
     int32_t interp(ExecMode mode)
     {
         return execute(mode);
@@ -187,12 +199,6 @@ private:
     uint16_t getId(uint8_t i)
     {
         return uint16_t(getUInt8ROM(_pc++)) | (uint16_t(i) << 8);
-    }
-    
-    bool isNextOpcodeSetFrame() const
-    {
-        uint8_t op = getUInt8ROM(_pc);
-        return (Op(op & 0xfe) == Op::ENTER) || (Op(op & 0xf0) == Op::ENTERS);
     }
     
     uint8_t _mem[memSize];

@@ -18,6 +18,10 @@ using namespace lucid;
 InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
     : _memMgr(mem, memSize)
     , _topLevelArgs(&_memMgr)
+{ }
+
+void
+InterpreterBase::init()
 {
     // Init module list
     memset(_modules, 0, sizeof(CallNative) * ModuleCountMax);
@@ -129,6 +133,10 @@ InterpreterBase::execute(ExecMode mode)
 {
     if (mode == ExecMode::Start) {
         _pc = _entryPoint;
+        if (!isNextOpcodeSetFrame()) {
+            _error = Error::NoEntryPoint;
+            return -1;
+        }
     }
     
     // Push a dummy return address
