@@ -449,7 +449,7 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
 }
 
 void
-BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr, Compiler* c)
+BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 {
     int16_t rel = addr - _fixupIndex - 2;
 
@@ -460,7 +460,6 @@ BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr, Compiler* c)
     if (_branchSize != BranchSize::Short) {
         if (shortRel >= -128 && shortRel <= 127) {
             _branchSize = BranchSize::Short;
-            c->setModifiedBranchSize();
         }
         code[_fixupIndex] = rel >> 8;
         code[_fixupIndex + 1] = rel;
@@ -507,7 +506,7 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         case Kind::IfEnd:
             // Fixup branch
             if (_fixupNode != nullptr) {
-                std::static_pointer_cast<BranchNode>(_fixupNode)->fixup(code, AddrNativeType(code.size()), c);
+                std::static_pointer_cast<BranchNode>(_fixupNode)->fixup(code, AddrNativeType(code.size()));
             }
             break;
         case Kind::LoopStart:

@@ -482,7 +482,7 @@ class BranchNode : public ASTNode
     void setFixupNode(const ASTPtr& f) { _fixupNode = f; }
     
     // Address of where this node should branch to
-    void fixup(std::vector<uint8_t>& code, AddrNativeType addr, Compiler* c);
+    void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
     
     AddrNativeType fixupIndex() const { return _fixupIndex; }
     

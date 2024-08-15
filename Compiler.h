@@ -283,8 +283,6 @@ public:
     
     void setAnnotation(int32_t index, uint32_t addr) { _scanner.setAnnotation(index, addr); }
 
-    void setModifiedBranchSize() { _modifiedBranchSize = true; }
-    
 protected:
     bool statement();
     bool function();
@@ -412,8 +410,6 @@ private:
 
     uint16_t _nextMem = 0; // next available location in mem
     uint16_t _localHighWaterMark = 0;
-    
-    bool _modifiedBranchSize = false;
 };
 
 }
