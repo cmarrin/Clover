@@ -62,8 +62,8 @@
 		4914A49C2C4DD665003DDADA /* TestExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestExpr.lucid; path = ../Test/TestExpr.lucid; sourceTree = "<group>"; };
 		491886F42C5EDAE70053F2C0 /* Lucid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Lucid.h; path = ../Runtime/Lucid.h; sourceTree = "<group>"; };
 		492BB6302C6E58C20022D290 /* PostLightEffects.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PostLightEffects.h; path = ../PostLightEffects/PostLightEffects.h; sourceTree = "<group>"; };
-		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; lastKnownFileType = text; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
-		492BB6322C6E58C20022D290 /* PostLightEffects.lucid */ = {isa = PBXFileReference; lastKnownFileType = text; name = PostLightEffects.lucid; path = ../PostLightEffects/PostLightEffects.lucid; sourceTree = "<group>"; };
+		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
+		492BB6322C6E58C20022D290 /* PostLightEffects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.lucid; path = ../PostLightEffects/PostLightEffects.lucid; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
 		4941A1012BBA1D2800CE3C9E /* Flicker.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.lucid; path = ../examples/Flicker.lucid; sourceTree = "<group>"; };

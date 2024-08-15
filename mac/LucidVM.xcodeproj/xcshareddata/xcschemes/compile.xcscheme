@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1540"
-   version = "1.7">
+   version = "1.8">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -28,6 +28,8 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
+      <Testables>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -57,8 +59,8 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -a -l -h examples/PostLightEffects.lucid"
-            isEnabled = "NO">
+            argument = "-d -a -l -h PostLightEffects/PostLightEffects.lucid"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestCore.lucid"
@@ -90,7 +92,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-h -t Test/TestCore.lucid Test/TestExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestPtrStruct.lucid"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>
