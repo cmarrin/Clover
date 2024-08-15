@@ -117,13 +117,13 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // push them as small integers and cast, that's only 2 bytes.
     bool isSmallFloat = false;
     Type t = _type;
+    int32_t i = _i;
     
     if (_type == Type::Float && _f >= -8 && _f <= 7) {
-        int32_t i = int32_t(_f);
+        i = int32_t(_f);
         if (float(i) == _f) {
             // It's an integer
             isSmallFloat = true;
-            _i = i;
             t = Type::Int8;
         }
     }
@@ -133,11 +133,11 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     if (t == Type::Float) {
         bytesInOperand = 4;
-    } else if (_i >= -8 && _i <= 7) {
+    } else if (i >= -8 && i <= 7) {
         bytesInOperand = 0;
-    } else if (_i >= -128 && _i <= 127) {
+    } else if (i >= -128 && i <= 127) {
         bytesInOperand = 1;
-    } else if (_i >= -32768 && _i <= 32767) {
+    } else if (i >= -32768 && i <= 32767) {
         bytesInOperand = 2;
     } else {
         bytesInOperand = 4;
@@ -156,14 +156,14 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     if (bytesInOperand == 0) {
-        code.push_back(uint8_t(op) | _i);
+        code.push_back(uint8_t(op) | i);
     } else {
         code.push_back(uint8_t(op));
         switch(bytesInOperand) {
-            case 4: code.push_back(_i >> 24);
-                    code.push_back(_i >> 16);
-            case 2: code.push_back(_i >> 8);
-            case 1: code.push_back(_i);
+            case 4: code.push_back(i >> 24);
+                    code.push_back(i >> 16);
+            case 2: code.push_back(i >> 8);
+            case 1: code.push_back(i);
             default: break;
         }
     }
