@@ -61,6 +61,9 @@
 		4914A49A2C4DD665003DDADA /* TestFunction.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.lucid; path = ../Test/TestFunction.lucid; sourceTree = "<group>"; };
 		4914A49C2C4DD665003DDADA /* TestExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestExpr.lucid; path = ../Test/TestExpr.lucid; sourceTree = "<group>"; };
 		491886F42C5EDAE70053F2C0 /* Lucid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Lucid.h; path = ../Runtime/Lucid.h; sourceTree = "<group>"; };
+		492BB6302C6E58C20022D290 /* PostLightEffects.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PostLightEffects.h; path = ../PostLightEffects/PostLightEffects.h; sourceTree = "<group>"; };
+		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; lastKnownFileType = text; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
+		492BB6322C6E58C20022D290 /* PostLightEffects.lucid */ = {isa = PBXFileReference; lastKnownFileType = text; name = PostLightEffects.lucid; path = ../PostLightEffects/PostLightEffects.lucid; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
 		4941A1012BBA1D2800CE3C9E /* Flicker.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.lucid; path = ../examples/Flicker.lucid; sourceTree = "<group>"; };
@@ -87,7 +90,6 @@
 		49C469C62C6A769E00588838 /* NativeColor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeColor.h; path = ../Runtime/NativeColor.h; sourceTree = "<group>"; };
 		49C469C72C6A83B100588838 /* NativeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeCore.h; path = ../Runtime/NativeCore.h; sourceTree = "<group>"; };
 		49C469C82C6A83B100588838 /* NativeCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCore.cpp; path = ../Runtime/NativeCore.cpp; sourceTree = "<group>"; };
-		49DF25DD2C65A14700CD7D55 /* PostLightEffects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.lucid; path = ../examples/PostLightEffects.lucid; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -185,7 +187,9 @@
 		4941A1002BBA1CF300CE3C9E /* examples */ = {
 			isa = PBXGroup;
 			children = (
-				49DF25DD2C65A14700CD7D55 /* PostLightEffects.lucid */,
+				492BB6302C6E58C20022D290 /* PostLightEffects.h */,
+				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
+				492BB6322C6E58C20022D290 /* PostLightEffects.lucid */,
 				4941A1012BBA1D2800CE3C9E /* Flicker.lucid */,
 				4941A1172BBB0B1200CE3C9E /* Effects.lucid */,
 				49C164A42C025CD500981AD1 /* simple.lucid */,

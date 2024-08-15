@@ -4,3 +4,4 @@ UserInterfaceState.xcuserstate
 xcschememanagement.plist
 mac/LucidVM.xcodeproj/xcuserdata/cmarrin.xcuserdatad
 PostLightEffects/*.h
+Test/*.h
