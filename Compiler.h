@@ -363,17 +363,6 @@ private:
         }
     }
     
-    struct Def
-    {
-        Def() { }
-        Def(std::string name, uint8_t value)
-            : _name(name)
-            , _value(value)
-        { }
-        std::string _name;
-        uint8_t _value;
-    };
-    
     FunctionPtr currentFunction()
     {
         expect(_inFunction && _currentFunction, Error::InternalError);

@@ -33,57 +33,62 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     
     program();
     
-    if (_error == Error::None && executable.size() > maxExecutableSize) {
-        _error = Error::ExecutableTooBig;
-    }
-    
     if (_error != Error::None) {
         return false;
     }
     
-    // Do second pass
-    // Write signature
-    executable.push_back('l');
-    executable.push_back('u');
-    executable.push_back('c');
-    executable.push_back('d');
-
-    // Write dummy entry point address, to be filled in later
-    executable.push_back(0);
-    executable.push_back(0);
-    executable.push_back(0);
-    executable.push_back(0);
+    // Do 2 pass code generation. On the first pass we don't know
+    // how long most of the branch instructions need to be so
+    // we make them long. But as we fill in the jump addresses
+    // we remember which branches can be short and  then go back
+    // for a second pass to shorten them.
     
-    // Write top level struct size, to be filled in later
-    int32_t topLevelSize = _structs[0]->size();
-    appendValue(executable, topLevelSize, Type::UInt32);
-    
-    // Write constant size and then constants
-    appendValue(executable, uint16_t(_constants.size()), Type::UInt16);
-    for (auto it : _constants) {
-        executable.push_back(it);
-    }
-    
-    for (auto& itStruct : _structs) {
-        itStruct->astNode()->emitCode(executable, false, this);
+    for (int i = 0; i < 2; i ++) {
+        executable.clear();
         
-        for (auto& itFunc : itStruct->functions()) {
-            // If this is the initialize function of the top level
-            // struct, set the entry point
-            if (itStruct == _structs[0] && itFunc->name() == "") {
-                uint32_t cur = uint32_t(executable.size());
-                executable.at(4) = cur >> 24;
-                executable.at(5) = cur >> 16;
-                executable.at(6) = cur >> 8;
-                executable.at(7) = cur;
-            }
+        // Write signature
+        executable.push_back('l');
+        executable.push_back('u');
+        executable.push_back('c');
+        executable.push_back('d');
+
+        // Write dummy entry point address, to be filled in later
+        executable.push_back(0);
+        executable.push_back(0);
+        executable.push_back(0);
+        executable.push_back(0);
+        
+        // Write top level struct size, to be filled in later
+        int32_t topLevelSize = _structs[0]->size();
+        appendValue(executable, topLevelSize, Type::UInt32);
+        
+        // Write constant size and then constants
+        appendValue(executable, uint16_t(_constants.size()), Type::UInt16);
+        for (auto it : _constants) {
+            executable.push_back(it);
+        }
+        
+        for (auto& itStruct : _structs) {
+            itStruct->astNode()->emitCode(executable, false, this);
             
-            // Set addr of this function
-            itFunc->setAddr(AddrNativeType(executable.size()));
-            itFunc->astNode()->emitCode(executable, false, this);
+            for (auto& itFunc : itStruct->functions()) {
+                // If this is the initialize function of the top level
+                // struct, set the entry point
+                if (itStruct == _structs[0] && itFunc->name() == "") {
+                    uint32_t cur = uint32_t(executable.size());
+                    executable.at(4) = cur >> 24;
+                    executable.at(5) = cur >> 16;
+                    executable.at(6) = cur >> 8;
+                    executable.at(7) = cur;
+                }
+                
+                // Set addr of this function
+                itFunc->setAddr(AddrNativeType(executable.size()));
+                itFunc->astNode()->emitCode(executable, false, this);
+            }
         }
     }
-
+    
     return _error == Error::None;
 }
 bool

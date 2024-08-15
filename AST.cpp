@@ -117,14 +117,16 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // push them as small integers and cast, that's only 2 bytes.
     bool isSmallFloat = false;
     Type t = _type;
+    int32_t i = _i;
     
     if (_type == Type::Float && _f >= -8 && _f <= 7) {
-        int32_t i = int32_t(_f);
+        i = int32_t(_f);
         if (float(i) == _f) {
             // It's an integer
             isSmallFloat = true;
-            _i = i;
             t = Type::Int8;
+        } else {
+            i = _i;
         }
     }
     
@@ -132,12 +134,13 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     uint8_t bytesPushed = typeToBytes(t);
     
     if (t == Type::Float) {
+        
         bytesInOperand = 4;
-    } else if (_i >= -8 && _i <= 7) {
+    } else if (i >= -8 && i <= 7) {
         bytesInOperand = 0;
-    } else if (_i >= -128 && _i <= 127) {
+    } else if (i >= -128 && i <= 127) {
         bytesInOperand = 1;
-    } else if (_i >= -32768 && _i <= 32767) {
+    } else if (i >= -32768 && i <= 32767) {
         bytesInOperand = 2;
     } else {
         bytesInOperand = 4;
@@ -156,14 +159,14 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     if (bytesInOperand == 0) {
-        code.push_back(uint8_t(op) | _i);
+        code.push_back(uint8_t(op) | i);
     } else {
         code.push_back(uint8_t(op));
         switch(bytesInOperand) {
-            case 4: code.push_back(_i >> 24);
-                    code.push_back(_i >> 16);
-            case 2: code.push_back(_i >> 8);
-            case 1: code.push_back(_i);
+            case 4: code.push_back(i >> 24);
+                    code.push_back(i >> 16);
+            case 2: code.push_back(i >> 8);
+            case 1: code.push_back(i);
             default: break;
         }
     }
@@ -451,39 +454,56 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
 void
 BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 {
-    // FIXME: For now assume long addresses
     int16_t rel = addr - _fixupIndex - 2;
-    code[_fixupIndex] = rel >> 8;
-    code[_fixupIndex + 1] = rel;
+
+    // If _branchSize is Long or Unknown we need to emit a 2 byte branch.
+    // But if the branch would fit in 1 byte, set branchSize to Short and
+    // tell the compiler we need another pass
+    int16_t shortRel = rel + 1;
+    if (_branchSize != BranchSize::Short) {
+        if (shortRel >= -128 && shortRel <= 127) {
+            _branchSize = BranchSize::Short;
+        }
+        code[_fixupIndex] = rel >> 8;
+        code[_fixupIndex + 1] = rel;
+    } else {
+        code[_fixupIndex] = shortRel;
+    }
 }
 
 void
 BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
-    // FIXME: For now all branches are long (16 bit, -32768 to 32767). Eventually we
-    // want to do 2 passes. _size will start out as None and The first pass will simply
-    // set the appropriate size according to how far the jump needs to be. The second
-    // pass will emit BRA and IF opcodes of the appropriate size.
     switch (_kind) {
         case Kind::IfStart:
             // Emit the opcode with a 0 branch address and mark it
-            // FIXME: for now assume all long addresses
             c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-            code.push_back(uint8_t(Op::IF) | 0x01);
+            
+            // If this is the first pass, we don't know how long the
+            // branch should be so we make enough space for a long
+            // branch
+            code.push_back(uint8_t(Op::IF) | ((_branchSize == BranchSize::Short) ? 0x00 : 0x01));
             _fixupIndex = AddrNativeType(code.size());
             code.push_back(0);
-            code.push_back(0);
+            if (_branchSize != BranchSize::Short) {
+                code.push_back(0);
+            }
             break;
         case Kind::Break:
         case Kind::Continue:
         case Kind::ElseStart:
             // Emit the opcode with a 0 branch address and mark it
-            // FIXME: for now assume all long addresses
             c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-            code.push_back(uint8_t(Op::BRA) | 0x01);
+
+            // If this is the first pass, we don't know how long the
+            // branch should be so we make enough space for a long
+            // branch
+            code.push_back(uint8_t(Op::BRA) | ((_branchSize == BranchSize::Short) ? 0x00 : 0x01));
             _fixupIndex = AddrNativeType(code.size());
             code.push_back(0);
-            code.push_back(0);
+            if (_branchSize != BranchSize::Short) {
+                code.push_back(0);
+            }
             // Fallthrough to fixup the IfStartNode
         case Kind::LoopNext:
         case Kind::IfEnd:

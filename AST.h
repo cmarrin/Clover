@@ -471,7 +471,7 @@ class BranchNode : public ASTNode
 {
   public:
     enum class Kind { IfStart, ElseStart, IfEnd, LoopStart, LoopNext, LoopEnd, Break, Continue };
-    enum class Size { None, Short, Byte, Long };
+    enum class BranchSize { Unknown, Short, Long };
     
     BranchNode(Kind k, int32_t annotationIndex) : ASTNode(annotationIndex), _kind(k) { }
 
@@ -490,7 +490,7 @@ class BranchNode : public ASTNode
     
   private:
     Kind _kind;
-    Size _size = Size::Long;
+    BranchSize _branchSize = BranchSize::Unknown;
     ASTPtr _fixupNode;
     AddrNativeType _fixupIndex = 0;
 };
