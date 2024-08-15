@@ -125,6 +125,8 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             // It's an integer
             isSmallFloat = true;
             t = Type::Int8;
+        } else {
+            i = _i;
         }
     }
     
@@ -132,6 +134,7 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     uint8_t bytesPushed = typeToBytes(t);
     
     if (t == Type::Float) {
+        
         bytesInOperand = 4;
     } else if (i >= -8 && i <= 7) {
         bytesInOperand = 0;
