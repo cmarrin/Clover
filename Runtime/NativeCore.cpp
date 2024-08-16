@@ -47,7 +47,7 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
         case Id::PrintF: {
             VarArg va(interp->memMgr(), 0, Type::String);
             AddrNativeType fmt = interp->memMgr()->getLocal(0, AddrType);
-            fmt::Formatter::format(fmt, va);
+            fmt::Formatter::printf(fmt, va);
             break;
         }
         case Id::RandomInt: {
