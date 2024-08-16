@@ -128,14 +128,14 @@ InterpreterBase::typeCast(Type from, Type to)
     _memMgr.stack().push(v, typeToOpSize(to));
 }
 
-int32_t
+uint32_t
 InterpreterBase::execute(ExecMode mode)
 {
     if (mode == ExecMode::Start) {
         _pc = _entryPoint;
         if (!isNextOpcodeSetFrame()) {
             _error = Error::NoEntryPoint;
-            return -1;
+            return 0;
         }
     }
     
@@ -157,12 +157,12 @@ InterpreterBase::execute(ExecMode mode)
         }
         if (_error != Error::None) {
             _errorAddr = _pc - 1;
-            return -1;
+            return 0;
         }
 
         // If address is 0, we exit
         if (_pc == 0) {
-            return 0;
+            return _returnValue;
         }
 
         uint8_t opInt = getUInt8ROM(_pc++);

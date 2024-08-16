@@ -51,7 +51,7 @@ class InterpreterBase
     virtual void setLight(uint8_t i, uint32_t rgb) = 0;
 
     enum class ExecMode : uint8_t { Start, Continue };
-    int32_t execute(ExecMode);
+    uint32_t execute(ExecMode);
 
     void addArg(uint32_t v, Type type);
     void addArg(float v);
@@ -168,7 +168,7 @@ template <uint32_t memSize> class Interpreter : public InterpreterBase
 public:
     Interpreter() : InterpreterBase(_mem, memSize) { }
     
-    int32_t interp(ExecMode mode)
+    uint32_t interp(ExecMode mode)
     {
         return execute(mode);
     }

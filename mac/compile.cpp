@@ -270,7 +270,7 @@ int main(int argc, char * const argv[])
             interp.init();
             
             if (interp.error() == lucid::InterpreterBase::Error::None) {
-                int32_t result = 0;
+                uint32_t result = 0;
                 
                 if (looping) {
                     std::cout << "Running looping test on '" << path << "'\n";
@@ -286,13 +286,13 @@ int main(int argc, char * const argv[])
                     std::cout << "\nInit\n";
                     result = interp.interp(MyInterpreter::ExecMode::Start);
 
-                    if (result == 0) {
+                    if (interp.error() == MyInterpreter::Error::None) {
                         interp.dropArgs(5);
                         interp.addArg('*', lucid::Type::UInt8);
                         for (int i = 0; i < 10; ++i) {
                             std::cout << "Pass " << i << "\n";
                             result = interp.interp(MyInterpreter::ExecMode::Start);
-                            if (result != 0) {
+                            if (interp.error() != MyInterpreter::Error::None) {
                                 break;
                             }
                         }
@@ -306,7 +306,7 @@ int main(int argc, char * const argv[])
                     result = interp.interp(MyInterpreter::ExecMode::Start);
                 }
                 
-                if (result == 0) {
+                if (interp.error() == MyInterpreter::Error::None) {
                     std::cout << "Complete\n\n";
                 }
             }

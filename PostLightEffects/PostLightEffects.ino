@@ -40,9 +40,7 @@ Serial.print(i);
 Serial.print(", ");
 Serial.print(rgb, 16);
 Serial.println(")");
-	    _pixels.begin(); // This initializes the NeoPixel library.
-	    _pixels.setBrightness(255);
-        _pixels.setPixelColor(i, 0x648a00);
+        _pixels.setPixelColor(i, rgb);
 		_pixels.show();
     }
 
@@ -170,17 +168,23 @@ Serial.println(")");
         }
     }
 
-uint8_t brightness = 0;
+int iii = 0;
 	void loop()
 	{
-        if (error() != PostLightEffects::Error::None) {
+        if (error() != PostLightEffects::Error::None || iii >= 30) {
+            _pixels.clear();
+            _pixels.show();
             return;
         }
         
+        ++iii;
+        
         addArg('*', lucid::Type::UInt8);
-        interp(PostLightEffects::ExecMode::Start);
+        uint32_t result = interp(PostLightEffects::ExecMode::Start);
         if (error() != PostLightEffects::Error::None) {
             showError(error());
+        } else {
+            delay(result);
         }
 	}
  
