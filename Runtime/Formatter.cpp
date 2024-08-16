@@ -103,7 +103,7 @@ Formatter::vprintf(const char* fmt, va_list args)
     return Formatter::doprintf(&f);
 }
 
-bool Formatter::toNumber(FormatterArgs*f, uint32_t fmt, uint32_t& n)
+bool Formatter::toNumber(FormatterArgs*f, uint32_t& fmt, uint32_t& n)
 {
     n = 0;
     bool haveNumber = false;

@@ -49,7 +49,7 @@ public:
     
     static constexpr uint32_t MaxIntegerBufferSize = 24; // Big enough for a 64 bit integer in octal
 
-    static bool toNumber(FormatterArgs*f, uint32_t fmt, uint32_t& n);
+    static bool toNumber(FormatterArgs*f, uint32_t& fmt, uint32_t& n);
 
     static int32_t printf(lucid::AddrNativeType fmt, lucid::VarArg&);    
     static int32_t printf(const char* fmt, ...);
