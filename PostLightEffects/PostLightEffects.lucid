@@ -171,7 +171,7 @@ function init(uint8 cmd)
     }
     
     if (cmd == 'f') {
-        core.memset(&leds, 0, NumLights * 4);
+        core.memset(&leds, 0, NumLights * 4 * 4);
 
         flickerStepsMin = float(FlickerSpeedTable[speed].min) * 255;
         flickerStepsMax = float(FlickerSpeedTable[speed].max) * 255;
