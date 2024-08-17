@@ -1172,8 +1172,16 @@ Compiler::argumentList(const ASTPtr& fun)
                 expect(sym->type() == Type::None || sym->type() == arg->type(), Error::MismatchedType);
             }
         } else {
-            // This is past the last arg, it can be any type
+            // We are past the last arg. That makes this a vararg call. We upcast any integral
+            // types to 32 bits.
             neededType = arg->type();
+            switch (neededType) {
+                case Type::Int8:
+                case Type::Int16: neededType = Type::Int32; break;
+                case Type::UInt8:
+                case Type::UInt16: neededType = Type::UInt32; break;
+                default: break;
+            }
         }
 
         arg = TypeCastNode::castIfNeeded(arg, neededType, annotationIndex());
