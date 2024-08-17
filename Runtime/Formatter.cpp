@@ -180,22 +180,10 @@ static Length handleLength(FormatterArgs*f, uint32_t& fmt)
     return length;
 }
 
-// 32 bit values are the max supported. Return int32_t for L, LL, J, Z, and T
-// Always return int32_t. Unsigned values less than 32 bits will be sign extended,
-// but reinterpret_cast to unsigned values will work corrently
+// 8 and 16 bit integers are upcast by the caller to 32 bit. Ignore the length field
 static int32_t getInteger(Length length, FormatterArgs* f)
 {
-    switch(length) {
-        case Length::H: return int32_t(int16_t(f->getArg(lucid::Type::UInt16)));
-        case Length::HH: return int32_t(int8_t(f->getArg(lucid::Type::UInt8)));
-        case Length::L:
-        case Length::LL:
-        case Length::J:
-        case Length::Z:
-        case Length::T:
-        case Length::None: return int32_t(f->getArg(lucid::Type::UInt32));
-    }
-    return 0;
+    return int32_t(f->getArg(lucid::Type::UInt32));
 }
 
 static char* intToString(uint64_t value, char* buf, size_t size, uint8_t base = 10, Formatter::Capital cap = Formatter::Capital::No)
@@ -366,12 +354,13 @@ int32_t Formatter::doprintf(FormatterArgs* f)
             break;
         }
         case 'c':
-            lucid::putChar(static_cast<char>(f->getArg(lucid::Type::UInt8)));
+            // Chars are passed in as uint32
+            lucid::putChar(static_cast<char>(f->getArg(lucid::Type::UInt32)));
             size++;
             break;
         case 'b': {
-            // Boolean
-            const char* s = f->getArg(lucid::Type::UInt8) ? "true" : "false";
+            // Booleans are passed in as uint32
+            const char* s = f->getArg(lucid::Type::UInt32) ? "true" : "false";
             for (int i = 0; s[i] != '\0'; ++i) {
                 lucid::putChar(s[i]);
             }
