@@ -13,6 +13,7 @@
 #include <EEPROM.h>
 #include "PostLightEffects.h"
 #include "Defines.h"
+#include "Formatter.h"
 
 /*
 
@@ -166,7 +167,7 @@ public:
 int iii = 0;
 	void loop()
 	{
-        if (error() != PostLightEffects::Error::None || iii >= 30) {
+        if (error() != PostLightEffects::Error::None || iii >= 300) {
             _pixels.clear();
             _pixels.show();
             return;
