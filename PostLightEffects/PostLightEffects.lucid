@@ -173,8 +173,8 @@ function init(uint8 cmd)
     if (cmd == 'f') {
         core.memset(&leds, 0, NumLights * 4 * 4);
 
-        flickerStepsMin = float(FlickerSpeedTable[speed].min) * 255;
-        flickerStepsMax = float(FlickerSpeedTable[speed].max) * 255;
+        flickerStepsMin = float(FlickerSpeedTable[speed].min) / 255;
+        flickerStepsMax = float(FlickerSpeedTable[speed].max) / 255;
         
         // Modify the brightness to make it between 0.5 and 1.0
         flickerBrightnessMod = colors[0].v / 2.0 + 0.5;
