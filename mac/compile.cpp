@@ -14,7 +14,6 @@
 #include "Decompiler.h"
 #include "Defines.h"
 #include "Interpreter.h"
-#include "Formatter.h"
 
 // Base pointer of executable code (see Defines.h)
 uint8_t* lucid::ROMBase = nullptr;
@@ -27,7 +26,7 @@ class MyInterpreter : public lucid::Interpreter<StackSize>
   public:
     virtual void setLight(uint8_t i, uint32_t rgb) override
     {
-        fmt::Formatter::printf("setLight(%hhd, 0x%08x)\n", i, rgb);
+        lucid::printf("setLight(%hhd, 0x%08x)\n", i, rgb);
     }
 };
 

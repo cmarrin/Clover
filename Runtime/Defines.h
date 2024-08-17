@@ -594,6 +594,12 @@ enum class Operator : uint8_t {
     UMinus  = 0xe2,
 };
 
+class VarArg;
+
+int32_t printf(AddrNativeType fmt, VarArg&);    
+int32_t printf(const char* fmt, ...);
+int32_t vprintf(const char* fmt, va_list args);
+
 // Native Modules contain native functions that can be called
 // by the interpreter. Modules are numbered starting at 0. There
 // is a 'core' module always available as module 0. Others are

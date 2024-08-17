@@ -9,7 +9,6 @@
 
 #include "Interpreter.h"
 
-#include "Formatter.h"
 #include "NativeColor.h"
 #include "NativeCore.h"
 

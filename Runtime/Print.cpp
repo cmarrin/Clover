@@ -12,15 +12,24 @@
 
 //#include "bare.h"
 
-#include "Formatter.h"
-
 #include "Defines.h"
 #include "Memory.h"
 
 #include <assert.h>
 #include <string.h>
+#include <stdarg.h>
 
-using namespace fmt;
+using namespace lucid;
+
+class FormatterArgs
+{
+  public:
+    virtual ~FormatterArgs() { }
+    
+    virtual uint8_t getChar(uint32_t i) const = 0;
+    virtual uint8_t getStringChar(uintptr_t p) const = 0;
+    virtual uintptr_t getArg(lucid::Type type) = 0;
+};
 
 class InterpFormatterArgs : public FormatterArgs
 {
@@ -81,29 +90,51 @@ class NativeFormatterArgs : public FormatterArgs
     va_list _args;
 };
 
+enum class Flag {
+    leftJustify = 0x01,
+    plus = 0x02,
+    space = 0x04,
+    alt = 0x08,
+    zeroPad = 0x10,
+};
+
+static bool isFlag(uint8_t flags, Flag flag) { return (flags & static_cast<uint8_t>(flag)) != 0; }
+static void setFlag(uint8_t& flags, Flag flag) { flags |= static_cast<uint8_t>(flag); }
+
+enum class Capital { Yes, No };
+
+static constexpr uint32_t MaxIntegerBufferSize = 24; // Big enough for a 64 bit integer in octal
+
+int32_t doprintf(FormatterArgs*);
+
+namespace lucid {
+
 int32_t
-Formatter::printf(lucid::AddrNativeType fmt, lucid::VarArg& args)
+printf(lucid::AddrNativeType fmt, lucid::VarArg& args)
 {
     InterpFormatterArgs f(fmt, args);
-    return Formatter::doprintf(&f);
+    return doprintf(&f);
 }
 
 int32_t
-Formatter::printf(const char* fmt, ...)
+printf(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    return vprintf(fmt, args);
+    return lucid::vprintf(fmt, args);
 }
 
 int32_t
-Formatter::vprintf(const char* fmt, va_list args)
+vprintf(const char* fmt, va_list args)
 {
     NativeFormatterArgs f(fmt, args);
-    return Formatter::doprintf(&f);
+    return doprintf(&f);
 }
 
-bool Formatter::toNumber(FormatterArgs*f, uint32_t& fmt, uint32_t& n)
+}
+
+bool
+toNumber(FormatterArgs*f, uint32_t& fmt, uint32_t& n)
 {
     n = 0;
     bool haveNumber = false;
@@ -125,11 +156,11 @@ static void handleFlags(FormatterArgs*f, uint32_t& fmt, uint8_t& flags)
 {
     while (1) {
         switch (f->getChar(fmt)) {
-        case '-': Formatter::setFlag(flags, Formatter::Flag::leftJustify); break;
-        case '+': Formatter::setFlag(flags, Formatter::Flag::plus); break;
-        case ' ': Formatter::setFlag(flags, Formatter::Flag::space); break;
-        case '#': Formatter::setFlag(flags, Formatter::Flag::alt); break;
-        case '0': Formatter::setFlag(flags, Formatter::Flag::zeroPad); break;
+        case '-': setFlag(flags, Flag::leftJustify); break;
+        case '+': setFlag(flags, Flag::plus); break;
+        case ' ': setFlag(flags, Flag::space); break;
+        case '#': setFlag(flags, Flag::alt); break;
+        case '0': setFlag(flags, Flag::zeroPad); break;
         default: return;
         }
         ++fmt;
@@ -144,7 +175,7 @@ static int32_t handleWidth(FormatterArgs*f, uint32_t& fmt)
     }
     
     uint32_t n;
-    return Formatter::toNumber(f, fmt, n) ? static_cast<int32_t>(n) : -1;
+    return toNumber(f, fmt, n) ? static_cast<int32_t>(n) : -1;
 }
 
 enum class Length { None, H, HH, L, LL, J, Z, T };
@@ -186,7 +217,7 @@ static int32_t getInteger(Length length, FormatterArgs* f)
     return int32_t(f->getArg(lucid::Type::UInt32));
 }
 
-static char* intToString(uint64_t value, char* buf, size_t size, uint8_t base = 10, Formatter::Capital cap = Formatter::Capital::No)
+static char* intToString(uint64_t value, char* buf, size_t size, uint8_t base = 10, Capital cap = Capital::No)
 {
     if (value == 0) {
         buf[0] = '0';
@@ -194,7 +225,7 @@ static char* intToString(uint64_t value, char* buf, size_t size, uint8_t base = 
         return buf;
     }
     
-    char hexBase = (cap == Formatter::Capital::Yes) ? 'A' : 'a';
+    char hexBase = (cap == Capital::Yes) ? 'A' : 'a';
     char* p = buf + size;
     *--p = '\0';
     
@@ -206,7 +237,7 @@ static char* intToString(uint64_t value, char* buf, size_t size, uint8_t base = 
     return p;
 }
 
-static int32_t outInteger(uintmax_t value, Signed sign, int32_t width, int32_t precision, uint8_t flags, uint8_t base, Formatter::Capital cap)
+static int32_t outInteger(uintmax_t value, Signed sign, int32_t width, int32_t precision, uint8_t flags, uint8_t base, Capital cap)
 {
     uint32_t size = 0;
     if (sign == Signed::Yes) {
@@ -219,24 +250,24 @@ static int32_t outInteger(uintmax_t value, Signed sign, int32_t width, int32_t p
         }
     }
     
-    if (Formatter::isFlag(flags, Formatter::Flag::alt) && base != 10) {
+    if (isFlag(flags, Flag::alt) && base != 10) {
         lucid::putChar('0');
         size++;
         width--;
         if (base == 16) {
-            lucid::putChar((cap == Formatter::Capital::Yes) ? 'X' : 'x');
+            lucid::putChar((cap == Capital::Yes) ? 'X' : 'x');
             size++;
             width--;
         }
     }
     
-    char buf[Formatter::MaxIntegerBufferSize];
-    char* p = intToString(static_cast<uint64_t>(value), buf, Formatter::MaxIntegerBufferSize, base, cap);
+    char buf[MaxIntegerBufferSize];
+    char* p = intToString(static_cast<uint64_t>(value), buf, MaxIntegerBufferSize, base, cap);
     size += static_cast<uint32_t>(p - buf);
 
     int32_t pad = static_cast<int32_t>(width) - static_cast<int32_t>(strlen(p));
     
-    char padChar = Formatter::isFlag(flags, Formatter::Flag::zeroPad) ? '0' : ' ';
+    char padChar = isFlag(flags, Flag::zeroPad) ? '0' : ' ';
     
     while (pad > 0) {
         lucid::putChar(padChar);
@@ -286,7 +317,7 @@ static int32_t outString(FormatterArgs* f, uintptr_t p, int32_t width, int32_t p
 //
 // 
  
-int32_t Formatter::doprintf(FormatterArgs* f)
+int32_t doprintf(FormatterArgs* f)
 {
     uint8_t flags = 0;
     int32_t size = 0;
@@ -315,17 +346,17 @@ int32_t Formatter::doprintf(FormatterArgs* f)
         {
         case 'd':
         case 'i':
-            size += outInteger(getInteger(length, f), Signed::Yes, width, precision, flags, 10, Formatter::Capital::No);
+            size += outInteger(getInteger(length, f), Signed::Yes, width, precision, flags, 10, Capital::No);
             break;
         case 'u':
-            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 10, Formatter::Capital::No);
+            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 10, Capital::No);
             break;
         case 'o':
-            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 8, Formatter::Capital::No);
+            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 8, Capital::No);
             break;
         case 'x':
         case 'X':
-            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 16, (f->getChar(fmt) == 'X') ? Formatter::Capital::Yes : Formatter::Capital::No);
+            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 16, (f->getChar(fmt) == 'X') ? Capital::Yes : Capital::No);
             break;
         case 'f':
         case 'F':
@@ -333,16 +364,16 @@ int32_t Formatter::doprintf(FormatterArgs* f)
         case 'E':
         case 'g':
         case 'G': {
-            Formatter::Capital cap = Formatter::Capital::No;
+            Capital cap = Capital::No;
             FloatType type = FloatType::Shortest;
             switch(f->getChar(fmt))
             {
-            case 'f': cap = Formatter::Capital::No; type = FloatType::Float; break;
-            case 'F': cap = Formatter::Capital::Yes; type = FloatType::Float; break;
-            case 'e': cap = Formatter::Capital::No; type = FloatType::Exp; break;
-            case 'E': cap = Formatter::Capital::Yes; type = FloatType::Exp; break;
-            case 'g': cap = Formatter::Capital::No; type = FloatType::Shortest; break;
-            case 'G': cap = Formatter::Capital::Yes; type = FloatType::Shortest; break;
+            case 'f': cap = Capital::No; type = FloatType::Float; break;
+            case 'F': cap = Capital::Yes; type = FloatType::Float; break;
+            case 'e': cap = Capital::No; type = FloatType::Exp; break;
+            case 'E': cap = Capital::Yes; type = FloatType::Exp; break;
+            case 'g': cap = Capital::No; type = FloatType::Shortest; break;
+            case 'G': cap = Capital::Yes; type = FloatType::Shortest; break;
             }
 
             char buf[20];
@@ -370,7 +401,7 @@ int32_t Formatter::doprintf(FormatterArgs* f)
             size += outString(f, f->getArg(lucid::Type::String), width, precision, flags);
             break;
         case 'p':
-            size += outInteger(f->getArg(lucid::Type::UInt32), Signed::No, width, precision, flags, 16, Formatter::Capital::No);
+            size += outInteger(f->getArg(lucid::Type::UInt32), Signed::No, width, precision, flags, 16, Capital::No);
             break;
         default:
             lucid::putChar(f->getChar(fmt++));

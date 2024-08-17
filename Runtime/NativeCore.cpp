@@ -9,7 +9,6 @@
 
 #include "NativeCore.h"
 
-#include "Formatter.h"
 #include "Interpreter.h"
 
 using namespace lucid;
@@ -47,7 +46,7 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
         case Id::PrintF: {
             VarArg va(interp->memMgr(), 0, Type::String);
             AddrNativeType fmt = interp->memMgr()->getLocal(0, AddrType);
-            fmt::Formatter::printf(fmt, va);
+            lucid::printf(fmt, va);
             break;
         }
         case Id::RandomInt: {

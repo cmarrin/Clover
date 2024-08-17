@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		4914A4852C2E0F92003DDADA /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4842C2E0F92003DDADA /* Function.cpp */; };
 		4914A4882C3E0752003DDADA /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* Interpreter.cpp */; };
-		4914A48B2C44A13B003DDADA /* Formatter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4892C44A132003DDADA /* Formatter.cpp */; };
+		4914A48B2C44A13B003DDADA /* Print.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4892C44A132003DDADA /* Print.cpp */; };
 		49279C2A2C1903BE00294992 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
 		4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A0F22BB6F59900CE3C9E /* compile.cpp */; };
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
@@ -43,8 +43,7 @@
 /* Begin PBXFileReference section */
 		4914A4842C2E0F92003DDADA /* Function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Function.cpp; path = ../Function.cpp; sourceTree = "<group>"; };
 		4914A4872C3B624D003DDADA /* Memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Memory.h; path = ../Runtime/Memory.h; sourceTree = "<group>"; };
-		4914A4892C44A132003DDADA /* Formatter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Formatter.cpp; path = ../Runtime/Formatter.cpp; sourceTree = "<group>"; };
-		4914A48A2C44A132003DDADA /* Formatter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Formatter.h; path = ../Runtime/Formatter.h; sourceTree = "<group>"; };
+		4914A4892C44A132003DDADA /* Print.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Print.cpp; path = ../Runtime/Print.cpp; sourceTree = "<group>"; };
 		4914A48D2C4DD665003DDADA /* TestCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestCore.h; path = ../Test/TestCore.h; sourceTree = "<group>"; };
 		4914A48E2C4DD665003DDADA /* TestPtrStruct.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestPtrStruct.lucid; path = ../Test/TestPtrStruct.lucid; sourceTree = "<group>"; };
 		4914A48F2C4DD665003DDADA /* TestIf.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestIf.lucid; path = ../Test/TestIf.lucid; sourceTree = "<group>"; };
@@ -142,8 +141,7 @@
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
 				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
 				4941A1042BBA28F000CE3C9E /* Defines.h */,
-				4914A4892C44A132003DDADA /* Formatter.cpp */,
-				4914A48A2C44A132003DDADA /* Formatter.h */,
+				4914A4892C44A132003DDADA /* Print.cpp */,
 				4914A4842C2E0F92003DDADA /* Function.cpp */,
 				49C164B22C03E84700981AD1 /* Function.h */,
 				4941A1052BBA28F000CE3C9E /* Interpreter.cpp */,
@@ -284,7 +282,7 @@
 				49C469CA2C6A8C2C00588838 /* NativeColor.cpp in Sources */,
 				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
 				49C469C92C6A8C2900588838 /* NativeCore.cpp in Sources */,
-				4914A48B2C44A13B003DDADA /* Formatter.cpp in Sources */,
+				4914A48B2C44A13B003DDADA /* Print.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -13,7 +13,6 @@
 #include <EEPROM.h>
 #include "PostLightEffects.h"
 #include "Defines.h"
-#include "Formatter.h"
 
 /*
 
