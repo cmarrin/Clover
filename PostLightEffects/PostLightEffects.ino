@@ -35,11 +35,6 @@ public:
 
     virtual void setLight(uint8_t i, uint32_t rgb) override
     {
-Serial.print("setLight(");
-Serial.print(i);
-Serial.print(", ");
-Serial.print(rgb, 16);
-Serial.println(")");
         _pixels.setPixelColor(i, rgb);
 		_pixels.show();
     }
