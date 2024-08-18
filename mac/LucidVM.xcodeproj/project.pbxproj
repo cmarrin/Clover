@@ -91,7 +91,6 @@
 		49C469C82C6A83B100588838 /* NativeCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCore.cpp; path = ../Runtime/NativeCore.cpp; sourceTree = "<group>"; };
 		49E9ACCB2C715C580074BD25 /* PostLightController.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostLightController.ino; path = ../PostLightController/PostLightController.ino; sourceTree = "<group>"; };
 		49E9ACCD2C715F990074BD25 /* Flash.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Flash.cpp; path = ../PostLightController/Flash.cpp; sourceTree = "<group>"; };
-		49E9ACCE2C715F990074BD25 /* Effect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Effect.h; path = ../PostLightController/Effect.h; sourceTree = "<group>"; };
 		49E9ACCF2C715F990074BD25 /* InterpretedEffect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = InterpretedEffect.h; path = ../PostLightController/InterpretedEffect.h; sourceTree = "<group>"; };
 		49E9ACD02C715F990074BD25 /* Flash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Flash.h; path = ../PostLightController/Flash.h; sourceTree = "<group>"; };
 		49E9ACD12C715F990074BD25 /* InterpretedEffect.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InterpretedEffect.cpp; path = ../PostLightController/InterpretedEffect.cpp; sourceTree = "<group>"; };
@@ -206,7 +205,6 @@
 			isa = PBXGroup;
 			children = (
 				49E9ACCB2C715C580074BD25 /* PostLightController.ino */,
-				49E9ACCE2C715F990074BD25 /* Effect.h */,
 				49E9ACCD2C715F990074BD25 /* Flash.cpp */,
 				49E9ACD02C715F990074BD25 /* Flash.h */,
 				49E9ACD12C715F990074BD25 /* InterpretedEffect.cpp */,

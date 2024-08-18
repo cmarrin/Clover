@@ -74,8 +74,8 @@ Hue is an angle on the color wheel. A 0-360 degree value is obtained with hue / 
 
 constexpr int LEDPin = 6;
 constexpr int NumPixels = 8;
-constexpr int MaxPayloadSize = 242; // Must be less than 250
-constexpr int CommandSize = 6;
+constexpr int MaxPayloadSize = 1024;
+constexpr int CommandSize = 7;
 constexpr char StartChar = '(';
 constexpr char EndChar = ')';
 constexpr unsigned long SerialTimeOut = 2000; // ms
@@ -89,9 +89,11 @@ public:
 	PostLightController()
 		: _pixels(NumPixels, LEDPin, NEO_GRB + NEO_KHZ800)
 		, _serial(11, 10)
-		, _flashEffect(&_pixels)
-		, _interpretedEffect(&_modules, 1, &_pixels)
-	{ }
+		, _interpretedEffect(&_pixels)
+	{
+        _buf = _interpretedEffect.stackBase();
+    }
+
 	~PostLightController() { }
 	
     void setLight(uint8_t i, uint32_t rgb)
@@ -104,7 +106,7 @@ public:
 	{
 	    Serial.begin(115200);
         while (!Serial) ; // wait for Arduino Serial Monitor to open
-	    _serial.begin(1200);
+	    _serial.begin(2400);
 		
 		delay(500);
 
@@ -122,8 +124,13 @@ public:
 
 	void loop()
 	{
-		int32_t delayInMs = _currentEffect ? _currentEffect->loop() : 0;
-
+		int32_t delayInMs = 0;
+        if (_effect == Effect::Flash) {
+            delayInMs = _flash.loop(&_pixels);
+        } else if (_effect == Effect::Interp) {
+            delayInMs = _interpretedEffect.loop();
+        }
+        
         if (delayInMs > MaxDelay) {
             delayInMs = MaxDelay;
         }
@@ -131,7 +138,7 @@ public:
 		if (delayInMs < 0) {
 			// An effect has finished. End it and clear the display
 			showColor(0, 0, 0, 0, 0);
-			_currentEffect = nullptr;
+            _effect = Effect::None;
 			delayInMs = 0;
 		}
 		
@@ -197,14 +204,19 @@ public:
 				case State::Cmd:
                     _buf[_bufIndex++] = c;
 					_cmd = c;
-					_state = State::Size;
+					_state = State::SizeHi;
 					_expectedChecksum += c;
 					break;
-				case State::Size:
+				case State::SizeHi:
                     _buf[_bufIndex++] = c;
-					_payloadSize = c;
+					_state = State::SizeLo;
+					_payloadSize = uint16_t(c) << 8;
+					_expectedChecksum += c;
+					break;
+				case State::SizeLo:
+                    _buf[_bufIndex++] = c;
+					_payloadSize |= uint16_t(uint8_t(c));
                     _payloadReceived = 0;
-     
                     Serial.print(F("Buffer size="));
                     Serial.println(_payloadSize);
 					
@@ -226,6 +238,10 @@ public:
 					if (_payloadReceived >= _payloadSize) {
 						_state = State::Checksum;
 					}
+if ((_payloadReceived % 8) == 0) {
+    Serial.print(F("*** got data byte ="));
+    Serial.println(_payloadReceived);
+}
 					break;
 				case State::Checksum: {     
                     // If we're passing through and not executing, we've decremented
@@ -263,7 +279,11 @@ public:
 
                             // Pass through buffer if needed
                             if (_cmdPassThrough) {
-                                for (uint8_t i = 0; i < _payloadSize + CommandSize; i++) {
+                                for (uint16_t i = 0; i < _payloadSize + CommandSize; i++) {
+if ((i % 8) == 0) {
+    Serial.print(F("*** passthrough data byte ="));
+    Serial.println(i);
+}
                                     _serial.write(_buf[i]);
                                 }
                             }
@@ -273,7 +293,7 @@ public:
                             }
                             
                             // Handle the command
-							_currentEffect = nullptr;
+                            _effect = Effect::None;
 							
 							switch(_cmd) {
 								case 'C':
@@ -282,24 +302,19 @@ public:
 								
 								case 'X': {
 									// Cancel effect
-									_currentEffect = nullptr;
+                                    _effect = Effect::None;
 									
-									uint16_t startAddr = uint16_t(_buf[4]) + (uint16_t(_buf[5]) << 8);
-									if (startAddr + _payloadSize - 2 > 1024) {
-										Serial.print(F("inv EEPROM addr: addr="));
-										Serial.print(startAddr);
-										Serial.print(F(", size="));
-										Serial.println(_payloadSize - 2);
+									if (_payloadSize > 1024) {
+										Serial.print(F("inv EEPROM size="));
+										Serial.println(_payloadSize);
 										showStatus(StatusColor::Red, 5, 5);
 										_state = State::NotCapturing;
 									} else {
-										Serial.print(F("exec => EEPROM: addr="));
-										Serial.print(startAddr);
-										Serial.print(F(", size="));
-										Serial.println(_payloadSize - 2);
+										Serial.print(F("exec => EEPROM: size="));
+										Serial.println(_payloadSize);
 
-										for (uint8_t i = 0; i < _payloadSize - 2; ++i) {
-											EEPROM[i + startAddr] = _buf[i + 2 + 4]; // Skip cmd chars and start addr
+										for (uint8_t i = 0; i < _payloadSize; ++i) {
+											EEPROM[i] = _buf[i + 2 + 4]; // Skip cmd chars and start addr
 										}
 									}
                                     showStatus(StatusColor::Yellow, 0, 0);
@@ -310,49 +325,60 @@ public:
 								if (!_interpretedEffect.init(_cmd, _buf + 4, _payloadSize)) {
 									String errorMsg;
 									switch(_interpretedEffect.error()) {
-								        case Device::Error::None:
-										errorMsg = F("???");
-										break;
-								        case Device::Error::CmdNotFound:
-										errorMsg = String(F("bad cmd: '")) + String(char(_cmd)) + String(F("'"));
-										break;
-										break;
-								        case Device::Error::UnexpectedOpInIf:
-										errorMsg = F("bad op in if");
-										break;
-										case Device::Error::InvalidOp:
-										errorMsg = F("inv op");
-										break;
-								        case Device::Error::OnlyMemAddressesAllowed:
-										errorMsg = F("mem addrs only");
-										break;
-								        case Device::Error::AddressOutOfRange:
-										errorMsg = F("addr out of rng");
-										break;
-								        case Device::Error::InvalidModuleOp:
-										errorMsg = F("inv mod op");
-										break;
-								        case Device::Error::ExpectedSetFrame:
-										errorMsg = F("SetFrame needed");
-										break;
-								        case Device::Error::InvalidNativeFunction:
-										errorMsg = F("inv native func");
-										break;
-								        case Device::Error::NotEnoughArgs:
-										errorMsg = F("not enough args");
-										break;
-								        case Device::Error::StackOverrun:
-										errorMsg = F("can't call, stack full");
-										break;
-								        case Device::Error::StackUnderrun:
-										errorMsg = F("stack underrun");
-										break;
-								        case Device::Error::StackOutOfRange:
-										errorMsg = F("stack out of range");
-										break;
-                                        case Device::Error::WrongNumberOfArgs:
-										errorMsg = F("wrong arg cnt");
-										break;
+                                        default:
+                                        errorMsg = F("???");
+                                        break;
+                                        case MyInterpreter::Error::None:
+                                        errorMsg = F("---");
+                                        break;
+                                        case MyInterpreter::Error::InvalidSignature:
+                                        errorMsg = F("bad signature");
+                                        break;
+                                        case MyInterpreter::Error::NoEntryPoint:
+                                        errorMsg = F("no entry point");
+                                        break;
+                                        case MyInterpreter::Error::UnexpectedOpInIf:
+                                        errorMsg = F("bad op in if");
+                                        break;
+                                        case MyInterpreter::Error::InvalidOp:
+                                        errorMsg = F("inv op");
+                                        break;
+                                        case MyInterpreter::Error::OnlyMemAddressesAllowed:
+                                        errorMsg = F("mem addrs only");
+                                        break;
+                                        case MyInterpreter::Error::AddressOutOfRange:
+                                        errorMsg = F("addr out of rng");
+                                        break;
+                                        case MyInterpreter::Error::ExpectedSetFrame:
+                                        errorMsg = F("SetFrame needed");
+                                        break;
+                                        case MyInterpreter::Error::InvalidModuleOp:
+                                        errorMsg = F("inv mod op");
+                                        break;
+                                        case MyInterpreter::Error::InvalidNativeFunction:
+                                        errorMsg = F("inv native func");
+                                        break;
+                                        case MyInterpreter::Error::NotEnoughArgs:
+                                        errorMsg = F("not enough args");
+                                        break;
+                                        case MyInterpreter::Error::WrongNumberOfArgs:
+                                        errorMsg = F("wrong arg cnt");
+                                        break;
+                                        case MyInterpreter::Error::StackOverrun:
+                                        errorMsg = F("can't call, stack full");
+                                        break;
+                                        case MyInterpreter::Error::StackUnderrun:
+                                        errorMsg = F("stack underrun");
+                                        break;
+                                        case MyInterpreter::Error::StackOutOfRange:
+                                        errorMsg = F("stack out of range");
+                                        break;
+                                        case MyInterpreter::Error::ImmedNotAllowedHere:
+                                        errorMsg = F("immed not allowed here");
+                                        break;
+                                        case MyInterpreter::Error::InternalError:
+                                        errorMsg = F("internal err");
+                                        break;
 									}
 
 									Serial.print(F("Interp fx err: "));
@@ -360,7 +386,7 @@ public:
 									showStatus(StatusColor::Red, 5, 1);
 									_state = State::NotCapturing;
 								} else {
-									_currentEffect = &_interpretedEffect;
+                                    _effect = Effect::Interp;
 								}
 								break;
 							}
@@ -391,35 +417,32 @@ private:
 
 	void showColor(uint8_t h, uint8_t s, uint8_t v, uint8_t n, uint8_t d)
 	{
-		uint8_t buf[ ] = { h, s, v, n, d };
-        _currentEffect = &_flashEffect;
-        _currentEffect->init('0', buf, sizeof(buf));		
+        _effect = Effect::Flash;
+        _flash.init(&_pixels, h, s, v, n, d);
 	}
 	
 	void showStatus(StatusColor color, uint8_t numberOfBlinks = 0, uint8_t interval = 0)
 	{
-		// Flash half bright red at 1 second interval, 10 times
-		uint8_t buf[ ] = { 0x00, 0xff, 0x80, numberOfBlinks, interval };
-		
-		buf[0] = (color == StatusColor::Red) ? 0 : ((color == StatusColor::Green) ? 85 : 30);			
-		
-		_currentEffect = &_flashEffect;
-		_currentEffect->init('0', buf, sizeof(buf));		
+		// Flash half bright red or green at passed interval and passed number of times
+        _effect = Effect::Flash;
+        uint8_t h = (color == StatusColor::Red) ? 0 : ((color == StatusColor::Green) ? 85 : 30);
+        _flash.init(&_pixels, h, 0xff, 0x80, numberOfBlinks, interval);
 	}
 	
 	Adafruit_NeoPixel _pixels;
 	SoftwareSerial _serial;
 	
-	Effect* _currentEffect = nullptr;
-	
-	Flash _flashEffect;
+    enum class Effect { None, Flash, Interp };
+    Effect _effect = Effect::None;
+	Flash _flash;
 	InterpretedEffect _interpretedEffect;
 	
-	uint8_t _buf[MaxPayloadSize + CommandSize];
-	uint8_t _bufIndex = 0;
+    // We share the incoming buffer with the interpreter stack
+	uint8_t* _buf = nullptr;
+	uint16_t _bufIndex = 0;
     
-    uint8_t _payloadReceived = 0;
-	uint8_t _payloadSize = 0;
+    uint16_t _payloadReceived = 0;
+	uint16_t _payloadSize = 0;
     
 	unsigned long _timeSinceLastChar = 0;
 	
@@ -432,7 +455,7 @@ private:
     bool _cmdExecute = true;
 	
 	// State machine
-	enum class State { NotCapturing, DeviceAddr, Cmd, Size, Data, Checksum, LeadOut };
+	enum class State { NotCapturing, DeviceAddr, Cmd, SizeHi, SizeLo, Data, Checksum, LeadOut };
 	State _state = State::NotCapturing;
 };
 

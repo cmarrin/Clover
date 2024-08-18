@@ -9,21 +9,20 @@
 
 #include "InterpretedEffect.h"
 
-InterpretedEffect::InterpretedEffect(Adafruit_NeoPixel* pixels)
-	: Effect(pixels)
-	, _interp(pixels)
-{
-}
-
 bool
 InterpretedEffect::init(uint8_t cmd, const uint8_t* buf, uint32_t size)
 {
-	Effect::init(cmd, buf, size);
-	
-    char c[2];
-    c[0] = cmd;
-    c[1] = '\0';
-	if (!_interp.init(c, buf, size)) {
+    _interp.init();
+
+    for (int i = size - 1; i >= 0; --i) {
+        _interp.addArg(buf[i], lucid::Type::UInt8);
+    }
+    _interp.addArg(cmd, lucid::Type::UInt8); // cmd
+    
+    _interp.interp(MyInterpreter::ExecMode::Start);
+    _interp.dropArgs(size + 1);
+
+	if (_interp.error() != MyInterpreter::Error::None) {
 		return false;
 	}
 
@@ -35,5 +34,8 @@ InterpretedEffect::init(uint8_t cmd, const uint8_t* buf, uint32_t size)
 int32_t
 InterpretedEffect::loop()
 {
-    return _interp.loop();
+    _interp.addArg('*', lucid::Type::UInt8);
+    uint32_t result = _interp.interp(MyInterpreter::ExecMode::Start);
+    _interp.dropArgs(1);
+    return (_interp.error() != MyInterpreter::Error::None) ? -1 : result;
 }

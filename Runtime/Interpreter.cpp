@@ -22,6 +22,8 @@ InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
 void
 InterpreterBase::init()
 {
+    _error = Error::None;
+    
     // Init module list
     memset(_modules, 0, sizeof(CallNative) * ModuleCountMax);
     
@@ -48,6 +50,7 @@ InterpreterBase::init()
         return;
     }
 
+    _memMgr.stack().sp() = _memMgr.stack().size();
     _pc = _entryPoint;
         
     uint32_t topLevelStructSize = 0;

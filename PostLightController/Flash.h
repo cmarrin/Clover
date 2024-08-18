@@ -13,23 +13,22 @@
 
 #pragma once
 
-#include "Effect.h"
+#include <stdint.h>
 
-class Flash : public Effect
+class Adafruit_NeoPixel;
+
+class Flash
 {
 public:
-	Flash(Adafruit_NeoPixel* pixels) : Effect(pixels) { }
-	virtual ~Flash() { }
-	
-	virtual bool init(uint8_t cmd, const uint8_t* buf, uint32_t size) override;
-	virtual int32_t loop() override;
+	bool init(Adafruit_NeoPixel* pixels, uint8_t h, uint8_t s, uint8_t v, uint8_t count, uint16_t duration);
+	int32_t loop(Adafruit_NeoPixel* pixels);
 		
 private:
-	void setAllLights(uint32_t color);
+	void setAllLights(Adafruit_NeoPixel* pixels, uint32_t color);
 	
     uint32_t _color;
 	uint8_t _count;
-	uint32_t _duration; // in ms
+	uint16_t _duration; // in ms
 	
 	uint32_t _lastFlash = 0;
 	bool _on = false;

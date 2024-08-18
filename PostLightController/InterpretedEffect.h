@@ -15,7 +15,6 @@
 
 #include <Lucid.h>
 
-#include "Effect.h"
 #include "NativeColor.h"
 
 #include <Adafruit_NeoPixel.h>
@@ -39,17 +38,17 @@ private:
 	Adafruit_NeoPixel* _pixels;
 };
 
-class InterpretedEffect : public Effect
+class InterpretedEffect
 {
 public:
-	InterpretedEffect(Adafruit_NeoPixel* pixels);
-	virtual ~InterpretedEffect() {}
+	InterpretedEffect(Adafruit_NeoPixel* pixels) : _interp(pixels) { }
 	
-	virtual bool init(uint8_t cmd, const uint8_t* buf, uint32_t size) override;
-	virtual int32_t loop() override;
+	bool init(uint8_t cmd, const uint8_t* buf, uint32_t size);
+	int32_t loop();
 	
 	MyInterpreter::Error error() const { return _interp.error(); }
-				
+
+    uint8_t* stackBase() { return &(_interp.memMgr()->stack().getAbs(0)); }
 private:
 	MyInterpreter _interp;
 };

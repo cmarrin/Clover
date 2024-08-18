@@ -58,6 +58,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -a -l -h PostLightEffects/PostLightEffects.lucid"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -a -l PostLightEffects/PostLightEffects.lucid"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
