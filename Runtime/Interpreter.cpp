@@ -113,6 +113,12 @@ InterpreterBase::typeCast(Type from, Type to)
     // handle from float case
     if (from == Type::Float) {
         v = intToFloat(v);
+    } else if (from == Type::UInt16) {
+        // v is signed. Clear upper 16 bits
+        v &= 0xffff;
+    } else if (from == Type::UInt8) {
+        // v is signed. Clear upper 24 bits
+        v &= 0xff;
     } else if (typeToBytes(from) < typeToBytes(to)) {
         // Handle widening
         if (from == Type::Int16 || from == Type::Int8) {
