@@ -85,8 +85,8 @@ LedEntry* led;
 float flickerStepsMin;
 float flickerStepsMax;
 float flickerBrightnessMod;
-int16 multiColorDurationMax; // Number of counts between fade (based on Delay)
-int16 multiColorDurationCur;
+uint32 multiColorDurationMax; // Number of counts between fade (based on Delay)
+uint32 multiColorDurationCur;
 uint8 multiColorIndex;
 bool multiColorIsCrossfading;
 
@@ -136,7 +136,7 @@ function init(uint8 cmd)
     led = &leds[0];
     
     if (cmd == 'm') {
-        multiColorDurationMax = speed * 1000 / Delay;
+        multiColorDurationMax = uint32(speed) * 1000 / Delay;
         
         // Start on a random color
         multiColorIndex = core.irand(0, 4);
@@ -248,8 +248,8 @@ function int16 multicolorLoop()
     multiColorIsCrossfading = true;
     
     // Add random amount to duration
-    multiColorDurationMax = int16(float(speed * 1000) * core.frand(1, 1.5)) / Delay;
-
+    multiColorDurationMax = int32(float(speed) * 1000 * core.frand(1, 1.5)) / Delay;
+    multiColorDurationCur = 0;
     return Delay;
 }
 
