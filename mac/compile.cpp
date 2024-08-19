@@ -275,13 +275,14 @@ int main(int argc, char * const argv[])
                 if (looping) {
                     std::cout << "Running looping test on '" << path << "'\n";
                 
-                    // Pass in 5 args, a uint8 command, speed, value, saturation and hue.
+                    // Pass in 6 args, a uint8 command, speed, value, saturation and hue.
                     // Push them backwards
-                    interp.addArg(3, lucid::Type::UInt8); // speed (0-7)
-                    interp.addArg(150, lucid::Type::UInt8); // value
-                    interp.addArg(200, lucid::Type::UInt8); // saturation
-                    interp.addArg(128, lucid::Type::UInt8); // hue
-                    interp.addArg('f', lucid::Type::UInt8); // cmd
+                    interp.addArg(7, lucid::Type::UInt8); // speed (0-7)
+                    interp.addArg(6, lucid::Type::UInt8); // speed (0-7)
+                    interp.addArg(200, lucid::Type::UInt8); // value
+                    interp.addArg(224, lucid::Type::UInt8); // saturation
+                    interp.addArg(50, lucid::Type::UInt8); // hue
+                    interp.addArg('p', lucid::Type::UInt8); // cmd
                     
                     std::cout << "\nInit\n";
                     result = interp.interp(MyInterpreter::ExecMode::Start);
