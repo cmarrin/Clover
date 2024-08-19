@@ -26,7 +26,9 @@ InterpretedEffect::init(uint8_t cmd, const uint8_t* buf, uint32_t size)
 		return false;
 	}
 
-    lucid::printf(F("InterpretedEffect started: cmd='*c'\n"), cmd);
+    Serial.print(F("InterpretedEffect started: cmd='"));
+    Serial.print(char(cmd));
+    Serial.println("'");
 
 	return true;
 }

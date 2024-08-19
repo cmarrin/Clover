@@ -75,7 +75,8 @@ Hue is an angle on the color wheel. A 0-360 degree value is obtained with hue / 
 constexpr int LEDPin = 6;
 constexpr int NumPixels = 8;
 constexpr int MaxPayloadSize = 1024;
-constexpr int CommandSize = 7;
+constexpr int CommandSizeBefore = 5;
+constexpr int CommandSizeAfter = 2;
 constexpr char StartChar = '(';
 constexpr char EndChar = ')';
 constexpr unsigned long SerialTimeOut = 2000; // ms
@@ -161,11 +162,6 @@ public:
 			
 			// Run the state machine
 			
-			// Serial.print("*** char=0x");
-			// Serial.print(int(c), HEX);
-			// Serial.print(", state=");
-			// Serial.println(int(_state));
-
 			switch(_state) {
 				case State::NotCapturing:
 					if (c == StartChar) {
@@ -229,6 +225,10 @@ public:
 						_state = State::Data;
 						_expectedChecksum += c;
 					}
+
+                    if (_cmd == 'X') {
+                        showStatus(StatusColor::Blue, 0, 0);
+                    }
 					break;
 				case State::Data:
 					_buf[_bufIndex++] = c;
@@ -238,10 +238,6 @@ public:
 					if (_payloadReceived >= _payloadSize) {
 						_state = State::Checksum;
 					}
-if ((_payloadReceived % 8) == 0) {
-    Serial.print(F("*** got data byte ="));
-    Serial.println(_payloadReceived);
-}
 					break;
 				case State::Checksum: {     
                     // If we're passing through and not executing, we've decremented
@@ -277,17 +273,21 @@ if ((_payloadReceived % 8) == 0) {
 							// Have a good buffer
 							_state = State::NotCapturing;
 
+                            if (_cmd == 'X') {
+                                showStatus(StatusColor::Yellow, 0, 0);
+                            }
+
                             // Pass through buffer if needed
                             if (_cmdPassThrough) {
-                                for (uint16_t i = 0; i < _payloadSize + CommandSize; i++) {
-if ((i % 8) == 0) {
-    Serial.print(F("*** passthrough data byte ="));
-    Serial.println(i);
-}
+                                for (uint16_t i = 0; i < _payloadSize + CommandSizeBefore + CommandSizeAfter; i++) {
                                     _serial.write(_buf[i]);
                                 }
                             }
        
+                            if (_cmd == 'X') {
+                                showStatus(StatusColor::Green, 0, 0);
+                            }
+
                             if (!_cmdExecute) {
                                 break;
                             }
@@ -297,7 +297,11 @@ if ((i % 8) == 0) {
 							
 							switch(_cmd) {
 								case 'C':
-								showColor(_buf[4], _buf[5], _buf[6], _buf[7], _buf[8]);
+								showColor(_buf[CommandSizeBefore], 
+                                          _buf[CommandSizeBefore + 1], 
+                                          _buf[CommandSizeBefore + 2], 
+                                          _buf[CommandSizeBefore + 3], 
+                                          _buf[CommandSizeBefore + 4]);
 								break;
 								
 								case 'X': {
@@ -313,16 +317,17 @@ if ((i % 8) == 0) {
 										Serial.print(F("exec => EEPROM: size="));
 										Serial.println(_payloadSize);
 
-										for (uint8_t i = 0; i < _payloadSize; ++i) {
-											EEPROM[i] = _buf[i + 2 + 4]; // Skip cmd chars and start addr
+										for (uint16_t i = 0; i < _payloadSize; ++i) {
+											EEPROM[i] = _buf[i + CommandSizeBefore]; // Skip cmd chars and start addr
 										}
 									}
-                                    showStatus(StatusColor::Yellow, 0, 0);
+                                    Serial.print(F("Finished upload"));
+                                    showStatus(StatusColor::Blue, 5, 1);
 									break;
 								}
 								default:
 								// See if it's interpreted, payload is after cmd bytes, offset it
-								if (!_interpretedEffect.init(_cmd, _buf + 4, _payloadSize)) {
+								if (!_interpretedEffect.init(_cmd, _buf + CommandSizeBefore, _payloadSize)) {
 									String errorMsg;
 									switch(_interpretedEffect.error()) {
                                         default:
@@ -413,7 +418,7 @@ private:
 	    return sum & 0x3f;
 	}
 
-	enum class StatusColor { Red, Green, Yellow };
+	enum class StatusColor { Red, Green, Yellow, Blue };
 
 	void showColor(uint8_t h, uint8_t s, uint8_t v, uint8_t n, uint8_t d)
 	{
@@ -425,7 +430,14 @@ private:
 	{
 		// Flash half bright red or green at passed interval and passed number of times
         _effect = Effect::Flash;
-        uint8_t h = (color == StatusColor::Red) ? 0 : ((color == StatusColor::Green) ? 85 : 30);
+        uint8_t h = 128;
+        
+        switch (color) {
+            case StatusColor::Red: h = 0; break;
+            case StatusColor::Green: h = 85; break;
+            case StatusColor::Yellow: h = 30; break;
+            case StatusColor::Blue: h = 140; break;
+        }
         _flash.init(&_pixels, h, 0xff, 0x80, numberOfBlinks, interval);
 	}
 	
