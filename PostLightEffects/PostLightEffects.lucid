@@ -11,9 +11,6 @@
 //
 // Current effects:
 //
-//      'c' - Constant color
-//              Args:   0, 1, 2       Color
-//
 //      'm' - Multicolor: rotate between 4 passed color at passed rate
 //              Args:   0..2       Color 1
 //                      3..5       Color 2
@@ -130,9 +127,7 @@ function init(uint8 cmd)
         clr.loadColorArg(colors[3]);
     }
     
-    if (cmd != 'c') {
-        speed = core.argint8();
-    }
+    speed = core.argint8();
     
     if (cmd == 'r') {
         range = core.argint8();
@@ -209,17 +204,6 @@ function init(uint8 cmd)
 // Effects take one or more colors and possibly other args
 // Colors are hue, saturation, brightness (uint8). 0 is
 // 0%, 255 is 100%.
-
-//
-// Constant color
-//
-// Args:  0, 1, 2       Color
-
-function int16 constantLoop()
-{
-	setAllLights(0);
-    return Delay;
-}
 
 // Multicolor - pass 4 colors and cross fade between them
 //
@@ -335,6 +319,8 @@ function int16 rainbowLoop()
     return Delay;
 }
 
+uint8 _cmd = 'f';
+
 initialize()
 {
     // For now let's just run flicker. Later we will have
@@ -345,16 +331,27 @@ initialize()
     // First arg is a uint8 command. If it's an alpha character
     // This is the init for the selected command. If that's the
     // case the following args are specific to that command.
-    // If it's '*' this is the loop for that command. For now
-    // we assume the 'f' (flicker) command.
+    // If it's '*' this is the loop for that command.
     uint8 cmd = core.argint8();
-    if (cmd == '*') {
+    if (cmd != '*') {
+        // Init
+        init(cmd);
+        _cmd = cmd;
+    } else {
         // Loop
-        return flickerLoop();
+        if (_cmd == 'm') {
+            return multicolorLoop();
+        }
+        if (_cmd == 'p') {
+            return pulseLoop();
+        }
+        if (_cmd == 'f') {
+            return flickerLoop();
+        }
+        if (_cmd == 'r') {
+            return rainbowLoop();
+        }
     }
-    
-    // Init
-    init(cmd);
 }
 
 };
