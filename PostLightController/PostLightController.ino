@@ -321,7 +321,7 @@ public:
 											EEPROM[i] = _buf[i + CommandSizeBefore]; // Skip cmd chars and start addr
 										}
 									}
-                                    Serial.print(F("Finished upload"));
+                                    Serial.println(F("Finished upload"));
                                     showStatus(StatusColor::Blue, 5, 1);
 									break;
 								}
