@@ -105,7 +105,7 @@ static inline uint8_t tolower(uint8_t c)    { return isUpper(c) ? (c - 'A' + 'a'
 static inline uint8_t toupper(uint8_t c)    { return isLower(c) ? (c - 'a' + 'A') : c; }
 static inline bool isSpecial(uint8_t c)
 {
-    return (c >= '!' && c <= '/') || (c >= ':' && c <= '@') || ( c >= '[' && c <= '`') || (c >= '{' && c <= '~');
+    return c != '_' && c != '$' && ((c >= '!' && c <= '/') || (c >= ':' && c <= '@') || ( c >= '[' && c <= '`') || (c >= '{' && c <= '~'));
 }
 
 static constexpr uint8_t C_EOF = 0xff;
