@@ -43,13 +43,14 @@ public:
     // Pointer to array is not allowed. When an array is passed as an arg, you always pass
     // a pointer to it. So the arg type is a pointer to the underlying type.
 
-    Symbol(const std::string& name, Type type, bool ptr, uint16_t size, uint16_t nElements, bool isConstant = false)
+    enum class Kind { Var, Constant, ScalarConstant };
+    Symbol(const std::string& name, Type type, bool ptr, uint16_t size, uint16_t nElements, Kind kind = Kind::Var)
         : _name(name)
         , _type(type)
         , _ptr(ptr)
         , _structSize(size)
         , _nElements(nElements)
-        , _isConstant(isConstant)
+        , _kind(kind)
     { }
     
     void setAddr(int32_t addr, Index index) { _addr = addr; _index = index; }
@@ -61,7 +62,8 @@ public:
     const std::string& name() const { return _name; }
     Type type() const { return _type; }
     bool isPointer() const { return _ptr; }
-    bool isConstant() const { return _isConstant; }
+    Kind kind() const { return _kind; }
+    void setKind(Kind kind) { _kind = kind; }
     FunctionPtr function() const { return _function; }
     uint16_t size() const
     {
@@ -86,7 +88,7 @@ private:
     FunctionPtr _function;
     uint16_t _nElements = 1;
     uint16_t _structSize = 0;
-    bool _isConstant = false;
+    Kind _kind = Kind::Var;
 };
 
 }

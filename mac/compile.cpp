@@ -77,7 +77,7 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
         case lucid::Error::InitializerNotAllowed: err = "initializer not allowed for this type"; break;
         case lucid::Error::ExpectedIndexable: err = "expected indexable variable"; break;
         case lucid::Error::PointerConstantNotAllowed: err = "pointer constant not allowed"; break;
-        case lucid::Error::EmptyArrayRequiresInitializer: err = "empty array requires initializer"; break;
+        case lucid::Error::RequiresInitializer: err = "var requires initializer"; break;
         case lucid::Error::PropertyDoesNotExist: err = "property does not exist"; break;
         case lucid::Error::IteratorMustBeScalar: err = "iterator must be scalar"; break;
         case lucid::Error::PtrAssignmentMustMatch: err = "pointer assignment must match"; break;

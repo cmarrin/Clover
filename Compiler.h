@@ -243,7 +243,7 @@ enum class Error {
     InitializerNotAllowed,
     ExpectedIndexable,
     PointerConstantNotAllowed,
-    EmptyArrayRequiresInitializer,
+    RequiresInitializer,
     PropertyDoesNotExist,
     IteratorMustBeScalar,
     PtrAssignmentMustMatch,
@@ -316,7 +316,7 @@ private:
     bool formalParameterList();
     bool argumentList(const ASTPtr& fun);
     
-    void collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16_t& nElements);
+    void collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16_t& nElements, bool& isScalarConstant);
     
     bool isReserved(Token token, const std::string str, Reserved&);
 
@@ -397,7 +397,11 @@ private:
 
     uint32_t _entryStructIndex;
     
+    // Scalar constants are embedded in the code as constant opcodes. Structs and arrays
+    // are stored at the start of the executable and are accessed as Constant values
     std::vector<uint8_t> _constants;
+    std::vector<uint32_t> _scalarConstants;
+    
     StructList _structs;
     StructList _structStack;
     std::vector<ModulePtr> _modules;

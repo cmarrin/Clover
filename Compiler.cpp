@@ -272,7 +272,7 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
         expect(Token::CloseBracket);
     }
     
-    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->size() : typeToBytes(type), nElements, isConstant);
+    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->size() : typeToBytes(type), nElements);
     expect(sym != nullptr, Error::DuplicateIdentifier);
     
     // Check for an initializer.
@@ -283,8 +283,10 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
     if (match(Token::Equal)) {
         if (isConstant) {
             // Collect the constant initializers
-            collectConstants(type, nElements != 1, addr, nConstElements);
+            bool isScalarConstant;
+            collectConstants(type, nElements != 1, addr, nConstElements, isScalarConstant);
             sym->setNElements(nConstElements);
+            sym->setKind(isScalarConstant ? Symbol::Kind::ScalarConstant : Symbol::Kind::Constant);
         } else if ((uint8_t(type) < StructTypeStart && nElements == 1) || isPointer) {
             // Built-in scalar type. Generate an expression
             ast = expression();
@@ -307,7 +309,7 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
             expect(Token::CloseBrace);
         }
     } else {
-        expect(nElements != 0, Error::EmptyArrayRequiresInitializer);
+        expect(nElements != 0 && !isConstant, Error::RequiresInitializer);
     }
 
     // Put the var in the current struct unless we're in a function, then put it in _locals    
@@ -353,17 +355,21 @@ static Type nextStructProperty(const StructPtr& struc, uint16_t& propIndex)
 }
 
 void
-Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16_t& nElements)
+Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16_t& nElements, bool& isScalarConstant)
 {
     uint32_t v;
-    addr = uint32_t(_constants.size());
     
     if (!isArray && isScalar(type)) {
         expect(value(v, type), Error::ExpectedValue);
         nElements = 1;
-        appendValue(_constants, v, type);
+        addr = uint32_t(_scalarConstants.size());
+        _scalarConstants.push_back(v);
+        isScalarConstant = true;
         return;
     }
+
+    isScalarConstant = false;
+    addr = uint32_t(_constants.size());
        
     // This is an array of scalars, a struct or an array of structs
     expect(Token::OpenBrace);
@@ -682,7 +688,7 @@ Compiler::loopStatement()
             if (t != Type::None) {
                 expect(isScalar(t), Error::WrongType);
 
-                sym = std::make_shared<Symbol>(id, t, false, typeToBytes(t), 1, false);
+                sym = std::make_shared<Symbol>(id, t, false, typeToBytes(t), 1);
                 expect(sym != nullptr, Error::DuplicateIdentifier);
         
                 currentFunction()->addLocal(sym);
@@ -1060,10 +1066,20 @@ Compiler::primaryExpression()
         expect(_inFunction, Error::InternalError);
         SymbolPtr symbol = findSymbol(id);
         if (symbol) {
-            // This could be a var or function. Create the proper ASTNode
+            // This could be a var, scalar constant or function. Create the proper ASTNode
             if (symbol->type() == Type::Function) {
                 return std::make_shared<FunctionCallNode>(symbol->function(), annotationIndex());
+            } else if (symbol->kind() == Symbol::Kind::ScalarConstant) {
+                Index index;
+                AddrNativeType addr = symbol->addr(index);
+                int32_t v = _scalarConstants[addr];
+                if (symbol->type() == Type::Float) {
+                    return std::make_shared<ConstantNode>(intToFloat(v), annotationIndex());
+                } else {
+                    return std::make_shared<ConstantNode>(symbol->type(), v, annotationIndex());
+                }
             } else {
+                // It's a Var or Constant symbol
                 return std::make_shared<VarNode>(symbol, annotationIndex());
             }
         }

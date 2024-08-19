@@ -68,7 +68,7 @@ Function::addLocal(const SymbolPtr& sym, AddrNativeType addr, uint16_t nElements
     
     _locals.push_back(sym);
     
-    if (sym->isConstant()) {
+    if (sym->kind() != Symbol::Kind::Var) {
         sym->setAddr(addr, Index::C);
         sym->setNElements(nElements);
         return true;
