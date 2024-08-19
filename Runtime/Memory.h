@@ -54,18 +54,20 @@ class Memory
             push(uint8_t(v >> 24));
         }
                 
-        uint32_t pop(OpSize size)
+        int32_t pop(OpSize size)
         {
-            uint32_t v = 0;
+            int32_t v = 0;
             
             switch (size) {
                 case OpSize::flt  :
-                case OpSize::i32: v |= uint32_t(pop()) << 24;
-                                  v |= uint32_t(pop()) << 16;
-                case OpSize::i16: v |= uint32_t(pop()) << 8;
-                case OpSize::i8 : v |= uint32_t(pop());
+                case OpSize::i32: v |= int32_t(pop()) << 24;
+                                  v |= int32_t(pop()) << 16;
+                case OpSize::i16: v |= int32_t(pop()) << 8;
+                case OpSize::i8 : v |= int32_t(pop());
             }
             
+            // sign extend
+            sex(v, size);
             return v;
         }
         
