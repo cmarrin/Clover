@@ -523,7 +523,11 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     Type type = _expr->type();
     
     // See Defines.h for the definition of the SWITCH opcode.
-    uint16_t operand = uint16_t(_clauses.size()) << 3;
+    uint16_t n = uint16_t(_clauses.size());
+    if (_haveDefault) {
+        n -= 1;
+    }
+    uint16_t operand = n << 3;
     
     // FIXME: Eventually we should use multi-pass to determine if the address can be 1 byte. For now
     // we assume it's 2 bytes.
@@ -555,12 +559,8 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 
     // Default clause should be first if there is one
     // Now emit the list
-    bool haveDefault = false;
-    
     for (auto& it : _clauses) {
-        if (it.isDefault()) {
-            haveDefault = true;
-        } else {
+        if (!it.isDefault()) {
             appendValue(code, it.value(), opSizeToBytes(opSize));
             it.setFixupIndex(AddrNativeType(code.size()));
             appendValue(code, 0, longAddr ? 2 : 1);
@@ -577,7 +577,7 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // otherwise we need to put a BRA first in place of the default clause
     AddrNativeType missingDefaultFixupAddr = 0;
     
-    if (!haveDefault) {
+    if (!_haveDefault) {
         // FIXME: Eventually make this a short branch if possible. For now, make it long
         code.push_back(uint8_t(Op::BRA) | 0x01);
 
@@ -603,7 +603,7 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     // Finally, fixup the branches at the end of the case statements
-    if (!haveDefault) {
+    if (!_haveDefault) {
         ::fixup(code, missingDefaultFixupAddr, AddrNativeType(code.size()) - missingDefaultFixupAddr - 2);
     }
     
