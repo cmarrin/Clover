@@ -339,17 +339,11 @@ initialize()
         _cmd = cmd;
     } else {
         // Loop
-        if (_cmd == 'm') {
-            return multicolorLoop();
-        }
-        if (_cmd == 'p') {
-            return pulseLoop();
-        }
-        if (_cmd == 'f') {
-            return flickerLoop();
-        }
-        if (_cmd == 'r') {
-            return rainbowLoop();
+        switch (_cmd) {
+            case 'm': return multicolorLoop();
+            case 'p': return pulseLoop();
+            case 'f': return flickerLoop();
+            case 'r': return rainbowLoop();
         }
     }
 }
