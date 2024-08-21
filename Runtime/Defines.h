@@ -208,7 +208,7 @@ Opcodes:
 static constexpr uint16_t ConstStart = 14; // Past signature, entry point and top level size
 
 // 0 bit opcodes start at 0x00
-static constexpr uint8_t OneBitOperandStart  = 0x44;
+static constexpr uint8_t OneBitOperandStart  = 0x42;
 static constexpr uint8_t TwoBitOperandStart  = 0x4c;
 static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
@@ -307,7 +307,7 @@ enum class Op: uint8_t {
     
 //
 //
-// Available opcodes 3e - 43
+// Available opcodes 3e - 41
 //
 //
 
@@ -316,8 +316,9 @@ enum class Op: uint8_t {
 // This limits branches to the range -32768 to 32767.
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
-    IF      = 0x44,
-    BRA     = 0x46,
+    IF      = 0x42, // Branch is always forward
+    FBRA    = 0x44, // Branch is always forward
+    RBRA    = 0x46, // Branch is always reverse
     NCALL   = 0x48,
     ENTER   = 0x4a,
 

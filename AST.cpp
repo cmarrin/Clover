@@ -419,24 +419,30 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
     return node;
 }
 
+static void fixup(std::vector<uint8_t>& code, AddrNativeType fixupIndex, AddrNativeType addr, BranchNode::BranchSize& branchSize)
+{
+    // If branchSize is Long or Unknown we need to emit a 2 byte branch.
+    // But if the branch would fit in 1 byte, set branchSize to Short and
+    // tell the compiler we need another pass
+    if (branchSize != BranchNode::BranchSize::Short) {
+        if (addr <= 255) {
+            branchSize = BranchNode::BranchSize::Short;
+        }
+        code[fixupIndex] = addr >> 8;
+        code[fixupIndex + 1] = addr;
+    } else {
+        code[fixupIndex] = addr;
+    }
+}
+
 void
 BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 {
-    int16_t rel = addr - _fixupIndex - 2;
-
-    // If _branchSize is Long or Unknown we need to emit a 2 byte branch.
-    // But if the branch would fit in 1 byte, set branchSize to Short and
-    // tell the compiler we need another pass
-    int16_t shortRel = rel + 1;
-    if (_branchSize != BranchSize::Short) {
-        if (shortRel >= -128 && shortRel <= 127) {
-            _branchSize = BranchSize::Short;
-        }
-        code[_fixupIndex] = rel >> 8;
-        code[_fixupIndex + 1] = rel;
-    } else {
-        code[_fixupIndex] = shortRel;
+    AddrNativeType rel = addr - _fixupIndex - 2;
+    if (_branchSize == BranchSize::Short) {
+        rel += 1;
     }
+    ::fixup(code, _fixupIndex, rel, _branchSize);
 }
 
 void
@@ -466,7 +472,7 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             // If this is the first pass, we don't know how long the
             // branch should be so we make enough space for a long
             // branch
-            code.push_back(uint8_t(Op::BRA) | ((_branchSize == BranchSize::Short) ? 0x00 : 0x01));
+            code.push_back(uint8_t(Op::FBRA) | ((_branchSize == BranchSize::Short) ? 0x00 : 0x01));
             _fixupIndex = AddrNativeType(code.size());
             code.push_back(0);
             if (_branchSize != BranchSize::Short) {
@@ -490,8 +496,10 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             int16_t relAddr = int16_t(addr - AddrNativeType(code.size())) - 2;
             assert(relAddr < 0);
             
-            code.push_back(uint8_t(Op::BRA) | ((relAddr >= -128) ? 0x00 : 0x01));
-            appendValue(code, relAddr, (relAddr >= -128) ? 1 : 2);
+            // RBRA has a positive addr which is subtracted from pc
+            relAddr = -relAddr;
+            code.push_back(uint8_t(Op::RBRA) | ((relAddr <= 255) ? 0x00 : 0x01));
+            appendValue(code, relAddr, (relAddr <= 255) ? 1 : 2);
             break;
         }
         default:
@@ -499,17 +507,10 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
 }
 
-static void fixup(std::vector<uint8_t>& code, AddrNativeType fixupIndex, AddrNativeType addr)
-{
-    // FIXME: handle short jumps
-    code[fixupIndex] = addr >> 8;
-    code[fixupIndex + 1] = addr;
-}
-
 void
 CaseClause::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 {
-    ::fixup(code, _fixupIndex, addr);
+    ::fixup(code, _fixupIndex, addr, _branchSize);
 }
 
 void
@@ -529,11 +530,13 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     uint16_t operand = n << 3;
     
-    // FIXME: Eventually we should use multi-pass to determine if the address can be 1 byte. For now
-    // we assume it's 2 bytes.
-    bool longAddr = true;
+    bool longAddr = _branchSize != BranchNode::BranchSize::Short;
     OpSize opSize = typeToOpSize(type);
-    operand |= 0x04;
+    
+    if (longAddr) {
+        operand |= 0x04;
+    }
+    
     operand |= uint16_t(opSize);
 
     // emit the opcode and operand
@@ -578,37 +581,56 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     AddrNativeType missingDefaultFixupAddr = 0;
     
     if (!_haveDefault) {
-        // FIXME: Eventually make this a short branch if possible. For now, make it long
-        code.push_back(uint8_t(Op::BRA) | 0x01);
+        code.push_back(uint8_t(Op::FBRA) | ((_defaultBranchSize != BranchNode::BranchSize::Short) ? 0x01 : 0x00));
 
         // We can reuse the fixupIndex beacuse we're done with it
         missingDefaultFixupAddr = AddrNativeType(code.size());
-        appendValue(code, 0, 2);
+        appendValue(code, 0, (_defaultBranchSize == BranchNode::BranchSize::Short) ? 1 : 2);
     }
     
-    for (auto& it : _clauses) {
-        if (!it.isDefault()) {
+    // If all branches in the list are short, we can make the list entry short
+    bool allShortBranches = true;
+    
+    for (auto it = _clauses.begin(); it != _clauses.end(); ++it) {
+        if (!it->isDefault()) {
             // No need to fixup default. It's always first
-            it.fixup(code, AddrNativeType(code.size()) - jumpSourceAddr);
+            AddrNativeType addr = AddrNativeType(code.size()) - jumpSourceAddr;
+            if (addr >= 256) {
+                allShortBranches = true;
+            }
+            it->fixup(code, addr);
         }
         
-        it.stmt()->emitCode(code, false, c);
-        
-        // FIXME: Eventually make this a short branch if possible. For now, make it long
-        code.push_back(uint8_t(Op::BRA) | 0x01);
+        it->stmt()->emitCode(code, false, c);
+
+        // The last clause will always have a branch of 0 so we can skip it
+        if (it == _clauses.end() - 1) {
+            continue;
+        }
+        code.push_back(uint8_t(Op::FBRA) | ((it->branchSize() != BranchNode::BranchSize::Short) ? 0x01 : 0x00));
 
         // We can reuse the fixupIndex beacuse we're done with it
-        it.setFixupIndex(AddrNativeType(code.size()));
-        appendValue(code, 0, 2);
+        it->setFixupIndex(AddrNativeType(code.size()));
+        appendValue(code, 0, ((it->branchSize() == BranchNode::BranchSize::Short) ? 1 : 2));
+    }
+    
+    // Set branchSize if needed
+    if (_branchSize == BranchNode::BranchSize::Unknown) {
+        _branchSize = allShortBranches ? BranchNode::BranchSize::Short : BranchNode::BranchSize::Long;
     }
     
     // Finally, fixup the branches at the end of the case statements
     if (!_haveDefault) {
-        ::fixup(code, missingDefaultFixupAddr, AddrNativeType(code.size()) - missingDefaultFixupAddr - 2);
+        uint8_t adjustment = (_defaultBranchSize == BranchNode::BranchSize::Short) ? 1 : 2;
+        ::fixup(code, missingDefaultFixupAddr, AddrNativeType(code.size()) - missingDefaultFixupAddr - adjustment, _defaultBranchSize);
     }
     
-    for (auto& it : _clauses) {
-        it.fixup(code, AddrNativeType(code.size()) - it.fixupIndex() - 2);
+    for (auto it = _clauses.begin(); it != _clauses.end(); ++it) {
+        if (it == _clauses.end() - 1) {
+            continue;
+        }
+        uint8_t adjustment = (it->branchSize() == BranchNode::BranchSize::Short) ? 1 : 2;
+        it->fixup(code, AddrNativeType(code.size()) - it->fixupIndex() - adjustment);
     }
 }
 

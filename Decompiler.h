@@ -53,7 +53,7 @@ private:
     
     void emitOp(const char* opString);
     void emitSizeValue(uint8_t size);
-    void emitRelAddr(uint8_t size);
+    void emitRelAddr(uint8_t size, bool isSigned = true);
     void emitNumber(int32_t number);
     void emitConstant(uint8_t bytes, bool isSigned = true);
     void emitShortConstant(uint8_t value);

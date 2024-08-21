@@ -458,15 +458,19 @@ InterpreterBase::execute(ExecMode mode)
                 _memMgr.stack().push(left, OpSize::i8);
                 break;
             case Op::IF:
-                right = getIOpnd(opSize);
+                right = getUOpnd(opSize);
                 left = _memMgr.stack().pop(OpSize::i8);
                 if (left == 0) {
                     _pc += right;
                 }
                 break;
-            case Op::BRA:
-                right = getIOpnd(opSize);
+            case Op::FBRA:
+                right = getUOpnd(opSize);
                 _pc += right;
+                break;
+            case Op::RBRA:
+                right = getUOpnd(opSize);
+                _pc -= right;
                 break;
             case Op::SWITCH  : {
                 uint16_t operand = getUOpnd(OpSize::i16);

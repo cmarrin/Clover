@@ -518,12 +518,14 @@ class CaseClause
     AddrNativeType fixupIndex() const { return _fixupIndex; }
     void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
     bool isDefault() const { return _isDefault; }
+    BranchNode::BranchSize branchSize() const { return _branchSize; }
     
   private:
     int32_t _value = 0;
     ASTPtr _stmt;
     AddrNativeType _fixupIndex = 0;
     bool _isDefault = false;
+    BranchNode::BranchSize _branchSize = BranchNode::BranchSize::Unknown;
 };
 
 class SwitchNode : public ASTNode
@@ -546,6 +548,8 @@ class SwitchNode : public ASTNode
     ASTPtr _expr;
     std::vector<CaseClause> _clauses;
     bool _haveDefault = false;
+    BranchNode::BranchSize _branchSize = BranchNode::BranchSize::Unknown;
+    BranchNode::BranchSize _defaultBranchSize = BranchNode::BranchSize::Unknown;
 };
 
 class IndexNode : public ASTNode

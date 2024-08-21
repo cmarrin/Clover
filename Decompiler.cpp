@@ -211,8 +211,9 @@ Decompiler::statement()
         case Op::HI      : emitOp("HI"); emitSize(size); break;
         case Op::EQ      : emitOp("EQ"); emitSize(size); break;
         case Op::NE      : emitOp("NE"); emitSize(size); break;
-        case Op::IF      : emitOp("IF"); emitRelAddr(size); break;
-        case Op::BRA     : emitOp("BRA"); emitRelAddr(size); break;
+        case Op::IF      : emitOp("IF"); emitRelAddr(size, false); break;
+        case Op::FBRA    : emitOp("FBRA"); emitRelAddr(size, false); break;
+        case Op::RBRA    : emitOp("RBRA"); emitRelAddr(size, false); break;
         case Op::SWITCH  : {
             emitOp("SWITCH");
             _out->append("\n");
@@ -225,7 +226,7 @@ Decompiler::statement()
                 _out->append("      ");
                 emitConstant(opSizeToBytes(opSize));
                 _out->append(":");
-                emitRelAddr(isLongAddr ? 1 : 0);
+                emitRelAddr(isLongAddr ? 1 : 0, false);
                 _out->append("\n");
             }
             break;
@@ -265,14 +266,17 @@ void Decompiler::emitOp(const char* opString)
     _out->append(opString);
 }
 
-void Decompiler::emitRelAddr(uint8_t size)
+void Decompiler::emitRelAddr(uint8_t size, bool isSigned)
 {
     _out->append(" ");
     if (size) {
-        _out->append(std::to_string(getInt16()));
+        _out->append(std::to_string(isSigned ? getInt16() : getUInt16()));
     } else {
-        int8_t v = getInt8();
-        _out->append(std::to_string(v));
+        if (isSigned) {
+            _out->append(std::to_string(getInt8()));
+        } else {
+            _out->append(std::to_string(getUInt8()));
+        }
     }
 }
 
