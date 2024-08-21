@@ -550,6 +550,7 @@ enum class Reserved {
     Else,
     Switch,
     Case,
+    Default,
     Float,
     Fixed,
     True,

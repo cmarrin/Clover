@@ -320,7 +320,7 @@ private:
 
     bool formalParameterList();
     bool argumentList(const ASTPtr& fun);
-    bool caseClause(int32_t& value);
+    bool caseClause(int32_t& value, bool& isDefault);
     
     void collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16_t& nElements, bool& isScalarConstant);
     

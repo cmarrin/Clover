@@ -668,10 +668,15 @@ Compiler::switchStatement(const ASTPtr& parent)
     
     ASTPtr switchStmt = std::make_shared<SwitchNode>(expr, annotationIndex());
     int32_t value;
-    while (caseClause(value)) {
+    bool isDefault;
+    while (caseClause(value, isDefault)) {
         ASTPtr stmt = std::make_shared<StatementsNode>(-1);
         expect(statement(stmt), Error::ExpectedExpr);
-        std::static_pointer_cast<SwitchNode>(switchStmt)->addCaseClause(value, stmt);
+        if (isDefault) {
+            std::static_pointer_cast<SwitchNode>(switchStmt)->addCaseClause(stmt);
+        } else {
+            std::static_pointer_cast<SwitchNode>(switchStmt)->addCaseClause(value, stmt);
+        }
     }
     
     expect(Token::CloseBrace);
@@ -682,19 +687,25 @@ Compiler::switchStatement(const ASTPtr& parent)
 }
 
 bool
-Compiler::caseClause(int32_t& value)
+Compiler::caseClause(int32_t& value, bool& isDefault)
 {
-    if (!match(Reserved::Case)) {
+    isDefault = false;
+    
+    if (match(Reserved::Default)) {
+        isDefault = true;
+    } else if (!match(Reserved::Case)) {
         return false;
     }
     
-    // Case value must be integer constant. That means literal (including true and false), a scalar constant or an enum
-    // FIXME: add support for enum
-    ASTPtr ast = primaryExpression();
-    expect(ast != nullptr && ast->astNodeType() == ASTNodeType::Constant && isInteger(ast->type()), Error::WrongType);
+    if (!isDefault) {
+        // Case value must be integer constant. That means literal (including true and false), a scalar constant or an enum
+        // FIXME: add support for enum
+        ASTPtr ast = primaryExpression();
+        expect(ast != nullptr && ast->astNodeType() == ASTNodeType::Constant && isInteger(ast->type()), Error::WrongType);
 
-    // We know this is an integer constant node. Get the value
-    value = std::static_pointer_cast<ConstantNode>(ast)->integerValue();
+        // We know this is an integer constant node. Get the value
+        value = std::static_pointer_cast<ConstantNode>(ast)->integerValue();
+    }
     
     expect(Token::Colon);
     return true;
@@ -1419,6 +1430,7 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "else",       Reserved::Else },
         { "switch",     Reserved::Switch },
         { "case",       Reserved::Case },
+        { "default",    Reserved::Default },
         { "struct",     Reserved::Struct },
         { "return",     Reserved::Return },
         { "break",      Reserved::Break },

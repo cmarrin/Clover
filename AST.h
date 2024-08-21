@@ -539,6 +539,7 @@ class SwitchNode : public ASTNode
     
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
+    void addCaseClause(const ASTPtr& stmt) { _clauses.emplace_back(stmt); }
     void addCaseClause(int32_t value, const ASTPtr& stmt) { _clauses.emplace_back(value, stmt); }
     
   private:
