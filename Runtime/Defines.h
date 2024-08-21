@@ -253,9 +253,12 @@ enum class Op: uint8_t {
     DUP2    = 0x20,
     DUP4    = 0x21,
     
-    SWITCH  = 0x22, // Following opcode is a 16 bit operand and then a list of pairs: <value (1-4 bytes), addr (1 or 2 bytes)
-                    // Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the OpSize format. 
-                    // Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list (0 - 8191 entries).
+    SWITCH  = 0x22, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
+                    // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
+                    // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
+                    // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
+                    // there is none then this is a BRA to the end of the clauses.
+
 //
 //
 // Available opcodes 23

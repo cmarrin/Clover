@@ -488,9 +488,10 @@ InterpreterBase::execute(ExecMode mode)
                     case 0x42: addr = switchSearch<4, 2>(value, _pc, n); break;
                 }
                 
-                // FIXME: what do we do if there is no match?
                 if (addr == 0) {
-                    _error = Error::InternalError;
+                    // If there's no match, this is the default clause, which is
+                    // right after the jump table
+                    _pc += n * (opSizeToBytes(opSize) + (isLongAddr ? 2 : 1));
                 } else {
                     _pc += addr;
                 }

@@ -499,14 +499,17 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
 }
 
+static void fixup(std::vector<uint8_t>& code, AddrNativeType fixupIndex, AddrNativeType addr)
+{
+    // FIXME: handle short jumps
+    code[fixupIndex] = addr >> 8;
+    code[fixupIndex + 1] = addr;
+}
+
 void
 CaseClause::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 {
-    // FIXME: handle short jumps
-    int16_t rel = addr - _fixupIndex - 2;
-
-    code[_fixupIndex] = rel >> 8;
-    code[_fixupIndex + 1] = rel;
+    ::fixup(code, _fixupIndex, addr);
 }
 
 void
@@ -519,9 +522,7 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     
     Type type = _expr->type();
     
-    // Following SWITCH opcode is a 16 bit operand and then a list of pairs: <value (1-4 bytes), addr (1 or 2 bytes).
-    // Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the OpSize format. 
-    // Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list (0 - 8191 entries).
+    // See Defines.h for the definition of the SWITCH opcode.
     uint16_t operand = uint16_t(_clauses.size()) << 3;
     
     // FIXME: Eventually we should use multi-pass to determine if the address can be 1 byte. For now
@@ -531,18 +532,39 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     operand |= 0x04;
     operand |= uint16_t(opSize);
 
+    // emit the opcode and operand
     code.push_back(uint8_t(Op::SWITCH));
     appendValue(code, operand, 2);
     
+    // Jump addresses in list are relative to this point
+    AddrNativeType jumpSourceAddr = AddrNativeType(code.size());
+    
     // Now we need to sort the clauses, so we can binary search at runtime.
     std::sort(_clauses.begin(), _clauses.end(),
-                [](const CaseClause &a, const CaseClause &b) { return a.value() < b.value(); });
-                
+                [](const CaseClause &a, const CaseClause &b)
+                {
+                    // default clause is always lowest
+                    if (a.isDefault()) {
+                        return true;
+                    }
+                    if (b.isDefault()) {
+                        return false;
+                    }
+                    return a.value() < b.value();
+                });
+
+    // Default clause should be first if there is one
     // Now emit the list
+    bool haveDefault = false;
+    
     for (auto& it : _clauses) {
-        appendValue(code, it.value(), opSizeToBytes(opSize));
-        it.setFixupIndex(AddrNativeType(code.size()));
-        appendValue(code, 0, longAddr ? 2 : 1);
+        if (it.isDefault()) {
+            haveDefault = true;
+        } else {
+            appendValue(code, it.value(), opSizeToBytes(opSize));
+            it.setFixupIndex(AddrNativeType(code.size()));
+            appendValue(code, 0, longAddr ? 2 : 1);
+        }
     }
     
     // Now emit the statements. As we do so, fixup the addr in the list.
@@ -551,8 +573,25 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     //
     // FIXME: we can skip the branch on the last case statement
     //
+    // If we have a default clause it will be first and it gets emitted right after the list
+    // otherwise we need to put a BRA first in place of the default clause
+    AddrNativeType missingDefaultFixupAddr = 0;
+    
+    if (!haveDefault) {
+        // FIXME: Eventually make this a short branch if possible. For now, make it long
+        code.push_back(uint8_t(Op::BRA) | 0x01);
+
+        // We can reuse the fixupIndex beacuse we're done with it
+        missingDefaultFixupAddr = AddrNativeType(code.size());
+        appendValue(code, 0, 2);
+    }
+    
     for (auto& it : _clauses) {
-        it.fixup(code, AddrNativeType(code.size()) + 3);
+        if (!it.isDefault()) {
+            // No need to fixup default. It's always first
+            it.fixup(code, AddrNativeType(code.size()) - jumpSourceAddr);
+        }
+        
         it.stmt()->emitCode(code, false, c);
         
         // FIXME: Eventually make this a short branch if possible. For now, make it long
@@ -564,8 +603,12 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     // Finally, fixup the branches at the end of the case statements
+    if (!haveDefault) {
+        ::fixup(code, missingDefaultFixupAddr, AddrNativeType(code.size()) - missingDefaultFixupAddr - 2);
+    }
+    
     for (auto& it : _clauses) {
-        it.fixup(code, AddrNativeType(code.size()));
+        it.fixup(code, AddrNativeType(code.size()) - it.fixupIndex() - 2);
     }
 }
 

@@ -509,17 +509,21 @@ class BranchNode : public ASTNode
 class CaseClause
 {
   public:
+    CaseClause(const ASTPtr& stmt) : _stmt(stmt), _isDefault(true) { }
     CaseClause(int32_t value, const ASTPtr& stmt) : _value(value), _stmt(stmt) { }
     
     int32_t value() const { return _value; }
     const ASTPtr& stmt() const { return _stmt; }
     void setFixupIndex(AddrNativeType addr) { _fixupIndex = addr; }
+    AddrNativeType fixupIndex() const { return _fixupIndex; }
     void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
+    bool isDefault() const { return _isDefault; }
     
   private:
-    int32_t _value;
+    int32_t _value = 0;
     ASTPtr _stmt;
     AddrNativeType _fixupIndex = 0;
+    bool _isDefault = false;
 };
 
 class SwitchNode : public ASTNode
