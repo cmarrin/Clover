@@ -215,12 +215,14 @@ Decompiler::statement()
         case Op::BRA     : emitOp("BRA"); emitRelAddr(size); break;
         case Op::SWITCH  : {
             emitOp("SWITCH");
+            _out->append("\n");
             uint16_t operand = getUInt16();
             uint16_t n = operand >> 3;
             bool isLongAddr = (operand & 0x04) != 0;
             OpSize opSize = OpSize(operand & 0x03);
             
             for (uint16_t i = 0; i < n; ++i) {
+                _out->append("      ");
                 emitConstant(opSizeToBytes(opSize));
                 _out->append(":");
                 emitRelAddr(isLongAddr ? 1 : 0);
