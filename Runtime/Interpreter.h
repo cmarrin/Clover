@@ -73,6 +73,19 @@ class InterpreterBase
     // TOS has from type value, type cast and push to type
     void typeCast(Type from, Type to);
 
+    int32_t getROM(AddrNativeType addr, uint8_t size) const
+    {
+        int32_t v = 0;
+        
+        switch (size) {
+            case 4: v = getUInt8ROM(addr++);
+                    v = (v << 8) | getUInt8ROM(addr++);
+            case 2: v = (v << 8) | getUInt8ROM(addr++);
+            case 1: v = (v << 8) | getUInt8ROM(addr++);
+                break;
+        }
+        return v;
+    }
 
     // Addr is in bytes
     uint8_t getUInt8ROM(uint16_t addr) const
@@ -149,6 +162,29 @@ class InterpreterBase
         _pc = _memMgr.stack().pop(AddrOpSize);
     }
     
+    template <uint8_t valueSize, uint8_t addrSize>
+    AddrNativeType switchSearch(int32_t v, AddrNativeType addr, uint16_t n)
+    {
+        static constexpr uint8_t entrySize = valueSize + addrSize;
+        uint16_t low = 0;
+        uint16_t high = n - 1;
+        
+        while (low <= high) {
+            uint16_t mid = low + (high - low) / 2;
+            int32_t testValue = getROM(addr + mid * entrySize, valueSize);
+            if (testValue == v) {
+                return getROM(addr + mid * entrySize + valueSize, addrSize);
+            }
+            
+            if (testValue < v) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return 0;
+    }
+
     uint16_t _pc = 0;
 
     Error _error = Error::None;

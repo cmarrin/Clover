@@ -35,6 +35,7 @@ enum class ASTNodeType {
     Enter,
     TypeCast,
     Branch,
+    Switch,
     Index,
     Return,
     Assignment,
@@ -503,6 +504,42 @@ class BranchNode : public ASTNode
     BranchSize _branchSize = BranchSize::Unknown;
     ASTPtr _fixupNode;
     AddrNativeType _fixupIndex = 0;
+};
+
+class CaseClause
+{
+  public:
+    CaseClause(int32_t value, const ASTPtr& stmt) : _value(value), _stmt(stmt) { }
+    
+    int32_t value() const { return _value; }
+    const ASTPtr& stmt() const { return _stmt; }
+    void setFixupIndex(AddrNativeType addr) { _fixupIndex = addr; }
+    void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
+    
+  private:
+    int32_t _value;
+    ASTPtr _stmt;
+    AddrNativeType _fixupIndex = 0;
+};
+
+class SwitchNode : public ASTNode
+{
+  public:
+  public:
+    SwitchNode(const ASTPtr& expr, int32_t annotationIndex)
+        : _expr(expr)
+        , ASTNode(annotationIndex)
+    { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Switch; }
+    
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+
+    void addCaseClause(int32_t value, const ASTPtr& stmt) { _clauses.emplace_back(value, stmt); }
+    
+  private:
+    ASTPtr _expr;
+    std::vector<CaseClause> _clauses;
 };
 
 class IndexNode : public ASTNode

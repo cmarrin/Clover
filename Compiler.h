@@ -88,6 +88,7 @@ type:
 statement:
       compoundStatement
     | ifStatement
+    | switchStatement
     | forStatement
     | whileStatement
     | loopStatement
@@ -103,6 +104,12 @@ compoundStatement:
 ifStatement:
     'if' '(' arithmeticExpression ')' statement ['else' statement ] ;
 
+switchStatement:
+    'switch' '(' arithmeticExpression ')' '{' { caseClause } '}' ;
+
+caseClause:
+    ('case' value | 'default) ':' statement ;
+
 forStatement:
     'for' '(' [ [ <type> ] identifier '=' arithmeticExpression ] ';'
             [ arithmeticExpression ] ';' [ arithmeticExpression ] ')' statement ;
@@ -116,12 +123,6 @@ loopStatement:
 returnStatement:
       'return' [ arithmeticExpression ] ';' ;
       
-switchStatement:
-    'switch' '(' arithmeticExpression ')' '{' { caseClause } '}' ;
-
-caseClause:
-    ('case' arithmeticExpression | 'default) ':' statement ;
-
 jumpStatement:
       'break' ';'
     | 'continue' ';'
@@ -170,6 +171,8 @@ argumentList:
       | arithmeticExpression { ',' arithmeticExpression }
       ;
 
+value:
+    
 operator: (* operator   precedence   association *)
                '='     (*   1          Right    *)
     |          '+='    (*   1          Right    *)
@@ -284,13 +287,14 @@ public:
     void setAnnotation(int32_t index, uint32_t addr) { _scanner.setAnnotation(index, addr); }
 
 protected:
-    bool statement();
-    bool function();
+    bool statement(const ASTPtr& parent);
     bool type(Type&);
   
-    bool varStatement();
-    bool var(Type, bool isPointer, bool isConstant);
+    bool function();
     bool init();
+    bool varStatement(const ASTPtr& parent);
+
+    bool var(const ASTPtr& parent, Type, bool isPointer, bool isConstant);
 
     bool value(uint32_t& i, Type);
 
@@ -300,12 +304,13 @@ private:
     
     bool structEntry();
     
-    bool compoundStatement();
-    bool ifStatement();
-    bool loopStatement();
-    bool returnStatement();
-    bool jumpStatement();
-    bool expressionStatement();
+    bool compoundStatement(const ASTPtr& parent);
+    bool ifStatement(const ASTPtr& parent);
+    bool switchStatement(const ASTPtr& parent);
+    bool loopStatement(const ASTPtr& parent);
+    bool returnStatement(const ASTPtr& parent);
+    bool jumpStatement(const ASTPtr& parent);
+    bool expressionStatement(const ASTPtr& parent);
 
     ASTPtr expression();
     ASTPtr arithmeticExpression(const ASTPtr& lhs, uint8_t minPrec = 1);
@@ -315,6 +320,7 @@ private:
 
     bool formalParameterList();
     bool argumentList(const ASTPtr& fun);
+    bool caseClause(int32_t& value);
     
     void collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16_t& nElements, bool& isScalarConstant);
     
@@ -385,7 +391,7 @@ private:
     void exitJumpContext() { _jumpList.pop_back(); }
     void addJumpEntry(const ASTPtr& jump);
     
-    void addJumpFixupNodes(BranchNode::Kind jumpKind, const BranchNode::Kind targetKind);
+    void addJumpFixupNodes(const ASTPtr& parent, BranchNode::Kind jumpKind, const BranchNode::Kind targetKind);
     
     Scanner _scanner;
 

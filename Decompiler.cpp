@@ -213,6 +213,21 @@ Decompiler::statement()
         case Op::NE      : emitOp("NE"); emitSize(size); break;
         case Op::IF      : emitOp("IF"); emitRelAddr(size); break;
         case Op::BRA     : emitOp("BRA"); emitRelAddr(size); break;
+        case Op::SWITCH  : {
+            emitOp("SWITCH");
+            uint16_t operand = getUInt16();
+            uint16_t n = operand >> 3;
+            bool isLongAddr = (operand & 0x04) != 0;
+            OpSize opSize = OpSize(operand & 0x03);
+            
+            for (uint16_t i = 0; i < n; ++i) {
+                emitConstant(opSizeToBytes(opSize));
+                _out->append(":");
+                emitRelAddr(isLongAddr ? 1 : 0);
+                _out->append("\n");
+            }
+            break;
+        }
         case Op::CALL    : emitOp("CALL"); emitNumber(getUInt16()); break;
         case Op::ENTER   : emitOp("ENTER"); emitNumber(size ? getUInt16() : getUInt8()); break;
         case Op::ENTERS  : emitOp("ENTERS"); emitNumber(size); break;
@@ -326,11 +341,11 @@ void Decompiler::emitIndex()
 }
 
 void
-Decompiler::emitConstant(uint8_t bytes)
+Decompiler::emitConstant(uint8_t bytes, bool isSigned)
 {
     _out->append(" #");
     int32_t value = getUInt8();
-    if (value > 127) {
+    if (value > 127 && isSigned) {
         // sign extend
         value |= 0xffffff80;
     }
@@ -343,7 +358,12 @@ Decompiler::emitConstant(uint8_t bytes)
     if (bytes > 3) {
         value = (value < 8) | getUInt8();
     }
-    _out->append(std::to_string(value));
+    
+    if (isSigned) {
+        _out->append(std::to_string(value));
+    } else {
+        _out->append(std::to_string(uint32_t(value)));
+    }
 }
     
 void

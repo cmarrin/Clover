@@ -172,7 +172,7 @@ Compiler::strucT()
 bool
 Compiler::structEntry()
 {
-    if (strucT() || varStatement() || function() || init()) {
+    if (strucT() || varStatement(currentStruct()->astNode()) || function() || init()) {
         return true;
     }
     
@@ -223,7 +223,7 @@ Compiler::value(uint32_t& i, Type t)
 }
 
 bool
-Compiler::varStatement()
+Compiler::varStatement(const ASTPtr& parent)
 {
     bool isConstant = false;
     
@@ -244,14 +244,14 @@ Compiler::varStatement()
         isPointer = true;
     }
     
-    expect(var(t, isPointer, isConstant), Error::ExpectedVar);
+    expect(var(parent, t, isPointer, isConstant), Error::ExpectedVar);
 
     expect(Token::Semicolon);
     return true;
 }
 
 bool
-Compiler::var(Type type, bool isPointer, bool isConstant)
+Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
 {
     std::string id;
     expect(identifier(id), Error::ExpectedIdentifier);
@@ -331,11 +331,7 @@ Compiler::var(Type type, bool isPointer, bool isConstant)
         
         ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, Op::NOP, ast, annotationIndex());
     
-        if (_inFunction) {
-            currentFunction()->addASTNode(assignment);
-        } else {
-            currentStruct()->addASTNode(assignment);
-        }
+        parent->addNode(assignment);
     }
     
     return true;
@@ -515,7 +511,7 @@ Compiler::function()
     // ENTER has to be the first instruction in the Function.
     _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
     
-    while(statement()) { }
+    while(statement(_currentFunction->astNode())) { }
     
     expect(Token::CloseBrace);
 
@@ -559,7 +555,7 @@ Compiler::init()
     // ENTER has to be the first instruction in the Function.
     _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
 
-    while(statement()) { }
+    while(statement(_currentFunction->astNode())) { }
     
     expect(Token::CloseBrace);
 
@@ -581,20 +577,21 @@ Compiler::init()
 }
 
 bool
-Compiler::statement()
+Compiler::statement(const ASTPtr& parent)
 {
-    if (compoundStatement()) return true;
-    if (ifStatement()) return true;
-    if (loopStatement()) return true;
-    if (returnStatement()) return true;
-    if (jumpStatement()) return true;
-    if (varStatement()) return true;
-    if (expressionStatement()) return true;
+    if (compoundStatement(parent)) return true;
+    if (ifStatement(parent)) return true;
+    if (switchStatement(parent)) return true;
+    if (loopStatement(parent)) return true;
+    if (returnStatement(parent)) return true;
+    if (jumpStatement(parent)) return true;
+    if (varStatement(parent)) return true;
+    if (expressionStatement(parent)) return true;
     return false;
 }
 
 bool
-Compiler::compoundStatement()
+Compiler::compoundStatement(const ASTPtr& parent)
 {
     if (!match(Token::OpenBrace)) {
         return false;
@@ -607,7 +604,7 @@ Compiler::compoundStatement()
         numLocals = currentFunction()->numLocals();
     }
     
-    while(statement()) { }
+    while(statement(parent)) { }
 
     expect(Token::CloseBrace);
     
@@ -619,20 +616,20 @@ Compiler::compoundStatement()
 }
 
 bool
-Compiler::ifStatement()
+Compiler::ifStatement(const ASTPtr& parent)
 {
     if (!match(Reserved::If)) {
         return false;
     }
     
     expect(Token::OpenParen);
-    currentFunction()->addASTNode(expression());
+    parent->addNode(expression());
     expect(Token::CloseParen);
     
     ASTPtr ifNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart, annotationIndex());
-    currentFunction()->addASTNode(ifNode);
+    parent->addNode(ifNode);
 
-    statement();
+    statement(parent);
     
     bool haveElse = false;
     ASTPtr elseNode;
@@ -642,19 +639,69 @@ Compiler::ifStatement()
         elseNode = std::make_shared<BranchNode>(BranchNode::Kind::ElseStart, annotationIndex());
         
         std::static_pointer_cast<BranchNode>(elseNode)->setFixupNode(ifNode);
-        currentFunction()->addASTNode(elseNode);
-        statement();
+        parent->addNode(elseNode);
+        statement(parent);
     }
 
     ASTPtr endNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd, annotationIndex());
-    currentFunction()->addASTNode(endNode);
+    parent->addNode(endNode);
     std::static_pointer_cast<BranchNode>(endNode)->setFixupNode(haveElse ? elseNode : ifNode);
 
     return true;
 }
 
 bool
-Compiler::loopStatement()
+Compiler::switchStatement(const ASTPtr& parent)
+{
+    if (!match(Reserved::Switch)) {
+        return false;
+    }
+    
+    expect(Token::OpenParen);
+    
+    ASTPtr expr = expression();
+    expect(expr != nullptr, Error::ExpectedExpr);
+    
+    expect(Token::CloseParen);
+    
+    expect(Token::OpenBrace);
+    
+    ASTPtr switchStmt = std::make_shared<SwitchNode>(expr, annotationIndex());
+    int32_t value;
+    while (caseClause(value)) {
+        ASTPtr stmt = std::make_shared<StatementsNode>(-1);
+        expect(statement(stmt), Error::ExpectedExpr);
+        std::static_pointer_cast<SwitchNode>(switchStmt)->addCaseClause(value, stmt);
+    }
+    
+    expect(Token::CloseBrace);
+    
+    parent->addNode(switchStmt);
+    
+    return true;
+}
+
+bool
+Compiler::caseClause(int32_t& value)
+{
+    if (!match(Reserved::Case)) {
+        return false;
+    }
+    
+    // Case value must be integer constant. That means literal (including true and false), a scalar constant or an enum
+    // FIXME: add support for enum
+    ASTPtr ast = primaryExpression();
+    expect(ast != nullptr && ast->astNodeType() == ASTNodeType::Constant && isInteger(ast->type()), Error::WrongType);
+
+    // We know this is an integer constant node. Get the value
+    value = std::static_pointer_cast<ConstantNode>(ast)->integerValue();
+    
+    expect(Token::Colon);
+    return true;
+}
+
+bool
+Compiler::loopStatement(const ASTPtr& parent)
 {
     bool forLoop;
     
@@ -709,7 +756,7 @@ Compiler::loopStatement()
             expect(!rhs->isPointer() && isScalar(rhs->type()), Error::IteratorMustBeScalar);
 
             ASTPtr assignment = std::make_shared<AssignmentNode>(lhs, Op::NOP, rhs, annotationIndex());
-            currentFunction()->addASTNode(assignment);
+            parent->addNode(assignment);
 
             expect(Token::Semicolon);
         }
@@ -717,7 +764,7 @@ Compiler::loopStatement()
     
     // This is the start of the loop
     ASTPtr loopStartNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopStart, annotationIndex());
-    currentFunction()->addASTNode(loopStartNode);
+    parent->addNode(loopStartNode);
 
     ASTPtr ifStartNode, ifEndNode, loopNextNode, iterNode, loopEndNode;
 
@@ -725,11 +772,11 @@ Compiler::loopStatement()
     Token endToken = forLoop ? Token::Semicolon : Token::CloseParen;
         
     if (!match(endToken)) {
-        currentFunction()->addASTNode(expression());
+        parent->addNode(expression());
         expect(endToken);
 
         ifStartNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart, annotationIndex());
-        currentFunction()->addASTNode(ifStartNode);
+        parent->addNode(ifStartNode);
     }
 
     if (forLoop) {
@@ -741,37 +788,37 @@ Compiler::loopStatement()
         }
     }
     
-    statement();
+    statement(parent);
     
     // Now emit the iteration. This is where continue goes
     loopNextNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopNext, annotationIndex());
-    currentFunction()->addASTNode(loopNextNode);
+    parent->addNode(loopNextNode);
 
     // All continues branch to loopNextNode
-    addJumpFixupNodes(BranchNode::Kind::Continue, BranchNode::Kind::LoopNext);
+    addJumpFixupNodes(parent, BranchNode::Kind::Continue, BranchNode::Kind::LoopNext);
 
     if (iterNode) {
-        currentFunction()->addASTNode(iterNode);
+        parent->addNode(iterNode);
     
         // If the iterNode leaves something on the stack get rid of it
         if (iterNode->valueLeftOnStack()) {
-            currentFunction()->addASTNode(std::make_shared<DropNode>(typeToBytes(iterNode->type()), annotationIndex()));
+            parent->addNode(std::make_shared<DropNode>(typeToBytes(iterNode->type()), annotationIndex()));
         }
     }
     
     // Now we're at the end of the loop
     loopEndNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopEnd, annotationIndex());
-    currentFunction()->addASTNode(loopEndNode);
+    parent->addNode(loopEndNode);
     
     if (ifStartNode) {
         // IfStart branches to IfEnd
         ifEndNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd, annotationIndex());
-        currentFunction()->addASTNode(ifEndNode);
+        parent->addNode(ifEndNode);
         std::static_pointer_cast<BranchNode>(ifEndNode)->setFixupNode(ifStartNode);
     }
     
     // All breaks branch to IfEnd
-    addJumpFixupNodes(BranchNode::Kind::Break, BranchNode::Kind::IfEnd);
+    addJumpFixupNodes(parent, BranchNode::Kind::Break, BranchNode::Kind::IfEnd);
 
     // LoopEnd branches back to LoopStart
     std::static_pointer_cast<BranchNode>(loopEndNode)->setFixupNode(loopStartNode);
@@ -782,7 +829,7 @@ Compiler::loopStatement()
 }
 
 bool
-Compiler::returnStatement()
+Compiler::returnStatement(const ASTPtr& parent)
 {
     if (!match(Reserved::Return)) {
         return false;
@@ -790,14 +837,14 @@ Compiler::returnStatement()
     
     ASTPtr ast = expression();
     expect(ast != nullptr || currentFunction()->returnType() == Type::None, Error::MismatchedType);
-    currentFunction()->addASTNode(std::make_shared<ReturnNode>(ast, annotationIndex()));
+    parent->addNode(std::make_shared<ReturnNode>(ast, annotationIndex()));
     
     expect(Token::Semicolon);
     return true;
 }
 
 bool
-Compiler::jumpStatement()
+Compiler::jumpStatement(const ASTPtr& parent)
 {
     BranchNode::Kind kind;
     if (match(Reserved::Break)) {
@@ -813,27 +860,27 @@ Compiler::jumpStatement()
 
     ASTPtr jump = std::make_shared<BranchNode>(kind, annotationIndex());
     addJumpEntry(jump);
-    currentFunction()->addASTNode(jump);
+    parent->addNode(jump);
 
     expect(Token::Semicolon);
     return true;
 }
 
 void
-Compiler::addJumpFixupNodes(BranchNode::Kind jumpKind, const BranchNode::Kind targetKind)
+Compiler::addJumpFixupNodes(const ASTPtr& parent, BranchNode::Kind jumpKind, const BranchNode::Kind targetKind)
 {
     // Create a BranchNode for each branch of the right kind
     for (auto& it : _jumpList.back()) {
         if (std::reinterpret_pointer_cast<BranchNode>(it)->kind() == jumpKind) {
             ASTPtr node = std::make_shared<BranchNode>(targetKind, annotationIndex());
-            currentFunction()->addASTNode(node);
+            parent->addNode(node);
             std::reinterpret_pointer_cast<BranchNode>(node)->setFixupNode(it);
         }
     }
 }
 
 bool
-Compiler::expressionStatement()
+Compiler::expressionStatement(const ASTPtr& parent)
 {
     ASTPtr node = expression();
     if (!node) {
@@ -842,7 +889,7 @@ Compiler::expressionStatement()
     }
     
     expect(_inFunction, Error::InternalError);
-    currentFunction()->addASTNode(node);
+    parent->addNode(node);
     expect(Token::Semicolon);
     
     // If this is a function call, a return value will be pushed by
@@ -851,7 +898,7 @@ Compiler::expressionStatement()
         std::static_pointer_cast<FunctionCallNode>(node)->setPushReturn(false);
     } else if (node->valueLeftOnStack()) {
         // We don't need the value, toss it
-        currentFunction()->addASTNode(std::make_shared<DropNode>(typeToBytes(node->type()), annotationIndex()));
+        parent->addNode(std::make_shared<DropNode>(typeToBytes(node->type()), annotationIndex()));
     }
     return true;
 }
@@ -1370,6 +1417,8 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "for",        Reserved::For },
         { "if",         Reserved::If },
         { "else",       Reserved::Else },
+        { "switch",     Reserved::Switch },
+        { "case",       Reserved::Case },
         { "struct",     Reserved::Struct },
         { "return",     Reserved::Return },
         { "break",      Reserved::Break },

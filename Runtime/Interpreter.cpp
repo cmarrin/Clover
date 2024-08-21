@@ -468,6 +468,34 @@ InterpreterBase::execute(ExecMode mode)
                 right = getIOpnd(opSize);
                 _pc += right;
                 break;
+            case Op::SWITCH  : {
+                uint16_t operand = getUOpnd(OpSize::i16);
+                uint16_t n = operand >> 3;
+                bool isLongAddr = (operand & 0x04) != 0;
+                OpSize opSize = OpSize(operand & 0x03);
+                
+                uint32_t value = _memMgr.stack().pop(opSize);
+                
+                // We're pointing at the jump table, do a binary search
+                AddrNativeType addr = 0;
+                
+                switch ((opSizeToBytes(opSize) << 4) | (isLongAddr ? 2 : 1)) {
+                    case 0x11: addr = switchSearch<1, 1>(value, _pc, n); break;
+                    case 0x21: addr = switchSearch<2, 1>(value, _pc, n); break;
+                    case 0x41: addr = switchSearch<4, 1>(value, _pc, n); break;
+                    case 0x12: addr = switchSearch<1, 2>(value, _pc, n); break;
+                    case 0x22: addr = switchSearch<2, 2>(value, _pc, n); break;
+                    case 0x42: addr = switchSearch<4, 2>(value, _pc, n); break;
+                }
+                
+                // FIXME: what do we do if there is no match?
+                if (addr == 0) {
+                    _error = Error::InternalError;
+                } else {
+                    _pc += addr;
+                }
+                break;
+            }
             case Op::CALL:
                 right = getUOpnd(OpSize::i16);
                 _memMgr.stack().push(_pc, AddrOpSize);
