@@ -50,6 +50,16 @@ class Symbol;
 using ASTPtr = std::shared_ptr<ASTNode>;
 using ASTNodeList = std::vector<ASTPtr>;
 
+static inline void appendValue(std::vector<uint8_t>& container, uint32_t v, uint8_t bytes)
+{
+    switch (bytes) {
+        case 4: container.push_back(v >> 24);
+                container.push_back(v >> 16);
+        case 2: container.push_back(v >> 8);
+        case 1: container.push_back(v);
+    }
+}
+
 class ASTNode
 {
   public:

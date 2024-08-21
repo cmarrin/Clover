@@ -76,16 +76,7 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler* c)
     }
     
     code.push_back(extra);
-    if (addedBytes > 2) {
-        code.push_back(uint8_t(relAddr >> 24));
-        code.push_back(uint8_t(relAddr >> 16));
-    }
-    if (addedBytes > 1) {
-        code.push_back(uint8_t(relAddr >> 8));
-    }
-    if (addedBytes > 0) {
-        code.push_back(uint8_t(relAddr));
-    }
+    appendValue(code, relAddr, addedBytes);
 }
 
 // If short, bytesInOperand is 0
@@ -162,13 +153,7 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         code.push_back(uint8_t(op) | i);
     } else {
         code.push_back(uint8_t(op));
-        switch(bytesInOperand) {
-            case 4: code.push_back(i >> 24);
-                    code.push_back(i >> 16);
-            case 2: code.push_back(i >> 8);
-            case 1: code.push_back(i);
-            default: break;
-        }
+        appendValue(code, i, bytesInOperand);
     }
     
     if (isSmallFloat) {
@@ -303,10 +288,7 @@ DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     uint16_t offset = _property->addr(index);
     if (offset) {
         code.push_back((offset > 255) ? uint8_t(Op::OFFSET2) : uint8_t(Op::OFFSET1));
-        if (offset > 255) {
-            code.push_back(offset >> 8);
-        }
-        code.push_back(offset);
+        appendValue(code, offset, (offset > 255) ? 2 : 1);
     }
     
     if (!isLHS) {
@@ -327,10 +309,7 @@ static void emitDrop(std::vector<uint8_t>& code, uint16_t argSize)
             code.push_back(uint8_t(Op::DROPS) | (argSize - 1));
         } else {
             code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
-            if (argSize > 256) {
-                code.push_back(argSize >> 8);
-            }
-            code.push_back(argSize);
+            appendValue(code, argSize, (argSize > 255) ? 2 : 1);
         }
     }
 }
@@ -353,19 +332,11 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     if (_function->isNative()) {
         // Add moduleId to addr
         addr |= _moduleId << BitsPerFunctionId;
-        
-        if (addr <= 255) {
-            code.push_back(uint8_t(Op::NCALL));
-            code.push_back(addr);
-        } else {
-            code.push_back(uint8_t(Op::NCALL) | 0x01);
-            code.push_back(addr >> 8);
-            code.push_back(addr);
-        }
+        code.push_back(uint8_t(Op::NCALL) | ((addr <= 255) ? 0x00 : 0x01));
+        appendValue(code, addr, (addr <= 255) ? 1 : 2);
     } else {
         code.push_back(uint8_t(Op::CALL));
-        code.push_back(addr >> 8);
-        code.push_back(addr);
+        appendValue(code, addr, 2);
     }
     
     // Pop the args after the call returns. Args pushed is not necessarily the
@@ -400,10 +371,7 @@ EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     } else {
         bool isLong = localSize > 255;
         code.push_back(uint8_t(Op::ENTER) | (isLong ? 0x01 : 0x00));
-        if (isLong) {
-            code.push_back(uint8_t(localSize >> 8));
-        }
-        code.push_back(uint8_t(localSize));
+        appendValue(code, localSize, isLong ? 2 : 1);
     }
 }
 
@@ -522,20 +490,82 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             int16_t relAddr = int16_t(addr - AddrNativeType(code.size())) - 2;
             assert(relAddr < 0);
             
-            if (relAddr >= -128) {
-                code.push_back(uint8_t(Op::BRA));
-                code.push_back(uint8_t(relAddr));
-            } else {
-                // Need subtract 1 to account for size of long branch
-                relAddr -= 1;
-                code.push_back(uint8_t(Op::BRA) | 0x01);
-                code.push_back(uint8_t(relAddr >> 8));
-                code.push_back(uint8_t(relAddr));
-            }
+            code.push_back(uint8_t(Op::BRA) | ((relAddr >= -128) ? 0x00 : 0x01));
+            appendValue(code, relAddr, (relAddr >= -128) ? 1 : 2);
             break;
         }
         default:
             break;
+    }
+}
+
+void
+CaseClause::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
+{
+    // FIXME: handle short jumps
+    int16_t rel = addr - _fixupIndex - 2;
+
+    code[_fixupIndex] = rel >> 8;
+    code[_fixupIndex + 1] = rel;
+}
+
+void
+SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+{
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
+    // First emit expression
+    _expr->emitCode(code, false, c);
+    
+    Type type = _expr->type();
+    
+    // Following SWITCH opcode is a 16 bit operand and then a list of pairs: <value (1-4 bytes), addr (1 or 2 bytes).
+    // Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the OpSize format. 
+    // Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list (0 - 8191 entries).
+    uint16_t operand = uint16_t(_clauses.size()) << 3;
+    
+    // FIXME: Eventually we should use multi-pass to determine if the address can be 1 byte. For now
+    // we assume it's 2 bytes.
+    bool longAddr = true;
+    OpSize opSize = typeToOpSize(type);
+    operand |= 0x04;
+    operand |= uint16_t(opSize);
+
+    code.push_back(uint8_t(Op::SWITCH));
+    appendValue(code, operand, 2);
+    
+    // Now we need to sort the clauses, so we can binary search at runtime.
+    std::sort(_clauses.begin(), _clauses.end(),
+                [](const CaseClause &a, const CaseClause &b) { return a.value() < b.value(); });
+                
+    // Now emit the list
+    for (auto& it : _clauses) {
+        appendValue(code, it.value(), opSizeToBytes(opSize));
+        it.setFixupIndex(AddrNativeType(code.size()));
+        appendValue(code, 0, longAddr ? 2 : 1);
+    }
+    
+    // Now emit the statements. As we do so, fixup the addr in the list.
+    // At the end of each statement, add a BranchNode so the statement
+    // can jump to the end. We need to fixup after
+    //
+    // FIXME: we can skip the branch on the last case statement
+    //
+    for (auto& it : _clauses) {
+        it.fixup(code, AddrNativeType(code.size()) + 3);
+        it.stmt()->emitCode(code, false, c);
+        
+        // FIXME: Eventually make this a short branch if possible. For now, make it long
+        code.push_back(uint8_t(Op::BRA) | 0x01);
+
+        // We can reuse the fixupIndex beacuse we're done with it
+        it.setFixupIndex(AddrNativeType(code.size()));
+        appendValue(code, 0, 2);
+    }
+    
+    // Finally, fixup the branches at the end of the case statements
+    for (auto& it : _clauses) {
+        it.fixup(code, AddrNativeType(code.size()));
     }
 }
 
