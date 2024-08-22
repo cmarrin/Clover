@@ -16,7 +16,7 @@ uint8 errors = 0;
 
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
-    core.printf("%10sTest %2hhi: ", " ", testNo);
+    core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %i, got %i\n", exp, act);
         errors++;
@@ -27,7 +27,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
 
 function showFloatResults(uint8 testNo, float exp, float act)
 {
-    core.printf("%10sTest %2hhi: ", " ", testNo);
+    core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
         core.printf("     FAIL: exp %f, got %f\n", exp, act);
         errors++;

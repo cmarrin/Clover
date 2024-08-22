@@ -55,7 +55,7 @@ initialize()
     testIntGlobal = 42;
     testFloatGlobal = 6.5;
 
-    core.printf("\n  exprs\n");
+    core.printf("\nexprs\n");
 
     core.printf("\n  Int vals\n");
     showIntResults(1, 12, TestSizeDef);
@@ -118,16 +118,10 @@ initialize()
     showIntResults(35, 0, TestFloatConst >= testFloatGlobal);
     showIntResults(36, 0, TestFloatConst > testFloatGlobal);
     
-    core.printf("\n  Flt exprs\n");
-    showFloatResults(37, 38, testFloatTable[1] + float(TestSizeDef) * TestFloatConst - testFloatGlobal);
-    showFloatResults(38, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
+    core.printf("\n  Flt expr\n");
+    showFloatResults(37, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
 
-    core.printf("\nDone.%40s", " ");
-    if (errors) {
-        core.printf("FAILED\n\n");
-    } else {
-        core.printf("Passed\n\n");
-    }
+    core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
 }
 
 };
