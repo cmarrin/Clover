@@ -419,14 +419,14 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
     return node;
 }
 
-static void fixup(std::vector<uint8_t>& code, AddrNativeType fixupIndex, AddrNativeType addr, BranchNode::BranchSize& branchSize)
+static void fixup(std::vector<uint8_t>& code, AddrNativeType fixupIndex, AddrNativeType addr, BranchSize& branchSize)
 {
     // If branchSize is Long or Unknown we need to emit a 2 byte branch.
     // But if the branch would fit in 1 byte, set branchSize to Short and
     // tell the compiler we need another pass
-    if (branchSize != BranchNode::BranchSize::Short) {
+    if (branchSize != BranchSize::Short) {
         if (addr <= 255) {
-            branchSize = BranchNode::BranchSize::Short;
+            branchSize = BranchSize::Short;
         }
         code[fixupIndex] = addr >> 8;
         code[fixupIndex + 1] = addr;
@@ -530,7 +530,7 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     uint16_t operand = n << 3;
     
-    bool longAddr = _branchSize != BranchNode::BranchSize::Short;
+    bool longAddr = _branchSize != BranchSize::Short;
     OpSize opSize = typeToOpSize(type);
     
     if (longAddr) {
@@ -581,11 +581,11 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     AddrNativeType missingDefaultFixupAddr = 0;
     
     if (!_haveDefault) {
-        code.push_back(uint8_t(Op::FBRA) | ((_defaultBranchSize != BranchNode::BranchSize::Short) ? 0x01 : 0x00));
+        code.push_back(uint8_t(Op::FBRA) | ((_defaultBranchSize != BranchSize::Short) ? 0x01 : 0x00));
 
         // We can reuse the fixupIndex beacuse we're done with it
         missingDefaultFixupAddr = AddrNativeType(code.size());
-        appendValue(code, 0, (_defaultBranchSize == BranchNode::BranchSize::Short) ? 1 : 2);
+        appendValue(code, 0, (_defaultBranchSize == BranchSize::Short) ? 1 : 2);
     }
     
     // If all branches in the list are short, we can make the list entry short
@@ -607,21 +607,21 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         if (it == _clauses.end() - 1) {
             continue;
         }
-        code.push_back(uint8_t(Op::FBRA) | ((it->branchSize() != BranchNode::BranchSize::Short) ? 0x01 : 0x00));
+        code.push_back(uint8_t(Op::FBRA) | ((it->branchSize() != BranchSize::Short) ? 0x01 : 0x00));
 
         // We can reuse the fixupIndex beacuse we're done with it
         it->setFixupIndex(AddrNativeType(code.size()));
-        appendValue(code, 0, ((it->branchSize() == BranchNode::BranchSize::Short) ? 1 : 2));
+        appendValue(code, 0, ((it->branchSize() == BranchSize::Short) ? 1 : 2));
     }
     
     // Set branchSize if needed
-    if (_branchSize == BranchNode::BranchSize::Unknown) {
-        _branchSize = allShortBranches ? BranchNode::BranchSize::Short : BranchNode::BranchSize::Long;
+    if (_branchSize == BranchSize::Unknown) {
+        _branchSize = allShortBranches ? BranchSize::Short : BranchSize::Long;
     }
     
     // Finally, fixup the branches at the end of the case statements
     if (!_haveDefault) {
-        uint8_t adjustment = (_defaultBranchSize == BranchNode::BranchSize::Short) ? 1 : 2;
+        uint8_t adjustment = (_defaultBranchSize == BranchSize::Short) ? 1 : 2;
         ::fixup(code, missingDefaultFixupAddr, AddrNativeType(code.size()) - missingDefaultFixupAddr - adjustment, _defaultBranchSize);
     }
     
@@ -629,9 +629,48 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         if (it == _clauses.end() - 1) {
             continue;
         }
-        uint8_t adjustment = (it->branchSize() == BranchNode::BranchSize::Short) ? 1 : 2;
+        uint8_t adjustment = (it->branchSize() == BranchSize::Short) ? 1 : 2;
         it->fixup(code, AddrNativeType(code.size()) - it->fixupIndex() - adjustment);
     }
+}
+
+void
+ConditionalNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+{
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
+    // First emit expression
+    _expr->emitCode(code, false, c);
+    
+    // Now emit if. If expr is false, jump to second expression, otherwise fall through to first
+    code.push_back(uint8_t(Op::IF) | ((_ifBranchSize == BranchSize::Short) ? 0x00 : 0x01));
+    AddrNativeType fixupIndex = AddrNativeType(code.size());
+    code.push_back(0);
+    if (_ifBranchSize != BranchSize::Short) {
+        code.push_back(0);
+    }
+    
+    // Emit the first expr
+    _first->emitCode(code, false, c);
+    
+    // Fixup the IF, It needs to jump past the FBRA
+    // Fixed adjustment of 1 for both long and short versions
+    ::fixup(code, fixupIndex, AddrNativeType(code.size()) - fixupIndex + 1, _ifBranchSize);
+    
+    // Now emit the branch past the first expr
+    code.push_back(uint8_t(Op::FBRA) | ((_elseBranchSize == BranchSize::Short) ? 0x00 : 0x01));
+    fixupIndex = AddrNativeType(code.size());
+    code.push_back(0);
+    if (_elseBranchSize != BranchSize::Short) {
+        code.push_back(0);
+    }
+    
+    // Emit the second expr
+    _second->emitCode(code, false, c);
+    
+    // Fixup the else
+    AddrNativeType adjustment = (_elseBranchSize == BranchSize::Short) ? -1 : -2;
+    ::fixup(code, fixupIndex, AddrNativeType(code.size()) - fixupIndex + adjustment, _elseBranchSize);
 }
 
 void

@@ -56,6 +56,7 @@ enum class Token : uint8_t {
     CloseBracket= ']',
     Dot         = '.',
     Comma       = ',',
+    Question    = '?',
     
     None        = 0x83,
     Unknown     = 0x84,

@@ -917,7 +917,7 @@ Compiler::expressionStatement(const ASTPtr& parent)
 ASTPtr
 Compiler::expression()
 {
-    return arithmeticExpression(unaryExpression(), 1);
+    return arithmeticExpression(conditionalExpression(), 1);
 }
 
 ASTPtr
@@ -965,6 +965,23 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
     }
     
     return lhs;
+}
+
+ASTPtr
+Compiler::conditionalExpression()
+{
+    ASTPtr node = unaryExpression();
+    if (!node) {
+        return nullptr;
+    }
+    
+    if (match(Token::Question)) {
+        ASTPtr first = expression();
+        expect(Token::Colon);
+        ASTPtr second = expression();
+        node = std::make_shared<ConditionalNode>(node, first, second, annotationIndex());
+    }
+    return node;
 }
 
 ASTPtr

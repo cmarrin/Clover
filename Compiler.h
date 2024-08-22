@@ -132,9 +132,14 @@ expressionStatement:
     [ arithmeticExpression ] ';' ;
     
 arithmeticExpression:
-      unaryExpression
+      conditionalExpression
     | unaryExpression operator arithmeticExpression
 
+conditionalExpression:
+      unaryExpression
+    | conditionalExpression '?' expression : expression
+    ;
+    
 unaryExpression:
       postfixExpression
     | '-' unaryExpression
@@ -314,6 +319,7 @@ private:
 
     ASTPtr expression();
     ASTPtr arithmeticExpression(const ASTPtr& lhs, uint8_t minPrec = 1);
+    ASTPtr conditionalExpression();
     ASTPtr unaryExpression();
     ASTPtr postfixExpression();
     ASTPtr primaryExpression();

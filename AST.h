@@ -36,6 +36,7 @@ enum class ASTNodeType {
     TypeCast,
     Branch,
     Switch,
+    Conditional,
     Index,
     Return,
     Assignment,
@@ -478,11 +479,12 @@ class EnterNode : public ASTNode
     FunctionPtr _function;
 };
 
+enum class BranchSize { Unknown, Short, Long };
+
 class BranchNode : public ASTNode
 {
   public:
     enum class Kind { IfStart, ElseStart, IfEnd, LoopStart, LoopNext, LoopEnd, Break, Continue };
-    enum class BranchSize { Unknown, Short, Long };
     
     BranchNode(Kind k, int32_t annotationIndex) : ASTNode(annotationIndex), _kind(k) { }
 
@@ -518,14 +520,14 @@ class CaseClause
     AddrNativeType fixupIndex() const { return _fixupIndex; }
     void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
     bool isDefault() const { return _isDefault; }
-    BranchNode::BranchSize branchSize() const { return _branchSize; }
+    BranchSize branchSize() const { return _branchSize; }
     
   private:
     int32_t _value = 0;
     ASTPtr _stmt;
     AddrNativeType _fixupIndex = 0;
     bool _isDefault = false;
-    BranchNode::BranchSize _branchSize = BranchNode::BranchSize::Unknown;
+    BranchSize _branchSize = BranchSize::Unknown;
 };
 
 class SwitchNode : public ASTNode
@@ -548,8 +550,35 @@ class SwitchNode : public ASTNode
     ASTPtr _expr;
     std::vector<CaseClause> _clauses;
     bool _haveDefault = false;
-    BranchNode::BranchSize _branchSize = BranchNode::BranchSize::Unknown;
-    BranchNode::BranchSize _defaultBranchSize = BranchNode::BranchSize::Unknown;
+    BranchSize _branchSize = BranchSize::Unknown;
+    BranchSize _defaultBranchSize = BranchSize::Unknown;
+};
+
+class ConditionalNode : public ASTNode
+{
+  public:
+  public:
+    ConditionalNode(const ASTPtr& expr, const ASTPtr& first, const ASTPtr& second, int32_t annotationIndex)
+        : _expr(expr)
+        , _first(first)
+        , _second(second)
+        , ASTNode(annotationIndex)
+    { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Conditional; }
+    
+    // first and second have to be the same type. That should have been validated by the caller
+    virtual Type type() const override { return _first->type(); }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+
+  private:
+    ASTPtr _expr;
+    ASTPtr _first;
+    ASTPtr _second;
+
+    BranchSize _ifBranchSize = BranchSize::Unknown;
+    BranchSize _elseBranchSize = BranchSize::Unknown;
 };
 
 class IndexNode : public ASTNode
