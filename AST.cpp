@@ -125,7 +125,6 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     uint8_t bytesPushed = typeToBytes(t);
     
     if (t == Type::Float) {
-        
         bytesInOperand = 4;
     } else if (i >= -8 && i <= 7) {
         bytesInOperand = 0;
@@ -392,7 +391,7 @@ ASTPtr
 TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationIndex)
 {
     // We can only cast scalar nodes
-    if (!isScalar(node->type()) || !isScalar(neededType)) {
+    if ((!isEnum(node->type()) && !isScalar(node->type())) || !isScalar(neededType)) {
         return node;
     }
     

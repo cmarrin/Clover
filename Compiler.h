@@ -20,6 +20,7 @@
 #include <variant>
 
 #include "AST.h"
+#include "Enum.h"
 #include "Function.h"
 #include "Defines.h"
 #include "Module.h"
@@ -55,7 +56,7 @@ struct:
     'struct' <id> '{' { structEntry ';' } '}' ;
     
 structEntry:
-    struct | varStatement | function | init  ;
+    struct | varStatement | function | init | enum  ;
 
 varStatement:
     [ 'const' ] type [ '*' ] var ';' ;
@@ -71,8 +72,14 @@ function:
 
 init:
     'initialize' '(' ')' compoundStatement ;
-    
-// <id> is a struct name
+
+enum:
+    'enum' <id> '{' [enumEntry ] { ',' enumEntry } '}' ;
+
+enumEntry:
+    <id> [ '=' <integer> ] ;
+
+// <id> is a struct or enum name
 type:
       'float'
     | 'hfloat'
@@ -220,6 +227,7 @@ enum class Error {
     ExpectedEnd,
     ExpectedIdentifier,
     ExpectedExpr,
+    ExpectedEnum,
     ExpectedArgList,
     ExpectedFormalParams,
     ExpectedFunction,
@@ -289,6 +297,19 @@ public:
         return _structTypes[i];
     }
     
+    const EnumPtr typeToEnum(Type type) const
+    {
+        uint8_t i = uint8_t(type);
+        if (i < EnumTypeStart || i >= StructTypeStart) {
+            return nullptr;
+        }
+        i -= EnumTypeStart;
+        if (i >= _enumTypes.size()) {
+            return nullptr;
+        }
+        return _enumTypes[i];
+    }
+    
     void setAnnotation(int32_t index, uint32_t addr) { _scanner.setAnnotation(index, addr); }
 
 protected:
@@ -306,8 +327,10 @@ protected:
 private:
     bool import();
     bool strucT();
+    bool enuM();
     
     bool structEntry();
+    bool enumEntry(EnumPtr);
     
     bool compoundStatement(const ASTPtr& parent);
     bool ifStatement(const ASTPtr& parent);
@@ -336,6 +359,13 @@ private:
     {
         _structs.push_back(std::make_shared<Struct>(name, type));
         return _structs.back();
+    }
+    
+    EnumPtr addEnum(const std::string& name)
+    {
+        EnumPtr e = std::make_shared<Enum>(name, Type(_enumTypes.size() + EnumTypeStart));
+        _enumTypes.push_back(e);
+        return e;
     }
 
     StructPtr findStruct(const std::string&);
@@ -404,11 +434,9 @@ private:
     bool _inFunction = false;
     FunctionPtr _currentFunction = nullptr;
     
-    uint8_t _nextStructType = StructTypeStart;
     std::vector<StructPtr> _structTypes; // array of structs, ordered by (type-StructTypeStart)
+    std::vector<EnumPtr> _enumTypes; // array of enums, ordered by (type-EnumTypeStart)
 
-    uint32_t _entryStructIndex;
-    
     // Scalar constants are embedded in the code as constant opcodes. Structs and arrays
     // are stored at the start of the executable and are accessed as Constant values
     std::vector<uint8_t> _constants;

@@ -46,6 +46,7 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
         case lucid::Error::ExpectedEnd: err = "expected 'end'"; break;
         case lucid::Error::ExpectedIdentifier: err = "expected identifier"; break;
         case lucid::Error::ExpectedExpr: err = "expected expression"; break;
+        case lucid::Error::ExpectedEnum: err = "expected enum"; break;
         case lucid::Error::ExpectedLHSExpr: err = "expected left-hand side expression"; break;
         case lucid::Error::ExpectedArgList: err = "expected arg list"; break;
         case lucid::Error::ExpectedFormalParams: err = "expected formal params"; break;

@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "Enum.h"
 #include "Function.h"
 #include "Module.h"
 #include "Symbol.h"
@@ -36,6 +37,8 @@ public:
         _structs.push_back(std::make_shared<Struct>(name, type));
         return _structs.back();
     }
+
+    void addEnum(const EnumPtr& e) { _enums.push_back(e); }
 
     FunctionPtr addFunction(const std::string& name, Type returnType)
     {
@@ -94,12 +97,24 @@ public:
         return nullptr;
     }
 
+    EnumPtr findEnum(const std::string& s)
+    {
+        const auto& it = find_if(_enums.begin(), _enums.end(),
+                [s](const EnumPtr& p) { return p->name() == s; });
+
+        if (it != _enums.end()) {
+            return *it;
+        }
+        return nullptr;
+    }
+
     const ASTPtr& astNode() const { return _astNode; }
 
     void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
 
 private:
     std::vector<StructPtr> _structs;
+    std::vector<EnumPtr> _enums;
     std::vector<SymbolPtr> _locals;
     uint8_t _localSize = 0;
     Type _type = Type::None;

@@ -149,13 +149,15 @@ Compiler::strucT()
     expect(identifier(id), Error::ExpectedIdentifier);
 
     // Add a struct
+    Type structType = Type(_structTypes.size() + StructTypeStart);
+    
     if (!_structStack.empty()) {
         // This is a child of another struct
-        _structStack.push_back(currentStruct()->addStruct(id, Type(_nextStructType++)));
+        _structStack.push_back(currentStruct()->addStruct(id, structType));
         _structTypes.push_back(_structStack.back());
     } else {
         // This is the top level struct
-        _structStack.push_back(addStruct(id, Type(_nextStructType++)));
+        _structStack.push_back(addStruct(id, structType));
         _structTypes.push_back(_structStack.back());
     }
     
@@ -172,11 +174,60 @@ Compiler::strucT()
 bool
 Compiler::structEntry()
 {
-    if (strucT() || varStatement(currentStruct()->astNode()) || function() || init()) {
+    if (strucT() || varStatement(currentStruct()->astNode()) || function() || init() || enuM()) {
         return true;
     }
     
     return false;
+}
+
+bool
+Compiler::enuM()
+{
+    if (!match(Reserved::Enum)) {
+        return false;
+    }
+    
+    std::string id;
+    expect(identifier(id), Error::ExpectedIdentifier);
+
+    // Add an emum
+    // FIXME: handle too many enums
+    EnumPtr e = addEnum(id);    
+    currentStruct()->addEnum(e);
+    
+    expect(Token::OpenBrace);
+    
+    if (enumEntry(e)) {
+        while(match(Token::Comma)) {
+            expect(enumEntry(e), Error::ExpectedValue);
+        }
+    }
+    
+    expect(Token::CloseBrace);
+    expect(Token::Semicolon);
+    return true;
+}
+
+bool
+Compiler::enumEntry(EnumPtr e)
+{
+    std::string id;
+    if (!identifier(id)) {
+        return false;
+    }
+    
+    uint32_t i;
+    
+    if (match(Token::Equal)) {
+        expect(integerValue(i), Error::ExpectedValue);
+    } else {
+        // Use the value after the prev enumEntry
+        i = e->nextValue() + 1;
+    }
+    
+    e->addValue(id, i);
+    return true;
 }
 
 bool
@@ -287,12 +338,12 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
             collectConstants(type, nElements != 1, addr, nConstElements, isScalarConstant);
             sym->setNElements(nConstElements);
             sym->setKind(isScalarConstant ? Symbol::Kind::ScalarConstant : Symbol::Kind::Constant);
-        } else if ((uint8_t(type) < StructTypeStart && nElements == 1) || isPointer) {
-            // Built-in scalar type. Generate an expression
+        } else if ((!isStruct(type) && nElements == 1) || isPointer) {
+            // Built-in scalar or enum type. Generate an expression
             ast = expression();
             expect(ast != nullptr, Error::ExpectedExpr);
         } else {
-            // Struct or array type, collect initializers
+            // Struct, enum or array type, collect initializers
             expect(Token::OpenBrace);
             ast = expression();
             if (ast) {
@@ -453,7 +504,7 @@ Compiler::type(Type& t)
         return true;
     }
         
-    // See if it's a struct
+    // See if it's a struct or enum
     std::string id;
     if (!identifier(id, false)) {
         return false;
@@ -469,6 +520,13 @@ Compiler::type(Type& t)
         _scanner.retireToken();
         return true;
     }
+    
+    EnumPtr e = currentStruct()->findEnum(id);
+    if (e) {
+        t = e->type();
+        _scanner.retireToken();
+        return true;
+    }        
     
     struc = findStruct(id);
     if (struc) {
@@ -1090,6 +1148,11 @@ Compiler::postfixExpression()
                 continue;
             }
             
+            // If lhs is an Enum then get the enum value and create a constant node.
+            // This node has the integer value corresponding to the enum value and 
+            // the type of the enum.
+            
+            
             // lhs must be a struct or pointer to struct. Find its definition
             Type structType = lhs->type();
             expect(isStruct(structType), Error::ExpectedStructType);
@@ -1126,14 +1189,28 @@ Compiler::primaryExpression()
         return ast;
     }
     
-    // See if this is a type cast
+    // See if this is a type cast or an enum
     Type t;
     if (type(t)) {
         // A type cast looks like a function with a single arg
-        expect(Token::OpenParen);
-        ASTPtr arg = expression();
-        expect(Token::CloseParen);        
-        return std::make_shared<TypeCastNode>(t, arg, annotationIndex());
+        if (match(Token::OpenParen)) {
+            // This is a type cast
+            ASTPtr arg = expression();
+            expect(Token::CloseParen);        
+            return std::make_shared<TypeCastNode>(t, arg, annotationIndex());
+        } else {
+            // The only other choice is an Enum deref, which means a dot must follow then an id
+            expect(isEnum(t), Error::ExpectedEnum);
+            expect(Token::Dot);
+            
+            std::string id;
+            expect(identifier(id), Error::ExpectedEnum);
+            
+            EnumPtr e = typeToEnum(t);
+            int32_t value;
+            expect(e->findValue(id, value), Error::ExpectedEnum);
+            return std::make_shared<ConstantNode>(t, value, annotationIndex());
+        }
     }
     
     std::string id;
@@ -1266,6 +1343,10 @@ Compiler::argumentList(const ASTPtr& fun)
             // We are past the last arg. That makes this a vararg call. We upcast any integral
             // types to 32 bits.
             neededType = arg->type();
+            if (isEnum(neededType)) {
+                neededType = Type::UInt8;
+            }
+            
             switch (neededType) {
                 case Type::Int8:
                 case Type::Int16: neededType = Type::Int32; break;
@@ -1449,6 +1530,7 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "case",       Reserved::Case },
         { "default",    Reserved::Default },
         { "struct",     Reserved::Struct },
+        { "enum",       Reserved::Enum },
         { "return",     Reserved::Return },
         { "break",      Reserved::Break },
         { "continue",   Reserved::Continue },
@@ -1545,11 +1627,8 @@ Compiler::sizeInBytes(Type type) const
         case Type::Int32:   return 4;
         default:
             // Handle Structs
-            int16_t structIndex = uint16_t(type) < StructTypeStart;
-            if (structIndex < 0 || structIndex > (255 - StructTypeStart)) {
-                return 0;
-            }
-            return _structs[structIndex]->size();
+            StructPtr s = typeToStruct(type);
+            return (s == nullptr) ? 0 : s->size();
     }
 }
 

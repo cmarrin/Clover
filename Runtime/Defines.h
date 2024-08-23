@@ -361,30 +361,32 @@ enum class Op: uint8_t {
     ENTERS  = 0xf0,
 };
 
-// Built-in types are 0x00-StructTypeStart-1, custom types are StructTypeStart-0xff
+// Built-in types are 0x00 to EnumTypeStart-1, enum types are EnumTypeStart
+// to StructTypeStart-1. Struct types are StructTypeStart-0xff
 // Order the types so scalar types are all together
+
+constexpr uint8_t EnumTypeStart = 0x20; // Where enum types start
+constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
 
 enum class Type : uint8_t {
     None = 0,
     
-    Float  = 10,
-    Int8   = 11,
-    UInt8  = 12,
-    Int16  = 13,
-    UInt16 = 14,
-    Int32  = 15,
-    UInt32 = 16,
+    Float  = 0x08,
+    Int8   = 0x09,
+    UInt8  = 0x0a,
+    Int16  = 0x0b,
+    UInt16 = 0x0c,
+    Int32  = 0x0d,
+    UInt32 = 0x0e,
     
-    String = 20,
-    Function = 21,
+    String   = 0x10,
+    Function = 0x11,
 };
 
 static constexpr bool isScalar(Type t) { return t >= Type::Float && t <= Type::UInt32; }
 static constexpr bool isInteger(Type t) { return t >= Type::Int8 && t <= Type::UInt32; }
-
-constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
-
-static inline bool isStruct(Type type) { return uint8_t(type) >= StructTypeStart; }
+static constexpr bool isEnum(Type t) { return uint8_t(t) >= EnumTypeStart && uint8_t(t) < StructTypeStart; }
+static constexpr bool isStruct(Type t) { return uint8_t(t) >= StructTypeStart; }
 
 enum class Index : uint8_t { C = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
 enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
@@ -396,6 +398,10 @@ static constexpr uint8_t opSizeToBytes(OpSize opSize)
 
 static constexpr OpSize typeToOpSize(Type type)
 {
+    if (isEnum(type)) {
+        // FIXME: For now Enums are always 1 byte
+        return OpSize::i8;
+    }
     return (type == Type::Int8 || type == Type::UInt8) ? OpSize::i8 : ((type == Type::Int16 || type == Type::UInt16) ? OpSize::i16 : OpSize::i32);
 };
 
@@ -417,8 +423,12 @@ static inline uint8_t typeToBytes(Type type)
         case Type::Float    : return 4;
         case Type::String   : return AddrSize;
         default:
-            if (uint8_t(type) >= StructTypeStart) {
+            if (isStruct(type)) {
                 return AddrSize;
+            }
+            if (isEnum(type)) {
+                // FIXME: For now Enums are always 1 byte
+                return 1;
             }
             return 0;
     }
@@ -440,6 +450,11 @@ static inline uint8_t typeToSizeBits(Type type)
 
 static inline Op castOp(Type from, Type to)
 {
+    // FIXME: For now assume enum is 1 byte
+    if (isEnum(from)) {
+        from = Type::UInt8;
+    }
+    
     // Cast opcode are sparse, only the ones needed exist
     // return NOP for all the rest.
     if (from == Type::Float) {
@@ -535,6 +550,7 @@ static inline int32_t sex(int32_t& v, OpSize opSize)
 enum class Reserved {
     None,
     Struct,
+    Enum,
     Const,
     Import,
     As,
@@ -648,6 +664,11 @@ using FunctionList = std::vector<FunctionPtr>;
 class Struct;
 using StructPtr = std::shared_ptr<Struct>;
 using StructList = std::vector<StructPtr>;
+
+class Enum;
+using EnumPtr = std::shared_ptr<Enum>;
+using EnumList = std::vector<EnumPtr>;
+
 #endif
 
 }
