@@ -24,7 +24,10 @@ public:
     Struct(const std::string& name, Type type)
         : Module(name)
         , _type(type)
-    { }
+    {
+        // Add ctor
+        Module::addFunction("", Type::None);
+    }
     
     Type localType(uint16_t i) const { return (i >= _locals.size()) ? Type::None : _locals[i]->type(); }
     uint16_t numLocals() const { return _locals.size(); }
@@ -111,6 +114,9 @@ public:
     const ASTPtr& astNode() const { return _astNode; }
 
     void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
+    
+    bool haveExplicitCtor() const { return _haveExplicitCtor; }
+    void setHaveExplicitCtor() { _haveExplicitCtor = true; }
 
 private:
     std::vector<StructPtr> _structs;
@@ -119,6 +125,7 @@ private:
     uint8_t _localSize = 0;
     Type _type = Type::None;
     ASTPtr _astNode = std::make_shared<StatementsNode>(-1);
+    bool _haveExplicitCtor = false;
 };
 
 }

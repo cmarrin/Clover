@@ -48,7 +48,7 @@ function int8 testFunction(int8* p, float f)
     return *p + int8(f);
 }
 
-initialize()
+Test()
 {
     errors = 0;
     

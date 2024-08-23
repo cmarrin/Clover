@@ -37,13 +37,21 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         return false;
     }
     
-    // Do 2 pass code generation. On the first pass we don't know
-    // how long most of the branch instructions need to be so
-    // we make them long. But as we fill in the jump addresses
-    // we remember which branches can be short and  then go back
-    // for a second pass to shorten them.
+    // Do 3 code generation:
+    //
+    //      1)  On the first pass we don't know how long most of the branch
+    //          instructions need to be so we make them long. But as we fill
+    //          in the jump addresses we remember which branches can be short
+    //
+    //      2)  Now go back for a second pass to shorten the ones that have
+    //          been marked as such.
+    //
+    //      3)  But we're not done. If we have forward function declarations
+    //          their addresses will have been set from the previous pass
+    //          and if we've shortened any branches they will be wrong so
+    //          we need a third pass to make them correct
     
-    for (int i = 0; i < 2; i ++) {
+    for (int i = 0; i < 3; i ++) {
         executable.clear();
         
         // Write signature
@@ -72,7 +80,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
             itStruct->astNode()->emitCode(executable, false, this);
             
             for (auto& itFunc : itStruct->functions()) {
-                // If this is the initialize function of the top level
+                // If this is the ctor function of the top level
                 // struct, set the entry point
                 if (itStruct == _structs[0] && itFunc->name() == "") {
                     uint32_t cur = uint32_t(executable.size());
@@ -174,7 +182,8 @@ Compiler::strucT()
 bool
 Compiler::structEntry()
 {
-    if (strucT() || varStatement(currentStruct()->astNode()) || function() || init() || enuM()) {
+    // varStatement needs to be last. It's looking for a type which could get confused with the ctor.
+    if (strucT() || function() || ctor() || enuM() || varStatement(currentStruct()->astNode())) {
         return true;
     }
     
@@ -591,16 +600,35 @@ Compiler::function()
 }
 
 bool
-Compiler::init()
+Compiler::ctor()
 {
-    if (!match(Reserved::Initialize)) {
+    // identifier may or may not be the name of the struct, if not, don't retire the id.
+    std::string id;
+    if (!identifier(id, false)) {
         return false;
     }
     
-    // The init method is a function that has no name and no return type
-    // Remember the function
+    if (id != currentStruct()->name()) {
+        return false;
+    }
+    
+    _scanner.retireToken();
+    
+    // The ctor method is a function that has no name and no return type
+    // Remember the function. It gets created when the struct is created.
+    // Implicit initializations go there (e.g., var initializations in
+    // the struct). Make sure this is the only explicit ctor in this 
+    // struct.
     expect(currentStruct() != nullptr, Error::InternalError);
-    _currentFunction = currentStruct()->addFunction("", Type::None);
+    expect(!currentStruct()->haveExplicitCtor(), Error::InternalError);
+    expect(!currentStruct()->functions().empty(), Error::InternalError);
+    
+    currentStruct()->setHaveExplicitCtor();
+    
+    _currentFunction = currentStruct()->functions()[0];
+
+    expect(_currentFunction->name().empty(), Error::InternalError);
+
     _inFunction = true;
     
     expect(Token::OpenParen);
@@ -1522,7 +1550,6 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "import",     Reserved::Import },
         { "as",         Reserved::As },
         { "function",   Reserved::Function },
-        { "initialize", Reserved::Initialize },
         { "for",        Reserved::For },
         { "if",         Reserved::If },
         { "else",       Reserved::Else },

@@ -555,7 +555,6 @@ enum class Reserved {
     Import,
     As,
     Function,
-    Initialize,
     Return,
     Break,
     Continue,

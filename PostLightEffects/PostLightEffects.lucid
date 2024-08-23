@@ -321,7 +321,7 @@ function int16 rainbowLoop()
 
 uint8 _cmd = 'f';
 
-initialize()
+PostLightEffects()
 {
     // For now let's just run flicker. Later we will have
     // a way to select the effect

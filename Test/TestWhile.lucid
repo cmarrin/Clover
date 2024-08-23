@@ -36,7 +36,7 @@ function showFloatResults(uint8 testNo, float exp, float act)
     }
 }
 
-initialize()
+Test()
 {
     errors = 0;
     

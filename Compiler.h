@@ -56,7 +56,7 @@ struct:
     'struct' <id> '{' { structEntry ';' } '}' ;
     
 structEntry:
-    struct | varStatement | function | init | enum  ;
+    struct | varStatement | function | ctor | enum  ;
 
 varStatement:
     [ 'const' ] type [ '*' ] var ';' ;
@@ -70,8 +70,8 @@ initializer:
 function:
     'function' [ <type> ] <id> '(' formalParameterList ')' compoundStatement ;
 
-init:
-    'initialize' '(' ')' compoundStatement ;
+ctor:
+    <id> '(' ')' compoundStatement ;
 
 enum:
     'enum' <id> '{' [enumEntry ] { ',' enumEntry } '}' ;
@@ -317,7 +317,7 @@ protected:
     bool type(Type&);
   
     bool function();
-    bool init();
+    bool ctor();
     bool varStatement(const ASTPtr& parent);
 
     bool var(const ASTPtr& parent, Type, bool isPointer, bool isConstant);

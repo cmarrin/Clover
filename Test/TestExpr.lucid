@@ -48,7 +48,7 @@ function showFloatResults(uint8 testNo, float exp, float act)
 
 float testFloatGlobal;
 
-initialize()
+Test()
 {
     errors = 0;
     
