@@ -76,6 +76,7 @@
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Scanner.h; sourceTree = "<group>"; };
 		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
 		4941A1172BBB0B1200CE3C9E /* Effects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.lucid; path = ../examples/Effects.lucid; sourceTree = "<group>"; };
+		49AD783D2C77D53500ABC078 /* Enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Enum.h; path = ../Enum.h; sourceTree = "<group>"; };
 		49C164A42C025CD500981AD1 /* simple.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = simple.lucid; path = ../examples/simple.lucid; sourceTree = "<group>"; };
 		49C164A92C0297FB00981AD1 /* interp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = interp; sourceTree = BUILT_PRODUCTS_DIR; };
 		49C164B22C03E84700981AD1 /* Function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Function.h; path = ../Function.h; sourceTree = "<group>"; };
@@ -146,7 +147,7 @@
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
 				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
 				4941A1042BBA28F000CE3C9E /* Defines.h */,
-				4914A4892C44A132003DDADA /* Print.cpp */,
+				49AD783D2C77D53500ABC078 /* Enum.h */,
 				4914A4842C2E0F92003DDADA /* Function.cpp */,
 				49C164B22C03E84700981AD1 /* Function.h */,
 				4941A1052BBA28F000CE3C9E /* Interpreter.cpp */,
@@ -159,6 +160,7 @@
 				49C469C82C6A83B100588838 /* NativeCore.cpp */,
 				49C469C72C6A83B100588838 /* NativeCore.h */,
 				49C164B52C04463000981AD1 /* OpInfo.h */,
+				4914A4892C44A132003DDADA /* Print.cpp */,
 				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
 				4941A10F2BBA290B00CE3C9E /* Scanner.h */,
 				49C164BC2C0545D100981AD1 /* Struct.h */,
