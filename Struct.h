@@ -112,6 +112,7 @@ public:
     }
 
     const ASTPtr& astNode() const { return _astNode; }
+    const ASTPtr& initASTNode() const { return _initASTNode; }
 
     void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
     
@@ -125,6 +126,7 @@ private:
     uint8_t _localSize = 0;
     Type _type = Type::None;
     ASTPtr _astNode = std::make_shared<StatementsNode>(-1);
+    ASTPtr _initASTNode = std::make_shared<StatementsNode>(-1);
     bool _haveExplicitCtor = false;
 };
 

@@ -51,7 +51,7 @@ public:
     AddrNativeType addr() const { return _addr; }
     void setAddr(AddrNativeType addr) { _addr = addr; }
     const SymbolPtr& local(uint8_t i) const { return _locals[i]; }
-    const ASTPtr& astNode() const { return _astNode; }
+    const ASTPtr& astNode();
 
     void addASTNode(const ASTPtr& node);
 

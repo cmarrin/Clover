@@ -27,13 +27,19 @@ Function::Function(const char* name, uint16_t nativeId, Type returnType, const S
     }
 }
 
-void
-Function::addASTNode(const ASTPtr& node)
+const ASTPtr&
+Function::astNode()
 {
     if (!_astNode) {
         _astNode = std::make_shared<StatementsNode>(-1);
     }
-    _astNode->addNode(node);
+    return _astNode;
+}
+
+void
+Function::addASTNode(const ASTPtr& node)
+{
+    astNode()->addNode(node);
 }
 
 void
