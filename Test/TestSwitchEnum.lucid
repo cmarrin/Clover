@@ -58,22 +58,47 @@ Test()
 
     int8 a = 1;
     int8 b = -1;
+    
     switch (a) {
         case 0: b = 10;
         case 1: b = 20;
         case 2: b = 30;
     }
-
+    
     showIntResults(5, 20, b);
+
+    a = 4;
+    b = -1;
+
+    switch (a) {
+        case 0: b = 10;
+        case 1: b = 20;
+        case 2: b = 30;
+    }
+    
+    showIntResults(6, -1, b);
+
+    b = -1;
+
+    switch (a) {
+        case 0: b = 10;
+        case 1: b = 20;
+        default: b = 100;
+        case 2: b = 30;
+    }
+
+    showIntResults(7, 100, b);
     
     Items item = Items.Second;
+    b = -1;
+    
     switch (item) {
         case Items.Third: b = 10;
         case Items.First: b = 20;
         case Items.Second: b = 30;
     }
 
-    showIntResults(6, 20, b);
+    showIntResults(8, 30, b);
     
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
     return errors;
