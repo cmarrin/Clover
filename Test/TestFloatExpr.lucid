@@ -1,0 +1,87 @@
+/*-------------------------------------------------------------------------
+    This source file is a part of Lucid
+    For the latest info, see https://github.com/cmarrin/Lucid
+    Copyright (c) 2021-2022, Chris Marrin
+    All rights reserved.
+    Use of this source code is governed by the MIT license that can be
+    found in the LICENSE file.
+-------------------------------------------------------------------------*/
+
+// Test float constants, vars, operands and expressions
+
+struct Test
+{
+
+const uint8 TestSizeDef = 12;
+const int16 TestIntConst = 0xfc;
+const float TestFloatConst = 3.5;
+
+const float testFloatTable [ ] = { 1.5, 2.5, 3.5, 7.5, };
+
+int16 testIntGlobal;
+
+uint8 errors;
+
+function showIntResults(uint8 testNo, int32 exp, int32 act)
+{
+    core.printf("%10s-> %2hhi: ", " ", testNo);
+    if (exp != act) {
+        core.printf("     FAIL: exp %i, got %i\n", exp, act);
+        errors++;
+    } else {
+        core.printf("     Pass\n");
+    }
+}
+
+function showFloatResults(uint8 testNo, float exp, float act)
+{
+    core.printf("%10s-> %2hhi: ", " ", testNo);
+    if (exp != act) {
+        core.printf("     FAIL: exp %f, got %f\n", exp, act);
+        errors++;
+    } else {
+        core.printf("     Pass\n");
+    }
+}
+
+float testFloatGlobal;
+
+Test()
+{
+    errors = 0;
+    
+    testIntGlobal = 43;
+    testFloatGlobal = 6.5;
+
+    core.printf("\nTest Float Exprs\n");
+
+    core.printf("\n  Flt ops\n");
+    showFloatResults(1, 10, TestFloatConst + testFloatGlobal);
+    showFloatResults(2, -3, TestFloatConst - testFloatGlobal);
+    showFloatResults(3, 22.75, TestFloatConst * testFloatGlobal);
+    showFloatResults(4, 2.5, 16.25 / testFloatGlobal);
+
+    showFloatResults(5, -6.5, -testFloatGlobal);
+
+    showIntResults(6, 1, TestFloatConst < testFloatGlobal);
+    showIntResults(7, 1, TestFloatConst <= testFloatGlobal);
+    showIntResults(8, 0, TestFloatConst == testFloatGlobal);
+    showIntResults(9, 1, TestFloatConst != testFloatGlobal);
+    showIntResults(10, 0, TestFloatConst >= testFloatGlobal);
+    showIntResults(11, 0, TestFloatConst > testFloatGlobal);
+    
+    core.printf("\n  Flt expr\n");
+    showFloatResults(12, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
+
+    core.printf("\n  Flt cast\n");
+    uint8 a = 2;
+    showFloatResults(13, 2.5, float(a) + 0.5);
+    showFloatResults(14, 12.5, float(TestSizeDef) + 0.5);
+    showFloatResults(15, 252.5, float(TestIntConst) + 0.5);
+    showFloatResults(16, 43.5, float(testIntGlobal) + 0.5);
+
+    core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
+    return errors;
+}
+
+};

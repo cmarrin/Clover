@@ -18,8 +18,6 @@ const float TestFloatConst = 3.5;
 
 const int8 testIntTable[ ] = { 1, 2, 3, 7 };
 
-const float testFloatTable [ ] = { 1.5, 2.5, 3.5, 7.5, };
-
 int16 testIntGlobal;
 
 uint8 errors;
@@ -35,17 +33,6 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
-function showFloatResults(uint8 testNo, float exp, float act)
-{
-    core.printf("%10s-> %2hhi: ", " ", testNo);
-    if (exp != act) {
-        core.printf("     FAIL: exp %f, got %f\n", exp, act);
-        errors++;
-    } else {
-        core.printf("     Pass\n");
-    }
-}
-
 float testFloatGlobal;
 
 Test()
@@ -55,7 +42,7 @@ Test()
     testIntGlobal = 42;
     testFloatGlobal = 6.5;
 
-    core.printf("\nexprs\n");
+    core.printf("\nTest Int Exprs\n");
 
     core.printf("\n  Int vals\n");
     showIntResults(1, 12, TestSizeDef);
@@ -103,25 +90,14 @@ Test()
     showIntResults(24, 2984, int16(testIntTable[1]) + int16(TestSizeDef) * TestIntConst - testIntGlobal);
     showIntResults(25, 2940, int16(testIntTable[1] + TestSizeDef) * (TestIntConst - testIntGlobal));
 
-    core.printf("\n  Flt ops\n");
-    showFloatResults(26, 10, TestFloatConst + testFloatGlobal);
-    showFloatResults(27, -3, TestFloatConst - testFloatGlobal);
-    showFloatResults(28, 22.75, TestFloatConst * testFloatGlobal);
-    showFloatResults(29, 2.5, 16.25 / testFloatGlobal);
-
-    showFloatResults(30, -6.5, -testFloatGlobal);
-
-    showIntResults(31, 1, TestFloatConst < testFloatGlobal);
-    showIntResults(32, 1, TestFloatConst <= testFloatGlobal);
-    showIntResults(33, 0, TestFloatConst == testFloatGlobal);
-    showIntResults(34, 1, TestFloatConst != testFloatGlobal);
-    showIntResults(35, 0, TestFloatConst >= testFloatGlobal);
-    showIntResults(36, 0, TestFloatConst > testFloatGlobal);
-    
-    core.printf("\n  Flt expr\n");
-    showFloatResults(37, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
+    core.printf("\n  Int cast\n");
+    float a = -2.5;
+    showIntResults(26, -2, int32(a));
+    showIntResults(27, 3, uint8(TestFloatConst));
+    showIntResults(28, 6, uint16(testFloatGlobal));
 
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
+    return errors
 }
 
 };

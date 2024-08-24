@@ -52,13 +52,11 @@
 		4914A4922C4DD665003DDADA /* TestFor.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFor.lucid; path = ../Test/TestFor.lucid; sourceTree = "<group>"; };
 		4914A4932C4DD665003DDADA /* TestFor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFor.h; path = ../Test/TestFor.h; sourceTree = "<group>"; };
 		4914A4942C4DD665003DDADA /* TestPtrStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestPtrStruct.h; path = ../Test/TestPtrStruct.h; sourceTree = "<group>"; };
-		4914A4952C4DD665003DDADA /* TestExpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestExpr.h; path = ../Test/TestExpr.h; sourceTree = "<group>"; };
 		4914A4962C4DD665003DDADA /* TestWhile.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestWhile.lucid; path = ../Test/TestWhile.lucid; sourceTree = "<group>"; };
 		4914A4972C4DD665003DDADA /* Test.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Test.ino; path = ../Test/Test.ino; sourceTree = "<group>"; };
 		4914A4982C4DD665003DDADA /* TestFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFunction.h; path = ../Test/TestFunction.h; sourceTree = "<group>"; };
 		4914A4992C4DD665003DDADA /* TestIf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestIf.h; path = ../Test/TestIf.h; sourceTree = "<group>"; };
 		4914A49A2C4DD665003DDADA /* TestFunction.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.lucid; path = ../Test/TestFunction.lucid; sourceTree = "<group>"; };
-		4914A49C2C4DD665003DDADA /* TestExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestExpr.lucid; path = ../Test/TestExpr.lucid; sourceTree = "<group>"; };
 		491886F42C5EDAE70053F2C0 /* Lucid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Lucid.h; path = ../Runtime/Lucid.h; sourceTree = "<group>"; };
 		492BB6302C6E58C20022D290 /* PostLightEffects.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PostLightEffects.h; path = ../PostLightEffects/PostLightEffects.h; sourceTree = "<group>"; };
 		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
@@ -76,6 +74,9 @@
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Scanner.h; sourceTree = "<group>"; };
 		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
 		4941A1172BBB0B1200CE3C9E /* Effects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.lucid; path = ../examples/Effects.lucid; sourceTree = "<group>"; };
+		49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestSwitchEnum.lucid; path = ../Test/TestSwitchEnum.lucid; sourceTree = "<group>"; };
+		49A85D842C7A220500E8F5F3 /* TestFloatExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestFloatExpr.lucid; path = ../Test/TestFloatExpr.lucid; sourceTree = "<group>"; };
+		49A85D852C7A220500E8F5F3 /* TestIntExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr.lucid; path = ../Test/TestIntExpr.lucid; sourceTree = "<group>"; };
 		49AD783D2C77D53500ABC078 /* Enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Enum.h; path = ../Enum.h; sourceTree = "<group>"; };
 		49C164A42C025CD500981AD1 /* simple.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = simple.lucid; path = ../examples/simple.lucid; sourceTree = "<group>"; };
 		49C164A92C0297FB00981AD1 /* interp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = interp; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -121,8 +122,8 @@
 				4914A4972C4DD665003DDADA /* Test.ino */,
 				4914A4912C4DD665003DDADA /* TestCore.lucid */,
 				4914A48D2C4DD665003DDADA /* TestCore.h */,
-				4914A49C2C4DD665003DDADA /* TestExpr.lucid */,
-				4914A4952C4DD665003DDADA /* TestExpr.h */,
+				49A85D842C7A220500E8F5F3 /* TestFloatExpr.lucid */,
+				49A85D852C7A220500E8F5F3 /* TestIntExpr.lucid */,
 				4914A4922C4DD665003DDADA /* TestFor.lucid */,
 				4914A4932C4DD665003DDADA /* TestFor.h */,
 				4914A49A2C4DD665003DDADA /* TestFunction.lucid */,
@@ -131,6 +132,7 @@
 				4914A4992C4DD665003DDADA /* TestIf.h */,
 				4914A48E2C4DD665003DDADA /* TestPtrStruct.lucid */,
 				4914A4942C4DD665003DDADA /* TestPtrStruct.h */,
+				49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.lucid */,
 				4914A4962C4DD665003DDADA /* TestWhile.lucid */,
 				4914A4902C4DD665003DDADA /* TestWhile.h */,
 			);
