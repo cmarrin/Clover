@@ -1369,7 +1369,9 @@ Compiler::argumentList(const ASTPtr& fun)
                 // means it can take a pointer to any type. This is to allow
                 // core.memset to take any pointer and initialize it
                 expect(sym->type() == Type::None || sym->type() == arg->type(), Error::MismatchedType);
-            }
+            } else if (!isScalar(arg->type()) || !isScalar(neededType))
+                // We only automatically cast between scalars
+                expect(arg->type() == neededType, Error::MismatchedType);
         } else {
             // We are past the last arg. That makes this a vararg call. We upcast any integral
             // types to 32 bits.
