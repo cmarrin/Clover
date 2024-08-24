@@ -192,7 +192,7 @@ class ConstantNode : public ASTNode
 
     int32_t integerValue() const
     {
-        if (isScalar(_type)) {
+        if (isScalar(_type) || isEnum(_type)) {
             if (_type == Type::Float) {
                 return int32_t(_f);
             }
