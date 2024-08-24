@@ -625,7 +625,7 @@ Compiler::ctor()
     
     currentStruct()->setHaveExplicitCtor();
     
-    _currentFunction = currentStruct()->functions()[0];
+    _currentFunction = currentStruct()->addFunction("", Type::None);
 
     expect(_currentFunction->name().empty(), Error::InternalError);
 

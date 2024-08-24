@@ -542,6 +542,8 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     code.push_back(uint8_t(Op::SWITCH));
     appendValue(code, operand, 2);
     
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     // Jump addresses in list are relative to this point
     AddrNativeType jumpSourceAddr = AddrNativeType(code.size());
     
@@ -569,6 +571,8 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         }
     }
     
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+
     // Now emit the statements. As we do so, fixup the addr in the list.
     // At the end of each statement, add a BranchNode so the statement
     // can jump to the end. We need to fixup after

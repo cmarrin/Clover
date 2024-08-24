@@ -24,10 +24,7 @@ public:
     Struct(const std::string& name, Type type)
         : Module(name)
         , _type(type)
-    {
-        // Add ctor
-        Module::addFunction("", Type::None);
-    }
+    { }
     
     Type localType(uint16_t i) const { return (i >= _locals.size()) ? Type::None : _locals[i]->type(); }
     uint16_t numLocals() const { return _locals.size(); }
