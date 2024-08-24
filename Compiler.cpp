@@ -790,7 +790,8 @@ Compiler::caseClause(int32_t& value, bool& isDefault)
         // Case value must be integer constant. That means literal (including true and false), a scalar constant or an enum
         // FIXME: add support for enum
         ASTPtr ast = primaryExpression();
-        expect(ast != nullptr && ast->astNodeType() == ASTNodeType::Constant && isInteger(ast->type()), Error::WrongType);
+        expect(ast != nullptr && ast->astNodeType() == ASTNodeType::Constant && 
+                (isInteger(ast->type()) || isEnum(ast->type())), Error::WrongType);
 
         // We know this is an integer constant node. Get the value
         value = std::static_pointer_cast<ConstantNode>(ast)->integerValue();
