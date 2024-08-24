@@ -182,12 +182,14 @@ Compiler::strucT()
 bool
 Compiler::structEntry()
 {
-    // varStatement needs to be last. It's looking for a type which could get confused with the ctor.
-    if (strucT() || function() || ctor() || enuM() || varStatement(currentStruct()->astNode())) {
+    if (strucT() || function() || ctor() || enuM()) {
         return true;
     }
     
-    return false;
+    // varStatement needs to be last. It's looking for a type which could get confused with the ctor.
+    // The parent passed to the varStatement is the ctor of the current struct because that's where
+    // initialization code goes.
+    return varStatement(currentStruct()->initASTNode());
 }
 
 bool
@@ -619,9 +621,7 @@ Compiler::ctor()
     // Implicit initializations go there (e.g., var initializations in
     // the struct). Make sure this is the only explicit ctor in this 
     // struct.
-    expect(currentStruct() != nullptr, Error::InternalError);
-    expect(!currentStruct()->haveExplicitCtor(), Error::InternalError);
-    expect(!currentStruct()->functions().empty(), Error::InternalError);
+    expect(!currentStruct()->haveExplicitCtor(), Error::DuplicateIdentifier);
     
     currentStruct()->setHaveExplicitCtor();
     
@@ -640,6 +640,9 @@ Compiler::ctor()
 
     // ENTER has to be the first instruction in the Function.
     _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
+    
+    // init code goes right after ENTER
+    _currentFunction->addASTNode(currentStruct()->initASTNode());
 
     while(statement(_currentFunction->astNode())) { }
     
