@@ -35,9 +35,10 @@ public:
                 [s](std::pair<std::string, int32_t> p) { return p.first == s; });
 
         if (it != _values.end()) {
-            return it->second;
+            value = it->second;
+            return true;
         }
-        return -1;
+        return false;
     }
     
     int32_t nextValue() const
