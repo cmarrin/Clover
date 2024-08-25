@@ -36,25 +36,24 @@ bool Decompiler::decompile()
             return false;
         }
         
-        // Emit entry point
-        uint32_t entryPoint = 0;
-        entryPoint |= uint32_t(getUInt8()) << 24;
-        entryPoint |= uint32_t(getUInt8()) << 16;
-        entryPoint |= uint32_t(getUInt8()) << 8;
-        entryPoint |= uint32_t(getUInt8());
+        // Emit main entry point
+        int32_t entryPoint = getInt32();
         
-        _out->append("\nEntry Point: ");
+        _out->append("\nMain entry point                           : ");
+        _out->append(std::to_string(entryPoint));
+        _out->append("\n");
+        
+        // Emit ctor entry point
+        entryPoint = getInt32();
+        
+        _out->append("Top-level srruct constructor entry point   : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         
         // Emit size
-        uint32_t size = 0;
-        size |= uint32_t(getUInt8()) << 24;
-        size |= uint32_t(getUInt8()) << 16;
-        size |= uint32_t(getUInt8()) << 8;
-        size |= uint32_t(getUInt8());
+        int32_t size = getInt32();
         
-        _out->append("Top-level struct size: ");
+        _out->append("Top-level struct size                      : ");
         _out->append(std::to_string(size));
         _out->append("\n\n");
         

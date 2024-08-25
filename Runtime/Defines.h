@@ -64,6 +64,110 @@ static inline uint32_t floatToInt(float f)
     return *(reinterpret_cast<int32_t*>(&f));
 }
 
+enum class Index : uint8_t { C = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
+enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
+
+// Built-in types are 0x00 to EnumTypeStart-1, enum types are EnumTypeStart
+// to StructTypeStart-1. Struct types are StructTypeStart-0xff
+// Order the types so scalar types are all together
+
+constexpr uint8_t EnumTypeStart = 0x20; // Where enum types start
+constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
+
+enum class Type : uint8_t {
+    None = 0,
+    
+    Float  = 0x08,
+    Int8   = 0x09,
+    UInt8  = 0x0a,
+    Int16  = 0x0b,
+    UInt16 = 0x0c,
+    Int32  = 0x0d,
+    UInt32 = 0x0e,
+    
+    String   = 0x10,
+    Function = 0x11,
+};
+
+static constexpr bool isScalar(Type t) { return t >= Type::Float && t <= Type::UInt32; }
+static constexpr bool isInteger(Type t) { return t >= Type::Int8 && t <= Type::UInt32; }
+static constexpr bool isEnum(Type t) { return uint8_t(t) >= EnumTypeStart && uint8_t(t) < StructTypeStart; }
+static constexpr bool isStruct(Type t) { return uint8_t(t) >= StructTypeStart; }
+
+static constexpr uint8_t opSizeToBytes(OpSize opSize)
+{
+    return (opSize == OpSize::i8) ? 1 : ((opSize == OpSize::i16) ? 2 : 4);
+}
+
+static constexpr OpSize typeToOpSize(Type type)
+{
+    if (isEnum(type)) {
+        // FIXME: For now Enums are always 1 byte
+        return OpSize::i8;
+    }
+    return (type == Type::Int8 || type == Type::UInt8) ? OpSize::i8 : ((type == Type::Int16 || type == Type::UInt16) ? OpSize::i16 : OpSize::i32);
+};
+
+// Defines for size of addresses
+using AddrNativeType = uint32_t;
+constexpr Type AddrType = Type::UInt32;
+constexpr OpSize AddrOpSize = typeToOpSize(AddrType);
+constexpr uint8_t AddrSize = opSizeToBytes(AddrOpSize);
+
+static inline uint8_t typeToBytes(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return 1;
+        case Type::UInt8    : return 1;
+        case Type::Int16    : return 2;
+        case Type::UInt16   : return 2;
+        case Type::Int32    : return 4;
+        case Type::UInt32   : return 4;
+        case Type::Float    : return 4;
+        case Type::String   : return AddrSize;
+        default:
+            if (isStruct(type)) {
+                return AddrSize;
+            }
+            if (isEnum(type)) {
+                // FIXME: For now Enums are always 1 byte
+                return 1;
+            }
+            return 0;
+    }
+};
+
+static inline uint8_t typeToSizeBits(Type type)
+{
+    switch (type) {
+        case Type::Int8     : return 0x00;
+        case Type::UInt8    : return 0x00;
+        case Type::Int16    : return 0x01;
+        case Type::UInt16   : return 0x01;
+        case Type::Int32    : return 0x02;
+        case Type::UInt32   : return 0x02;
+        case Type::Float    : return 0x03;
+        default: return 0;
+    }
+};
+
+/*
+    Executable file format
+    
+        Bytes       Description
+        
+        0-3     : Signature - 'lucd'
+        4-7     : Entry point of 'main' function, if any (0 if not)
+        8-11    : Location of constructor function of top level struct
+        12-15   : Bytes of storage needed for top-level struct
+        15-n    : Bytes of constant structs and arrays
+        n-<end> : Executable code
+ */
+ 
+constexpr AddrNativeType MainEntryPointAddr = 4;
+constexpr AddrNativeType TopLevelCtorEntryPointAddr = 8;
+constexpr AddrNativeType TopLevelStructSizeAddr = 12;
+
 /*
 
 Machine Code for LucidVM
@@ -71,22 +175,8 @@ Machine Code for LucidVM
 See README.md for details.
 
 Opcodes:
-    Param nomenclature:
-        
-        int8    - Byte after opcode. Int constant (-128 to 127)
-        uint8   - Byte after opcode. Int constant (0 to 255)
-        int16   - 2 bytes after opcode. Int constant (-32768 to 32767)
-        uint16  - 2 bytes after opcode. Int constant (0 to 65535)
-        int32   - 4 bytes after opcode. Int constant (-2^31 to 2^31-1)
-        uint32  - 4 bytes after opcode. Int constant (0 to 2^32-1)
-        half    - 2 bytes after opcode. 16 bit fixed point number (8:8 - +/-127.99)
-        float   - 4 bytes after opcode. Floating point number in Float class format
-        str     - Byte after opcode is length, followed by length bytes
-        
-        ref     - Reference to a value on the stack or a constant.
-
     Stack is 8 bit and grows down. 16 and 32 bit values are stored in consecutive
-    locations (HI to LO).
+    locations in big-endian order (HI to LO).
     
     A stack frame has a U register pointing at the previous U register value. Above
     that is the return address, followed by args. The leftmost arg is pushed
@@ -359,93 +449,6 @@ enum class Op: uint8_t {
     PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
     DROPS   = 0xe0, // lower 4 bits is bytes to drop from 1 to 16
     ENTERS  = 0xf0,
-};
-
-// Built-in types are 0x00 to EnumTypeStart-1, enum types are EnumTypeStart
-// to StructTypeStart-1. Struct types are StructTypeStart-0xff
-// Order the types so scalar types are all together
-
-constexpr uint8_t EnumTypeStart = 0x20; // Where enum types start
-constexpr uint8_t StructTypeStart = 0x80; // Where struct types start
-
-enum class Type : uint8_t {
-    None = 0,
-    
-    Float  = 0x08,
-    Int8   = 0x09,
-    UInt8  = 0x0a,
-    Int16  = 0x0b,
-    UInt16 = 0x0c,
-    Int32  = 0x0d,
-    UInt32 = 0x0e,
-    
-    String   = 0x10,
-    Function = 0x11,
-};
-
-static constexpr bool isScalar(Type t) { return t >= Type::Float && t <= Type::UInt32; }
-static constexpr bool isInteger(Type t) { return t >= Type::Int8 && t <= Type::UInt32; }
-static constexpr bool isEnum(Type t) { return uint8_t(t) >= EnumTypeStart && uint8_t(t) < StructTypeStart; }
-static constexpr bool isStruct(Type t) { return uint8_t(t) >= StructTypeStart; }
-
-enum class Index : uint8_t { C = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
-enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
-
-static constexpr uint8_t opSizeToBytes(OpSize opSize)
-{
-    return (opSize == OpSize::i8) ? 1 : ((opSize == OpSize::i16) ? 2 : 4);
-}
-
-static constexpr OpSize typeToOpSize(Type type)
-{
-    if (isEnum(type)) {
-        // FIXME: For now Enums are always 1 byte
-        return OpSize::i8;
-    }
-    return (type == Type::Int8 || type == Type::UInt8) ? OpSize::i8 : ((type == Type::Int16 || type == Type::UInt16) ? OpSize::i16 : OpSize::i32);
-};
-
-// Defines for size of addresses
-using AddrNativeType = uint32_t;
-constexpr Type AddrType = Type::UInt32;
-constexpr OpSize AddrOpSize = typeToOpSize(AddrType);
-constexpr uint8_t AddrSize = opSizeToBytes(AddrOpSize);
-
-static inline uint8_t typeToBytes(Type type)
-{
-    switch (type) {
-        case Type::Int8     : return 1;
-        case Type::UInt8    : return 1;
-        case Type::Int16    : return 2;
-        case Type::UInt16   : return 2;
-        case Type::Int32    : return 4;
-        case Type::UInt32   : return 4;
-        case Type::Float    : return 4;
-        case Type::String   : return AddrSize;
-        default:
-            if (isStruct(type)) {
-                return AddrSize;
-            }
-            if (isEnum(type)) {
-                // FIXME: For now Enums are always 1 byte
-                return 1;
-            }
-            return 0;
-    }
-};
-
-static inline uint8_t typeToSizeBits(Type type)
-{
-    switch (type) {
-        case Type::Int8     : return 0x00;
-        case Type::UInt8    : return 0x00;
-        case Type::Int16    : return 0x01;
-        case Type::UInt16   : return 0x01;
-        case Type::Int32    : return 0x02;
-        case Type::UInt32   : return 0x02;
-        case Type::Float    : return 0x03;
-        default: return 0;
-    }
 };
 
 static inline Op castOp(Type from, Type to)

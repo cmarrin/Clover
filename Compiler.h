@@ -405,6 +405,17 @@ private:
         }
     }
     
+    void setValue(std::vector<uint8_t>& container, AddrNativeType addr, uint32_t v, Type t)
+    {
+        switch (typeToOpSize(t)) {
+            case OpSize::i32:
+            case OpSize::flt: container[addr] = v >> 24;
+                              container[addr + 1] = v >> 16;
+            case OpSize::i16: container[addr + 2] = v >> 8;
+            case OpSize::i8 : container[addr + 3] = v;
+        }
+    }
+    
     FunctionPtr currentFunction()
     {
         expect(_inFunction && _currentFunction, Error::InternalError);

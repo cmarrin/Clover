@@ -60,13 +60,13 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         executable.push_back('c');
         executable.push_back('d');
 
-        // Write dummy entry point address, to be filled in later
-        executable.push_back(0);
-        executable.push_back(0);
-        executable.push_back(0);
-        executable.push_back(0);
+        // Write dummy entry point address for main, to be filled in later
+        appendValue(executable, 0, Type::UInt32);
         
-        // Write top level struct size, to be filled in later
+        // Write dummy entry point address for top-level struct ctor, to be filled in later
+        appendValue(executable, 0, Type::UInt32);
+        
+        // Write top level struct size
         int32_t topLevelSize = _structs[0]->size();
         appendValue(executable, topLevelSize, Type::UInt32);
         
@@ -80,14 +80,16 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
             itStruct->astNode()->emitCode(executable, false, this);
             
             for (auto& itFunc : itStruct->functions()) {
+                // If this is the main function of the top level
+                // struct, set the entry point
+                if (itStruct == _structs[0] && itFunc->name() == "main") {
+                    setValue(executable, MainEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
+                }
+                
                 // If this is the ctor function of the top level
                 // struct, set the entry point
                 if (itStruct == _structs[0] && itFunc->name() == "") {
-                    uint32_t cur = uint32_t(executable.size());
-                    executable.at(4) = cur >> 24;
-                    executable.at(5) = cur >> 16;
-                    executable.at(6) = cur >> 8;
-                    executable.at(7) = cur;
+                    setValue(executable, TopLevelCtorEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
                 }
                 
                 // Set addr of this function
