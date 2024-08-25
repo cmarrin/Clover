@@ -155,6 +155,8 @@ int main(int argc, char * const argv[])
     
     lucid::AnnotationList annotations;
     std::vector<std::pair<int32_t, std::string>> functions;
+    
+    int32_t errors = 0;
 
     for (const auto& it : inputFiles) {
         std::fstream stream;
@@ -314,6 +316,7 @@ int main(int argc, char * const argv[])
                     interp.addArg(2, lucid::Type::UInt16);
                     interp.addArg('f', lucid::Type::UInt8);
                     result = interp.interp(MyInterpreter::ExecMode::Start);
+                    errors += result;
                 }
                 
                 if (interp.error() == MyInterpreter::Error::None) {
@@ -352,6 +355,10 @@ int main(int argc, char * const argv[])
                 std::cout << "\n\n";
             }
         }
+    }
+
+    if (singlePass) {
+        std::cout << "\n\n***** Tests Complete: " << errors << " error"<< ((errors != 1) ? "s" : "") << " - " << ((errors == 0) ? "Passed" : "FAILED") << "\n";
     }
 
     return 1;

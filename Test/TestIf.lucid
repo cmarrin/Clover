@@ -141,12 +141,8 @@ Test()
         showIntResults(18, 0, 1);
     }
     
-    core.printf("\nDone.%40s", " ");
-    if (errors) {
-        core.printf("FAILED\n\n");
-    } else {
-        core.printf("Passed\n\n");
-    }
+    core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
+    return errors;
 }
 
 };

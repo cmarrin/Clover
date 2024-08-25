@@ -81,12 +81,8 @@ Test()
     showFloatResults(3, 195.5, function3( 20, 30.5));
     showIntResults(4, 110, function4( 50, 60.5));
 
-    core.printf("\nDone.%40s", " ");
-    if (errors) {
-        core.printf("FAILED\n\n");
-    } else {
-        core.printf("Passed\n\n");
-    }
+    core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
+    return errors;
 }
 
 };

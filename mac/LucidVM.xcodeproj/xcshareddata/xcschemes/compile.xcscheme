@@ -98,11 +98,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestSwitchEnum.lucid"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-h -t Test/TestCore.lucid Test/TestExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestPtrStruct.lucid"
-            isEnabled = "NO">
+            argument = "-h -t Test/TestCore.lucid Test/TestIntExpr.lucid Test/TestFloatExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestSwitchEnum.lucid"
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

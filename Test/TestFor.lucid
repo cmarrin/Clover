@@ -129,12 +129,8 @@ Test()
     }
     showIntResults(11, 50, j);
 
-    core.printf("\nDone.%40s", " ");
-    if (errors) {
-        core.printf("FAILED\n\n");
-    } else {
-        core.printf("Passed\n\n");
-    }
+    core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
+    return errors;
 }
 
 };

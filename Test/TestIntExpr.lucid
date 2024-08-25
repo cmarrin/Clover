@@ -97,7 +97,7 @@ Test()
     showIntResults(28, 6, uint16(testFloatGlobal));
 
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
-    return errors
+    return errors;
 }
 
 };
