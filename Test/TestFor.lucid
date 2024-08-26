@@ -25,7 +25,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
-Test()
+function int32 main()
 {    
     errors = 0;
     

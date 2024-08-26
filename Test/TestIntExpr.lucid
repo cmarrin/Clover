@@ -35,7 +35,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
 
 float testFloatGlobal;
 
-Test()
+function int32 main()
 {
     errors = 0;
     

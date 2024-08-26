@@ -40,7 +40,7 @@ enum Items { First, Second, Third };
 
 function int32 enumFunc(Items i) { return int32(i); }
 
-Test()
+function int32 main()
 {
     errors = 0;
     

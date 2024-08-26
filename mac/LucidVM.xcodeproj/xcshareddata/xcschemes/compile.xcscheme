@@ -70,7 +70,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestIntExpr.lucid"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestFloatExpr.lucid"
@@ -102,7 +102,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-h -t Test/TestCore.lucid Test/TestIntExpr.lucid Test/TestFloatExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestSwitchEnum.lucid"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

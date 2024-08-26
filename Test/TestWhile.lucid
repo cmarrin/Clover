@@ -36,7 +36,7 @@ function showFloatResults(uint8 testNo, float exp, float act)
     }
 }
 
-Test()
+function int32 main()
 {
     errors = 0;
     

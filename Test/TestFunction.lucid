@@ -66,7 +66,7 @@ function int16 function4(int16 a, float b)
     return a + int16(b);
 }
 
-Test()
+function int32 main()
 {
     errors = 0;
     
