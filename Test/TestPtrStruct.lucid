@@ -43,6 +43,8 @@ struct TestStruct
     int8 c;
 };
 
+TestStruct globalTestStruct = { 10, 20.5, 30 };
+
 function int8 testFunction(int8* p, float f)
 {
     return *p + int8(f);
@@ -104,6 +106,16 @@ function int32 main()
     ts.a = 4;
     showIntResults(11, 12, ts.c);
     showIntResults(12, 4, ts.a);
+
+    TestStruct localTestStruct = { 1, 2.5, 3 };
+
+    core.printf("\nTest Srruct Initializers\n");
+    showIntResults(13, 10, globalTestStruct.a);
+    showFloatResults(14, 20.5, globalTestStruct.b);
+    showIntResults(15, 30, globalTestStruct.c);
+    showIntResults(16, 1, localTestStruct.a);
+    showFloatResults(17, 2.5, localTestStruct.b);
+    showIntResults(18, 3, localTestStruct.c);
 
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
     return errors;
