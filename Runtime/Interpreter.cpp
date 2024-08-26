@@ -186,6 +186,8 @@ InterpreterBase::execute(ExecMode mode)
         _memMgr.stack().push(0, AddrOpSize);
     }
     
+    _returnValue = 0;
+    
     while(1) {
         if (_memMgr.error() != Memory::Error::None) {
             // FIXME: Deal with errors
