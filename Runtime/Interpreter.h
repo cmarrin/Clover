@@ -26,6 +26,7 @@ class InterpreterBase
         None,
         InvalidSignature,
         NoEntryPoint,
+        NotInstantiated,
         UnexpectedOpInIf,
 		InvalidOp,
         OnlyMemAddressesAllowed,
@@ -46,10 +47,20 @@ class InterpreterBase
     
     virtual ~InterpreterBase() { }
     
-    void init();
-
     virtual void setLight(uint8_t i, uint32_t rgb) = 0;
 
+    // This method is the first called. It sets up the stack and registers
+    // then loads the executable and finally allocates the top level struct
+    // on the stack. But the constructor is not called.
+    void instantiate();
+    
+    // After instantiate is called the top-level struct instance is ready to be
+    // constructed. The caller first pushes args for the constructor and then
+    // calls the construct method.
+    void construct();
+
+    // The execute method can be called over and over, as it would be from the
+    // loop() function on Arduino.
     enum class ExecMode : uint8_t { Start, Continue };
     uint32_t execute(ExecMode);
 
@@ -196,7 +207,11 @@ class InterpreterBase
     uint32_t _returnValue;
     
     VarArg _topLevelArgs;
-    AddrNativeType _entryPoint = 0;
+    AddrNativeType _mainEntryPoint = 0;
+    AddrNativeType _topLevelCtorEntryPoint = 0;
+    
+    enum class State { BeforeInstantiate, Instantiated, Constructed };
+    State _state = State::BeforeInstantiate;
 };
 
 template <uint32_t memSize> class Interpreter : public InterpreterBase

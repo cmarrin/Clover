@@ -20,9 +20,12 @@ InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
 { }
 
 void
-InterpreterBase::init()
+InterpreterBase::instantiate()
 {
     _error = Error::None;
+    _state = State::BeforeInstantiate;
+    
+    // Reset everything
     
     // Init module list
     memset(_modules, 0, sizeof(CallNative) * ModuleCountMax);
@@ -38,30 +41,51 @@ InterpreterBase::init()
         _error = Error::InvalidSignature;
         return;
     }
+
+    _mainEntryPoint = getROM(MainEntryPointAddr, 4);
+    _topLevelCtorEntryPoint = getROM(TopLevelCtorEntryPointAddr, 4);
+
+    uint32_t topLevelStructSize = getROM(TopLevelStructSizeAddr, 4);
+
+
+    // Instantiate the top-level struct, but don't call the ctor
+    _memMgr.stack().sp() = _memMgr.stack().size() - topLevelStructSize;    
+    _pc = _topLevelCtorEntryPoint;
+    _memMgr.self() = _memMgr.stack().sp();
     
-    _entryPoint = 0;
-    _entryPoint |= uint32_t(getUInt8ROM(4)) << 24;
-    _entryPoint |= uint32_t(getUInt8ROM(5)) << 16;
-    _entryPoint |= uint32_t(getUInt8ROM(6)) << 8;
-    _entryPoint |= uint32_t(getUInt8ROM(7));
+    // The only thing on the stack at this point is space for the
+    // top-level struct. The self pointer points at it. The next
+    // step is to push args for the ctor and call construct.
+
+    _state = State::Instantiated;
+}
+
+void
+InterpreterBase::construct()
+{
+    if (_state != State::Instantiated) {
+        _error = Error::NotInstantiated;
+        return;
+    }
     
-    if (_entryPoint == 0) {
-        _error = Error::NoEntryPoint;
+    _state = State::Constructed;
+    
+    // If there's no ctor, that's ok, we just have nothing to do.
+    if (_topLevelCtorEntryPoint == 0) {
         return;
     }
 
-    _memMgr.stack().sp() = _memMgr.stack().size();
-    _pc = _entryPoint;
-        
-    uint32_t topLevelStructSize = 0;
-    topLevelStructSize |= uint32_t(getUInt8ROM(8)) << 24;
-    topLevelStructSize |= uint32_t(getUInt8ROM(9)) << 16;
-    topLevelStructSize |= uint32_t(getUInt8ROM(10)) << 8;
-    topLevelStructSize |= uint32_t(getUInt8ROM(11));
-
-    // FIXME: For now we set Y to the top level struct.
-    _memMgr.setFrame(topLevelStructSize);
-    _memMgr.self() = _memMgr.stack().sp();
+    // At this point the stack has memory for the top-level struct
+    // instantiation (pointed to by Y) and any args pushed by the
+    // caller. Now we need to push a return addr of 0, so when we
+    // return from the ctor we will see the 0 and exit the interpreter.
+    _topLevelArgs.initialize();
+    _memMgr.stack().push(0, AddrOpSize);
+    
+    // Set the pc to the ctor address and call the interpreter
+    // with ExecMode::Continue, so it doesn't try to execute main().
+    _pc = _topLevelCtorEntryPoint;
+    execute(ExecMode::Continue);
 }
 
 void
@@ -139,24 +163,28 @@ InterpreterBase::typeCast(Type from, Type to)
 uint32_t
 InterpreterBase::execute(ExecMode mode)
 {
+    if (_state != State::Constructed) {
+        _error = Error::NotInstantiated;
+        return 0;
+    }
+    
     if (mode == ExecMode::Start) {
-        _pc = _entryPoint;
+        _pc = _mainEntryPoint;
         if (!isNextOpcodeSetFrame()) {
             _error = Error::NoEntryPoint;
             return 0;
         }
     }
     
-    // Push a dummy return address
-    _memMgr.stack().push(0, AddrOpSize);
-    
-    // Init the top level arg pointer. Any params pushed will be accessible using _topLevelArgs
-    // Since this is the top level, we have a return address pushed but not a U reg. VarArgs
-    // expects both in order to properly point to the first arg. use setFrame/restoreFrame
-    // to set the stack correctly
-    _memMgr.setFrame(0);
-    _topLevelArgs.initialize();
-    _memMgr.restoreFrame();
+    // If we're continuing the stack is already setup
+    if (mode == ExecMode::Start) {
+        // Init the top level arg pointer. Any params pushed will be accessible using _topLevelArgs
+        // At this point any args are directly on the top of stack init VarArgs to that point
+        _topLevelArgs.initialize();
+
+        // Push a dummy return address
+        _memMgr.stack().push(0, AddrOpSize);
+    }
     
     while(1) {
         if (_memMgr.error() != Memory::Error::None) {

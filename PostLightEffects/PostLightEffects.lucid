@@ -323,28 +323,18 @@ uint8 _cmd = 'f';
 
 PostLightEffects()
 {
-    // For now let's just run flicker. Later we will have
-    // a way to select the effect
-    
     core.initArgs();
-    
-    // First arg is a uint8 command. If it's an alpha character
-    // This is the init for the selected command. If that's the
-    // case the following args are specific to that command.
-    // If it's '*' this is the loop for that command.
-    uint8 cmd = core.argint8();
-    if (cmd != '*') {
-        // Init
-        init(cmd);
-        _cmd = cmd;
-    } else {
-        // Loop
-        switch (_cmd) {
-            case 'm': return multicolorLoop();
-            case 'p': return pulseLoop();
-            case 'f': return flickerLoop();
-            case 'r': return rainbowLoop();
-        }
+    _cmd = core.argint8();
+    init(_cmd);
+}
+
+function int32 main()
+{
+    switch (_cmd) {
+        case 'm': return multicolorLoop();
+        case 'p': return pulseLoop();
+        case 'f': return flickerLoop();
+        case 'r': return rainbowLoop();
     }
 }
 

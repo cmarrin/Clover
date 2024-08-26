@@ -269,8 +269,7 @@ int main(int argc, char * const argv[])
             lucid::ROMBase = &(executable[0]);
             
             MyInterpreter interp;
-            
-            interp.init();
+            interp.instantiate();
             
             if (interp.error() == lucid::InterpreterBase::Error::None) {
                 uint32_t result = 0;
@@ -296,11 +295,10 @@ int main(int argc, char * const argv[])
                     interp.addArg('m', lucid::Type::UInt8); // cmd
                     
                     std::cout << "\nInit\n";
-                    result = interp.interp(MyInterpreter::ExecMode::Start);
-
+                    interp.construct();
+                    interp.dropArgs(14);
+            
                     if (interp.error() == MyInterpreter::Error::None) {
-                        interp.dropArgs(14);
-                        interp.addArg('*', lucid::Type::UInt8);
                         for (int i = 0; i < 100; ++i) {
                             std::cout << "Pass " << i << "\n";
                             result = interp.interp(MyInterpreter::ExecMode::Start);
@@ -311,11 +309,15 @@ int main(int argc, char * const argv[])
                     }
                 } else {
                     std::cout << "Running single pass test on '" << path << "'\n";
+
+                    interp.construct();
+
                     // Pass in 2 args, a uint8 command and a uint16 number.
                     // Push them backwards
                     interp.addArg(2, lucid::Type::UInt16);
                     interp.addArg('f', lucid::Type::UInt8);
                     result = interp.interp(MyInterpreter::ExecMode::Start);
+                    interp.dropArgs(14);
                     errors += result;
                 }
                 
@@ -343,6 +345,7 @@ int main(int argc, char * const argv[])
                     case lucid::InterpreterBase::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
                     case lucid::InterpreterBase::Error::InvalidSignature: err = "invalid signature"; break;
                     case lucid::InterpreterBase::Error::NoEntryPoint: err = "invalid entry point in executable"; break;
+                    case lucid::InterpreterBase::Error::NotInstantiated: err = "Need to call instantiate, then construct"; break;
                     case lucid::InterpreterBase::Error::ImmedNotAllowedHere: err = "immediate not allowed here"; break;
                 }
                 std::cout << "Interpreter failed: " << err;

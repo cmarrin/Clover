@@ -255,7 +255,7 @@ class VarArg
     }
     
     
-    void initialize() { _nextAddr = _memMgr->localAddr(0); _initialAddr = _nextAddr; }
+    void initialize() { _nextAddr = _memMgr->stack().sp(); _initialAddr = _nextAddr; }
 
     void initialize(uint32_t lastArgOffset, Type lastArgType)
     {
