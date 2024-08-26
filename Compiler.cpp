@@ -591,10 +591,12 @@ Compiler::function()
         _localHighWaterMark = _nextMem;
     }
     
-    // Emit Return at the end if there's not already one
+    // If there's not a return at the end of the function, add one if
+    // no return value is expected, or emit an error if one is.
     ASTPtr nodes = _currentFunction->astNode();
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
     if (lastNode->astNodeType() != ASTNodeType::Return) {
+        expect(_currentFunction->returnType() == Type::None, Error::ExpectedReturnValue);
         _currentFunction->addASTNode(std::make_shared<ReturnNode>(nullptr, annotationIndex()));
     }
         
@@ -939,7 +941,8 @@ Compiler::returnStatement(const ASTPtr& parent)
     }
     
     ASTPtr ast = expression();
-    expect(ast != nullptr || currentFunction()->returnType() == Type::None, Error::MismatchedType);
+    expect(ast == nullptr || currentFunction()->returnType() != Type::None, Error::UnexpectedReturnValue);
+    expect(ast != nullptr || currentFunction()->returnType() == Type::None, Error::ExpectedReturnValue);
     parent->addNode(std::make_shared<ReturnNode>(ast, annotationIndex()));
     
     expect(Token::Semicolon);

@@ -40,6 +40,8 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
         case lucid::Error::ExpectedKeyword: err = "expected keyword"; break;
         case lucid::Error::ExpectedType: err = "expected type"; break;
         case lucid::Error::ExpectedValue: err = "expected value"; break;
+        case lucid::Error::ExpectedReturnValue: err = "return value required"; break;
+        case lucid::Error::UnexpectedReturnValue: err = "return value not allowed"; break;
         case lucid::Error::ExpectedString: err = "expected string"; break;
         case lucid::Error::ExpectedRef: err = "expected ref"; break;
         case lucid::Error::ExpectedOpcode: err = "expected opcode"; break;

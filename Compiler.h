@@ -221,6 +221,8 @@ enum class Error {
     ExpectedKeyword,
     ExpectedType,
     ExpectedValue,
+    ExpectedReturnValue,
+    UnexpectedReturnValue,
     ExpectedString,
     ExpectedRef,
     ExpectedOpcode,
