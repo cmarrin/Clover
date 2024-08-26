@@ -58,7 +58,6 @@
 		4914A4992C4DD665003DDADA /* TestIf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestIf.h; path = ../Test/TestIf.h; sourceTree = "<group>"; };
 		4914A49A2C4DD665003DDADA /* TestFunction.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.lucid; path = ../Test/TestFunction.lucid; sourceTree = "<group>"; };
 		491886F42C5EDAE70053F2C0 /* Lucid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Lucid.h; path = ../Runtime/Lucid.h; sourceTree = "<group>"; };
-		492BB6302C6E58C20022D290 /* PostLightEffects.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PostLightEffects.h; path = ../PostLightEffects/PostLightEffects.h; sourceTree = "<group>"; };
 		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
 		492BB6322C6E58C20022D290 /* PostLightEffects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.lucid; path = ../PostLightEffects/PostLightEffects.lucid; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -195,7 +194,6 @@
 		4941A1002BBA1CF300CE3C9E /* examples */ = {
 			isa = PBXGroup;
 			children = (
-				492BB6302C6E58C20022D290 /* PostLightEffects.h */,
 				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
 				492BB6322C6E58C20022D290 /* PostLightEffects.lucid */,
 				4941A1012BBA1D2800CE3C9E /* Flicker.lucid */,
