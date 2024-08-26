@@ -941,8 +941,14 @@ Compiler::returnStatement(const ASTPtr& parent)
     }
     
     ASTPtr ast = expression();
-    expect(ast == nullptr || currentFunction()->returnType() != Type::None, Error::UnexpectedReturnValue);
-    expect(ast != nullptr || currentFunction()->returnType() == Type::None, Error::ExpectedReturnValue);
+    Type neededType = currentFunction()->returnType();
+    
+    if (neededType == Type::None) {
+        expect(ast == nullptr, Error::UnexpectedReturnValue);
+    } else {
+        expect(ast != nullptr, Error::ExpectedReturnValue);
+    }
+
     parent->addNode(std::make_shared<ReturnNode>(ast, annotationIndex()));
     
     expect(Token::Semicolon);
@@ -1375,9 +1381,10 @@ Compiler::argumentList(const ASTPtr& fun)
                 // means it can take a pointer to any type. This is to allow
                 // core.memset to take any pointer and initialize it
                 expect(sym->type() == Type::None || sym->type() == arg->type(), Error::MismatchedType);
-            } else if (!isScalar(arg->type()) || !isScalar(neededType))
+            } else if (!isScalar(arg->type()) || !isScalar(neededType)) {
                 // We only automatically cast between scalars
                 expect(arg->type() == neededType, Error::MismatchedType);
+            }
         } else {
             // We are past the last arg. That makes this a vararg call. We upcast any integral
             // types to 32 bits.
