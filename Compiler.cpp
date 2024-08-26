@@ -177,6 +177,22 @@ Compiler::strucT()
     
     expect(Token::CloseBrace);
     expect(Token::Semicolon);
+    
+    // If there was no ctor but there is init code, we need to add a dummy ctor.
+    if (!currentStruct()->haveExplicitCtor() && currentStruct()->initASTNode()->numChildren() != 0) {
+        currentStruct()->setHaveExplicitCtor();
+        FunctionPtr function = currentStruct()->addFunction("", Type::None);
+    
+        // ENTER has to be the first instruction in the Function.
+        function->addASTNode(std::make_shared<EnterNode>(function, annotationIndex()));
+    
+        // init code goes right after ENTER
+        function->addASTNode(currentStruct()->initASTNode());
+
+        // Emit Return at the end
+        function->addASTNode(std::make_shared<ReturnNode>(nullptr, annotationIndex()));
+    }
+    
     _structStack.pop_back();
     return true;
 }
@@ -409,8 +425,9 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
         // If we have an initializer do an assignment on each value
         if (ast->astNodeType() == ASTNodeType::Initializer) {
             uint32_t n = ast->numChildren();
+            StructPtr s = typeToStruct(type);
+            
             for (uint32_t i = 0; i < n; ++i) {
-                StructPtr s = typeToStruct(type);
                 SymbolPtr sym = s->findLocal(i);
                 ASTPtr node = ast->child(i);
                 
@@ -1286,7 +1303,6 @@ Compiler::primaryExpression()
     
     std::string id;
     if (identifier(id)) {
-        expect(_inFunction, Error::InternalError);
         SymbolPtr symbol = findSymbol(id);
         if (symbol) {
             // This could be a var, scalar constant or function. Create the proper ASTNode
