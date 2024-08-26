@@ -358,18 +358,31 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
         } else {
             // Struct, enum or array type, collect initializers
             expect(Token::OpenBrace);
-            ast = expression();
-            if (ast) {
-                // FIXME: For now ignore the initializers
-                while (match(Token::Comma)) {
-                    ast = expression();
+            
+            // FIXME: For now only support struct
+            StructPtr s = typeToStruct(type);
+            if (s != nullptr) {
+                ASTPtr list = std::make_shared<InitializerNode>(annotationIndex());
+                
+                ast = expression();
+                if (ast) {
+                    list->addNode(ast);
                     
-                    // Allow trailing comma
-                    if (ast == nullptr) {
-                        break;
+                    while (match(Token::Comma)) {
+                        ast = expression();
+                        
+                        // Allow trailing comma
+                        if (ast == nullptr) {
+                            break;
+                        }
+                        
+                        list->addNode(ast);
                     }
                 }
+                
+                ast = list;
             }
+            
             expect(Token::CloseBrace);
         }
     } else {
@@ -393,9 +406,24 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
             expect(type == ast->type(), Error::MismatchedType);
         }
         
-        ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, Op::NOP, ast, annotationIndex());
-    
-        parent->addNode(assignment);
+        // If we have an initializer do an assignment on each value
+        if (ast->astNodeType() == ASTNodeType::Initializer) {
+            uint32_t n = ast->numChildren();
+            for (uint32_t i = 0; i < n; ++i) {
+                StructPtr s = typeToStruct(type);
+                SymbolPtr sym = s->findLocal(i);
+                ASTPtr node = ast->child(i);
+                
+                // We now have idNode, which is the struct, sym, which is the property in
+                // that struct and node, which is the value to assign.
+                ASTPtr dot = std::make_shared<DotNode>(idNode, sym, annotationIndex());
+                ASTPtr assignment = std::make_shared<AssignmentNode>(dot, Op::NOP, node, annotationIndex());
+                parent->addNode(assignment);
+            }
+        } else {
+            ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, Op::NOP, ast, annotationIndex());
+            parent->addNode(assignment);
+        }
     }
     
     return true;

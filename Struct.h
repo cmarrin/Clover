@@ -86,6 +86,22 @@ public:
         return nullptr;
     }
 
+    // With this form, get the local at the given index, skipping functions.
+    SymbolPtr findLocal(uint32_t i)
+    {
+        for (auto& it : _locals) {
+            if (it->type() == Type::Function) {
+                continue;
+            }
+            if (i == 0) {
+                return it;
+            }
+            i -= 1;
+        }
+        
+        return nullptr;
+   }
+
     StructPtr findStruct(const std::string& s)
     {
         const auto& it = find_if(_structs.begin(), _structs.end(),

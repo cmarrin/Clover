@@ -20,7 +20,10 @@ Simple() { }
 
 function int32 main()
 {
-    core.printf(" v1=%hhd, v2=%hd\n", arr[1].b, arr[2].c);
+    A a = { arr[0].c, 2 };
+    
+    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
+    core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
     return 0;
 }
 

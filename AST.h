@@ -43,6 +43,7 @@ enum class ASTNodeType {
     Drop,
     Ref,
     Deref,
+    Initializer,
 };
 
 class ASTNode;
@@ -681,6 +682,32 @@ class DerefNode : public ASTNode
     
   private:
     ASTPtr _operand;
+};
+
+class InitializerNode : public ASTNode
+{
+  public:
+    InitializerNode(int32_t annotationIndex) : ASTNode(annotationIndex) { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Initializer; }
+
+    virtual void addNode(const ASTPtr& node) override
+    {
+        _list.push_back(node);
+    }
+    
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (_list.size() <= i) {
+            return nullptr;
+        }
+        return _list[i];
+    }
+
+    virtual const uint32_t numChildren() const override { return uint32_t(_list.size()); }
+    
+  private:
+    ASTNodeList _list;
 };
 
 

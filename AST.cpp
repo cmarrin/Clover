@@ -247,6 +247,7 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // into:
     //
     //      POPx i,U
+    //
     if (_left->astNodeType() == ASTNodeType::Var) {
         std::reinterpret_pointer_cast<VarNode>(_left)->emitPopCode(code, c);
         return;
