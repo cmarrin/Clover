@@ -160,13 +160,16 @@ static inline uint8_t typeToSizeBits(Type type)
         4-7     : Entry point of 'main' function, if any (0 if not)
         8-11    : Location of constructor function of top level struct
         12-15   : Bytes of storage needed for top-level struct
-        15-n    : Bytes of constant structs and arrays
+        16-17   : Size of constants in bytes
+        18-n    : Bytes of constant structs and arrays
         n-<end> : Executable code
  */
  
 constexpr AddrNativeType MainEntryPointAddr = 4;
 constexpr AddrNativeType TopLevelCtorEntryPointAddr = 8;
 constexpr AddrNativeType TopLevelStructSizeAddr = 12;
+constexpr uint16_t ConstStart = 18; // Past signature, entry point and top level size
+
 
 /*
 
@@ -294,8 +297,6 @@ Opcodes:
     POSTINC<1,2,4,F>- Takes an index byte. Like PUSH, but increments the value at EA and pushes the unincremented value
     POSTDEC<1,2,4,F>- Takes an index byte. Like PUSH, but decrements the value at EA and pushes the undecremented value
 */
-
-static constexpr uint16_t ConstStart = 14; // Past signature, entry point and top level size
 
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart  = 0x42;
