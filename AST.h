@@ -395,6 +395,8 @@ class DotNode : public ASTNode
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
 
     virtual bool valueLeftOnStack() const override { return true; }
+    
+    SymbolPtr property() const { return _property; }
 
   private:
     ASTPtr _operand;

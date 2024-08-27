@@ -1272,8 +1272,13 @@ Compiler::postfixExpression()
                 lhs = std::make_shared<DerefNode>(lhs, annotationIndex());
             }
             
-            // Make the node
-            lhs = std::make_shared<DotNode>(lhs, prop, annotationIndex());
+            // If this is a function, make it a member function with lhs as the instance
+            if (prop->type() == Type::Function) {
+                lhs = std::make_shared<FunctionCallNode>(prop->function(), lhs, annotationIndex());
+            } else {
+                // Otherwise make the dot node
+                lhs = std::make_shared<DotNode>(lhs, prop, annotationIndex());
+            }
         } else if (match(Token::Inc)) {
             lhs = std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true, annotationIndex());
         } else if (match(Token::Dec)) {
