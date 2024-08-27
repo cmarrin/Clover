@@ -196,7 +196,7 @@ class Memory
         // Restore the previous self pointer if needed
         AddrNativeType prevSelf = _stack.pop(AddrOpSize);
         if (prevSelf) {
-            _u = prevSelf;
+            _y = prevSelf;
         }
     }
 
