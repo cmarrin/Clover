@@ -428,6 +428,7 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
     // If this is a struct, we want to call its ctor
     if (struc && struc->ctor()) {
         ASTPtr ctor = std::make_shared<FunctionCallNode>(struc->ctor(), annotationIndex());
+        std::static_pointer_cast<FunctionCallNode>(ctor)->setPushReturn(false);
         parent->addNode(ctor);
     }
     
