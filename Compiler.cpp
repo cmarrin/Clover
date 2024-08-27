@@ -431,6 +431,21 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
         ASTPtr self = std::make_shared<VarNode>(sym, annotationIndex());
         ASTPtr ctor = std::make_shared<FunctionCallNode>(struc->ctor(), self, annotationIndex());
         std::static_pointer_cast<FunctionCallNode>(ctor)->setPushReturn(false);
+        
+        // See if we're passing args to ctor
+        // If we have an initializer, we can't also have args
+        if (match(Token::OpenParen)) {
+            expect(ast == nullptr, Error::InitializerNotAllowed);
+            expect(argumentList(ctor), Error::ExpectedArgList);
+            expect(Token::CloseParen);
+        } else {
+            // if the ctor expects args, pad with 0's
+            FunctionPtr function = std::static_pointer_cast<FunctionCallNode>(ctor)->function();
+            for (int i = 0; i < function->argCount(); ++i) {
+                ctor->addNode(std::make_shared<ConstantNode>(function->arg(i)->type(), 0, annotationIndex()));
+            }
+        }
+
         parent->addNode(ctor);
     }
     

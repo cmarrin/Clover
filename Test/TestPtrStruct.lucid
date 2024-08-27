@@ -14,6 +14,23 @@ struct Test
 
 uint8 errors = 0;
 
+struct A
+{
+    int8 b = 12;
+    int16 c = 24;
+    int32 d;
+    
+    A(int32 q)
+    {
+        d = q;
+    }
+    
+    function int32 f(int8 x, int8 y)
+    {
+        return x + y;
+    }
+};
+
 function showIntResults(uint8 testNo, int32 exp, int32 act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
@@ -54,9 +71,9 @@ function int32 main()
 {
     errors = 0;
     
-    core.printf("\nTest Struct, Pointers and Refs\n");
+    core.printf("\nTest Struct, Ptrs and Refs\n");
     
-    core.printf("\nTest Struct\n");
+    core.printf("\nStruct\n");
     TestStruct s;
     int8 i = 22;
     float f = 3.5;
@@ -68,7 +85,7 @@ function int32 main()
     showFloatResults(2, 3.5, s.b);
     showIntResults(3, 5, s.c);
 
-    core.printf("\nTest Pointer\n");
+    core.printf("\nTest Ptr\n");
     int8 c;
     int8* x;
     x = &c;
@@ -76,10 +93,10 @@ function int32 main()
 
     showIntResults(4, 22, *x);
     
-    core.printf("\nTest Passing Pointer to Function\n");
+    core.printf("\nPassing Ptr to Func\n");
     showIntResults(5, 25, testFunction(x, 3.5));
     
-    core.printf("\nTest Pointer to Struct\n");
+    core.printf("\nPtr to Struct\n");
     TestStruct* ss;
     ss = &s;
     ss.a = 17;
@@ -90,7 +107,7 @@ function int32 main()
     showFloatResults(7, 17.5, ss.b);
     showIntResults(8, 18, ss.c);
     
-    core.printf("\nTest Arrays and Pointers\n");
+    core.printf("\nArray/Ptr\n");
     
     int32 arr[10];
     int32* arrp = &arr;
@@ -109,13 +126,26 @@ function int32 main()
 
     TestStruct localTestStruct = { 1, 2.5, 3 };
 
-    core.printf("\nTest Srruct Initializers\n");
+    core.printf("\nSrruct init\n");
     showIntResults(13, 10, globalTestStruct.a);
     showFloatResults(14, 20.5, globalTestStruct.b);
     showIntResults(15, 30, globalTestStruct.c);
     showIntResults(16, 1, localTestStruct.a);
     showFloatResults(17, 2.5, localTestStruct.b);
     showIntResults(18, 3, localTestStruct.c);
+
+    core.printf("\nSrruct ctors\n");
+
+    A a;
+    A b(48);
+    
+    int32 result = a.f(5, 6);
+    
+    showIntResults(19, 12, a.b);
+    showIntResults(20, 24, a.c);
+    showIntResults(21, 0, a.d);
+    showIntResults(22, 11, result);
+    showIntResults(23, 48, b.d);
 
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
     return errors;
