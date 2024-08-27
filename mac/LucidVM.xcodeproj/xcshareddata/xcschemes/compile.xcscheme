@@ -54,7 +54,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-d -t -h examples/simple.lucid"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -a -l -h PostLightEffects/PostLightEffects.lucid"
@@ -102,7 +102,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-h -t Test/TestCore.lucid Test/TestIntExpr.lucid Test/TestFloatExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestPtrStruct.lucid Test/TestSwitchEnum.lucid"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>
