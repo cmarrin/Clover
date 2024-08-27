@@ -272,28 +272,29 @@ enum class Op: uint8_t {
     LNOT    = 0x0c,
     
     CALL    = 0x0d, // Absolute address of callee (16 bit)
-    INDEX1  = 0x0e, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
-    INDEX2  = 0x0f, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    MCALL   = 0x0e, // Call a member function. TOS has struct instance address that must be put in the Y register
+    INDEX1  = 0x0f, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    INDEX2  = 0x10, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
     
-    DEREF1  = 0x10, // TOS has ref, pop it, load the value at that address and push it
-    DEREF2  = 0x11,
-    DEREF4  = 0x12,
-    POP1    = 0x13, // Next byte is addr mode, pop TOS and store at address
-    POP2    = 0x14,
-    POP4    = 0x15,
-    PUSHREF = 0x16, // Next byte is addr mode. Data width is used when computing negative offsets from U
-    POPDEREF1=0x17, // a = popaddr, v = pop1, mem1[a] = v
-    POPDEREF2=0x18, // a = popaddr, v = pop2, mem2[a] = v
-    POPDEREF4=0x19, // a = popaddr, v = pop4, mem4[a] = v
-    PUSH1   = 0x1a, // Next byte is addr mode, push value at addr
-    PUSH2   = 0x1b,
-    PUSH4   = 0x1c,
+    DEREF1  = 0x11, // TOS has ref, pop it, load the value at that address and push it
+    DEREF2  = 0x12,
+    DEREF4  = 0x13,
+    POP1    = 0x14, // Next byte is addr mode, pop TOS and store at address
+    POP2    = 0x15,
+    POP4    = 0x16,
+    PUSHREF = 0x17, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    POPDEREF1=0x18, // a = popaddr, v = pop1, mem1[a] = v
+    POPDEREF2=0x19, // a = popaddr, v = pop2, mem2[a] = v
+    POPDEREF4=0x1a, // a = popaddr, v = pop4, mem4[a] = v
+    PUSH1   = 0x1b, // Next byte is addr mode, push value at addr
+    PUSH2   = 0x1c,
+    PUSH4   = 0x1d,
 
-    DUP1    = 0x1d,
-    DUP2    = 0x1e,
-    DUP4    = 0x1f,
+    DUP1    = 0x1e,
+    DUP2    = 0x1f,
+    DUP4    = 0x20,
     
-    SWITCH  = 0x20, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
+    SWITCH  = 0x21, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
                     // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
                     // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
                     // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
@@ -301,7 +302,7 @@ enum class Op: uint8_t {
 
 //
 //
-// Available opcodes 21 - 23
+// Available opcodes 22 - 23
 //
 //
 

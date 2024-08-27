@@ -41,7 +41,7 @@ NativeColor::callNative(uint16_t id, InterpreterBase* interp)
             // Arg is a pointer to a Color struct, which holds h, s and v floats.
             // Next incoming args are uint8 h, s, v values. Convert to 0-1 floats
             // and store in struct
-            AddrNativeType addr = interp->memMgr()->getLocal(0, AddrType);
+            AddrNativeType addr = interp->memMgr()->getArg(0, AddrType);
             float fh = float(interp->topLevelArgs()->arg(Type::Int8)) / 255;
             float fs = float(interp->topLevelArgs()->arg(Type::Int8)) / 255;
             float fv = float(interp->topLevelArgs()->arg(Type::Int8)) / 255;
@@ -51,8 +51,8 @@ NativeColor::callNative(uint16_t id, InterpreterBase* interp)
             break;
         }
         case Id::SetLight: {
-            uint8_t i = interp->memMgr()->getLocal(0, Type::UInt8);
-            AddrNativeType addr = interp->memMgr()->getLocal(1, AddrType);
+            uint8_t i = interp->memMgr()->getArg(0, Type::UInt8);
+            AddrNativeType addr = interp->memMgr()->getArg(1, AddrType);
             float fh = intToFloat(interp->memMgr()->getAbs(addr, OpSize::flt));
             float fs = intToFloat(interp->memMgr()->getAbs(addr + 4, OpSize::flt));
             float fv = intToFloat(interp->memMgr()->getAbs(addr + 8, OpSize::flt));

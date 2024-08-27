@@ -81,6 +81,7 @@ InterpreterBase::construct()
     // return from the ctor we will see the 0 and exit the interpreter.
     _topLevelArgs.initialize();
     _memMgr.stack().push(0, AddrOpSize);
+    _memMgr.stack().push(0, AddrOpSize);
     
     // Set the pc to the ctor address and call the interpreter
     // with ExecMode::Continue, so it doesn't try to execute main().
@@ -110,6 +111,7 @@ void
 InterpreterBase::callNative(uint16_t id)
 {
     // Add a dummy return address to make everything work
+    _memMgr.stack().push(0, AddrOpSize);
     _memMgr.stack().push(0, AddrOpSize);
     
     // Set the frame
@@ -182,7 +184,8 @@ InterpreterBase::execute(ExecMode mode)
         // At this point any args are directly on the top of stack init VarArgs to that point
         _topLevelArgs.initialize();
 
-        // Push a dummy return address
+        // Push a dummy return address and self pointer
+        _memMgr.stack().push(0, AddrOpSize);
         _memMgr.stack().push(0, AddrOpSize);
     }
     
@@ -528,6 +531,20 @@ InterpreterBase::execute(ExecMode mode)
             case Op::CALL:
                 right = getUOpnd(OpSize::i16);
                 _memMgr.stack().push(_pc, AddrOpSize);
+                
+                // Push dummy self pointer
+                _memMgr.stack().push(0, AddrOpSize);
+                _pc = right;
+                break;
+            case Op::MCALL:
+                left = _memMgr.stack().pop(AddrOpSize);
+                right = getUOpnd(OpSize::i16);
+                _memMgr.stack().push(_pc, AddrOpSize);
+
+                // Push self pointer
+                _memMgr.stack().push(_memMgr.self(), AddrOpSize);
+                _memMgr.self() = left;
+                
                 _pc = right;
                 break;
             case Op::DROPS   : _memMgr.stack().drop(operand + 1); break;

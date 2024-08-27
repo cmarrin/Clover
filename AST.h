@@ -420,11 +420,20 @@ class ModuleNode : public ASTNode
 class FunctionCallNode : public ASTNode
 {
   public:
+    // Call a raw function with no instance value
     FunctionCallNode(FunctionPtr func, int32_t annotationIndex)
         : ASTNode(annotationIndex)
         , _function(func)
     { }
     
+    // Call a raw function with no instance value
+    FunctionCallNode(FunctionPtr func, const ASTPtr& instance, int32_t annotationIndex)
+        : ASTNode(annotationIndex)
+        , _function(func)
+        , _instance(instance)
+    { }
+    
+    // Call function in the passed module
     FunctionCallNode(FunctionPtr func, uint8_t moduleId, int32_t annotationIndex)
         : ASTNode(annotationIndex)
         , _moduleId(moduleId)
@@ -464,6 +473,7 @@ class FunctionCallNode : public ASTNode
     uint8_t _moduleId = 0;
     ASTNodeList _args;
     bool _pushReturn = true;
+    ASTPtr _instance;
 
 };
 

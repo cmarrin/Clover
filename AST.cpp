@@ -335,7 +335,22 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         code.push_back(uint8_t(Op::NCALL) | ((addr <= 255) ? 0x00 : 0x01));
         appendValue(code, addr, (addr <= 255) ? 1 : 2);
     } else if (addr) {
-        code.push_back(uint8_t(Op::CALL));
+        // A member function pushes the instance and then calls MCALL. A bare function
+        // uses CALL and does not push an instance.
+        //
+        // When MCALL is executed it first pops the instance, pushes the return address,
+        // pushes the current value of the Y register and then places the popped
+        // instance pointer in Y, then calls the function.
+        //
+        // When CALL is executed it pushes the return address, then a 4 bytes of 0 as
+        // a dummy address to make arg accesses align correctly, then calls the
+        // function.
+        if (_instance) {
+            _instance->emitCode(code, true, c);
+            code.push_back(uint8_t(Op::MCALL));
+        } else {
+            code.push_back(uint8_t(Op::CALL));
+        }
         appendValue(code, addr, 2);
     }
     

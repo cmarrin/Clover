@@ -177,11 +177,6 @@ class Memory
         return getAbs(index(offset, Index::A), typeToOpSize(type));
     }
     
-    uint32_t getLocal(int32_t offset, Type type)
-    {
-        return getAbs(index(offset, Index::L), typeToOpSize(type));
-    }
-    
     // On entry args are pushed on stack followed by retAddr.
     // Push _bp and then set _bp to _sp. The subtract locals
     // from _sp.
@@ -197,15 +192,22 @@ class Memory
     {
         _stack.sp() = _u;
         _u = _stack.pop(AddrOpSize);
+        
+        // Restore the previous self pointer if needed
+        AddrNativeType prevSelf = _stack.pop(AddrOpSize);
+        if (prevSelf) {
+            _u = prevSelf;
+        }
     }
 
     AddrNativeType index(uint32_t offset, Index idx) const
     {
+        // U points at the previous U, then the previous self, then the return address
         switch (idx) {
             // Constants offset addresses by the size of stack memory so you can distinguish them
             case Index::C: return offset + ConstStart + stack().size();
             case Index::M: return _y + offset;
-            case Index::A: return _u + (AddrSize * 2) + offset;
+            case Index::A: return _u + (AddrSize * 3) + offset;
             case Index::L: return _u - offset - 1;
         }
     }
