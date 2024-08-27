@@ -6,3 +6,4 @@ mac/LucidVM.xcodeproj/xcuserdata/cmarrin.xcuserdatad
 PostLightEffects/*.h
 Test/*.h
 PostLightEffects/*.h
+examples/*.h
