@@ -199,9 +199,9 @@ class Memory
         switch (idx) {
             // Constants offset addresses by the size of stack memory so you can distinguish them
             case Index::C: return offset + ConstStart + stack().size();
-            case Index::X: return _x + offset;
-            case Index::Y: return _y + offset;
-            case Index::U: return localAddr(offset);
+            case Index::M: return _y + offset;
+            case Index::A: return localAddr(offset);
+            case Index::L: return localAddr(offset);
         }
     }
     

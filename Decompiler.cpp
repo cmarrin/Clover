@@ -339,9 +339,9 @@ void Decompiler::emitIndex()
     _out->append(",");
     switch (index) {
         case Index::C: _out->append("C"); break;
-        case Index::X: _out->append("X"); break;
-        case Index::Y: _out->append("Y"); break;
-        case Index::U: _out->append("U"); break;
+        case Index::M: _out->append("M"); break;
+        case Index::A: _out->append("A"); break;
+        case Index::L: _out->append("L"); break;
     }
 }
 

@@ -64,7 +64,7 @@ static inline uint32_t floatToInt(float f)
     return *(reinterpret_cast<int32_t*>(&f));
 }
 
-enum class Index : uint8_t { C = 0x00, X = 0x01, Y = 0x02, U = 0x03 };
+enum class Index : uint8_t { C = 0x00, M = 0x01, A = 0x02, L = 0x03 };
 enum class OpSize : uint8_t { i8 = 0, i16 = 1, i32 = 2, flt = 3 };
 
 // Built-in types are 0x00 to EnumTypeStart-1, enum types are EnumTypeStart
