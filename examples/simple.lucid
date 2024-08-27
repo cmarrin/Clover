@@ -10,19 +10,17 @@ struct Simple
 
 struct A
 {
-    int8 b;
-    int16 c;
+    int8 b = 12;
+    int16 c = 24;
 };
 
-const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
-
-Simple() { }
+//const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
 
 function int32 main()
 {
-    A a = { arr[0].c, 2 };
+    A a;
     
-    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
+//    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
     core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
     return 0;
 }

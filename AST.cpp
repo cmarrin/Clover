@@ -334,7 +334,7 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         addr |= _moduleId << BitsPerFunctionId;
         code.push_back(uint8_t(Op::NCALL) | ((addr <= 255) ? 0x00 : 0x01));
         appendValue(code, addr, (addr <= 255) ? 1 : 2);
-    } else {
+    } else if (addr) {
         code.push_back(uint8_t(Op::CALL));
         appendValue(code, addr, 2);
     }

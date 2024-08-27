@@ -67,7 +67,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         appendValue(executable, 0, Type::UInt32);
         
         // Write top level struct size
-        int32_t topLevelSize = _structs[0]->size();
+        int32_t topLevelSize = _topLevelStruct->size();
         appendValue(executable, topLevelSize, Type::UInt32);
         
         // Write constant size and then constants
@@ -76,31 +76,44 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
             executable.push_back(it);
         }
         
-        for (auto& itStruct : _structs) {
-            itStruct->astNode()->emitCode(executable, false, this);
-            
-            for (auto& itFunc : itStruct->functions()) {
-                // If this is the main function of the top level
-                // struct, set the entry point
-                if (itStruct == _structs[0] && itFunc->name() == "main") {
-                    setValue(executable, MainEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
-                }
-                
-                // If this is the ctor function of the top level
-                // struct, set the entry point
-                if (itStruct == _structs[0] && itFunc->name() == "") {
-                    setValue(executable, TopLevelCtorEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
-                }
-                
-                // Set addr of this function
-                itFunc->setAddr(AddrNativeType(executable.size()));
-                itFunc->astNode()->emitCode(executable, false, this);
-            }
-        }
+        emitStruct(executable, _topLevelStruct);
     }
     
     return _error == Error::None;
 }
+
+void
+Compiler::emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc)
+{
+    struc->astNode()->emitCode(executable, false, this);
+
+    //Emit structs
+    for (auto& itStruc : struc->structs()) {
+        emitStruct(executable, itStruc);
+    }
+    
+    // Emit functions
+    for (auto& itFunc : struc->functions()) {
+        if (struc == _topLevelStruct) {
+            // If this is the main function of the top level
+            // struct, set the entry point
+            if (itFunc->name() == "main") {
+                setValue(executable, MainEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
+            }
+            
+            // If this is the ctor function of the top level
+            // struct, set the entry point
+            if (itFunc->name() == "") {
+                setValue(executable, TopLevelCtorEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
+            }
+        }
+        
+        // Set addr of this function
+        itFunc->setAddr(AddrNativeType(executable.size()));
+        itFunc->astNode()->emitCode(executable, false, this);
+    }
+}
+
 bool
 Compiler::program()
 {
@@ -167,7 +180,8 @@ Compiler::strucT()
         _structTypes.push_back(_structStack.back());
     } else {
         // This is the top level struct
-        _structStack.push_back(addStruct(id, structType));
+        _topLevelStruct = std::make_shared<Struct>(id, structType);
+        _structStack.push_back(_topLevelStruct);
         _structTypes.push_back(_structStack.back());
     }
     
@@ -179,8 +193,7 @@ Compiler::strucT()
     expect(Token::Semicolon);
     
     // If there was no ctor but there is init code, we need to add a dummy ctor.
-    if (!currentStruct()->haveExplicitCtor() && currentStruct()->initASTNode()->numChildren() != 0) {
-        currentStruct()->setHaveExplicitCtor();
+    if (!currentStruct()->ctor() && currentStruct()->initASTNode()->numChildren() != 0) {
         FunctionPtr function = currentStruct()->addFunction("", Type::None);
     
         // ENTER has to be the first instruction in the Function.
@@ -367,7 +380,7 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
             collectConstants(type, nElements != 1, addr, nConstElements, isScalarConstant);
             sym->setNElements(nConstElements);
             sym->setKind(isScalarConstant ? Symbol::Kind::ScalarConstant : Symbol::Kind::Constant);
-        } else if ((!isStruct(type) && nElements == 1) || isPointer) {
+        } else if ((!struc && nElements == 1) || isPointer) {
             // Built-in scalar or enum type. Generate an expression
             ast = expression();
             expect(ast != nullptr, Error::ExpectedExpr);
@@ -376,8 +389,7 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
             expect(Token::OpenBrace);
             
             // FIXME: For now only support struct
-            StructPtr s = typeToStruct(type);
-            if (s != nullptr) {
+            if (struc != nullptr) {
                 ASTPtr list = std::make_shared<InitializerNode>(annotationIndex());
                 
                 ast = expression();
@@ -411,6 +423,12 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
     } else {
         expect(!_structStack.empty(), Error::InternalError);
         currentStruct()->addLocal(sym, addr, nConstElements);
+    }
+    
+    // If this is a struct, we want to call its ctor
+    if (struc) {
+        ASTPtr ctor = std::make_shared<FunctionCallNode>(struc->ctor(), annotationIndex());
+        parent->addNode(ctor);
     }
     
     if (ast) {
@@ -586,9 +604,8 @@ Compiler::type(Type& t)
         return true;
     }        
     
-    struc = findStruct(id);
-    if (struc) {
-        t = struc->type();
+    if (_topLevelStruct->name() == id) {
+        t = _topLevelStruct->type();
         _scanner.retireToken();
         return true;
     }
@@ -670,10 +687,7 @@ Compiler::ctor()
     // Implicit initializations go there (e.g., var initializations in
     // the struct). Make sure this is the only explicit ctor in this 
     // struct.
-    expect(!currentStruct()->haveExplicitCtor(), Error::DuplicateIdentifier);
-    
-    currentStruct()->setHaveExplicitCtor();
-    
+    expect(!currentStruct()->ctor(), Error::DuplicateIdentifier);
     _currentFunction = currentStruct()->addFunction("", Type::None);
 
     expect(_currentFunction->name().empty(), Error::InternalError);
@@ -1648,17 +1662,6 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         return true;
     }
     return false;
-}
-
-StructPtr
-Compiler::findStruct(const std::string& id)
-{
-    auto it = find_if(_structs.begin(), _structs.end(),
-                    [id](const StructPtr& s) { return s->name() == id; });
-    if (it != _structs.end()) {
-        return *it;
-    }
-    return nullptr;
 }
 
 SymbolPtr

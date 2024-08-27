@@ -357,12 +357,6 @@ private:
     
     bool isReserved(Token token, const std::string str, Reserved&);
 
-    StructPtr addStruct(const std::string& name, Type type)
-    {
-        _structs.push_back(std::make_shared<Struct>(name, type));
-        return _structs.back();
-    }
-    
     EnumPtr addEnum(const std::string& name)
     {
         EnumPtr e = std::make_shared<Enum>(name, Type(_enumTypes.size() + EnumTypeStart));
@@ -370,7 +364,6 @@ private:
         return e;
     }
 
-    StructPtr findStruct(const std::string&);
     SymbolPtr findSymbol(const std::string&);
     int16_t findModuleId(const std::string&);
 
@@ -441,6 +434,8 @@ private:
     void addJumpEntry(const ASTPtr& jump);
     
     void addJumpFixupNodes(const ASTPtr& parent, BranchNode::Kind jumpKind, const BranchNode::Kind targetKind);
+
+    void emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc);
     
     Scanner _scanner;
 
@@ -455,7 +450,7 @@ private:
     std::vector<uint8_t> _constants;
     std::vector<uint32_t> _scalarConstants;
     
-    StructList _structs;
+    StructPtr _topLevelStruct;
     StructList _structStack;
     std::vector<ModulePtr> _modules;
     

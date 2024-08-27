@@ -32,6 +32,10 @@ public:
     Type type() const { return _type; }
     uint8_t size() const { return _localSize; }
     
+    FunctionPtr ctor() const { return _ctor; }
+    
+    const std::vector<StructPtr>& structs() const { return _structs; }
+    
     StructPtr addStruct(const std::string& name, Type type)
     {
         _structs.push_back(std::make_shared<Struct>(name, type));
@@ -49,6 +53,14 @@ public:
         
         FunctionPtr function = Module::addFunction(name, returnType);
         _locals.push_back(std::make_shared<Symbol>(function));
+
+        if (name.empty()) {
+            // This is the ctor
+            // We're not checking to see if we already have a ctor. That should 
+            // be done by the caller
+            _ctor = function;
+        }
+        
         return function;
     }
 
@@ -129,8 +141,7 @@ public:
 
     void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
     
-    bool haveExplicitCtor() const { return _haveExplicitCtor; }
-    void setHaveExplicitCtor() { _haveExplicitCtor = true; }
+    bool haveCtor() const { return _ctor != nullptr; }
 
 private:
     std::vector<StructPtr> _structs;
@@ -140,7 +151,7 @@ private:
     Type _type = Type::None;
     ASTPtr _astNode = std::make_shared<StatementsNode>(-1);
     ASTPtr _initASTNode = std::make_shared<StatementsNode>(-1);
-    bool _haveExplicitCtor = false;
+    FunctionPtr _ctor;
 };
 
 }
