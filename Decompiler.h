@@ -63,7 +63,7 @@ private:
     
     bool atEnd() { return (_in->end() - _it) <= 0; }
 
-    int32_t addrMode(Index& index);
+    uint32_t addrMode(Index& index);
 
     int32_t getInt32()
     {
@@ -75,6 +75,8 @@ private:
         // Big endian
         return (int32_t(getUInt16()) << 16) | int32_t(getUInt16());
     }
+    
+    uint32_t getUInt32() { return getInt32(); }
     
     int16_t getInt16()
     {

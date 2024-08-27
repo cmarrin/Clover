@@ -299,31 +299,25 @@ void Decompiler::emitSizeValue(uint8_t size)
     _out->append(">");
 }
 
-// if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 15. If bit 2 is 1
-// and bit 3 is 0, bits 7:4 are prepended to a following byte for a 12 bit
-// address (-2048 to 2047). If bit 3 is 1 then if bit 4 is 0 the next 2 bytes
-// is a signed address. If bit 4 is 1 then the next 4 bytes is a signed address.
-int32_t
+// Determine the addr mode. Addr is unsigned. See Defines.h (Address Mode)
+// for details
+uint32_t
 Decompiler::addrMode(Index& index)
 {
-    int8_t mode = getUInt8();
+    uint8_t mode = getUInt8();
     index = Index(mode & 0x03);
-    int32_t v;
+    uint32_t v;
     
     if ((mode & 0x04) == 0) {
         // Short
         v = mode >> 3;
     } else if ((mode & 0x08) == 0) {
         // Upper 4 bits of mode prepended to next byte
-        v = (int32_t(mode & 0xf0) << 4) | getUInt8();
-        if ((v & 0x800) != 0) {
-            // Sign extend
-            v |= 0xfffff000;
-        }
+        v = (uint32_t(mode & 0xf0) << 4) | getUInt8();
     } else if (((mode & 0x10) == 0)) {
-        v = getInt16();
+        v = getUInt16();
     } else {
-        v = getInt32();
+        v = getUInt32();
     }
     
     return v;
@@ -333,7 +327,7 @@ void Decompiler::emitIndex()
 {
     _out->append(" ");
     Index index;
-    int32_t value = addrMode(index);
+    uint32_t value = addrMode(index);
 
     _out->append(std::to_string(value));
     _out->append(",");

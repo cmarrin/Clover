@@ -172,9 +172,14 @@ class Memory
         return v;
     }
     
+    uint32_t getArg(int32_t offset, Type type)
+    {
+        return getAbs(index(offset, Index::A), typeToOpSize(type));
+    }
+    
     uint32_t getLocal(int32_t offset, Type type)
     {
-        return getAbs(localAddr(offset), typeToOpSize(type));
+        return getAbs(index(offset, Index::L), typeToOpSize(type));
     }
     
     // On entry args are pushed on stack followed by retAddr.
@@ -194,28 +199,17 @@ class Memory
         _u = _stack.pop(AddrOpSize);
     }
 
-    AddrNativeType index(int32_t offset, Index idx, OpSize opSize) const
+    AddrNativeType index(uint32_t offset, Index idx) const
     {
         switch (idx) {
             // Constants offset addresses by the size of stack memory so you can distinguish them
             case Index::C: return offset + ConstStart + stack().size();
             case Index::M: return _y + offset;
-            case Index::A: return localAddr(offset);
-            case Index::L: return localAddr(offset);
+            case Index::A: return _u + (AddrSize * 2) + offset;
+            case Index::L: return _u - offset - 1;
         }
     }
     
-    // Local offsets are negative and args are non-negative so
-    // the first local byte (or the LSB if 16 or 32 bit) is -1
-    // and the first arg (or the MSB if 16 or 32 bit) is 0.
-    AddrNativeType localAddr(int32_t offset) const
-    {
-        if (offset < 0) {
-            return _u + offset;
-        }
-        return _u + AddrSize * 2 + offset;
-    }
-
     const AddrNativeType& self() const { return _y; }
     AddrNativeType& self() { return _y; }
     
@@ -237,13 +231,13 @@ class VarArg
     VarArg(Memory* memMgr, uint32_t lastArgOffset, Type lastArgType)
         : _memMgr(memMgr)
     {
-        _nextAddr = memMgr->localAddr(lastArgOffset) + typeToBytes(lastArgType);
+        _nextAddr = memMgr->index(lastArgOffset, Index::A) + typeToBytes(lastArgType);
     }
     
     VarArg(Memory* memMgr)
         : _memMgr(memMgr)
     {
-        _nextAddr = memMgr->localAddr(0);
+        _nextAddr = memMgr->index(0, Index::A);
     }
     
     // Type returned is always uint32_t. Use reinterpret_cast to convert to the proper type
@@ -259,7 +253,7 @@ class VarArg
 
     void initialize(uint32_t lastArgOffset, Type lastArgType)
     {
-        _nextAddr = _memMgr->localAddr(lastArgOffset) + typeToBytes(lastArgType);
+        _nextAddr = _memMgr->index(lastArgOffset, Index::A) + typeToBytes(lastArgType);
         _initialAddr = _nextAddr;
     }
     

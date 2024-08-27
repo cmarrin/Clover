@@ -128,26 +128,20 @@ class InterpreterBase
         return v;
     }
 
-    // if bit 2 is 0 then bits 7:3 are a signed offset from -16 to 15. If bit 2 is 1
-    // and bit 3 is 0, bits 7:4 are prepended to a following byte for a 12 bit
-    // address (-2048 to 2047). If bit 3 is 1 then if bit 4 is 0 the next 2 bytes
-    // is a signed address. If bit 4 is 1 then the next 4 bytes is a signed address.
+    // Determine the addr mode. Addr is unsigned. See Defines.h (Address Mode)
+    // for details
     int32_t addrMode(Index& index)
     {
-        int8_t mode = getUInt8ROM(_pc++);
+        uint8_t mode = getUInt8ROM(_pc++);
         index = Index(mode & 0x03);
-        int32_t v;
+        uint32_t v;
         
         if ((mode & 0x04) == 0) {
             // Short
             v = mode >> 3;
         } else if ((mode & 0x08) == 0) {
             // Upper 4 bits of mode prepended to next byte
-            v = (int32_t(mode & 0xf0) << 4) | getUOpnd(OpSize::i8);
-            if ((v & 0x800) != 0) {
-                // Sign extend
-                v |= 0xfffff000;
-            }
+            v = (uint32_t(mode & 0xf0) << 4) | getUOpnd(OpSize::i8);
         } else {
             v = getIOpnd(((mode & 0x10) == 0) ? OpSize::i16 : OpSize::i32);
         }
@@ -155,16 +149,16 @@ class InterpreterBase
         return v;
     }
     
-    AddrNativeType ea(OpSize opSize)
+    AddrNativeType ea()
     {
         Index index;
-        int32_t addr = addrMode(index);
-        return _memMgr.index(addr, index, opSize);
+        uint32_t addr = addrMode(index);
+        return _memMgr.index(addr, index);
     }
     
     uint32_t value(OpSize opSize)
     {
-        return _memMgr.getAbs(ea(opSize), opSize);
+        return _memMgr.getAbs(ea(), opSize);
     }
     
     void handleReturn()

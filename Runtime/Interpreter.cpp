@@ -229,13 +229,13 @@ InterpreterBase::execute(ExecMode mode)
             case Op::NOP:
                 break;
             case Op::PUSHREF1:
-                _memMgr.stack().push(ea(OpSize::i8), AddrOpSize);
+                _memMgr.stack().push(ea(), AddrOpSize);
                 break;
             case Op::PUSHREF2:
-                _memMgr.stack().push(ea(OpSize::i16), AddrOpSize);
+                _memMgr.stack().push(ea(), AddrOpSize);
                 break;
             case Op::PUSHREF4:
-                _memMgr.stack().push(ea(OpSize::i32), AddrOpSize);
+                _memMgr.stack().push(ea(), AddrOpSize);
                 break;
             case Op::DEREF1:
                 left = _memMgr.stack().pop(AddrOpSize);
@@ -278,17 +278,17 @@ InterpreterBase::execute(ExecMode mode)
                 break;
             case Op::POP1: {
                 uint32_t v = _memMgr.stack().pop(OpSize::i8);
-                _memMgr.setAbs(ea(OpSize::i8), v, OpSize::i8);
+                _memMgr.setAbs(ea(), v, OpSize::i8);
                 break;
             }
             case Op::POP2: {
                 uint32_t v = _memMgr.stack().pop(OpSize::i16);
-                _memMgr.setAbs(ea(OpSize::i16), v, OpSize::i16);
+                _memMgr.setAbs(ea(), v, OpSize::i16);
                 break;
             }
             case Op::POP4: {
                 uint32_t v = _memMgr.stack().pop(OpSize::i32);
-                _memMgr.setAbs(ea(OpSize::i32), v, OpSize::i32);
+                _memMgr.setAbs(ea(), v, OpSize::i32);
                 break;
             }
             case Op::POPDEREF1: {

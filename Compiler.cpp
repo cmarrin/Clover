@@ -1391,7 +1391,12 @@ Compiler::formalParameterList()
         std::string id;
         expect(identifier(id), Error::ExpectedIdentifier);
         
-        SymbolPtr sym = std::make_shared<Symbol>(id, t, isPointer, 1, 1);
+        StructPtr struc;
+        if (isStruct(t)) {
+            struc = typeToStruct(t);
+        }
+        
+        SymbolPtr sym = std::make_shared<Symbol>(id, t, isPointer, struc ? struc->size() : typeToBytes(t), 1);
         expect(currentFunction()->addArg(sym), Error::DuplicateIdentifier);
         
         if (!match(Token::Comma)) {

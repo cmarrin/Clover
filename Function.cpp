@@ -21,7 +21,6 @@ Function::Function(const char* name, uint16_t nativeId, Type returnType, const S
     , _addr(nativeId)
 {
     for (const auto& it : locals) {
-        // FIXME: set addr
         SymbolPtr sym = std::make_shared<Symbol>(it.name(), it.type(), it.isPointer(), 1, 1);
         addArg(sym);
     }
@@ -80,13 +79,16 @@ Function::addLocal(const SymbolPtr& sym, AddrNativeType addr, uint16_t nElements
         return true;
     }
     
-    // Locals start at -1 and go negative. The address is the -_localSize
-    // minus the size of the symbol. These are addresses relative to the
-    // base pointer (U) register, so are adjusted during code generation
-    // for the space taken up by the previous base pointer and return 
-    // address.
-    sym->setAddr(-_localSize - sym->size(), Index::L);
-    _localSize += sym->size();
+    // Locals are negative offsets from the U register. But here they
+    // are positive. But they still point at locations going down
+    // in memory. So the addr point at the "highest" location of the
+    // var. So if the first var is an int8 it is at addr 0, int16 is at
+    // addr is 1, and int32 is at 3. When accessing at runtime addrs
+    // are translated with 'U - addr - 1'. So the values would be -1,
+    // -2 and -4.
+    uint8_t bytes = sym->sizeInBytes();
+    sym->setAddr(_localSize + bytes - 1, Index::L);
+    _localSize += bytes;
     
     if (_localHighWaterMark < _localSize) {
         _localHighWaterMark = _localSize;
@@ -105,9 +107,9 @@ Function::addArg(const SymbolPtr& sym)
     _locals.push_back(sym);
     
     // Args start at 0 and go positive
-    sym->setAddr(_argSize, Index::L);
+    sym->setAddr(_argSize, Index::A);
     
-    _argSize += sym->size();
+    _argSize += sym->sizeInBytes();
     _argCount += 1;
     return true;
 }

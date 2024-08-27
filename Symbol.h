@@ -53,8 +53,8 @@ public:
         , _kind(kind)
     { }
     
-    void setAddr(int32_t addr, Index index) { _addr = addr; _index = index; }
-    int32_t addr(Index& index) const { index = _index; return _addr; }
+    void setAddr(uint32_t addr, Index index) { _addr = addr; _index = index; }
+    uint32_t addr(Index& index) const { index = _index; return _addr; }
     
     void setNElements(uint16_t n) { _nElements = n; }
     uint16_t nElements() const { return _nElements; }
@@ -65,7 +65,7 @@ public:
     Kind kind() const { return _kind; }
     void setKind(Kind kind) { _kind = kind; }
     FunctionPtr function() const { return _function; }
-    uint16_t size() const
+    uint16_t sizeInBytes() const
     {
         if (_ptr) {
             return AddrSize;
@@ -83,7 +83,7 @@ private:
     std::string _name;
     Type _type = Type::None;
     bool _ptr = false;
-    int32_t _addr = 0;
+    uint32_t _addr = 0;
     Index _index;
     FunctionPtr _function;
     uint16_t _nElements = 1;
