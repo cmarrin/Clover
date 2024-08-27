@@ -228,13 +228,7 @@ InterpreterBase::execute(ExecMode mode)
         switch (opcode) {
             case Op::NOP:
                 break;
-            case Op::PUSHREF1:
-                _memMgr.stack().push(ea(), AddrOpSize);
-                break;
-            case Op::PUSHREF2:
-                _memMgr.stack().push(ea(), AddrOpSize);
-                break;
-            case Op::PUSHREF4:
+            case Op::PUSHREF:
                 _memMgr.stack().push(ea(), AddrOpSize);
                 break;
             case Op::DEREF1:

@@ -196,21 +196,18 @@ Opcodes:
     int16 c = 20;
     int16 a = (b + 5) * (c + 6);
     
-    PUSHREF   b,U
-    PUSHK<2>  #10
-    DEREF<2>
-    PUSHREF   c,U
-    PUSHK<2>  #20
-    DEREF<2>
-    PUSHREF   a,U
-    PUSH<2>   b,U
-    PUSHK<2>  #5
+    PUSHK<2>    #10
+    POP<2>      b,L
+    PUSHK<2>    #20
+    POP<2>      c,L
+    PUSH<2>     b,L
+    PUSHK<2>    #5
     ADD<2>
-    PUSH<2>   c,BP
-    PUSHK<2>  #6
+    PUSH<2>     c,L
+    PUSHK<2>    #6
     ADD<2>
     MUL<2>
-    DEREF<2>
+    POP         a,L
     
     All addresses can be 2 bytes for a 64KB range or 4 bytes for a 2^32 byte range.
     This is determined at compile time. Also at compile time you can specify
@@ -250,56 +247,10 @@ Opcodes:
     
     On return, the callee sets SP = U, pops the stack into U and performs a
     return operation. The caller then adds the number of bytes of args to SP.
-    
-    PUSHREF         - push EA of value (must be X, Y, or U addressing mode)
-    DEREF<1,2,4>    - Value is on TOS, EA is TOS+1, store value at EA
-    PUSH<1,2,4>     - Push value (indexed from X, y or BP)
-    PUSHK<1,2,4>     - Push value (immediate value)
-    
-    DUP<1,2,4>      - Duplicate TOS
-    DROP<1,2,4>     - Pop TOS
-    SWAP<1,2,4>     - Exchange TOS and TOS+1
-    
-    ADD<1,2,4,F>    - Add TOS to TOS+1, result on TOS
-    SUB<1,2,4,F>    - Sub TOS+1 from TOS, result on TOS
-    UMUL<1,2,4>     - Unsigned multiple TOS+1 and TOS, result on TOS
-    IMUL<1,2,4,F>   - Signed multiple TOS+1 and TOS, result on TOS
-    UDIV<1,2,4>     - Unsigned divide TOS+1 by TOS, result on TOS
-    IMUL<1,2,4,F>   - Signed divide TOS+1 by TOS, result on TOS
-    OR<1,2,4>       - Bitwise or TOS and TOS+1, result on TOS
-    XOR<1,2,4>      - Bitwise xor TOS and TOS+1, result on TOS
-    AND<1,2,4>      - Bitwise and TOS and TOS+1, result on TOS
-    
-    NOT<1,2,4>      - Bitwise inversion of TOS, result on TOS
-    NEG<1,2,4,F>    - Negate TOS, result on TOS
-
-    LE<1,2,4,F>     - Test if signed TOS+1 is less than or equal to signed TOS, bool on TOS
-    LS<1,2,4,F>     - Test if unsigned TOS+1 is less than or equal to unsigned TOS, bool on TOS
-    LT<1,2,4,F>     - Test if signed TOS+1 is less than signed TOS, bool on TOS
-    LO<1,2,4,F>     - Test if unsigned TOS+1 is less than unsigned TOS, bool on TOS
-    EQ<1,2,4,F>     - Test if TOS+1 is equal to TOS, bool on TOS
-    NE<1,2,4,F>     - Test if TOS+1 is not equal to TOS, bool on TOS
-    GT<1,2,4,F>     - Test if signed TOS+1 is greater than signed TOS, bool on TOS
-    HI<1,2,4,F>     - Test if unsigned TOS+1 is greater than unsigned TOS, bool on TOS
-    GE<1,2,4,F>     - Test if signed TOS+1 is greater than or equal to signed TOS, bool on TOS
-    HS<1,2,4,F>     - Test if unsigned TOS+1 is greater than or equal to unsigned TOS, bool on TOS
-
-    IF<S,L>         - IF TOS is true, branch to 8 or 16 bit relative address in follow byte(s)
-    BRA<S,L>        - Jump to 8 or 16 bit relative address in follow byte(s)
-    CALL<S,L>       - Call function at 8 or 16 bit relative address in follow byte(s), push PC
-    CALLNATIVE      - Call native function with id in next byte
-    ENTER<I,S,L>    - Do enter operations using local count in lower 4 bits of opcode, or
-                      following 8 or 16 bits
-    RET             - Do leave operations and pop PC
-    
-    PREINC<1,2,4,F> - Takes an index byte. Like PUSH, but increments the value at EA and the pushed value
-    PREDEC<1,2,4,F> - Takes an index byte. Like PUSH, but decrements the value at EA and the pushed value
-    POSTINC<1,2,4,F>- Takes an index byte. Like PUSH, but increments the value at EA and pushes the unincremented value
-    POSTDEC<1,2,4,F>- Takes an index byte. Like PUSH, but decrements the value at EA and pushes the undecremented value
 */
 
 // 0 bit opcodes start at 0x00
-static constexpr uint8_t OneBitOperandStart  = 0x42;
+static constexpr uint8_t OneBitOperandStart  = 0x40;
 static constexpr uint8_t TwoBitOperandStart  = 0x4c;
 static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
@@ -330,21 +281,19 @@ enum class Op: uint8_t {
     POP1    = 0x13, // Next byte is addr mode, pop TOS and store at address
     POP2    = 0x14,
     POP4    = 0x15,
-    PUSHREF1= 0x16, // Next byte is addr mode. Data width is used when computing negative offsets from U
-    PUSHREF2= 0x17,
-    PUSHREF4= 0x18,
-    POPDEREF1=0x19, // a = popaddr, v = pop1, mem1[a] = v
-    POPDEREF2=0x1a, // a = popaddr, v = pop2, mem2[a] = v
-    POPDEREF4=0x1b, // a = popaddr, v = pop4, mem4[a] = v
-    PUSH1   = 0x1c, // Next byte is addr mode, push value at addr
-    PUSH2   = 0x1d,
-    PUSH4   = 0x1e,
+    PUSHREF = 0x16, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    POPDEREF1=0x17, // a = popaddr, v = pop1, mem1[a] = v
+    POPDEREF2=0x18, // a = popaddr, v = pop2, mem2[a] = v
+    POPDEREF4=0x19, // a = popaddr, v = pop4, mem4[a] = v
+    PUSH1   = 0x1a, // Next byte is addr mode, push value at addr
+    PUSH2   = 0x1b,
+    PUSH4   = 0x1c,
 
-    DUP1    = 0x1f,
-    DUP2    = 0x20,
-    DUP4    = 0x21,
+    DUP1    = 0x1d,
+    DUP2    = 0x1e,
+    DUP4    = 0x1f,
     
-    SWITCH  = 0x22, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
+    SWITCH  = 0x20, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
                     // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
                     // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
                     // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
@@ -352,7 +301,7 @@ enum class Op: uint8_t {
 
 //
 //
-// Available opcodes 23
+// Available opcodes 21 - 23
 //
 //
 
@@ -398,7 +347,7 @@ enum class Op: uint8_t {
     
 //
 //
-// Available opcodes 3e - 41
+// Available opcodes 3e - 3f
 //
 //
 
@@ -407,11 +356,17 @@ enum class Op: uint8_t {
 // This limits branches to the range -32768 to 32767.
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
-    IF      = 0x42, // Branch is always forward
-    FBRA    = 0x44, // Branch is always forward
-    RBRA    = 0x46, // Branch is always reverse
-    NCALL   = 0x48,
-    ENTER   = 0x4a,
+    IF      = 0x40, // Branch is always forward
+    FBRA    = 0x42, // Branch is always forward
+    RBRA    = 0x44, // Branch is always reverse
+    NCALL   = 0x46,
+    ENTER   = 0x48,
+
+//
+//
+// Available opcodes 4a - 4b
+//
+//
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 

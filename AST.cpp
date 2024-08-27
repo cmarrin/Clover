@@ -41,13 +41,15 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler* c)
             case OpSize::i32:
             case OpSize::flt: op = Op::POP4; break;
         }
-    } else {
+    } else if (ref) {
         // If ref is true, code generated will be a Ref
+        op = Op::PUSHREF;
+    } else {
         switch (typeToOpSize(t)) {
-            case OpSize::i8:  op = ref ? Op::PUSHREF1 : Op::PUSH1; break;
-            case OpSize::i16: op = ref ? Op::PUSHREF2 : Op::PUSH2; break;
+            case OpSize::i8:  op = Op::PUSH1; break;
+            case OpSize::i16: op = Op::PUSH2; break;
             case OpSize::i32:
-            case OpSize::flt: op = ref ? Op::PUSHREF4 : Op::PUSH4; break;
+            case OpSize::flt: op = Op::PUSH4; break;
         }
     }
     

@@ -141,9 +141,7 @@ Decompiler::statement()
         case Op::CASTI8F   : emitOp("CASTI8F");   break;
         case Op::CASTI832  : emitOp("CASTI832");  break;
         case Op::CASTI816  : emitOp("CASTI816");  break;
-        case Op::PUSHREF1  : emitOp("PUSHREF1"); emitIndex(); break;
-        case Op::PUSHREF2  : emitOp("PUSHREF2"); emitIndex(); break;
-        case Op::PUSHREF4  : emitOp("PUSHREF4"); emitIndex(); break;
+        case Op::PUSHREF   : emitOp("PUSHREF "); emitIndex(); break;
         case Op::INDEX1    : emitOp("INDEX1"); emitNumber(getUInt8()); break;
         case Op::INDEX2    : emitOp("INDEX2"); emitNumber(getUInt8()); break;
         case Op::OFFSET1   : emitOp("OFFSET1"); emitNumber(getUInt8()); break;
