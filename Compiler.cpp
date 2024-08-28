@@ -1275,11 +1275,6 @@ Compiler::postfixExpression()
                 continue;
             }
             
-            // If lhs is an Enum then get the enum value and create a constant node.
-            // This node has the integer value corresponding to the enum value and 
-            // the type of the enum.
-            
-            
             // lhs must be a struct or pointer to struct. Find its definition
             Type structType = lhs->type();
             expect(isStruct(structType), Error::ExpectedStructType);
