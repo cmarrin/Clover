@@ -150,20 +150,30 @@ class VarNode : public ASTNode
 
     virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) override
     {
-        emitCode(code, isLHS, false, c);
+        emitCode(code, Type::None, isLHS, false, c);
+    }
+    
+    void emitCode(std::vector<uint8_t>& code, Type type, bool isLHS, Compiler* c)
+    {
+        emitCode(code, type, isLHS, false, c);
     }
     
     void emitPopCode(std::vector<uint8_t>& code, Compiler* c)
     {
-        emitCode(code, false, true, c);
+        emitCode(code, Type::None, false, true, c);
     }
 
     virtual bool valueLeftOnStack() const override { return true; }
+    
+    // In cases where we have a constant offset to a member of a struct
+    // we can skip the OFFSET op and just offset the address here
+    void setOffset(uint32_t offset) { _offset = offset; }
 
   private:
-    void emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler*);
+    void emitCode(std::vector<uint8_t>& code, Type type, bool ref, bool pop, Compiler*);
     
     SymbolPtr _symbol = nullptr;
+    uint32_t _offset = 0;
 };
 
 // This can hold a numeric float, int or a constant. Constants are

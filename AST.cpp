@@ -25,14 +25,18 @@ StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-VarNode::emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler* c)
+VarNode::emitCode(std::vector<uint8_t>& code, Type type, bool ref, bool pop, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
     // If this is a pointer then we push it as a AddrType not the underlying type
     Op op;
-    Type t = isPointer() ? AddrType : _symbol->type();
-
+    Type t = type;
+    
+    if (t == Type::None) {
+        t = isPointer() ? AddrType : _symbol->type();
+    }
+    
     if (pop) {
         // Generate POP optimization
         switch (typeToOpSize(t)) {
@@ -59,6 +63,7 @@ VarNode::emitCode(std::vector<uint8_t>& code, bool ref, bool pop, Compiler* c)
     // for details
     Index index;
     uint32_t relAddr = _symbol->addr(index);
+    relAddr += (index == Index::L) ? -_offset : _offset;
     uint8_t extra = uint8_t(index);
     uint8_t addedBytes = 0;
     
@@ -282,10 +287,20 @@ DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
     c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
-    _operand->emitCode(code, true, c);
-
     Index index;
     uint16_t offset = _property->addr(index);
+
+    // If _operand is a Var, we can skip the OFFSET and just add the property
+    // offset to the VarNode.
+    if (_operand->astNodeType() == ASTNodeType::Var) {
+        std::static_pointer_cast<VarNode>(_operand)->setOffset(offset);        
+        std::static_pointer_cast<VarNode>(_operand)->emitCode(code, _property->type(), isLHS, c);
+        return;
+    }
+
+    _operand->emitCode(code, true, c);
+
+    // We can skip the OFFSET if offset value is 0
     if (offset) {
         code.push_back((offset > 255) ? uint8_t(Op::OFFSET2) : uint8_t(Op::OFFSET1));
         appendValue(code, offset, (offset > 255) ? 2 : 1);
