@@ -13,21 +13,21 @@ struct A
     int8 b = 12;
     int16 c = 24;
     
-    function int32 f(int8 x, int8 y)
+    function float f(int8 x, int8 y)
     {
         return x + y;
     }
 };
 
-const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
+//const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
 
-function int32 main()
+function int16 main()
 {
     A a;
     
-    int32 result = a.f(5, 6);
+    int16 result = a.f(5, 6);
     
-    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
+//    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
     core.printf(" a.b=%d, a.c=%d, result=%d\n", a.b, a.c, result);
     return 0;
 }
