@@ -348,13 +348,13 @@ Decompiler::emitConstant(uint8_t bytes, bool isSigned)
         value |= 0xffffff80;
     }
     if (bytes > 1) {
-        value = (value < 8) | getUInt8();
+        value = (value << 8) | getUInt8();
     }
     if (bytes > 2) {
-        value = (value < 8) | getUInt8();
+        value = (value << 8) | getUInt8();
     }
     if (bytes > 3) {
-        value = (value < 8) | getUInt8();
+        value = (value << 8) | getUInt8();
     }
     
     if (isSigned) {
