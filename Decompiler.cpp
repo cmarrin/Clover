@@ -362,6 +362,12 @@ Decompiler::emitConstant(uint8_t bytes, bool isSigned)
     } else {
         _out->append(std::to_string(uint32_t(value)));
     }
+    
+    if (bytes == 4) {
+        _out->append(" (");
+        _out->append(std::to_string(intToFloat(value)));
+        _out->append(")");
+    }
 }
     
 void
