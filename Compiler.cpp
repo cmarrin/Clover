@@ -1025,7 +1025,14 @@ Compiler::returnStatement(const ASTPtr& parent)
     } else {
         expect(ast != nullptr, Error::ExpectedReturnValue);
     }
-
+    
+    // If expr and return type are both scalar they can be cast,
+    // otherwise it's a type mismatch
+    if (isScalar(ast->type()) && isScalar(neededType)) {
+        ast = TypeCastNode::castIfNeeded(ast, neededType, annotationIndex());
+    } else {
+        expect(ast->type() == neededType, Error::MismatchedType);
+    }
     parent->addNode(std::make_shared<ReturnNode>(ast, annotationIndex()));
     
     expect(Token::Semicolon);
