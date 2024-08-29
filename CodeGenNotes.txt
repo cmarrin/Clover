@@ -1,0 +1,109 @@
+Converting to 6809
+
+ex:
+
+A -> U
+L -> U
+
+[18] ENTERS 0
+[19] PUSH1 0,A
+[21] PUSH1 1,A
+[23] ADD<1>
+[24] RETR1
+[25] ENTERS 0
+[26] PUSHK11 #12
+[28] POP1 0,M
+[30] PUSHK12 #24
+[32] POP2 1,M
+[34] RET
+[35] ENTERS 7
+[36] PUSHREF  2,L
+[38] MCALL 25
+[41] PUSHKS1 #6
+[42] PUSHKS1 #5
+[43] PUSHREF  2,L
+[45] MCALL 18
+[48] DROPS 2
+[49] PUSHR4
+[50] POP4 6,L
+[52] PUSH4 6,L
+[54] PUSHREF  2,L
+[56] OFFSET1 1
+[58] DEREF2
+[59] CASTI1632
+[60] PUSHREF  2,L
+[62] DEREF1
+[63] CASTI832
+[64] PUSHS " a.b=%d, a.c=%d, result=%d\n"
+[94] NCALL 1
+[96] DROPS 16
+[97] PUSHKS1 #0
+[98] RETR1
+
+***** Tests Complete: 0 errors - Passed
+Program ended with exit code: 1
+
+
+	
+A_f:
+	PSHS	U
+	TFR		S, U
+	LEAS	-3, S
+	LDA		6, U
+	ADDA	7, U
+	TFR		U, S
+	PULS	U
+	RTS				; return value is in A
+
+A_ctor:
+	PSHS	U
+	TFR		S, U
+	LDA		#12
+	STA		0, Y
+	LDA		#24
+	STA		1, Y
+	TFR		U, S
+	PULS	U
+	RTS
+	
+ENTRY:	
+	PSHS	U
+	TFR		S, U
+	LEAS	-7, S
+	PSHS	Y
+	LEAY	-3, U
+	JSR		A_ctor
+	PULS	Y
+	
+	LDA		#6
+	LDB		#5
+	PSHS	A, B
+	PSHS	Y
+	LEAY	-3, U
+	JSR		A_f
+	PULS	Y
+	LEAS	2, S
+	STA		-7, U
+	
+	; How do we sign extend to 32 bits? Where do we put a 32 bit value? X:D?
+	; For now do 16 bit
+	
+	SEX
+	PSHS	D
+	LEAX	-2, U
+	LDD		0, X
+	PSHS	D
+	LEAX	-3, U
+	LDA		0, X
+	SEX
+	PSHS	D
+	LDX		STRING
+	LDD		#PRINTF
+	SWI1
+	LEAS	10, S
+	LDA		#0
+	RTS
+	
+	
+	
+	
