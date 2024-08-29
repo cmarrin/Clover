@@ -478,10 +478,11 @@ BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 void
 BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 {
+    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+    
     switch (_kind) {
         case Kind::IfStart:
             // Emit the opcode with a 0 branch address and mark it
-            c->setAnnotation(_annotationIndex, uint32_t(code.size()));
             
             // If this is the first pass, we don't know how long the
             // branch should be so we make enough space for a long
@@ -497,7 +498,6 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         case Kind::Continue:
         case Kind::ElseStart:
             // Emit the opcode with a 0 branch address and mark it
-            c->setAnnotation(_annotationIndex, uint32_t(code.size()));
 
             // If this is the first pass, we don't know how long the
             // branch should be so we make enough space for a long
@@ -573,8 +573,6 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     code.push_back(uint8_t(Op::SWITCH));
     appendValue(code, operand, 2);
     
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
     // Jump addresses in list are relative to this point
     AddrNativeType jumpSourceAddr = AddrNativeType(code.size());
     
@@ -602,8 +600,6 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         }
     }
     
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
     // Now emit the statements. As we do so, fixup the addr in the list.
     // At the end of each statement, add a BranchNode so the statement
     // can jump to the end. We need to fixup after
