@@ -12,6 +12,7 @@ struct A
 {
     int8 b = 12;
     int16 c = 24;
+    int16 yyy[2];
     
     function float f(int8 x, int8 y)
     {
@@ -19,16 +20,25 @@ struct A
     }
 };
 
-//const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
+const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
 
 function int16 main()
 {
+    A xxx[4];
+
     A a;
+    
+    xxx[1].b = 13;
+    int8 zzz = xxx[1].b;
+    
+    a.yyy[1] = 14;
+    int16 qqq = a.yyy[1];
     
     int16 result = a.f(5, 6);
     
-//    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
+    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
     core.printf(" a.b=%d, a.c=%d, result=%d\n", a.b, a.c, result);
+    core.printf(" xxx=%d, zzz=%d, yyy=%d, qqq=%d\n", xxx[1].b, zzz, a.yyy[1], qqq);
     return 0;
 }
 
