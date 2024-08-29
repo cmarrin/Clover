@@ -374,7 +374,7 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // VarArgs being used to access them.
     uint16_t argSize = 0;
     for (auto& it : _args) {
-        argSize += it->sizeInBytes();
+        argSize += it->elementSizeInBytes();
     }
     
     emitDrop(code, argSize);
@@ -724,16 +724,9 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // index can be 8 or 16 bit. We know its a valid type because the caller checked it
     _rhs->emitCode(code, false, c);
 
-    code.push_back(uint8_t((_rhs->type() == Type::Int8 || _rhs->type() == Type::UInt8) ? Op::INDEX1 : Op::INDEX2));
-    
-    // If the underlying type is struct, get that size
-    uint8_t size;
-    if (isStruct(type())) {
-        size = c->typeToStruct(type())->size();
-    } else {
-        size = typeToBytes(type());
-    }
-    code.push_back(size);
+    uint16_t size = elementSizeInBytes();
+    code.push_back(uint8_t((size <= 255) ? Op::INDEX1 : Op::INDEX2));
+    appendValue(code, size, (size <= 255) ? 1 : 2);
     
     // if isLHS is true then we're done, we have a ref on TOS. If not we need to DEREF
     if (!isLHS) {

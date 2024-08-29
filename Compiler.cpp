@@ -67,7 +67,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         appendValue(executable, 0, Type::UInt32);
         
         // Write top level struct size
-        int32_t topLevelSize = _topLevelStruct->size();
+        int32_t topLevelSize = _topLevelStruct->sizeInBytes();
         appendValue(executable, topLevelSize, Type::UInt32);
         
         // Write constant size and then constants
@@ -85,6 +85,7 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
 void
 Compiler::emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc)
 {
+    //setAnnotation(struc->astNode()->annotationIndex(), uint32_t(executable.size()));
     struc->astNode()->emitCode(executable, false, this);
 
     //Emit structs
@@ -365,7 +366,7 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
         expect(Token::CloseBracket);
     }
     
-    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->size() : typeToBytes(type), nElements);
+    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->sizeInBytes() : typeToBytes(type), nElements);
     expect(sym != nullptr, Error::DuplicateIdentifier);
     
     // Check for an initializer.
@@ -1415,12 +1416,14 @@ Compiler::formalParameterList()
         std::string id;
         expect(identifier(id), Error::ExpectedIdentifier);
         
-        StructPtr struc;
-        if (isStruct(t)) {
-            struc = typeToStruct(t);
-        }
+        StructPtr struc = typeToStruct(t);
         
-        SymbolPtr sym = std::make_shared<Symbol>(id, t, isPointer, struc ? struc->size() : typeToBytes(t), 1);
+        // If this is a struct, pass it as a pointer
+        if (struc) {
+            isPointer = true;
+        }
+
+        SymbolPtr sym = std::make_shared<Symbol>(id, t, isPointer, struc ? struc->sizeInBytes() : typeToBytes(t), 1);
         expect(currentFunction()->addArg(sym), Error::DuplicateIdentifier);
         
         if (!match(Token::Comma)) {
@@ -1750,7 +1753,7 @@ Compiler::sizeInBytes(Type type) const
         default:
             // Handle Structs
             StructPtr s = typeToStruct(type);
-            return (s == nullptr) ? 0 : s->size();
+            return (s == nullptr) ? 0 : s->sizeInBytes();
     }
 }
 

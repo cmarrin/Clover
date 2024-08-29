@@ -70,13 +70,20 @@ public:
         if (_ptr) {
             return AddrSize;
         }
-        
-        if (isStruct(_type)) {
-            // Might be an array of structs
-            return _structSize * _nElements;
+        return elementSizeInBytes() * _nElements;
+    }
+    
+    uint16_t elementSizeInBytes() const
+    {
+        if (_ptr) {
+            return AddrSize;
         }
         
-        return typeToBytes(_type) * _nElements;
+        if (isStruct(_type)) {
+            return _structSize;
+        }
+        
+        return typeToBytes(_type);
     }
     
 private:

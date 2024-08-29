@@ -30,7 +30,7 @@ public:
     uint16_t numLocals() const { return _locals.size(); }
     
     Type type() const { return _type; }
-    uint8_t size() const { return _localSize; }
+    uint8_t sizeInBytes() const { return _localSize; }
     
     FunctionPtr ctor() const { return _ctor; }
     

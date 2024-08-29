@@ -82,7 +82,7 @@ class ASTNode
     
     // sizeInBytes is usually the same as typeToBytes(type). But if the
     // node is a ptr to the type then it will be different.
-    virtual uint8_t sizeInBytes() const { return typeToBytes(type()); }
+    virtual uint16_t elementSizeInBytes() const { return typeToBytes(type()); }
     
     virtual const ASTPtr child(uint32_t i) const { return nullptr; }
     virtual const uint32_t numChildren() const { return 0; }
@@ -138,10 +138,7 @@ class VarNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Var; }
     virtual Type type() const override { return _symbol->type(); }
-    virtual uint8_t sizeInBytes() const override
-    {
-        return _symbol->isPointer() ? AddrSize : typeToBytes(type());
-    }
+    virtual uint16_t elementSizeInBytes() const override { return _symbol->elementSizeInBytes(); }
 
     virtual bool isIndexable() const override { return _symbol->nElements() != 1; }
     virtual bool isAssignable() const override { return true; }
@@ -348,12 +345,6 @@ class OpNode : public ASTNode
 
     virtual Type type() const override { return _type; }
 
-    virtual uint8_t sizeInBytes() const override
-    {
-        return typeToBytes(type());
-    }
-
-
     virtual const ASTPtr child(uint32_t i) const override
     {
         if (i == 0) {
@@ -390,7 +381,9 @@ class DotNode : public ASTNode
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Dot; }
 
     virtual Type type() const override { return _type; }
+    virtual uint16_t elementSizeInBytes() const override { return _property->elementSizeInBytes(); }
     virtual bool isPointer() const override { return _property->isPointer(); }
+    virtual bool isIndexable() const override { return _property->nElements() != 1; }
 
     virtual bool isAssignable() const override { return true; }
 
@@ -615,6 +608,7 @@ class IndexNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Index; }
     virtual Type type() const override { return _lhs->type(); }
+    virtual uint16_t elementSizeInBytes() const override { return _lhs->elementSizeInBytes(); }
 
     virtual bool isAssignable() const override { return true; }
 
