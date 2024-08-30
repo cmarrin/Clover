@@ -15,16 +15,36 @@ using namespace lucid;
 
 bool Decompiler::decompile()
 {
+
+
+for (int i = 0; ; ++i) {
+    std::string line;
+    int32_t addr = _annotations->getLine(i, line);
+    
+    lucid::printf("[%d:%d] %s\n", i, addr, line.c_str());
+    
+    if (addr == -2) {
+        break;
+    }
+}
+
     // Output everything before the first addr
     if (_annotations) {
         _annotationIndex = 0;
-        for ( ; _annotationIndex < _annotations->size(); ++_annotationIndex) {
-            if ((*_annotations)[_annotationIndex].first != -1) {
+        for ( ; ; ++_annotationIndex) {
+            std::string line;
+            int32_t addr = _annotations->getLine(_annotationIndex, line);
+            if (addr == -2) {
+                _error = Error::PrematureEOF;
+                return false;
+            }
+            
+            if (addr != -1) {
                 break;
             }
             
             _out->append("                |    ");
-            _out->append((*_annotations)[_annotationIndex].second);
+            _out->append(line);
             _out->append("\n");
         }
     }
@@ -73,7 +93,7 @@ bool Decompiler::decompile()
         _out->append("\n\n");
         
         // Emit code
-        while (!atEnd()) {
+        while (!atEnd() && _error == Error::None) {
             statement();
         }
     }
@@ -81,7 +101,7 @@ bool Decompiler::decompile()
         return false;
     }
     
-    return true;
+    return _error == Error::None;
 }
 
 void
@@ -90,14 +110,19 @@ Decompiler::statement()
     uint16_t a = addr() - _codeOffset;
     
     if (_annotations) {
-        if (!_annotations->empty() && ((*_annotations)[_annotationIndex].first == -1 || (*_annotations)[_annotationIndex].first < a)) {
-            for ( ; _annotationIndex < _annotations->size(); ) {
-                _out->append("                |    ");
-                _out->append((*_annotations)[_annotationIndex++].second);
-                if ((*_annotations)[_annotationIndex].first != -1) {
-                    break;
-                }
+        while (true) {
+            std::string line;
+            int32_t addr = _annotations->getLine(_annotationIndex, line);
+            
+            if (addr == -2 || (addr != -1 && addr >= a)) {
+                break;
             }
+            
+            _out->append("                |    ");
+            _out->append(line);
+            
+            _annotationIndex += 1;
+
             if (_out->back() != '\n') {
                 _out->append("\n");
             }

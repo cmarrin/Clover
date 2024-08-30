@@ -18,8 +18,45 @@ namespace lucid {
 
 static constexpr uint8_t MAX_ID_LENGTH = 32;
 
-using AnnotationList = std::vector<std::pair<int32_t, std::string>>;
+class Annotations
+{
+  public:
+    Annotations() { _annotations.emplace_back(-1, ""); }
 
+    void setAnnotation(int32_t index, uint32_t addr)
+    {
+        if (_annotations.size() > index) {
+            if (_annotations[index].first == -1) {
+                _annotations[index].first = addr;
+            }
+        }
+    }
+
+    void addChar(char c)
+    {
+        if (c == '\n') {
+            _annotations.emplace_back(-1, "");
+        } else {
+            _annotations.back().second.push_back(c);
+        }
+    }
+    
+    int32_t getLine(uint32_t index, std::string& line) const
+    {
+        if (index >= _annotations.size()) {
+            line = "";
+            return -2;
+        }
+        
+        line = _annotations[index].second;
+        return _annotations[index].first;
+    }
+
+  private:
+    using AnnotationList = std::vector<std::pair<int32_t, std::string>>;
+    
+    AnnotationList _annotations;
+};
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -119,14 +156,13 @@ public:
         const char*     str;
     } TokenType;
 
-  	Scanner(std::istream* stream = nullptr, AnnotationList* annotations = nullptr)
+  	Scanner(std::istream* stream = nullptr, Annotations* annotations = nullptr)
   	 : _lastChar(0xff)
   	 , _stream(stream)
      , _lineno(1)
      , _charno(1)
      , _annotations(annotations)
   	{
-        if (_annotations) _annotations->emplace_back(-1, "");
     }
   	
   	~Scanner()
@@ -164,16 +200,11 @@ public:
     
     void retireToken() { _currentToken = Token::None; }
     
-    int32_t annotationIndex() const { return _annotations ? int32_t(_annotations->size()) : -1; }
+    int32_t annotationIndex() const { return _lineno; }
     
-    void setAnnotation(int32_t index, uint32_t addr)
-    {
-        if (_annotations && _annotations->size() > index) {
-            (*_annotations)[index].first = addr;
-        }
-    }
+    void setAnnotation(int32_t index, uint32_t addr) { if (_annotations) _annotations->setAnnotation(index, addr); }
     
-    const AnnotationList* annotations() const { return _annotations; }
+    const Annotations* annotations() const { return _annotations; }
 
 private:
   	Token getToken(TokenType& token);
@@ -205,7 +236,7 @@ private:
     
     bool _ignoreNewlines = false;
     
-    AnnotationList* _annotations;
+    Annotations* _annotations;
 };
 
 }

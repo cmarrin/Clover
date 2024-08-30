@@ -271,7 +271,7 @@ enum class Error {
 
 class Compiler {
 public:
-  	Compiler(std::istream* stream, AnnotationList* annotations)
+  	Compiler(std::istream* stream, Annotations* annotations)
         : _scanner(stream, annotations)
     { }
 

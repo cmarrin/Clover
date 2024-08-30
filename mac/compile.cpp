@@ -155,7 +155,7 @@ int main(int argc, char * const argv[])
         }
     }
     
-    lucid::AnnotationList annotations;
+    lucid::Annotations annotations;
     std::vector<std::pair<int32_t, std::string>> functions;
     
     int32_t errors = 0;
