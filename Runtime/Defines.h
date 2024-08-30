@@ -611,10 +611,11 @@ static constexpr uint8_t FunctionIdMask     = (1 << BitsPerFunctionId) - 1;
 #ifndef ARDUINO
 class ASTNode;
 using ASTPtr = std::shared_ptr<ASTNode>;
+using ASTNodeList = std::vector<ASTPtr>;
 
 class Symbol;
 using SymbolPtr = std::shared_ptr<Symbol>;
-using Symbols = std::vector<Symbol>;
+using SymbolList = std::vector<Symbol>;
 
 class Function;
 using FunctionPtr = std::shared_ptr<Function>;

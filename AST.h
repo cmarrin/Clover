@@ -50,9 +50,6 @@ class ASTNode;
 class Compiler;
 class Symbol;
 
-using ASTPtr = std::shared_ptr<ASTNode>;
-using ASTNodeList = std::vector<ASTPtr>;
-
 static inline void appendValue(std::vector<uint8_t>& container, uint32_t v, uint8_t bytes)
 {
     switch (bytes) {

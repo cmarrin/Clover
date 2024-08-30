@@ -14,7 +14,7 @@
 
 using namespace lucid;
 
-Function::Function(const char* name, uint16_t nativeId, Type returnType, const Symbols& locals)
+Function::Function(const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals)
     : _name(name)
     , _returnType(returnType)
     , _native(true)

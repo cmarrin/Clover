@@ -33,7 +33,7 @@ class Module
         return _functions.back();
     }
 
-    void addNativeFunction(const char* name, uint16_t nativeId, Type returnType, const Symbols& locals)
+    void addNativeFunction(const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals)
     {
         _functions.push_back(std::make_shared<Function>(name, nativeId, returnType, locals));
     }

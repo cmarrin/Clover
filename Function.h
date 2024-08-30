@@ -42,7 +42,7 @@ public:
     { }
 
     // Used to create built-in native functions
-    Function(const char* name, uint16_t nativeId, Type returnType, const Symbols& locals);
+    Function(const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals);
 
     const std::string& name() const { return _name; }
     Type returnType() const { return _returnType; }
