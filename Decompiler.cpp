@@ -34,12 +34,7 @@ for (int i = 0; ; ++i) {
         for ( ; ; ++_annotationIndex) {
             std::string line;
             int32_t addr = _annotations->getLine(_annotationIndex, line);
-            if (addr == -2) {
-                _error = Error::PrematureEOF;
-                return false;
-            }
-            
-            if (addr != -1) {
+            if (addr == -2 || addr != -1) {
                 break;
             }
             

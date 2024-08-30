@@ -79,14 +79,55 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         emitStruct(executable, _topLevelStruct);
     }
     
+    // Add the annotation info
+    TraversalVisitor func = [this] (const ASTPtr& node) {
+        int32_t index;
+        int32_t addr;
+        node->annotation(index, addr);
+        if (index >= 0 && addr >= 0) {
+            setAnnotation(index, addr);
+        }
+    };
+    
+    traverseStruct(_topLevelStruct, func);
+    
     return _error == Error::None;
+}
+
+void
+Compiler::traverseStruct(const StructPtr& struc, TraversalVisitor func) const
+{
+    traverseNode(struc->astNode(), func);
+
+    //Emit child structs
+    for (auto& itStruc : struc->structs()) {
+        traverseStruct(itStruc, func);
+    }
+    
+    // Emit functions
+    for (auto& itFunc : struc->functions()) {
+        traverseNode(itFunc->astNode(), func);
+    }
+}
+
+void
+Compiler::traverseNode(const ASTPtr& node,TraversalVisitor func) const
+{
+    if (node == nullptr) {
+        return;
+    }
+    
+    func(node);
+    
+    for (int i = 0; i < node->numChildren(); ++i) {
+        traverseNode(node->child(i), func);
+    }
 }
 
 void
 Compiler::emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc)
 {
-    //setAnnotation(struc->astNode()->annotationIndex(), uint32_t(executable.size()));
-    struc->astNode()->emitCode(executable, false, this);
+    struc->astNode()->emitCode(executable, false);
 
     //Emit structs
     for (auto& itStruc : struc->structs()) {
@@ -111,7 +152,7 @@ Compiler::emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc)
         
         // Set addr of this function
         itFunc->setAddr(AddrNativeType(executable.size()));
-        itFunc->astNode()->emitCode(executable, false, this);
+        itFunc->astNode()->emitCode(executable, false);
     }
 }
 
@@ -198,13 +239,13 @@ Compiler::strucT()
         FunctionPtr function = currentStruct()->addFunction("", Type::None);
     
         // ENTER has to be the first instruction in the Function.
-        function->addASTNode(std::make_shared<EnterNode>(function, annotationIndex()));
+        function->addASTNode(std::make_shared<EnterNode>(function));
     
         // init code goes right after ENTER
         function->addASTNode(currentStruct()->initASTNode());
 
         // Emit Return at the end
-        function->addASTNode(std::make_shared<ReturnNode>(nullptr, annotationIndex()));
+        function->addASTNode(std::make_shared<ReturnNode>(nullptr));
     }
     
     _structStack.pop_back();
@@ -391,7 +432,7 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
             
             // FIXME: For now only support struct
             if (struc != nullptr) {
-                ASTPtr list = std::make_shared<InitializerNode>(annotationIndex());
+                ASTPtr list = std::make_shared<InitializerNode>();
                 
                 ast = expression();
                 if (ast) {
@@ -429,8 +470,8 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
     // If this is a struct, we want to call its ctor
     if (struc && struc->ctor()) {
         // We need to pass a ref to the struct instance we are constructing
-        ASTPtr self = std::make_shared<VarNode>(sym, annotationIndex());
-        ASTPtr ctor = std::make_shared<FunctionCallNode>(struc->ctor(), self, annotationIndex());
+        ASTPtr self = std::make_shared<VarNode>(sym);
+        ASTPtr ctor = std::make_shared<FunctionCallNode>(struc->ctor(), self);
         std::static_pointer_cast<FunctionCallNode>(ctor)->setPushReturn(false);
         
         // See if we're passing args to ctor
@@ -443,15 +484,16 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
             // if the ctor expects args, pad with 0's
             FunctionPtr function = std::static_pointer_cast<FunctionCallNode>(ctor)->function();
             for (int i = 0; i < function->argCount(); ++i) {
-                ctor->addNode(std::make_shared<ConstantNode>(function->arg(i)->type(), 0, annotationIndex()));
+                ctor->addNode(std::make_shared<ConstantNode>(function->arg(i)->type(), 0));
             }
         }
 
+        ctor->setAnnotationIndex(annotationIndex());
         parent->addNode(ctor);
     }
     
     if (ast) {
-        ASTPtr idNode = std::make_shared<VarNode>(sym, annotationIndex());
+        ASTPtr idNode = std::make_shared<VarNode>(sym);
         
         // If var is a pointer, the rhs must be a pointer too. And both must be the same type
         if (isPointer) {
@@ -470,12 +512,14 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
                 
                 // We now have idNode, which is the struct, sym, which is the property in
                 // that struct and node, which is the value to assign.
-                ASTPtr dot = std::make_shared<DotNode>(idNode, sym, annotationIndex());
-                ASTPtr assignment = std::make_shared<AssignmentNode>(dot, Op::NOP, node, annotationIndex());
+                ASTPtr dot = std::make_shared<DotNode>(idNode, sym);
+                ASTPtr assignment = std::make_shared<AssignmentNode>(dot, Op::NOP, node);
+                assignment->setAnnotationIndex(annotationIndex());
                 parent->addNode(assignment);
             }
         } else {
-            ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, Op::NOP, ast, annotationIndex());
+            ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, Op::NOP, ast);
+            assignment->setAnnotationIndex(annotationIndex());
             parent->addNode(assignment);
         }
     }
@@ -661,7 +705,7 @@ Compiler::function()
     expect(Token::OpenBrace);
 
     // ENTER has to be the first instruction in the Function.
-    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction));
     
     while(statement(_currentFunction->astNode())) { }
     
@@ -678,7 +722,7 @@ Compiler::function()
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
     if (lastNode->astNodeType() != ASTNodeType::Return) {
         expect(_currentFunction->returnType() == Type::None, Error::ExpectedReturnValue);
-        _currentFunction->addASTNode(std::make_shared<ReturnNode>(nullptr, annotationIndex()));
+        _currentFunction->addASTNode(std::make_shared<ReturnNode>(nullptr));
     }
         
     _inFunction = false;
@@ -721,7 +765,7 @@ Compiler::ctor()
     expect(Token::OpenBrace);
 
     // ENTER has to be the first instruction in the Function.
-    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction, annotationIndex()));
+    _currentFunction->addASTNode(std::make_shared<EnterNode>(_currentFunction));
     
     // init code goes right after ENTER
     _currentFunction->addASTNode(currentStruct()->initASTNode());
@@ -739,7 +783,7 @@ Compiler::ctor()
     ASTPtr nodes = _currentFunction->astNode();
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
     if (lastNode->astNodeType() != ASTNodeType::Return) {
-        _currentFunction->addASTNode(std::make_shared<ReturnNode>(nullptr, annotationIndex()));
+        _currentFunction->addASTNode(std::make_shared<ReturnNode>(nullptr));
     }
     
     _inFunction = false;
@@ -794,10 +838,13 @@ Compiler::ifStatement(const ASTPtr& parent)
     }
     
     expect(Token::OpenParen);
-    parent->addNode(expression());
+    
+    ASTPtr ast = expression();
+    ast->setAnnotationIndex(annotationIndex());
+    parent->addNode(ast);
     expect(Token::CloseParen);
     
-    ASTPtr ifNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart, annotationIndex());
+    ASTPtr ifNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart);
     parent->addNode(ifNode);
 
     statement(parent);
@@ -807,14 +854,14 @@ Compiler::ifStatement(const ASTPtr& parent)
     
     if (match(Reserved::Else)) {
         haveElse = true;
-        elseNode = std::make_shared<BranchNode>(BranchNode::Kind::ElseStart, annotationIndex());
+        elseNode = std::make_shared<BranchNode>(BranchNode::Kind::ElseStart);
         
         std::static_pointer_cast<BranchNode>(elseNode)->setFixupNode(ifNode);
         parent->addNode(elseNode);
         statement(parent);
     }
 
-    ASTPtr endNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd, annotationIndex());
+    ASTPtr endNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd);
     parent->addNode(endNode);
     std::static_pointer_cast<BranchNode>(endNode)->setFixupNode(haveElse ? elseNode : ifNode);
 
@@ -837,11 +884,13 @@ Compiler::switchStatement(const ASTPtr& parent)
     
     expect(Token::OpenBrace);
     
-    ASTPtr switchStmt = std::make_shared<SwitchNode>(expr, annotationIndex());
+    ASTPtr switchStmt = std::make_shared<SwitchNode>(expr);
+    switchStmt->setAnnotationIndex(annotationIndex());
+
     int32_t value;
     bool isDefault;
     while (caseClause(value, isDefault)) {
-        ASTPtr stmt = std::make_shared<StatementsNode>(-1);
+        ASTPtr stmt = std::make_shared<StatementsNode>();
         expect(statement(stmt), Error::ExpectedExpr);
         if (isDefault) {
             std::static_pointer_cast<SwitchNode>(switchStmt)->addCaseClause(stmt);
@@ -929,7 +978,7 @@ Compiler::loopStatement(const ASTPtr& parent)
             
             // Get assignment
             expect(Token::Equal);
-            lhs = std::make_shared<VarNode>(sym, annotationIndex());
+            lhs = std::make_shared<VarNode>(sym);
             
             rhs = expression();
             expect(rhs != nullptr, Error::ExpectedExpr);
@@ -938,7 +987,7 @@ Compiler::loopStatement(const ASTPtr& parent)
             expect(!lhs->isPointer() && isScalar(lhs->type()), Error::IteratorMustBeScalar);
             expect(!rhs->isPointer() && isScalar(rhs->type()), Error::IteratorMustBeScalar);
 
-            ASTPtr assignment = std::make_shared<AssignmentNode>(lhs, Op::NOP, rhs, annotationIndex());
+            ASTPtr assignment = std::make_shared<AssignmentNode>(lhs, Op::NOP, rhs);
             parent->addNode(assignment);
 
             expect(Token::Semicolon);
@@ -946,7 +995,8 @@ Compiler::loopStatement(const ASTPtr& parent)
     }
     
     // This is the start of the loop
-    ASTPtr loopStartNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopStart, annotationIndex());
+    ASTPtr loopStartNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopStart);
+    loopStartNode->setAnnotationIndex(annotationIndex());
     parent->addNode(loopStartNode);
 
     ASTPtr ifStartNode, ifEndNode, loopNextNode, iterNode, loopEndNode;
@@ -958,7 +1008,7 @@ Compiler::loopStatement(const ASTPtr& parent)
         parent->addNode(expression());
         expect(endToken);
 
-        ifStartNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart, annotationIndex());
+        ifStartNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart);
         parent->addNode(ifStartNode);
     }
 
@@ -974,7 +1024,7 @@ Compiler::loopStatement(const ASTPtr& parent)
     statement(parent);
     
     // Now emit the iteration. This is where continue goes
-    loopNextNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopNext, annotationIndex());
+    loopNextNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopNext);
     parent->addNode(loopNextNode);
 
     // All continues branch to loopNextNode
@@ -985,17 +1035,17 @@ Compiler::loopStatement(const ASTPtr& parent)
     
         // If the iterNode leaves something on the stack get rid of it
         if (iterNode->valueLeftOnStack()) {
-            parent->addNode(std::make_shared<DropNode>(typeToBytes(iterNode->type()), annotationIndex()));
+            parent->addNode(std::make_shared<DropNode>(typeToBytes(iterNode->type())));
         }
     }
     
     // Now we're at the end of the loop
-    loopEndNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopEnd, annotationIndex());
+    loopEndNode = std::make_shared<BranchNode>(BranchNode::Kind::LoopEnd);
     parent->addNode(loopEndNode);
     
     if (ifStartNode) {
         // IfStart branches to IfEnd
-        ifEndNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd, annotationIndex());
+        ifEndNode = std::make_shared<BranchNode>(BranchNode::Kind::IfEnd);
         parent->addNode(ifEndNode);
         std::static_pointer_cast<BranchNode>(ifEndNode)->setFixupNode(ifStartNode);
     }
@@ -1030,11 +1080,14 @@ Compiler::returnStatement(const ASTPtr& parent)
     // If expr and return type are both scalar they can be cast,
     // otherwise it's a type mismatch
     if (isScalar(ast->type()) && isScalar(neededType)) {
-        ast = TypeCastNode::castIfNeeded(ast, neededType, annotationIndex());
+        ast = TypeCastNode::castIfNeeded(ast, neededType);
     } else {
         expect(ast->type() == neededType, Error::MismatchedType);
     }
-    parent->addNode(std::make_shared<ReturnNode>(ast, annotationIndex()));
+    
+    ASTPtr returnNode = std::make_shared<ReturnNode>(ast);
+    returnNode->setAnnotationIndex(annotationIndex());
+    parent->addNode(returnNode);
     
     expect(Token::Semicolon);
     return true;
@@ -1055,7 +1108,9 @@ Compiler::jumpStatement(const ASTPtr& parent)
     // Make sure we're in a loop
     expect(!_jumpList.empty(), Error::OnlyAllowedInLoop);
 
-    ASTPtr jump = std::make_shared<BranchNode>(kind, annotationIndex());
+    ASTPtr jump = std::make_shared<BranchNode>(kind);
+    jump->setAnnotationIndex(annotationIndex());
+
     addJumpEntry(jump);
     parent->addNode(jump);
 
@@ -1069,7 +1124,7 @@ Compiler::addJumpFixupNodes(const ASTPtr& parent, BranchNode::Kind jumpKind, con
     // Create a BranchNode for each branch of the right kind
     for (auto& it : _jumpList.back()) {
         if (std::reinterpret_pointer_cast<BranchNode>(it)->kind() == jumpKind) {
-            ASTPtr node = std::make_shared<BranchNode>(targetKind, annotationIndex());
+            ASTPtr node = std::make_shared<BranchNode>(targetKind);
             parent->addNode(node);
             std::reinterpret_pointer_cast<BranchNode>(node)->setFixupNode(it);
         }
@@ -1086,6 +1141,7 @@ Compiler::expressionStatement(const ASTPtr& parent)
     }
     
     expect(_inFunction, Error::InternalError);
+    node->setAnnotationIndex(annotationIndex());
     parent->addNode(node);
     expect(Token::Semicolon);
     
@@ -1095,7 +1151,7 @@ Compiler::expressionStatement(const ASTPtr& parent)
         std::static_pointer_cast<FunctionCallNode>(node)->setPushReturn(false);
     } else if (node->valueLeftOnStack()) {
         // We don't need the value, toss it
-        parent->addNode(std::make_shared<DropNode>(typeToBytes(node->type()), annotationIndex()));
+        parent->addNode(std::make_shared<DropNode>(typeToBytes(node->type())));
     }
     return true;
 }
@@ -1141,12 +1197,12 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
                 expect(lhs->isPointer() && rhs->isPointer(), Error::PtrAssignmentMustMatch);
                 expect(lhs->type() == rhs->type(), Error::PtrAssignmentMustMatch);
             }
-            lhs = std::make_shared<AssignmentNode>(lhs, opcode, rhs, annotationIndex());
+            lhs = std::make_shared<AssignmentNode>(lhs, opcode, rhs);
         } else {
             // Validate types. Only scalars allowed for binary ops
             expect(!lhs->isPointer() && !rhs->isPointer(), Error::PtrTypeNotAllowed);
             expect(isScalar(lhs->type()) && isScalar(rhs->type()), Error::MismatchedType);
-            lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false, annotationIndex());
+            lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false);
         }
     }
     
@@ -1165,7 +1221,7 @@ Compiler::conditionalExpression()
         ASTPtr first = expression();
         expect(Token::Colon);
         ASTPtr second = expression();
-        node = std::make_shared<ConditionalNode>(node, first, second, annotationIndex());
+        node = std::make_shared<ConditionalNode>(node, first, second);
     }
     return node;
 }
@@ -1200,14 +1256,14 @@ Compiler::unaryExpression()
     } else if (match(Token::And)) {
         // Ref (addressof)
         node = unaryExpression();
-        return std::make_shared<RefNode>(node, annotationIndex());
+        return std::make_shared<RefNode>(node);
     }  else if (match(Token::Mul)) {
         // Deref (*)
         node = unaryExpression();
         
         // Node must be a ref
         expect(node->isPointer(), Error::ExpectedRef);
-        return std::make_shared<DerefNode>(node, annotationIndex());
+        return std::make_shared<DerefNode>(node);
     } else {
         return nullptr;
     }
@@ -1224,10 +1280,10 @@ Compiler::unaryExpression()
         } else if (t == Type::UInt32) {
             t = Type::Int32;
         }
-        node = TypeCastNode::castIfNeeded(node, t, annotationIndex());
+        node = TypeCastNode::castIfNeeded(node, t);
     }
     
-    return std::make_shared<OpNode>(opcode, node, resultType, isRef, annotationIndex());
+    return std::make_shared<OpNode>(opcode, node, resultType, isRef);
 }
 
 ASTPtr
@@ -1250,7 +1306,7 @@ Compiler::postfixExpression()
             // underlying type. Assume that and deref. That's not
             // safe, but it's how C does it.
             if (lhs->isPointer()) {
-                lhs = std::make_shared<DerefNode>(lhs, annotationIndex());
+                lhs = std::make_shared<DerefNode>(lhs);
             } else {
                 expect(lhs->isIndexable(), Error::ExpectedIndexable);
             }
@@ -1259,7 +1315,7 @@ Compiler::postfixExpression()
             // Index can be 8 or 16 bit only
             expect(rhs->type() == Type::Int8  || rhs->type() == Type::UInt8 ||
                    rhs->type() == Type::Int16 || rhs->type() == Type::UInt16, Error::WrongType);
-            lhs = std::make_shared<IndexNode>(lhs, rhs, annotationIndex());
+            lhs = std::make_shared<IndexNode>(lhs, rhs);
             expect(Token::CloseBracket);
         } else if (match(Token::Dot)) {
             std::string id;
@@ -1272,7 +1328,7 @@ Compiler::postfixExpression()
                 expect(moduleId < _modules.size(), Error::InternalError);
                 FunctionPtr f = _modules[moduleId]->findFunction(id);
                 expect(f != nullptr, Error::UndefinedIdentifier);
-                lhs = std::make_shared<FunctionCallNode>(f, moduleId, annotationIndex());
+                lhs = std::make_shared<FunctionCallNode>(f, moduleId);
                 continue;
             }
             
@@ -1287,20 +1343,20 @@ Compiler::postfixExpression()
             
             // If this is a pointer to struct, deref it
             if (lhs->isPointer()) {
-                lhs = std::make_shared<DerefNode>(lhs, annotationIndex());
+                lhs = std::make_shared<DerefNode>(lhs);
             }
             
             // If this is a function, make it a member function with lhs as the instance
             if (prop->type() == Type::Function) {
-                lhs = std::make_shared<FunctionCallNode>(prop->function(), lhs, annotationIndex());
+                lhs = std::make_shared<FunctionCallNode>(prop->function(), lhs);
             } else {
                 // Otherwise make the dot node
-                lhs = std::make_shared<DotNode>(lhs, prop, annotationIndex());
+                lhs = std::make_shared<DotNode>(lhs, prop);
             }
         } else if (match(Token::Inc)) {
-            lhs = std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true, annotationIndex());
+            lhs = std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true);
         } else if (match(Token::Dec)) {
-            lhs = std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, true, annotationIndex());
+            lhs = std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, true);
         } else {
             return lhs;
         }
@@ -1325,7 +1381,7 @@ Compiler::primaryExpression()
             // This is a type cast
             ASTPtr arg = expression();
             expect(Token::CloseParen);        
-            return std::make_shared<TypeCastNode>(t, arg, annotationIndex());
+            return std::make_shared<TypeCastNode>(t, arg);
         } else {
             // The only other choice is an Enum deref, which means a dot must follow then an id
             expect(isEnum(t), Error::ExpectedEnum);
@@ -1337,7 +1393,7 @@ Compiler::primaryExpression()
             EnumPtr e = typeToEnum(t);
             int32_t value;
             expect(e->findValue(id, value), Error::ExpectedEnum);
-            return std::make_shared<ConstantNode>(t, value, annotationIndex());
+            return std::make_shared<ConstantNode>(t, value);
         }
     }
     
@@ -1347,25 +1403,25 @@ Compiler::primaryExpression()
         if (symbol) {
             // This could be a var, scalar constant or function. Create the proper ASTNode
             if (symbol->type() == Type::Function) {
-                return std::make_shared<FunctionCallNode>(symbol->function(), annotationIndex());
+                return std::make_shared<FunctionCallNode>(symbol->function());
             } else if (symbol->kind() == Symbol::Kind::ScalarConstant) {
                 Index index;
                 AddrNativeType addr = symbol->addr(index);
                 int32_t v = _scalarConstants[addr];
                 if (symbol->type() == Type::Float) {
-                    return std::make_shared<ConstantNode>(intToFloat(v), annotationIndex());
+                    return std::make_shared<ConstantNode>(intToFloat(v));
                 } else {
-                    return std::make_shared<ConstantNode>(symbol->type(), v, annotationIndex());
+                    return std::make_shared<ConstantNode>(symbol->type(), v);
                 }
             } else {
                 // It's a Var or Constant symbol
-                return std::make_shared<VarNode>(symbol, annotationIndex());
+                return std::make_shared<VarNode>(symbol);
             }
         }
         
         int16_t moduleId = findModuleId(id);
         if (moduleId >= 0) {
-            return std::make_shared<ModuleNode>(moduleId, annotationIndex());
+            return std::make_shared<ModuleNode>(moduleId);
         }
 
         expect(false, Error::ExpectedVar);
@@ -1373,7 +1429,7 @@ Compiler::primaryExpression()
 
     float f;
     if (floatValue(f)) {
-        return std::make_shared<ConstantNode>(f, annotationIndex());
+        return std::make_shared<ConstantNode>(f);
     }
         
     uint32_t i;
@@ -1388,12 +1444,12 @@ Compiler::primaryExpression()
             type = Type::UInt32;
         }
         
-        return std::make_shared<ConstantNode>(type, i, annotationIndex());
+        return std::make_shared<ConstantNode>(type, i);
     }
     
     std::string s;
     if (stringValue(s)) {
-        return std::make_shared<StringNode>(s, annotationIndex());
+        return std::make_shared<StringNode>(s);
     }
     
     return nullptr;
@@ -1462,7 +1518,7 @@ Compiler::argumentList(const ASTPtr& fun)
             
             // If the arg is a struct and we're expecting a pointer ref it
             if (sym->isPointer() && isStruct(arg->type()) && !arg->isPointer()) {
-                arg = std::make_shared<RefNode>(arg, annotationIndex());
+                arg = std::make_shared<RefNode>(arg);
             } else if (sym->isPointer() || arg->isPointer()) {
                 // If both the sym and arg are scalar then we can cast.
                 // Otherwise it's a type mismatch
@@ -1493,7 +1549,7 @@ Compiler::argumentList(const ASTPtr& fun)
             }
         }
 
-        arg = TypeCastNode::castIfNeeded(arg, neededType, annotationIndex());
+        arg = TypeCastNode::castIfNeeded(arg, neededType);
         fun->addNode(arg);
         
         i++;
@@ -1505,7 +1561,7 @@ Compiler::argumentList(const ASTPtr& fun)
 
     // if there are not enough args, pad with 0's
     while (i < function->argCount()) {
-        fun->addNode(std::make_shared<ConstantNode>(function->arg(i)->type(), 0, annotationIndex()));
+        fun->addNode(std::make_shared<ConstantNode>(function->arg(i)->type(), 0));
         i += 1;
     }
     return true;

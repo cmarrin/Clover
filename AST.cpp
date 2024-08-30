@@ -17,18 +17,18 @@
 using namespace lucid;
 
 void
-StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+StatementsNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
     for (auto& it : _statements) {
-        it->emitCode(code, isLHS, c);
+        it->emitCode(code, isLHS);
     }
 }
 
 void
-VarNode::emitCode(std::vector<uint8_t>& code, Type type, bool ref, bool pop, Compiler* c)
+VarNode::emitCode(std::vector<uint8_t>& code, Type type, bool ref, bool pop)
 {
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
     // If this is a pointer then we push it as a AddrType not the underlying type
     Op op;
     Type t = type;
@@ -102,10 +102,10 @@ static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
 }
 
 void
-ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
     assert(!isLHS);
     
     // Small floating point numbers is a common case. We currently
@@ -167,10 +167,10 @@ ConstantNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
     // We will push a null terminator in addition to the size. Make room for it
     code.push_back(uint8_t(Op::PUSHS));
     code.push_back(_string.size() + 1);
@@ -181,12 +181,12 @@ StringNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
     assert(!isLHS);
     
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
     // _type is the result type not the type used for operation. We need
     // to get that from the left or right operand
     Type opType = Type::UInt8;
@@ -195,35 +195,35 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     if (_left) {
         if (isLogical && _left->type() != Type::UInt8) {
             // Cast to uint8 (boolean)
-            _left = TypeCastNode::castIfNeeded(_left, Type::UInt8, _annotationIndex);
+            _left = TypeCastNode::castIfNeeded(_left, Type::UInt8);
         }
         if (!isLogical) {
             opType = _left->type();
         }
-        _left->emitCode(code, _isRef, c);
+        _left->emitCode(code, _isRef);
     }
     
     if (_right) {
         if (isLogical && _right->type() != Type::UInt8) {
             // Cast to uint8 (boolean)
-            _right = TypeCastNode::castIfNeeded(_right, Type::UInt8, _annotationIndex);
+            _right = TypeCastNode::castIfNeeded(_right, Type::UInt8);
         }
         if (!isLogical && _left == nullptr) {
             opType = _right->type();
         }
         
         // If this is a unary operation (like INC) then _isAssignment is used
-        _right->emitCode(code, (_left == nullptr) ? _isRef : isLHS, c);
+        _right->emitCode(code, (_left == nullptr) ? _isRef : isLHS);
     }
     
     code.push_back(uint8_t(_op) | typeToSizeBits(opType));
 }
 
 void
-AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
     // If op is not NOP this is operator assignment. Handle a += b like a = a + b
     //
     // 1) push lhs
@@ -235,10 +235,10 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     //
     // Now TOS has the value. do a pushref of the lhs and then popderef
     if (_op != Op::NOP) {
-        _left->emitCode(code, false, c);
+        _left->emitCode(code, false);
     }
     
-    _right->emitCode(code, false, c);
+    _right->emitCode(code, false);
     
     if (_op != Op::NOP) {
         code.push_back(uint8_t(_op) | typeToSizeBits(type()));
@@ -254,10 +254,10 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     //      POPx i,U
     //
     if (_left->astNodeType() == ASTNodeType::Var) {
-        std::reinterpret_pointer_cast<VarNode>(_left)->emitPopCode(code, c);
+        std::reinterpret_pointer_cast<VarNode>(_left)->emitPopCode(code);
         return;
     } else {
-        _left->emitCode(code, true, c);
+        _left->emitCode(code, true);
     }
     
     // If this is a pointer assignment, we need to use the pointer
@@ -274,19 +274,18 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     code.push_back(uint8_t(op));
 }
 
-DotNode::DotNode(const ASTPtr& operand, const SymbolPtr& property, int32_t annotationIndex)
-    : ASTNode(annotationIndex)
-    , _operand(operand)
+DotNode::DotNode(const ASTPtr& operand, const SymbolPtr& property)
+    : _operand(operand)
     , _property(property)
 {
     _type = _property->type();
 }
 
 void
-DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
     Index index;
     uint16_t offset = _property->addr(index);
 
@@ -294,11 +293,11 @@ DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     // offset to the VarNode.
     if (_operand->astNodeType() == ASTNodeType::Var) {
         std::static_pointer_cast<VarNode>(_operand)->setOffset(offset);        
-        std::static_pointer_cast<VarNode>(_operand)->emitCode(code, _property->type(), isLHS, c);
+        std::static_pointer_cast<VarNode>(_operand)->emitCode(code, _property->type(), isLHS);
         return;
     }
 
-    _operand->emitCode(code, true, c);
+    _operand->emitCode(code, true);
 
     // We can skip the OFFSET if offset value is 0
     if (offset) {
@@ -313,8 +312,10 @@ DotNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-ModuleNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+ModuleNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
 }
 
 static void emitDrop(std::vector<uint8_t>& code, uint16_t argSize)
@@ -330,16 +331,19 @@ static void emitDrop(std::vector<uint8_t>& code, uint16_t argSize)
 }
 
 void
-FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
+    // Don't set the addr if this is ctor
+    if (!_function->name().empty()) {
+        setAnnotationAddr(AddrNativeType(code.size()));
+    }
+    
     // _args has the list of arguments in order from left to right. But stack
     // pushes down, so args will appear in reverse order on the stack
     // (right most arg will be at lowest addr). So return children in reverse
     // order so the first arg is at the lowest address when pushed
     for (auto i = _args.size() - 1; _args.size() > i; --i) {
-        _args[i]->emitCode(code, isLHS, c);
+        _args[i]->emitCode(code, isLHS);
     }
     
     // Add a function call. args will already be pushed
@@ -361,7 +365,7 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
         // a dummy address to make arg accesses align correctly, then calls the
         // function.
         if (_instance) {
-            _instance->emitCode(code, true, c);
+            _instance->emitCode(code, true);
             code.push_back(uint8_t(Op::MCALL));
         } else {
             code.push_back(uint8_t(Op::CALL));
@@ -391,10 +395,10 @@ FunctionCallNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
     uint16_t localSize = _function->localSize();
     if (localSize < 15) {
         code.push_back(uint8_t(Op::ENTERS) | localSize);
@@ -406,11 +410,11 @@ EnterNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
-
-    _arg->emitCode(code, isLHS, c);
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
+    _arg->emitCode(code, isLHS);
     
     Op op = castOp(_arg->type(), _type);
     if (op != Op::NOP) {
@@ -419,7 +423,7 @@ TypeCastNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 ASTPtr
-TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationIndex)
+TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType)
 {
     // We can only cast scalar nodes
     if ((!isEnum(node->type()) && !isScalar(node->type())) || !isScalar(neededType)) {
@@ -442,7 +446,7 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationInde
             constNode->setType(neededType);
 
         } else {
-            node = std::make_shared<TypeCastNode>(neededType, node, annotationIndex);
+            node = std::make_shared<TypeCastNode>(neededType, node);
         }
     }
     
@@ -476,9 +480,9 @@ BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 }
 
 void
-BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
-{
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
+{    
+    setAnnotationAddr(AddrNativeType(code.size()));
     
     switch (_kind) {
         case Kind::IfStart:
@@ -544,12 +548,12 @@ CaseClause::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 }
 
 void
-SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
-{
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
+{    
+    setAnnotationAddr(AddrNativeType(code.size()));
     
     // First emit expression
-    _expr->emitCode(code, false, c);
+    _expr->emitCode(code, false);
     
     Type type = _expr->type();
     
@@ -631,7 +635,7 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
             it->fixup(code, addr);
         }
         
-        it->stmt()->emitCode(code, false, c);
+        it->stmt()->emitCode(code, false);
 
         // The last clause will always have a branch of 0 so we can skip it
         if (it == _clauses.end() - 1) {
@@ -665,12 +669,12 @@ SwitchNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-ConditionalNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
-{
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+ConditionalNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
+{    
+    setAnnotationAddr(AddrNativeType(code.size()));
     
     // First emit expression
-    _expr->emitCode(code, false, c);
+    _expr->emitCode(code, false);
     
     // Now emit if. If expr is false, jump to second expression, otherwise fall through to first
     code.push_back(uint8_t(Op::IF) | ((_ifBranchSize == BranchSize::Short) ? 0x00 : 0x01));
@@ -681,7 +685,7 @@ ConditionalNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     // Emit the first expr
-    _first->emitCode(code, false, c);
+    _first->emitCode(code, false);
     
     // Fixup the IF, It needs to jump past the FBRA
     // Fixed adjustment of 1 for both long and short versions
@@ -696,7 +700,7 @@ ConditionalNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
     
     // Emit the second expr
-    _second->emitCode(code, false, c);
+    _second->emitCode(code, false);
     
     // Fixup the else
     AddrNativeType adjustment = (_elseBranchSize == BranchSize::Short) ? -1 : -2;
@@ -704,11 +708,11 @@ ConditionalNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
-{
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
+{    
+    setAnnotationAddr(AddrNativeType(code.size()));
     
-    _lhs->emitCode(code, true, c);
+    _lhs->emitCode(code, true);
     
     // Optimization. If rhs is a constant 0, we can skip the index. Just emit the lhs.
     if (_rhs->astNodeType() == ASTNodeType::Constant) {
@@ -718,7 +722,7 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
     }
 
     // index can be 8 or 16 bit. We know its a valid type because the caller checked it
-    _rhs->emitCode(code, false, c);
+    _rhs->emitCode(code, false);
 
     uint16_t size = elementSizeInBytes();
     code.push_back(uint8_t((size <= 255) ? Op::INDEX1 : Op::INDEX2));
@@ -739,14 +743,14 @@ IndexNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-ReturnNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
-{
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+ReturnNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
+{    
+    setAnnotationAddr(AddrNativeType(code.size()));
     
     if (_arg == nullptr) {
         code.push_back(uint8_t(Op::RET));
     } else {
-        _arg->emitCode(code, false, c);
+        _arg->emitCode(code, false);
         uint8_t size = typeToBytes(_arg->type());
         Op op = (size == 1) ? Op::RETR1 : ((size == 2) ? Op::RETR2 : Op::RETR4);
         code.push_back(uint8_t(op));
@@ -754,30 +758,32 @@ ReturnNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
 }
 
 void
-DropNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
+DropNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
 {
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
     emitDrop(code, _bytesToDrop);
 }
 
 void
-RefNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
-{
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+RefNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
+{    
+    setAnnotationAddr(AddrNativeType(code.size()));
     
     // The ref operand can only be used on a right-hand operand.
     // We want to push a ref to it, thus passing 'true' here
-    _operand->emitCode(code, true, c);
+    _operand->emitCode(code, true);
 }
 
 void
-DerefNode::emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c)
-{
-    c->setAnnotation(_annotationIndex, uint32_t(code.size()));
+DerefNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
+{    
+    setAnnotationAddr(AddrNativeType(code.size()));
     
     // We're guaranteed that _operand is a ref, so we want to push it
     // as though it's not a LHS. This will push the ref itself and not 
     // a reference to the reference.
-    _operand->emitCode(code, false, c);
+    _operand->emitCode(code, false);
     
     // If this is LHS then we are done. The ref is on TOS, ready to be assigned to.
     // Otherwise we need to get the refed value.

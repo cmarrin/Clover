@@ -149,8 +149,8 @@ private:
     std::vector<SymbolPtr> _locals;
     uint8_t _localSize = 0;
     Type _type = Type::None;
-    ASTPtr _astNode = std::make_shared<StatementsNode>(-1);
-    ASTPtr _initASTNode = std::make_shared<StatementsNode>(-1);
+    ASTPtr _astNode = std::make_shared<StatementsNode>();
+    ASTPtr _initASTNode = std::make_shared<StatementsNode>();
     FunctionPtr _ctor;
 };
 

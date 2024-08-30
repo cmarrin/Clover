@@ -63,7 +63,6 @@ static inline void appendValue(std::vector<uint8_t>& container, uint32_t v, uint
 class ASTNode
 {
   public:
-    ASTNode(int32_t annotationIndex) : _annotationIndex(annotationIndex) { }
     virtual ~ASTNode() { }
     
     virtual ASTNodeType astNodeType() const = 0;
@@ -84,7 +83,7 @@ class ASTNode
     virtual const ASTPtr child(uint32_t i) const { return nullptr; }
     virtual const uint32_t numChildren() const { return 0; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) { }
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) { }
     
     int32_t annotationIndex() const { return _annotationIndex; }
     
@@ -95,15 +94,24 @@ class ASTNode
         return t == Type::Int8 || t == Type::Int16 || t == Type::Int32 || t == Type::Float;
     }
     
-  protected:
-      int32_t _annotationIndex = -1;
+    void setAnnotationIndex(int32_t index) { _annotationIndex = index; }
+    void setAnnotationAddr(AddrNativeType addr)
+    {
+        if (_annotationAddr == -1) {
+            _annotationAddr = addr;
+        }
+    }
+    
+    void annotation(int32_t& index, int32_t& addr) { index = _annotationIndex; addr = _annotationAddr; }
+    
+  private:
+      int32_t _annotationIndex = -1;    // Source code line number
+      int32_t _annotationAddr = -1;     // Executable address
 };
 
 class StatementsNode : public ASTNode
 {
-  public:
-    StatementsNode(int32_t annotationIndex) : ASTNode(annotationIndex) { }
-    
+  public:    
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Statements; }
     
     virtual void addNode(const ASTPtr& node) override
@@ -122,7 +130,7 @@ class StatementsNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return uint32_t(_statements.size()); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
 
   private:
     ASTNodeList _statements;
@@ -131,7 +139,7 @@ class StatementsNode : public ASTNode
 class VarNode : public ASTNode
 {
   public:
-    VarNode(const SymbolPtr& symbol, int32_t annotationIndex) : ASTNode(annotationIndex), _symbol(symbol) { }
+    VarNode(const SymbolPtr& symbol) : _symbol(symbol) { }
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Var; }
     virtual Type type() const override { return _symbol->type(); }
@@ -142,19 +150,19 @@ class VarNode : public ASTNode
 
     virtual bool isPointer() const override { return _symbol->isPointer(); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler* c) override
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override
     {
-        emitCode(code, Type::None, isLHS, false, c);
+        emitCode(code, Type::None, isLHS, false);
     }
     
-    void emitCode(std::vector<uint8_t>& code, Type type, bool isLHS, Compiler* c)
+    void emitCode(std::vector<uint8_t>& code, Type type, bool isLHS)
     {
-        emitCode(code, type, isLHS, false, c);
+        emitCode(code, type, isLHS, false);
     }
     
-    void emitPopCode(std::vector<uint8_t>& code, Compiler* c)
+    void emitPopCode(std::vector<uint8_t>& code)
     {
-        emitCode(code, Type::None, false, true, c);
+        emitCode(code, Type::None, false, true);
     }
 
     virtual bool valueLeftOnStack() const override { return true; }
@@ -164,7 +172,7 @@ class VarNode : public ASTNode
     void setOffset(uint32_t offset) { _offset = offset; }
 
   private:
-    void emitCode(std::vector<uint8_t>& code, Type type, bool ref, bool pop, Compiler*);
+    void emitCode(std::vector<uint8_t>& code, Type type, bool ref, bool pop);
     
     SymbolPtr _symbol = nullptr;
     uint32_t _offset = 0;
@@ -181,13 +189,13 @@ class VarNode : public ASTNode
 class ConstantNode : public ASTNode
 {
   public:
-    ConstantNode(Type t, uint32_t v, int32_t annotationIndex) : ASTNode(annotationIndex), _type(t), _i(v) { }
-    ConstantNode(float v, int32_t annotationIndex)  : ASTNode(annotationIndex), _type(Type::Float), _numeric(true), _f(v) { }
+    ConstantNode(Type t, uint32_t v) : _type(t), _i(v) { }
+    ConstantNode(float v)  : _type(Type::Float), _numeric(true), _f(v) { }
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Constant; }
     virtual Type type() const override { return _type; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
     void toFloat() { _f = float(_i); }
     void toUInt() { _i = uint32_t(_f); }
@@ -219,15 +227,15 @@ class ConstantNode : public ASTNode
 class StringNode : public ASTNode
 {
   public:
-    StringNode(const char* s, int32_t annotationIndex) : ASTNode(annotationIndex), _string(s) { }
-    StringNode(const std::string& s, int32_t annotationIndex) : ASTNode(annotationIndex), _string(s) { }
-    StringNode(char c, int32_t annotationIndex) : ASTNode(annotationIndex) { _string = c; }
+    StringNode(const char* s) : _string(s) { }
+    StringNode(const std::string& s) : _string(s) { }
+    StringNode(char c) { _string = c; }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Constant; }
     virtual Type type() const override { return Type::String; }
     virtual bool isPointer() const override { return true; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
 
     virtual bool valueLeftOnStack() const override { return true; }
 
@@ -238,7 +246,7 @@ class StringNode : public ASTNode
 class TypeCastNode : public ASTNode
 {
   public:
-    TypeCastNode(Type t, const ASTPtr& arg, int32_t annotationIndex) : ASTNode(annotationIndex), _type(t), _arg(arg) { }
+    TypeCastNode(Type t, const ASTPtr& arg) : _type(t), _arg(arg) { }
 
     virtual Type type() const override { return _type; }
     
@@ -252,9 +260,11 @@ class TypeCastNode : public ASTNode
         return nullptr;
     }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual const uint32_t numChildren() const override { return 1; }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
-    static ASTPtr castIfNeeded(ASTPtr& node, Type neededType, int32_t annotationIndex);
+    static ASTPtr castIfNeeded(ASTPtr& node, Type neededType);
     
     virtual bool valueLeftOnStack() const override { return true; }
 
@@ -267,16 +277,15 @@ class AssignmentNode : public ASTNode
 {
   public:
     // op is passed for operator assignment (like +=), NOP if simple assignment
-    AssignmentNode(const ASTPtr& left, Op op, const ASTPtr& right, int32_t annotationIndex)
-        : ASTNode(annotationIndex)
-        , _left(left)
+    AssignmentNode(const ASTPtr& left, Op op, const ASTPtr& right)
+        : _left(left)
         , _op(op)
         , _right(right)
     {
         // If _left is a pointer don't try to cast. We've already verified that
         // both are pointers if one is.
         if (!_left->isPointer()) {
-            _right = TypeCastNode::castIfNeeded(_right, _left->type(), annotationIndex);
+            _right = TypeCastNode::castIfNeeded(_right, _left->type());
         }
     }
 
@@ -295,7 +304,9 @@ class AssignmentNode : public ASTNode
         return nullptr;
     }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual const uint32_t numChildren() const override { return 2; }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
 
   private:
     Op _op;
@@ -305,20 +316,18 @@ class AssignmentNode : public ASTNode
 class OpNode : public ASTNode
 {
   public:
-    OpNode(const ASTPtr& left, Op op, const ASTPtr& right, Type resultType, bool isRef, int32_t annotationIndex)
-        : ASTNode(annotationIndex)
-        , _isRef(isRef)
+    OpNode(const ASTPtr& left, Op op, const ASTPtr& right, Type resultType, bool isRef)
+        : _isRef(isRef)
         , _op(op)
         , _left(left)
         , _right(right)
     {
         _type = (resultType == Type::None) ? _left->type() : resultType;
-        _right = TypeCastNode::castIfNeeded(_right, _left->type(), annotationIndex);
+        _right = TypeCastNode::castIfNeeded(_right, _left->type());
     }
     
-    OpNode(const ASTPtr& left, Op op, Type resultType, bool isRef, int32_t annotationIndex)
-        : ASTNode(annotationIndex)
-        , _isRef(isRef)
+    OpNode(const ASTPtr& left, Op op, Type resultType, bool isRef)
+        : _isRef(isRef)
         , _op(op)
         , _left(left)
     {
@@ -326,9 +335,8 @@ class OpNode : public ASTNode
         _type = (resultType == Type::None) ? _left->type() : resultType;
     }
     
-    OpNode(Op op, const ASTPtr& right, Type resultType, bool isRef, int32_t annotationIndex)
-        : ASTNode(annotationIndex)
-        , _isRef(isRef)
+    OpNode(Op op, const ASTPtr& right, Type resultType, bool isRef)
+        : _isRef(isRef)
         , _op(op)
         , _right(right)
     {
@@ -336,7 +344,7 @@ class OpNode : public ASTNode
         _type = (resultType == Type::None) ? _right->type() : resultType;
     }
     
-    OpNode(Op op, int32_t annotationIndex) : ASTNode(annotationIndex), _op(op) { }
+    OpNode(Op op) : _op(op) { }
     
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Op; }
 
@@ -353,7 +361,9 @@ class OpNode : public ASTNode
         return nullptr;
     }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual const uint32_t numChildren() const override { return 2; }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
     Op op() const { return _op; }
 
@@ -373,7 +383,7 @@ class OpNode : public ASTNode
 class DotNode : public ASTNode
 {
   public:
-    DotNode(const ASTPtr& operand, const SymbolPtr& struc, int32_t annotationIndex);
+    DotNode(const ASTPtr& operand, const SymbolPtr& strucx);
     
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Dot; }
 
@@ -392,7 +402,9 @@ class DotNode : public ASTNode
         return nullptr;
     }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual const uint32_t numChildren() const override { return 1; }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
 
     virtual bool valueLeftOnStack() const override { return true; }
     
@@ -407,13 +419,13 @@ class DotNode : public ASTNode
 class ModuleNode : public ASTNode
 {
   public:
-    ModuleNode(uint8_t id, int32_t annotationIndex) : ASTNode(annotationIndex), _id(id) { }
+    ModuleNode(uint8_t id) : _id(id) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Module; }
     
     uint8_t id() const { return _id; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
 
   private:
     uint8_t _id;
@@ -423,22 +435,19 @@ class FunctionCallNode : public ASTNode
 {
   public:
     // Call a raw function with no instance value
-    FunctionCallNode(FunctionPtr func, int32_t annotationIndex)
-        : ASTNode(annotationIndex)
-        , _function(func)
+    FunctionCallNode(FunctionPtr func)
+        : _function(func)
     { }
     
     // Call a raw function with no instance value
-    FunctionCallNode(FunctionPtr func, const ASTPtr& instance, int32_t annotationIndex)
-        : ASTNode(annotationIndex)
-        , _function(func)
+    FunctionCallNode(FunctionPtr func, const ASTPtr& instance)
+        : _function(func)
         , _instance(instance)
     { }
     
     // Call function in the passed module
-    FunctionCallNode(FunctionPtr func, uint8_t moduleId, int32_t annotationIndex)
-        : ASTNode(annotationIndex)
-        , _moduleId(moduleId)
+    FunctionCallNode(FunctionPtr func, uint8_t moduleId)
+        : _moduleId(moduleId)
         , _function(func)
     { }
 
@@ -465,7 +474,7 @@ class FunctionCallNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return uint32_t(_args.size()); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
 
     FunctionPtr function() const { return _function; }
     void setPushReturn(bool r) { _pushReturn = r; }
@@ -482,11 +491,11 @@ class FunctionCallNode : public ASTNode
 class EnterNode : public ASTNode
 {
   public:
-    EnterNode(const FunctionPtr& function, int32_t annotationIndex) : ASTNode(annotationIndex), _function(function) { }
+    EnterNode(const FunctionPtr& function) : _function(function) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Enter; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
   private:
     FunctionPtr _function;
@@ -499,11 +508,11 @@ class BranchNode : public ASTNode
   public:
     enum class Kind { IfStart, ElseStart, IfEnd, LoopStart, LoopNext, LoopEnd, Break, Continue };
     
-    BranchNode(Kind k, int32_t annotationIndex) : ASTNode(annotationIndex), _kind(k) { }
+    BranchNode(Kind k) : _kind(k) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Branch; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
     void setFixupNode(const ASTPtr& f) { _fixupNode = f; }
     
@@ -546,15 +555,23 @@ class CaseClause
 class SwitchNode : public ASTNode
 {
   public:
-  public:
-    SwitchNode(const ASTPtr& expr, int32_t annotationIndex)
+    SwitchNode(const ASTPtr& expr)
         : _expr(expr)
-        , ASTNode(annotationIndex)
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Switch; }
     
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (_clauses.size() <= i) {
+            return nullptr;
+        }
+        return _clauses[i].stmt();
+    }
+
+    virtual const uint32_t numChildren() const override { return uint32_t(_clauses.size()); }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
 
     void addCaseClause(const ASTPtr& stmt) { _clauses.emplace_back(stmt); _haveDefault = true; }
     void addCaseClause(int32_t value, const ASTPtr& stmt) { _clauses.emplace_back(value, stmt); }
@@ -571,11 +588,10 @@ class ConditionalNode : public ASTNode
 {
   public:
   public:
-    ConditionalNode(const ASTPtr& expr, const ASTPtr& first, const ASTPtr& second, int32_t annotationIndex)
+    ConditionalNode(const ASTPtr& expr, const ASTPtr& first, const ASTPtr& second)
         : _expr(expr)
         , _first(first)
         , _second(second)
-        , ASTNode(annotationIndex)
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Conditional; }
@@ -583,7 +599,7 @@ class ConditionalNode : public ASTNode
     // first and second have to be the same type. That should have been validated by the caller
     virtual Type type() const override { return _first->type(); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
 
   private:
     ASTPtr _expr;
@@ -597,10 +613,9 @@ class ConditionalNode : public ASTNode
 class IndexNode : public ASTNode
 {
   public:
-    IndexNode(const ASTPtr& lhs, const ASTPtr& rhs, int32_t annotationIndex)
+    IndexNode(const ASTPtr& lhs, const ASTPtr& rhs)
         : _lhs(lhs)
         , _rhs(rhs)
-        , ASTNode(annotationIndex)
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Index; }
@@ -616,7 +631,7 @@ class IndexNode : public ASTNode
         return _lhs->isPointer();
     }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
     virtual bool valueLeftOnStack() const override { return true; }
 
@@ -627,15 +642,14 @@ class IndexNode : public ASTNode
 class ReturnNode : public ASTNode
 {
   public:
-    ReturnNode(const ASTPtr& arg, int32_t annotationIndex)
+    ReturnNode(const ASTPtr& arg)
         : _arg(arg)
-        , ASTNode(annotationIndex)
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Return; }
     virtual Type type() const override { return _arg->type(); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
   private:
     ASTPtr _arg;
@@ -644,14 +658,13 @@ class ReturnNode : public ASTNode
 class DropNode : public ASTNode
 {
   public:
-    DropNode(uint16_t bytesToDrop, int32_t annotationIndex)
+    DropNode(uint16_t bytesToDrop)
         : _bytesToDrop(bytesToDrop)
-        , ASTNode(annotationIndex)
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Drop; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
   private:
     uint16_t _bytesToDrop;
@@ -661,16 +674,15 @@ class DropNode : public ASTNode
 class RefNode : public ASTNode
 {
   public:
-    RefNode(const ASTPtr& operand, int32_t annotationIndex)
+    RefNode(const ASTPtr& operand)
         : _operand(operand)
-        , ASTNode(annotationIndex)
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Ref; }
     virtual Type type() const override { return _operand->type(); }
     virtual bool isPointer() const override { return true; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
   private:
     ASTPtr _operand;
@@ -680,9 +692,8 @@ class RefNode : public ASTNode
 class DerefNode : public ASTNode
 {
   public:
-    DerefNode(const ASTPtr& operand, int32_t annotationIndex)
+    DerefNode(const ASTPtr& operand)
         : _operand(operand)
-        , ASTNode(annotationIndex)
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Deref; }
@@ -691,7 +702,7 @@ class DerefNode : public ASTNode
     //virtual bool isPointer() const override { return _operand->isPointer(); }
     virtual bool isIndexable() const override { return true; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS, Compiler*) override;
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
   private:
     ASTPtr _operand;
@@ -700,8 +711,6 @@ class DerefNode : public ASTNode
 class InitializerNode : public ASTNode
 {
   public:
-    InitializerNode(int32_t annotationIndex) : ASTNode(annotationIndex) { }
-
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Initializer; }
 
     virtual void addNode(const ASTPtr& node) override

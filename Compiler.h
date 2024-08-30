@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <istream>
+#include <functional>
 #include <variant>
 
 #include "AST.h"
@@ -312,7 +313,7 @@ public:
         return _enumTypes[i];
     }
     
-    void setAnnotation(int32_t index, uint32_t addr) { _scanner.setAnnotation(index, addr); }
+    void setAnnotation(int32_t index, int32_t addr) { _scanner.setAnnotation(index, addr); }
 
 protected:
     bool statement(const ASTPtr& parent);
@@ -436,6 +437,10 @@ private:
     void addJumpFixupNodes(const ASTPtr& parent, BranchNode::Kind jumpKind, const BranchNode::Kind targetKind);
 
     void emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc);
+
+    using TraversalVisitor = std::function<void(const ASTPtr&)>;
+    void traverseStruct(const StructPtr& struc, TraversalVisitor func) const;
+    void traverseNode(const ASTPtr& node, TraversalVisitor) const;
     
     Scanner _scanner;
 

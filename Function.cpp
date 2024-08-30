@@ -30,7 +30,7 @@ const ASTPtr&
 Function::astNode()
 {
     if (!_astNode) {
-        _astNode = std::make_shared<StatementsNode>(-1);
+        _astNode = std::make_shared<StatementsNode>();
     }
     return _astNode;
 }

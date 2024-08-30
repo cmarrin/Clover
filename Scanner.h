@@ -23,7 +23,7 @@ class Annotations
   public:
     Annotations() { _annotations.emplace_back(-1, ""); }
 
-    void setAnnotation(int32_t index, uint32_t addr)
+    void setAnnotation(int32_t index, int32_t addr)
     {
         if (_annotations.size() > index) {
             if (_annotations[index].first == -1) {
@@ -41,7 +41,7 @@ class Annotations
         }
     }
     
-    int32_t getLine(uint32_t index, std::string& line) const
+    int32_t getLine(int32_t index, std::string& line) const
     {
         if (index >= _annotations.size()) {
             line = "";
@@ -202,7 +202,7 @@ public:
     
     int32_t annotationIndex() const { return _lineno; }
     
-    void setAnnotation(int32_t index, uint32_t addr) { if (_annotations) _annotations->setAnnotation(index, addr); }
+    void setAnnotation(int32_t index, int32_t addr) { if (_annotations) _annotations->setAnnotation(index, addr); }
     
     const Annotations* annotations() const { return _annotations; }
 
