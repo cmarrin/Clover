@@ -269,87 +269,88 @@ Opcodes:
 enum class Op: uint8_t {
     NOP     = 0x00,
 
+    // Load/store - bits 1:0 of opcode are Opsize of operation.
     // Next byte: 7:5 - offset mode, 4:3 - index reg, 2:0 - load/store reg
     // Following byte(s) - offset
+    //
+    // offset mode: 0 - 6   : byte offset
+    //              7       : see next byte, if bit 7 = 0, byte is offset (0 - 127)
+    //                      : if bit 7 = 1, append next byte to bits 6:0 for a 15 bit offset (0 - 32768)
+    LD      = 0x04, // Load value from addr mode address
+    ST      = 0x08, // Store value at addr mode address
+    LEA     = 0x0c, // Load addr mode address (ignore bits 1:0 of opcode)
+    LDX     = 0x10, // Load value at address in reg
+    STX     = 0x14, // Store value at address in reg
+    LDK     = 0x18, // Load constant - bits 1:0 of opcode are opsize of bytes to load.
+                    // Next byte, bits 4:3 number of bytes following with signed value, bits 2:0 are destination reg
+    LDSK    = 0x1c, // Load constant - bits 1:0 of opcode are opsize of bytes to load.
+                    // Next byte, bits 7:3 signed value (-16 to 15), bits 2:0 are destination reg
+                    
+    PUSH    = 0x20, // Push value onto stack - bits 1:0 of opcode are opsize of bytes to load.
+                    // Next byte bits 2:0 are source reg
+    POP     = 0x24, // Pop value from stack - bits 1:0 of opcode are opsize of bytes to load.
+                    // Next byte bits 2:0 are destination reg
+
+    // Binary ops - bits 1:0 of opcode are Opsize of operation.
+    // Next byte: 5:3 - register a, 2:0 - register b. Result is in register a
+    ADD     = 0x28,
+    SUB     = 0x2c,
+    IMUL    = 0x30,
+    UMUL    = 0x34,
+    IDIV    = 0x38,
+    UDIV    = 0x3c,
     
-    LD      = 0x01, // Load value from indexed address in next byte
-    ST      = 0x02, // Store value at indexed address in next byte
-    LEA     = 0x03, // Load indexed address in next byte
-    LDX     = 0x04, // Load value at address in reg
-    STX     = 0x05, // Store value at address in reg
-    LDK     = 0x06, // 5 bit operand, load 1 byte
-    
-    PUSH    = 0x07,
-    POP     = 0x08,
-// 8
+    AND     = 0x40,
+    OR      = 0x44,
+    XOR     = 0x48,
 
-    // Binary ops
-    // Next byte: 5:3 - register a, 2:0 - register b
-    // Result is in register a
-    
-    LAND    = 0x09,
-    LOR     = 0x0a,
-    LNOT    = 0x0b,
+    // Unary ops - bits 1:0 of opcode are Opsize of operation.
+    // Next byte: 2:0 - register a. Result is in register a
+    NOT     = 0x4c,
+    NEG     = 0x50,
 
-    ADD     = 0x0c,
-    SUB     = 0x0d,
-    IMUL    = 0x0e,
-    UMUL    = 0x0f,
-    IDIV    = 0x10,
-    UDIV    = 0x11,
-    
-    AND     = 0x12,
-    OR      = 0x13,
-    XOR     = 0x14,
-// 12    
+    // Conditional branches. Bit 0 of opcode indicates that the next
+    // byte (bit 0 = 0) or 2 bytes (bit 0 = 1) contain a signed
+    // relative offset from the start of the next instruction.
+    BLE     = 0x54,
+    BLS     = 0x58,
+    BLT     = 0x5c,
+    BLO     = 0x60,
+    BGE     = 0x64,
+    BHS     = 0x68,
+    BGT     = 0x6c,
+    BHI     = 0x70,
+    BEQ     = 0x74,
+    BNE     = 0x78,
+    BRA     = 0x7c,
 
-    // Unary ops
-    // Next byte: 2:0 - register a
-    // Result is in register a
-    
-    NOT     = 0x15,
-    NEG     = 0x16,
-// 2
+    SWITCH  = 0x80, // Following opcode is an 8 or 16 bit operand followed by a table.
+                    // Bits 1:0 of opcode is OpSize of values in table. Bit 7 of first
+                    // operand byte is addr size in table, 0 - 1 byte, 1 - 2 bytes. If
+                    // Bit 6 of the operand is 0 then bits 5:0 are the number of entries
+                    // in the table (0 - 63 entries). If bit 6 is 1 then there is a second
+                    // operand byte bits 5:0 are prepended to this byte to give a 14 bit
+                    // number of entried (0 - 16383). Immediately following the table is
+                    // the code for the default clause. If there is none then this is a
+                    // BRA to the end of the clauses.
 
-    // Branches
-    // Next byte: 7:1 - signed relative branch address, 0 - short/long
-    // If long, next byte is LSB of address for a range of +/- 16K
-
-    BLE     = 0x17,
-    BLS     = 0x18,
-    BLT     = 0x19,
-    BLO     = 0x1a,
-    BGE     = 0x1b,
-    BHS     = 0x1c,
-    BGT     = 0x1d,
-    BHI     = 0x1e,
-    BEQ     = 0x1f,
-    BNE     = 0x20,
-    BRA     = 0x21,
-// 11
-
-    SWITCH  = 0x22, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr>
-                    // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
-                    // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
-                    // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
-                    // there is none then this is a BRA to the end of the clauses.
-// 1
-
-    ENTER   = 0x23,
-    CALL    = 0x24, // Absolute address of callee (16 bit)
-    MCALL   = 0x25, // Call a member function. TOS has struct instance address that must be put in the Y register
-    
-    NCALL   = 0x26,
-    RET     = 0x27,
+    ENTER   = 0x84, // Enter function (adjust BP). Bit 0 is 0 for 1 byte operand, 1 for 2 byte
+    CALL    = 0x88, // Call function. Bits 1:0 ignored, always 16 bit absolute operand
+    NCALL   = 0x8c, // Call native function. Bit 0 is 0 for 1 byte operand, 1 for 2 byte
+    RET     = 0x90, // Return from function (adjust BP).
 // 5
 
-    // Cast operators are sparse. For narrowing cast you don't
-    // need to worry about sign.
-    CAST    = 0x28,
-// 1
+    // Bits 1:0 are concatenated with 5:3 bits from next byte to give 32 type conversions
+    // Bits 2:0 from next byte is register
+    // Conversions:
+    //
+    //      FI32,  FI16,  FI8,  FU32, FU16, FU8 (negative float to unsigned return 0)
+    //      I32F,  U32F,  I16F, U16F, I8F,  U8F (widening cast need signed/unsigned versions for sign ext.
+    //      I1632, U1632, I832, U832, I816, U816
+    CAST    = 0x94,
 
-
-// Total 41 ops
+//
+// available opcodes 98 - ff
 };
 
 static inline Op castOp(Type from, Type to)
