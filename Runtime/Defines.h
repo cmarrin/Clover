@@ -196,19 +196,36 @@ Opcodes:
     int16 c = 20;
     int16 a = (b + 5) * (c + 6);
     
-    PUSHK<2>    #10
-    POP<2>      b,L
-    PUSHK<2>    #20
-    POP<2>      c,L
-    PUSH<2>     b,L
-    PUSHK<2>    #5
-    ADD<2>
-    PUSH<2>     c,L
-    PUSHK<2>    #6
-    ADD<2>
-    MUL<2>
-    POP         a,L
+    6809:
     
+    LDD     #10
+    STD     b,U
+    LDD     #20
+    STD     c,U
+    LDD     b,U
+    ADDD    #5
+    PSHS    D
+    LDD     c,U
+    ADDD    #6
+    PSHS    D
+    JSR     [$IMUL16]   // pass 16 bit args on stack, return value on stack but leave args on stack.
+    PULS    D
+    STD     a,U
+    LEAS    4,S
+    
+    Generic register based (8 regs)
+    
+    LDK21   r0, #10
+    ST2     r0, b,U
+    LDK21   r1, #20
+    ST2     r1, c,U
+    LDK2    r2, #5
+    ADD2    r0, r2
+    LDK21   r2, #6
+    ADD2    r1, r2
+    IMUL2   r0, r1
+    ST2     r0, a,U
+
     All addresses can be 2 bytes for a 64KB range or 4 bytes for a 2^32 byte range.
     This is determined at compile time. Also at compile time you can specify
     float support (16 or 32 bit) or not and max integer width (16 or 32 bits).
@@ -228,7 +245,7 @@ Opcodes:
         is an unsigned address. If bit 4 is 1 then the next 4 bytes is an unsigned address.
 
     - Immediate value
-        PUSHK<width><size> pushes an immediate operand. <width> indicates the number
+        LDK<width><size> loads an immediate operand. <width> indicates the number
         of bytes to push (1, 2, or 4) and <size> indicates the number of bytes
         following the opcode (1, 2, 3, or 4). Operand is signed and is sign extended
         to fit in the desired number of bytes to push.
@@ -249,127 +266,28 @@ Opcodes:
     return operation. The caller then adds the number of bytes of args to SP.
 */
 
-// 0 bit opcodes start at 0x00
-static constexpr uint8_t OneBitOperandStart  = 0x40;
-static constexpr uint8_t TwoBitOperandStart  = 0x4c;
-static constexpr uint8_t FoutBitOperandStart = 0xb0;
-
 enum class Op: uint8_t {
-    NOP     = 0x00,
-    PUSHS   = 0x01,
-    PUSHK11 = 0x02, // 1 byte operand, push 1 byte
-    PUSHK12 = 0x03, // 1 byte operand, push 2 bytes
-    PUSHK14 = 0x04, // 1 byte operand, push 4 bytes
-    PUSHK22 = 0x05, // 2 byte operand, push 2 bytes
-    PUSHK24 = 0x06, // 2 byte operand, push 4 bytes
-    PUSHK44 = 0x07, // 4 byte operand, push 4 bytes
+    // Next byte: 7:5 - offset mode, 4:3 - index reg, 2:0 - load/store reg
+    // Following byte(s) - offset
     
-    DROP1   = 0x08, // Next byte is count (1 - 256)
-    DROP2   = 0x09, // Next 2 bytes are count (1 - 65536)
+    LD      = 0x01, // Load value from indexed address in next byte
+    ST      = 0x01, // Store value at indexed address in next byte
+    LEA     = 0x01, // Load indexed address in next byte
+    LDX     = 0x01, // Load value at address in reg
+    STX     = 0x01, // Store value at address in reg
+    LDK     = 0x02, // 5 bit operand, load 1 byte
+    
+    PUSH    = 0x01,
+    POP     = 0x01,
+// 8
+
+    // Binary ops
+    // Next byte: 5:3 - register a, 2:0 - register b
+    // Result is in register a
     
     LAND    = 0x0a,
     LOR     = 0x0b,
     LNOT    = 0x0c,
-    
-    CALL    = 0x0d, // Absolute address of callee (16 bit)
-    MCALL   = 0x0e, // Call a member function. TOS has struct instance address that must be put in the Y register
-    INDEX1  = 0x0f, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
-    INDEX2  = 0x10, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
-    
-    DEREF1  = 0x11, // TOS has ref, pop it, load the value at that address and push it
-    DEREF2  = 0x12,
-    DEREF4  = 0x13,
-    POP1    = 0x14, // Next byte is addr mode, pop TOS and store at address
-    POP2    = 0x15,
-    POP4    = 0x16,
-    PUSHREF = 0x17, // Next byte is addr mode. Data width is used when computing negative offsets from U
-    POPDEREF1=0x18, // a = popaddr, v = pop1, mem1[a] = v
-    POPDEREF2=0x19, // a = popaddr, v = pop2, mem2[a] = v
-    POPDEREF4=0x1a, // a = popaddr, v = pop4, mem4[a] = v
-    PUSH1   = 0x1b, // Next byte is addr mode, push value at addr
-    PUSH2   = 0x1c,
-    PUSH4   = 0x1d,
-
-    DUP1    = 0x1e,
-    DUP2    = 0x1f,
-    DUP4    = 0x20,
-    
-    SWITCH  = 0x21, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
-                    // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
-                    // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
-                    // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
-                    // there is none then this is a BRA to the end of the clauses.
-
-//
-//
-// Available opcodes 22 - 23
-//
-//
-
-    PUSHR1  = 0x24, // Push _returnValue (1 byte)
-    PUSHR2  = 0x25, // Push _returnValue (2 bytes)
-    PUSHR4  = 0x26, // Push _returnValue (4 bytes)
-
-    // Cast operators are sparse. For narrowing cast you don't
-    // need to worry about sign.
-    CASTF8  = 0x27,
-    CASTF16 = 0x28,
-    CASTF32 = 0x29,
-    
-    CAST32F = 0x2a,
-    CAST3216= 0x2b,
-    CAST328 = 0x2c,
-    
-    CAST168 = 0x2d,
-    
-    // For widening casts you need signed and unsigned
-    // versions so you know when to sign extend
-    CASTU16F= 0x2e,
-    CASTU1632=0x2f,
-    
-    CASTI16F= 0x30,
-    CASTI1632=0x31,
-
-    CASTU8F = 0x32,
-    CASTU832= 0x33,
-    CASTU816= 0x34,
-
-    CASTI8F = 0x35,
-    CASTI832= 0x36,
-    CASTI816= 0x37,
-    
-    RET     = 0x38, // Return without popping anything from the stack
-    RETR1   = 0x39, // Return after popping TOS into _returnValue
-    RETR2   = 0x3a, // Return after popping TOS into _returnValue
-    RETR4   = 0x3b, // Return after popping TOS into _returnValue
-
-    OFFSET1 = 0x3c, // 8 bit ubnsigned offset added to ref on TOS
-    OFFSET2 = 0x3d, // 16 bit ubnsigned offset added to ref on TOS
-    
-//
-//
-// Available opcodes 3e - 3f
-//
-//
-
-// Bit 0 is 0 if the operand is a 8 bits and 1 if 16 bits.
-// Operand is sign extended
-// This limits branches to the range -32768 to 32767.
-// What happens if we go over that? do we fail or have some
-// kind of trampoline support?
-    IF      = 0x40, // Branch is always forward
-    FBRA    = 0x42, // Branch is always forward
-    RBRA    = 0x44, // Branch is always reverse
-    NCALL   = 0x46,
-    ENTER   = 0x48,
-
-//
-//
-// Available opcodes 4a - 4b
-//
-//
-
-// Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
     ADD     = 0x4c,
     SUB     = 0x50,
@@ -381,31 +299,61 @@ enum class Op: uint8_t {
     AND     = 0x64,
     OR      = 0x68,
     XOR     = 0x6c,
+// 12    
+
+    // Unary ops
+    // Next byte: 2:0 - register a
+    // Result is in register a
+    
     NOT     = 0x70,
     NEG     = 0x74,
+// 2
 
-    PREINC  = 0x78, // Next byte is addr mode
-    PREDEC  = 0x7c, // Next byte is addr mode
-    POSTINC = 0x80, // Next byte is addr mode
-    POSTDEC = 0x84, // Next byte is addr mode
+
+
+
+    // Branches
+    // Next byte: 7:1 - signed relative branch address, 0 - short/long
+    // If long, next byte is LSB of address for a range of +/- 16K
+
+    BLE     = 0x88,
+    BLS     = 0x8c,
+    BLT     = 0x90,
+    BLO     = 0x94,
+    BGE     = 0x98,
+    BHS     = 0x9c,
+    BGT     = 0xa0,
+    BHI     = 0xa4,
+    BEQ     = 0xa8,
+    BNE     = 0xac,
+    BRA     = 0xac,
+// 10
+
+    SWITCH  = 0x21, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
+                    // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
+                    // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
+                    // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
+                    // there is none then this is a BRA to the end of the clauses.
+// 1
+
+    ENTER   = 0x48,
+    CALL    = 0x0d, // Absolute address of callee (16 bit)
+    MCALL   = 0x0e, // Call a member function. TOS has struct instance address that must be put in the Y register
     
-    LE      = 0x88,
-    LS      = 0x8c,
-    LT      = 0x90,
-    LO      = 0x94,
-    GE      = 0x98,
-    HS      = 0x9c,
-    GT      = 0xa0,
-    HI      = 0xa4,
-    EQ      = 0xa8,
-    NE      = 0xac,
+    NCALL   = 0x46,
+    RET     = 0x38,
+// 5
 
-// These versions use the lower 4 bits of the opcode as a param (0-15)
-    PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
-    PUSHKS2 = 0xc0, // lower 4 bits is value from -8 to 7, push 2 bytes
-    PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
-    DROPS   = 0xe0, // lower 4 bits is bytes to drop from 1 to 16
-    ENTERS  = 0xf0,
+    // Cast operators are sparse. For narrowing cast you don't
+    // need to worry about sign.
+    CAST    = 0x27,
+// 1
+
+    NOP     = 0x00,
+// 1
+
+
+// Total 40 ops
 };
 
 static inline Op castOp(Type from, Type to)
