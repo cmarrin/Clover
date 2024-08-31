@@ -267,93 +267,89 @@ Opcodes:
 */
 
 enum class Op: uint8_t {
+    NOP     = 0x00,
+
     // Next byte: 7:5 - offset mode, 4:3 - index reg, 2:0 - load/store reg
     // Following byte(s) - offset
     
     LD      = 0x01, // Load value from indexed address in next byte
-    ST      = 0x01, // Store value at indexed address in next byte
-    LEA     = 0x01, // Load indexed address in next byte
-    LDX     = 0x01, // Load value at address in reg
-    STX     = 0x01, // Store value at address in reg
-    LDK     = 0x02, // 5 bit operand, load 1 byte
+    ST      = 0x02, // Store value at indexed address in next byte
+    LEA     = 0x03, // Load indexed address in next byte
+    LDX     = 0x04, // Load value at address in reg
+    STX     = 0x05, // Store value at address in reg
+    LDK     = 0x06, // 5 bit operand, load 1 byte
     
-    PUSH    = 0x01,
-    POP     = 0x01,
+    PUSH    = 0x07,
+    POP     = 0x08,
 // 8
 
     // Binary ops
     // Next byte: 5:3 - register a, 2:0 - register b
     // Result is in register a
     
-    LAND    = 0x0a,
-    LOR     = 0x0b,
-    LNOT    = 0x0c,
+    LAND    = 0x09,
+    LOR     = 0x0a,
+    LNOT    = 0x0b,
 
-    ADD     = 0x4c,
-    SUB     = 0x50,
-    IMUL    = 0x54,
-    UMUL    = 0x58,
-    IDIV    = 0x5c,
-    UDIV    = 0x60,
+    ADD     = 0x0c,
+    SUB     = 0x0d,
+    IMUL    = 0x0e,
+    UMUL    = 0x0f,
+    IDIV    = 0x10,
+    UDIV    = 0x11,
     
-    AND     = 0x64,
-    OR      = 0x68,
-    XOR     = 0x6c,
+    AND     = 0x12,
+    OR      = 0x13,
+    XOR     = 0x14,
 // 12    
 
     // Unary ops
     // Next byte: 2:0 - register a
     // Result is in register a
     
-    NOT     = 0x70,
-    NEG     = 0x74,
+    NOT     = 0x15,
+    NEG     = 0x16,
 // 2
-
-
-
 
     // Branches
     // Next byte: 7:1 - signed relative branch address, 0 - short/long
     // If long, next byte is LSB of address for a range of +/- 16K
 
-    BLE     = 0x88,
-    BLS     = 0x8c,
-    BLT     = 0x90,
-    BLO     = 0x94,
-    BGE     = 0x98,
-    BHS     = 0x9c,
-    BGT     = 0xa0,
-    BHI     = 0xa4,
-    BEQ     = 0xa8,
-    BNE     = 0xac,
-    BRA     = 0xac,
-// 10
+    BLE     = 0x17,
+    BLS     = 0x18,
+    BLT     = 0x19,
+    BLO     = 0x1a,
+    BGE     = 0x1b,
+    BHS     = 0x1c,
+    BGT     = 0x1d,
+    BHI     = 0x1e,
+    BEQ     = 0x1f,
+    BNE     = 0x20,
+    BRA     = 0x21,
+// 11
 
-    SWITCH  = 0x21, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
+    SWITCH  = 0x22, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr>
                     // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
                     // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
                     // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
                     // there is none then this is a BRA to the end of the clauses.
 // 1
 
-    ENTER   = 0x48,
-    CALL    = 0x0d, // Absolute address of callee (16 bit)
-    MCALL   = 0x0e, // Call a member function. TOS has struct instance address that must be put in the Y register
+    ENTER   = 0x23,
+    CALL    = 0x24, // Absolute address of callee (16 bit)
+    MCALL   = 0x25, // Call a member function. TOS has struct instance address that must be put in the Y register
     
-    NCALL   = 0x46,
-    RET     = 0x38,
+    NCALL   = 0x26,
+    RET     = 0x27,
 // 5
 
     // Cast operators are sparse. For narrowing cast you don't
     // need to worry about sign.
-    CAST    = 0x27,
-// 1
-
-    NOP     = 0x00,
+    CAST    = 0x28,
 // 1
 
 
-// Total 40 ops
+// Total 41 ops
 };
 
 static inline Op castOp(Type from, Type to)
