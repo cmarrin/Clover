@@ -51,8 +51,8 @@ static std::vector<OpInfo> info {
     { Operator::AndSto, 1 , true  , Op::AND  , Op::AND  , Type::None    }, //
     { Operator::OrSto , 1 , true  , Op::OR   , Op::OR   , Type::None    }, //
     { Operator::XorSto, 1 , true  , Op::XOR  , Op::XOR  , Type::None    }, //
-    { Operator::LOr   , 2 , false , Op::LOR  , Op::LOR  , Type::UInt8   }, // Logical AND, OR and NOT don't have opcodes.
-    { Operator::LAnd  , 3 , false , Op::LAND , Op::LAND , Type::UInt8   }, // They are short-circuited at compile time.
+    { Operator::LOr   , 2 , false , Op::NOP  , Op::NOP  , Type::UInt8   }, // Logical AND, and OR don't have opcodes.
+    { Operator::LAnd  , 3 , false , Op::NOP  , Op::NOP  , Type::UInt8   }, // They are short-circuited at compile time.
     { Operator::Or    , 4 , false , Op::OR   , Op::OR   , Type::None    },
     { Operator::Xor   , 5 , false , Op::XOR  , Op::XOR  , Type::None    },
     { Operator::And   , 6 , false , Op::AND  , Op::AND  , Type::None    },

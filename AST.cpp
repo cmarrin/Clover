@@ -190,7 +190,7 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
     // _type is the result type not the type used for operation. We need
     // to get that from the left or right operand
     Type opType = Type::UInt8;
-    bool isLogical = _op == Op::LAND || _op == Op::LOR || _op == Op::LNOT;
+    bool isLogical = _op == Op::LNOT;
     
     if (_left) {
         if (isLogical && _left->type() != Type::UInt8) {
@@ -491,7 +491,7 @@ BranchNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
             // If this is the first pass, we don't know how long the
             // branch should be so we make enough space for a long
             // branch
-            code.push_back(uint8_t(Op::IF) | ((_branchSize == BranchSize::Short) ? 0x00 : 0x01));
+            code.push_back(uint8_t(Op::BRF) | ((_branchSize == BranchSize::Short) ? 0x00 : 0x01));
             _fixupIndex = AddrNativeType(code.size());
             code.push_back(0);
             if (_branchSize != BranchSize::Short) {
@@ -677,7 +677,7 @@ ConditionalNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
     _expr->emitCode(code, false);
     
     // Now emit if. If expr is false, jump to second expression, otherwise fall through to first
-    code.push_back(uint8_t(Op::IF) | ((_ifBranchSize == BranchSize::Short) ? 0x00 : 0x01));
+    code.push_back(uint8_t(Op::BRF) | ((_ifBranchSize == BranchSize::Short) ? 0x00 : 0x01));
     AddrNativeType fixupIndex = AddrNativeType(code.size());
     code.push_back(0);
     if (_ifBranchSize != BranchSize::Short) {
@@ -705,6 +705,41 @@ ConditionalNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
     // Fixup the else
     AddrNativeType adjustment = (_elseBranchSize == BranchSize::Short) ? -1 : -2;
     ::fixup(code, fixupIndex, AddrNativeType(code.size()) - fixupIndex + adjustment, _elseBranchSize);
+}
+
+void
+LogicalNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
+{
+    // Code generated tests lhs. if true and Lor, skip rhs and push true. If
+    // false and LAnd, skip rhs and push false
+    setAnnotationAddr(AddrNativeType(code.size()));
+    
+    // First emit lhs
+    _lhs->emitCode(code, false);
+    
+    // Now emit if. We use BRF for LAnd and BRT for LOr
+    Op op = (_kind == Kind::LAnd) ? Op::BRF : Op::BRT;
+    code.push_back(uint8_t(op) | ((_branchSize == BranchSize::Short) ? 0x00 : 0x01));
+    AddrNativeType fixupIndex = AddrNativeType(code.size());
+    code.push_back(0);
+    if (_branchSize != BranchSize::Short) {
+        code.push_back(0);
+    }
+    
+    // Emit rhs
+    _rhs->emitCode(code, false);
+    
+    // Fixup the IF, It needs to jump past the FBRA
+    // Fixed adjustment of 1 for both long and short versions
+    ::fixup(code, fixupIndex, AddrNativeType(code.size()) - fixupIndex + 1, _branchSize);
+    
+    // Branch past the result push. It will always be short. And we can emit jump address
+    // since it will always just jump past a PUSHKS1 which is 1 byte.
+    code.push_back(uint8_t(Op::FBRA) | 0x01);
+    code.push_back(1);
+    
+    // Emit the PUSHKS1. If this is LAnd then push a 0, otherwise push a 1
+    code.push_back(uint8_t(Op::PUSHKS1) | ((_kind == Kind::LAnd) ? 0 : 1));
 }
 
 void

@@ -413,16 +413,6 @@ InterpreterBase::execute(ExecMode mode)
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left ^ right, opSize);
                 break;
-            case Op::LAND:
-                right = _memMgr.stack().pop(OpSize::i8);
-                left = _memMgr.stack().pop(OpSize::i8);
-                _memMgr.stack().push(left && right, OpSize::i8);
-                break;
-            case Op::LOR:
-                right = _memMgr.stack().pop(OpSize::i8);
-                left = _memMgr.stack().pop(OpSize::i8);
-                _memMgr.stack().push(left || right, OpSize::i8);
-                break;
             case Op::NOT:
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(~left, opSize);
@@ -484,10 +474,12 @@ InterpreterBase::execute(ExecMode mode)
                 }
                 _memMgr.stack().push(left, OpSize::i8);
                 break;
-            case Op::IF:
+            case Op::BRF:
+            case Op::BRT:
                 right = getUOpnd(opSize);
                 left = _memMgr.stack().pop(OpSize::i8);
-                if (left == 0) {
+                if (opcode == Op::BRT)
+                if (opcode == Op::BRT ^ left == 0) {
                     _pc += right;
                 }
                 break;

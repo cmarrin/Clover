@@ -1202,7 +1202,14 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
             // Validate types. Only scalars allowed for binary ops
             expect(!lhs->isPointer() && !rhs->isPointer(), Error::PtrTypeNotAllowed);
             expect(isScalar(lhs->type()) && isScalar(rhs->type()), Error::MismatchedType);
-            lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false);
+            
+            // If this is Operator::LAnd or Operator::Lor generate a Logical AST
+            if (opInfo.oper() == Operator::LOr || opInfo.oper() == Operator::LAnd) {
+                LogicalNode::Kind kind = (opInfo.oper() == Operator::LOr) ? LogicalNode::Kind::LOr : LogicalNode::Kind::LAnd;
+                lhs = std::make_shared<LogicalNode>(kind, lhs, rhs);
+            } else {
+                lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false);
+            }
         }
     }
     

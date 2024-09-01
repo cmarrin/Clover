@@ -267,34 +267,32 @@ enum class Op: uint8_t {
     DROP1   = 0x08, // Next byte is count (1 - 256)
     DROP2   = 0x09, // Next 2 bytes are count (1 - 65536)
     
-    LAND    = 0x0a,
-    LOR     = 0x0b,
-    LNOT    = 0x0c,
+    LNOT    = 0x0a,
     
-    CALL    = 0x0d, // Absolute address of callee (16 bit)
-    MCALL   = 0x0e, // Call a member function. TOS has struct instance address that must be put in the Y register
-    INDEX1  = 0x0f, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
-    INDEX2  = 0x10, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    CALL    = 0x0b, // Absolute address of callee (16 bit)
+    MCALL   = 0x0c, // Call a member function. TOS has struct instance address that must be put in the Y register
+    INDEX1  = 0x0d, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    INDEX2  = 0x0e, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
     
-    DEREF1  = 0x11, // TOS has ref, pop it, load the value at that address and push it
-    DEREF2  = 0x12,
-    DEREF4  = 0x13,
-    POP1    = 0x14, // Next byte is addr mode, pop TOS and store at address
-    POP2    = 0x15,
-    POP4    = 0x16,
-    PUSHREF = 0x17, // Next byte is addr mode. Data width is used when computing negative offsets from U
-    POPDEREF1=0x18, // a = popaddr, v = pop1, mem1[a] = v
-    POPDEREF2=0x19, // a = popaddr, v = pop2, mem2[a] = v
-    POPDEREF4=0x1a, // a = popaddr, v = pop4, mem4[a] = v
-    PUSH1   = 0x1b, // Next byte is addr mode, push value at addr
-    PUSH2   = 0x1c,
-    PUSH4   = 0x1d,
+    DEREF1  = 0x0f, // TOS has ref, pop it, load the value at that address and push it
+    DEREF2  = 0x10,
+    DEREF4  = 0x11,
+    POP1    = 0x12, // Next byte is addr mode, pop TOS and store at address
+    POP2    = 0x13,
+    POP4    = 0x14,
+    PUSHREF = 0x15, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    POPDEREF1=0x16, // a = popaddr, v = pop1, mem1[a] = v
+    POPDEREF2=0x17, // a = popaddr, v = pop2, mem2[a] = v
+    POPDEREF4=0x18, // a = popaddr, v = pop4, mem4[a] = v
+    PUSH1   = 0x19, // Next byte is addr mode, push value at addr
+    PUSH2   = 0x1a,
+    PUSH4   = 0x1b,
 
-    DUP1    = 0x1e,
-    DUP2    = 0x1f,
-    DUP4    = 0x20,
+    DUP1    = 0x1c,
+    DUP2    = 0x1d,
+    DUP4    = 0x1e,
     
-    SWITCH  = 0x21, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr> 
+    SWITCH  = 0x1f, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr>
                     // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
                     // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
                     // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
@@ -302,7 +300,7 @@ enum class Op: uint8_t {
 
 //
 //
-// Available opcodes 22 - 23
+// Available opcodes 20 - 23
 //
 //
 
@@ -357,17 +355,12 @@ enum class Op: uint8_t {
 // This limits branches to the range -32768 to 32767.
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
-    IF      = 0x40, // Branch is always forward
-    FBRA    = 0x42, // Branch is always forward
-    RBRA    = 0x44, // Branch is always reverse
-    NCALL   = 0x46,
-    ENTER   = 0x48,
-
-//
-//
-// Available opcodes 4a - 4b
-//
-//
+    BRF     = 0x40, // Branch if TOS is false, branch is always forward
+    BRT     = 0x42, // Branch if TOS is true, branch is always forward
+    FBRA    = 0x44, // Branch is always forward
+    RBRA    = 0x46, // Branch is always reverse
+    NCALL   = 0x48,
+    ENTER   = 0x4a,
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
