@@ -37,6 +37,7 @@ enum class ASTNodeType {
     Branch,
     Switch,
     Conditional,
+    Logical,
     Index,
     Return,
     Assignment,
@@ -608,6 +609,33 @@ class ConditionalNode : public ASTNode
 
     BranchSize _ifBranchSize = BranchSize::Unknown;
     BranchSize _elseBranchSize = BranchSize::Unknown;
+};
+
+class LogicalNode : public ASTNode
+{
+  public:
+  public:
+    enum class Kind { LAnd, LOr };
+    
+    LogicalNode(Kind kind, const ASTPtr& lhs, const ASTPtr& rhs)
+        : _kind(kind)
+        , _lhs(lhs)
+        , _rhs(rhs)
+    { }
+
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Logical; }
+    
+    // first and second have to be the same type. That should have been validated by the caller
+    virtual Type type() const override { return Type::UInt8; }
+
+    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
+
+  private:
+    Kind _kind;
+    ASTPtr _lhs;
+    ASTPtr _rhs;
+
+    BranchSize _branchSize = BranchSize::Unknown;
 };
 
 class IndexNode : public ASTNode

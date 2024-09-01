@@ -209,8 +209,6 @@ Decompiler::statement()
         case Op::AND     : emitOp("AND"); emitSize(size); break;
         case Op::OR      : emitOp("OR"); emitSize(size); break;
         case Op::XOR     : emitOp("XOR"); emitSize(size); break;
-        case Op::LAND    : emitOp("LAND"); emitSize(size); break;
-        case Op::LOR     : emitOp("LOR"); emitSize(size); break;
         case Op::NOT     : emitOp("NOT"); emitSize(size); break;
         case Op::NEG     : emitOp("NEG"); emitSize(size); break;
         case Op::LNOT    : emitOp("LNOT"); emitSize(size); break;
@@ -228,7 +226,8 @@ Decompiler::statement()
         case Op::HI      : emitOp("HI"); emitSize(size); break;
         case Op::EQ      : emitOp("EQ"); emitSize(size); break;
         case Op::NE      : emitOp("NE"); emitSize(size); break;
-        case Op::IF      : emitOp("IF"); emitRelAddr(size, false); break;
+        case Op::BRF     : emitOp("BRF"); emitRelAddr(size, false); break;
+        case Op::BRT     : emitOp("BRT"); emitRelAddr(size, false); break;
         case Op::FBRA    : emitOp("FBRA"); emitRelAddr(size, false); break;
         case Op::RBRA    : emitOp("RBRA"); emitRelAddr(size, false); break;
         case Op::SWITCH  : {
