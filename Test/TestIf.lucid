@@ -25,6 +25,14 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
+bool didElide;
+
+function bool elide()
+{
+    didElide = false;
+    return false;
+}
+
 function int32 main()
 {    
     errors = 0;
@@ -81,64 +89,77 @@ function int32 main()
     }
 
     core.printf("\nTest logical or/and/not\n");
-    if (1 > 2 || 2 > 3) {
+
+    didElide = true;
+    if (1 > 2 || elide()) {
         showIntResults(9, 0, 1);
     } else {
         showIntResults(9, 1, 1);
     }
     
+    showIntResults(10, false, didElide);
+
     if (1 > 2 || 2 < 3) {
-        showIntResults(10, 1, 1);
-    } else {
-        showIntResults(10, 0, 1);
-    }
-    
-    if (1 < 2 || 2 > 3) {
         showIntResults(11, 1, 1);
     } else {
         showIntResults(11, 0, 1);
     }
     
-    if (1 < 2 || 2 < 3) {
+    didElide = true;
+    if (1 < 2 || elide()) {
         showIntResults(12, 1, 1);
     } else {
         showIntResults(12, 0, 1);
     }
+
+    showIntResults(13, true, didElide);
     
-    if (1 > 2 && 2 > 3) {
-        showIntResults(13, 0, 1);
-    } else {
-        showIntResults(13, 1, 1);
-    }
-    
-    if (1 > 2 && 2 < 3) {
-        showIntResults(14, 0, 1);
-    } else {
+    if (1 < 2 || 2 < 3) {
         showIntResults(14, 1, 1);
+    } else {
+        showIntResults(14, 0, 1);
     }
     
-    if (1 < 2 && 2 > 3) {
+    didElide = true;
+    if (1 > 2 && elide()) {
         showIntResults(15, 0, 1);
     } else {
         showIntResults(15, 1, 1);
     }
+
+    showIntResults(16, true, didElide);
     
-    if (1 < 2 && 2 < 3) {
-        showIntResults(16, 1, 1);
-    } else {
-        showIntResults(16, 0, 1);
-    }
-    
-    if (!(1 < 2)) {
+    if (1 > 2 && 2 < 3) {
         showIntResults(17, 0, 1);
     } else {
         showIntResults(17, 1, 1);
     }
     
-    if (!(1 > 2)) {
-        showIntResults(18, 1, 1);
-    } else {
+    didElide = true;
+    if (1 < 2 && elide()) {
         showIntResults(18, 0, 1);
+    } else {
+        showIntResults(18, 1, 1);
+    }
+
+    showIntResults(19, false, didElide);
+    
+    if (1 < 2 && 2 < 3) {
+        showIntResults(20, 1, 1);
+    } else {
+        showIntResults(20, 0, 1);
+    }
+    
+    if (!(1 < 2)) {
+        showIntResults(21, 0, 1);
+    } else {
+        showIntResults(21, 1, 1);
+    }
+    
+    if (!(1 > 2)) {
+        showIntResults(22, 1, 1);
+    } else {
+        showIntResults(22, 0, 1);
     }
     
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");

@@ -735,7 +735,7 @@ LogicalNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
     
     // Branch past the result push. It will always be short. And we can emit jump address
     // since it will always just jump past a PUSHKS1 which is 1 byte.
-    code.push_back(uint8_t(Op::FBRA) | 0x01);
+    code.push_back(uint8_t(Op::FBRA));
     code.push_back(1);
     
     // Emit the PUSHKS1. If this is LAnd then push a 0, otherwise push a 1
