@@ -45,7 +45,8 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType)
     return node;
 }
 
-static void fixup(std::vector<uint8_t>& code, AddrNativeType fixupIndex, AddrNativeType addr, BranchSize& branchSize)
+void
+BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType fixupIndex, AddrNativeType addr, BranchSize& branchSize)
 {
     // If branchSize is Long or Unknown we need to emit a 2 byte branch.
     // But if the branch would fit in 1 byte, set branchSize to Short and
@@ -68,11 +69,17 @@ BranchNode::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
     if (_branchSize == BranchSize::Short) {
         rel += 1;
     }
-    ::fixup(code, _fixupIndex, rel, _branchSize);
+    BranchNode::fixup(code, _fixupIndex, rel, _branchSize);
 }
 
 void
 CaseClause::fixup(std::vector<uint8_t>& code, AddrNativeType addr)
 {
-    ::fixup(code, _fixupIndex, addr, _branchSize);
+    BranchNode::fixup(code, _fixupIndex, addr, _branchSize);
 }
+
+//void
+//SwitchNode::fixupDefault(std::vector<uint8_t>& code, AddrNativeType index, AddrNativeType addr)
+//{
+//    BranchNode::fixup(code, index, addr, _defaultBranchSize);
+//}

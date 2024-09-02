@@ -14,13 +14,13 @@ struct A
     int16 c = 24;
 };
 
-//const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
+const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
 
 function int32 main()
 {
     A a;
     
-//    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
+    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
     core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
     return 0;
 }

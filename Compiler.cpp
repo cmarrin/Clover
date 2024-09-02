@@ -66,17 +66,17 @@ bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& m
         _codeGen->code().push_back('d');
 
         // Write dummy entry point address for main, to be filled in later
-        appendValue(_codeGen->code(), 0, Type::UInt32);
+        appendValue(_codeGen->code(), 0, 4);
         
         // Write dummy entry point address for top-level struct ctor, to be filled in later
-        appendValue(_codeGen->code(), 0, Type::UInt32);
+        appendValue(_codeGen->code(), 0, 4);
         
         // Write top level struct size
         int32_t topLevelSize = _topLevelStruct->sizeInBytes();
-        appendValue(_codeGen->code(), topLevelSize, Type::UInt32);
+        appendValue(_codeGen->code(), topLevelSize, 4);
         
         // Write constant size and then constants
-        appendValue(_codeGen->code(), uint16_t(_constants.size()), Type::UInt16);
+        appendValue(_codeGen->code(), uint16_t(_constants.size()), 2);
         for (auto it : _constants) {
             _codeGen->code().push_back(it);
         }
@@ -576,7 +576,7 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
     }
 
     expect(value(v, type), Error::ExpectedValue);
-    appendValue(_constants, v, underlyingType);
+    appendValue(_constants, v, typeToBytes(underlyingType));
 
     uint16_t nCollectedElements = 1;
     bool advanceNElements = false;
@@ -605,7 +605,7 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
             advanceNElements = false;
         }
         
-        appendValue(_constants, v, underlyingType);
+        appendValue(_constants, v, typeToBytes(underlyingType));
     }
     
     expect(Token::CloseBrace);
