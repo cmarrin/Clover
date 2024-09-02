@@ -324,7 +324,18 @@ class OpNode : public ASTNode
         , _right(right)
     {
         _type = (resultType == Type::None) ? _left->type() : resultType;
-        _right = TypeCastNode::castIfNeeded(_right, _left->type());
+
+        if (_op == Op::LNOT && _left->type() != Type::UInt8) {
+            // Cast to uint8 (boolean)
+            _left = TypeCastNode::castIfNeeded(_left, Type::UInt8);
+        }
+
+        if (_op == Op::LNOT && _right->type() != Type::UInt8) {
+            // Cast to uint8 (boolean)
+            _right = TypeCastNode::castIfNeeded(_right, Type::UInt8);
+        } else {
+            _right = TypeCastNode::castIfNeeded(_right, _left->type());
+        }
     }
     
     OpNode(const ASTPtr& left, Op op, Type resultType, bool isRef)
@@ -334,6 +345,11 @@ class OpNode : public ASTNode
     {
         assert(op != Op::NOP);
         _type = (resultType == Type::None) ? _left->type() : resultType;
+
+        if (_op == Op::LNOT && _left->type() != Type::UInt8) {
+            // Cast to uint8 (boolean)
+            _left = TypeCastNode::castIfNeeded(_right, Type::UInt8);
+        }
     }
     
     OpNode(Op op, const ASTPtr& right, Type resultType, bool isRef)
@@ -343,6 +359,11 @@ class OpNode : public ASTNode
     {
         assert(op != Op::NOP);
         _type = (resultType == Type::None) ? _right->type() : resultType;
+
+        if (_op == Op::LNOT && _right->type() != Type::UInt8) {
+            // Cast to uint8 (boolean)
+            _right = TypeCastNode::castIfNeeded(_right, Type::UInt8);
+        }
     }
     
     OpNode(Op op) : _op(op) { }
@@ -384,7 +405,13 @@ class OpNode : public ASTNode
 class DotNode : public ASTNode
 {
   public:
-    DotNode(const ASTPtr& operand, const SymbolPtr& strucx);
+    DotNode(const ASTPtr& operand, const SymbolPtr& property)
+        : _operand(operand)
+        , _property(property)
+    {
+        _type = _property->type();
+    }
+
     
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Dot; }
 

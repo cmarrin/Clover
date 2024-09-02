@@ -193,10 +193,6 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
     bool isLogical = _op == Op::LNOT;
     
     if (_left) {
-        if (isLogical && _left->type() != Type::UInt8) {
-            // Cast to uint8 (boolean)
-            _left = TypeCastNode::castIfNeeded(_left, Type::UInt8);
-        }
         if (!isLogical) {
             opType = _left->type();
         }
@@ -204,10 +200,6 @@ OpNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
     }
     
     if (_right) {
-        if (isLogical && _right->type() != Type::UInt8) {
-            // Cast to uint8 (boolean)
-            _right = TypeCastNode::castIfNeeded(_right, Type::UInt8);
-        }
         if (!isLogical && _left == nullptr) {
             opType = _right->type();
         }
@@ -272,13 +264,6 @@ AssignmentNode::emitCode(std::vector<uint8_t>& code, bool isLHS)
         case OpSize::flt: op = Op::POPDEREF4; break;
     }
     code.push_back(uint8_t(op));
-}
-
-DotNode::DotNode(const ASTPtr& operand, const SymbolPtr& property)
-    : _operand(operand)
-    , _property(property)
-{
-    _type = _property->type();
 }
 
 void
