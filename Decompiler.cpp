@@ -28,22 +28,6 @@ for (int i = 0; ; ++i) {
     }
 }
 
-    // Output everything before the first addr
-    if (_annotations) {
-        _annotationIndex = 0;
-        for ( ; ; ++_annotationIndex) {
-            std::string line;
-            int32_t addr = _annotations->getLine(_annotationIndex, line);
-            if (addr == -2 || addr != -1) {
-                break;
-            }
-            
-            _out->append("                |    ");
-            _out->append(line);
-            _out->append("\n");
-        }
-    }
-    
     try {
         // Make sure we start with 'lucd'
         if (getUInt8() != 'l' || getUInt8() != 'u' || getUInt8() != 'c' || getUInt8() != 'd') {
@@ -87,6 +71,22 @@ for (int i = 0; ; ++i) {
 
         _out->append("\n\n");
         
+        // Output everything before the first addr
+        if (_annotations) {
+            _annotationIndex = 0;
+            for ( ; ; ++_annotationIndex) {
+                std::string line;
+                int32_t addr = _annotations->getLine(_annotationIndex, line);
+                if (addr == -2 || addr != -1) {
+                    break;
+                }
+                
+                _out->append("                |    ");
+                _out->append(line);
+                _out->append("\n");
+            }
+        }
+    
         // Emit code
         while (!atEnd() && _error == Error::None) {
             statement();

@@ -200,7 +200,7 @@ public:
     
     void retireToken() { _currentToken = Token::None; }
     
-    int32_t annotationIndex() const { return _lineno; }
+    int32_t annotationIndex() const { return _lineno - 1; }
     
     void setAnnotation(int32_t index, int32_t addr) { if (_annotations) _annotations->setAnnotation(index, addr); }
     

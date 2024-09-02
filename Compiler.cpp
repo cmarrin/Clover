@@ -515,12 +515,10 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
                 // that struct and node, which is the value to assign.
                 ASTPtr dot = std::make_shared<DotNode>(idNode, sym);
                 ASTPtr assignment = std::make_shared<AssignmentNode>(dot, Op::NOP, node);
-                assignment->setAnnotationIndex(annotationIndex());
                 parent->addNode(assignment);
             }
         } else {
             ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, Op::NOP, ast);
-            assignment->setAnnotationIndex(annotationIndex());
             parent->addNode(assignment);
         }
     }

@@ -30,7 +30,7 @@ class CodeGen
   public:
     virtual ~CodeGen() { }
     
-    virtual void emitCode(const ASTPtr& node, bool isLHS) { }
+    virtual void emitCode(const ASTPtr& node, bool isLHS) = 0;
 
     std::vector<uint8_t>& code() { return _code; }
     

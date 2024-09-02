@@ -751,6 +751,8 @@ CodeGenStackVM::emitCodeDeref(const ASTPtr& node, bool isLHS)
 void
 CodeGenStackVM::emitCode(const ASTPtr& node, bool isLHS)
 {
+    node->setAnnotationAddr(AddrNativeType(code().size()));
+    
     switch (node->astNodeType()) {
         case ASTNodeType::Statements    : emitCodeStatements(node, isLHS); break;
         case ASTNodeType::Op            : emitCodeOp(node, isLHS); break;
