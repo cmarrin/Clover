@@ -469,7 +469,7 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
     }
     
     // If this is a struct, we want to call its ctor
-    if (struc && struc->ctor()) {
+    if (struc && struc->ctor() && !isConstant) {
         // We need to pass a ref to the struct instance we are constructing
         ASTPtr self = std::make_shared<VarNode>(sym);
         ASTPtr ctor = std::make_shared<FunctionCallNode>(struc->ctor(), self);
