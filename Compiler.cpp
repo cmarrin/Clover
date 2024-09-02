@@ -14,15 +14,20 @@
 #include <cmath>
 
 #include "AST.h"
+#include "CodeGenStackVM.h"
 #include "NativeColor.h"
 #include "NativeCore.h"
 #include "OpInfo.h"
 
 using namespace lucid;
 
-bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
-                            const std::vector<Module*>& modules)
+Compiler::Compiler(std::istream* stream, Annotations* annotations) : _scanner(stream, annotations)
 {
+    _codeGen = new CodeGenStackVM;
+}
+
+bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& modules)
+{    
     // Add built-in native modules
     ModulePtr coreModule = NativeCore::createModule();
     _modules.push_back(coreModule);
@@ -52,31 +57,31 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
     //          we need a third pass to make them correct
     
     for (int i = 0; i < 3; i ++) {
-        executable.clear();
+        _codeGen->code().clear();
         
         // Write signature
-        executable.push_back('l');
-        executable.push_back('u');
-        executable.push_back('c');
-        executable.push_back('d');
+        _codeGen->code().push_back('l');
+        _codeGen->code().push_back('u');
+        _codeGen->code().push_back('c');
+        _codeGen->code().push_back('d');
 
         // Write dummy entry point address for main, to be filled in later
-        appendValue(executable, 0, Type::UInt32);
+        appendValue(_codeGen->code(), 0, Type::UInt32);
         
         // Write dummy entry point address for top-level struct ctor, to be filled in later
-        appendValue(executable, 0, Type::UInt32);
+        appendValue(_codeGen->code(), 0, Type::UInt32);
         
         // Write top level struct size
         int32_t topLevelSize = _topLevelStruct->sizeInBytes();
-        appendValue(executable, topLevelSize, Type::UInt32);
+        appendValue(_codeGen->code(), topLevelSize, Type::UInt32);
         
         // Write constant size and then constants
-        appendValue(executable, uint16_t(_constants.size()), Type::UInt16);
+        appendValue(_codeGen->code(), uint16_t(_constants.size()), Type::UInt16);
         for (auto it : _constants) {
-            executable.push_back(it);
+            _codeGen->code().push_back(it);
         }
         
-        emitStruct(executable, _topLevelStruct);
+        emitStruct(_codeGen, _topLevelStruct);
     }
     
     // Add the annotation info
@@ -97,8 +102,6 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
 void
 Compiler::traverseStruct(const StructPtr& struc, TraversalVisitor func) const
 {
-    traverseNode(struc->astNode(), func);
-
     //Emit child structs
     for (auto& itStruc : struc->structs()) {
         traverseStruct(itStruc, func);
@@ -125,13 +128,11 @@ Compiler::traverseNode(const ASTPtr& node,TraversalVisitor func) const
 }
 
 void
-Compiler::emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc)
+Compiler::emitStruct(CodeGen* codeGen, const StructPtr& struc)
 {
-    struc->astNode()->emitCode(executable, false);
-
     //Emit structs
     for (auto& itStruc : struc->structs()) {
-        emitStruct(executable, itStruc);
+        emitStruct(codeGen, itStruc);
     }
     
     // Emit functions
@@ -140,19 +141,19 @@ Compiler::emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc)
             // If this is the main function of the top level
             // struct, set the entry point
             if (itFunc->name() == "main") {
-                setValue(executable, MainEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
+                setValue(codeGen->code(), MainEntryPointAddr, uint32_t(codeGen->code().size()), Type::UInt32);
             }
             
             // If this is the ctor function of the top level
             // struct, set the entry point
             if (itFunc->name() == "") {
-                setValue(executable, TopLevelCtorEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
+                setValue(codeGen->code(), TopLevelCtorEntryPointAddr, uint32_t(codeGen->code().size()), Type::UInt32);
             }
         }
         
         // Set addr of this function
-        itFunc->setAddr(AddrNativeType(executable.size()));
-        itFunc->astNode()->emitCode(executable, false);
+        itFunc->setAddr(AddrNativeType(codeGen->code().size()));
+        codeGen->emitCode(itFunc->astNode(), false);
     }
 }
 

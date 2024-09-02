@@ -136,11 +136,8 @@ public:
         return nullptr;
     }
 
-    const ASTPtr& astNode() const { return _astNode; }
     const ASTPtr& initASTNode() const { return _initASTNode; }
 
-    void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
-    
     bool haveCtor() const { return _ctor != nullptr; }
 
 private:
@@ -149,7 +146,6 @@ private:
     std::vector<SymbolPtr> _locals;
     uint8_t _localSize = 0;
     Type _type = Type::None;
-    ASTPtr _astNode = std::make_shared<StatementsNode>();
     ASTPtr _initASTNode = std::make_shared<StatementsNode>();
     FunctionPtr _ctor;
 };

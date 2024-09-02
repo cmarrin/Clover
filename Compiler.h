@@ -21,6 +21,7 @@
 #include <variant>
 
 #include "AST.h"
+#include "CodeGen.h"
 #include "Enum.h"
 #include "Function.h"
 #include "Defines.h"
@@ -272,13 +273,12 @@ enum class Error {
 
 class Compiler {
 public:
-  	Compiler(std::istream* stream, Annotations* annotations)
-        : _scanner(stream, annotations)
-    { }
+  	Compiler(std::istream* stream, Annotations* annotations);
 
-    bool compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
-                 const std::vector<Module*>&);
+    bool compile(uint32_t maxExecutableSize, const std::vector<Module*>&);
 
+    std::vector<uint8_t>& code() { return _codeGen->code(); }
+    
     bool program();
 
     Error error() const { return _error; }
@@ -436,7 +436,7 @@ private:
     
     void addJumpFixupNodes(const ASTPtr& parent, BranchNode::Kind jumpKind, const BranchNode::Kind targetKind);
 
-    void emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc);
+    void emitStruct(CodeGen*, const StructPtr&);
 
     using TraversalVisitor = std::function<void(const ASTPtr&)>;
     void traverseStruct(const StructPtr& struc, TraversalVisitor func) const;
@@ -467,6 +467,8 @@ private:
 
     uint16_t _nextMem = 0; // next available location in mem
     uint16_t _localHighWaterMark = 0;
+    
+    CodeGen* _codeGen = nullptr;
 };
 
 }

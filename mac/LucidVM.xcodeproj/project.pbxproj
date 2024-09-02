@@ -15,6 +15,7 @@
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
 		4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
 		4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* Compiler.cpp */; };
+		4992F87F2C85446500345089 /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4992F87D2C85427100345089 /* CodeGenStackVM.cpp */; };
 		49C469C92C6A8C2900588838 /* NativeCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C82C6A83B100588838 /* NativeCore.cpp */; };
 		49C469CA2C6A8C2C00588838 /* NativeColor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C52C6A769E00588838 /* NativeColor.cpp */; };
 /* End PBXBuildFile section */
@@ -73,6 +74,9 @@
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Scanner.h; sourceTree = "<group>"; };
 		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
 		4941A1172BBB0B1200CE3C9E /* Effects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.lucid; path = ../examples/Effects.lucid; sourceTree = "<group>"; };
+		4992F87C2C85427100345089 /* CodeGen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGen.h; path = ../CodeGen.h; sourceTree = "<group>"; };
+		4992F87D2C85427100345089 /* CodeGenStackVM.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CodeGenStackVM.cpp; path = ../CodeGenStackVM.cpp; sourceTree = "<group>"; };
+		4992F87E2C85427100345089 /* CodeGenStackVM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGenStackVM.h; path = ../CodeGenStackVM.h; sourceTree = "<group>"; };
 		49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestSwitchEnum.lucid; path = ../Test/TestSwitchEnum.lucid; sourceTree = "<group>"; };
 		49A85D842C7A220500E8F5F3 /* TestFloatExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestFloatExpr.lucid; path = ../Test/TestFloatExpr.lucid; sourceTree = "<group>"; };
 		49A85D852C7A220500E8F5F3 /* TestIntExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr.lucid; path = ../Test/TestIntExpr.lucid; sourceTree = "<group>"; };
@@ -143,6 +147,9 @@
 			children = (
 				49C164B82C04EC6400981AD1 /* AST.cpp */,
 				49C164B92C04EC6400981AD1 /* AST.h */,
+				4992F87C2C85427100345089 /* CodeGen.h */,
+				4992F87D2C85427100345089 /* CodeGenStackVM.cpp */,
+				4992F87E2C85427100345089 /* CodeGenStackVM.h */,
 				4941A10D2BBA290B00CE3C9E /* Compiler.cpp */,
 				4941A1102BBA290B00CE3C9E /* Compiler.h */,
 				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
@@ -297,6 +304,7 @@
 				4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */,
 				4941A0F32BB6F59900CE3C9E /* compile.cpp in Sources */,
 				4914A4852C2E0F92003DDADA /* Function.cpp in Sources */,
+				4992F87F2C85446500345089 /* CodeGenStackVM.cpp in Sources */,
 				4914A4882C3E0752003DDADA /* Interpreter.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
 				49C469CA2C6A8C2C00588838 /* NativeColor.cpp in Sources */,

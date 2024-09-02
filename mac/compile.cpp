@@ -170,24 +170,22 @@ int main(int argc, char * const argv[])
         
         std::cout << "Compiling '" << it << "'\n";
         
-        std::vector<uint8_t> executable;
-        
         lucid::randomSeed(uint32_t(clock()));
 
         lucid::Compiler compiler(&stream, &annotations);
 
-        compiler.compile(executable, MaxExecutableSize, { });
+        compiler.compile(MaxExecutableSize, { });
         if (compiler.error() != lucid::Error::None) {
             showError(compiler.error(), compiler.expectedToken(), compiler.expectedString(), compiler.lineno(), compiler.charno());
-            std::cout << "          Executable size=" << std::to_string(executable.size()) << "\n";
+            std::cout << "          Executable size=" << std::to_string(compiler.code().size()) << "\n";
             return -1;
         }
 
-        std::cout << "Compile succeeded. Executable size=" << std::to_string(executable.size()) << "\n";
+        std::cout << "Compile succeeded. Executable size=" << std::to_string(compiler.code().size()) << "\n";
 
         if (decompile) {
             std::string out;
-            lucid::Decompiler decompiler(&executable, &out, annotate ? &annotations : nullptr);
+            lucid::Decompiler decompiler(&(compiler.code()), &out, annotate ? &annotations : nullptr);
             bool success = decompiler.decompile();
             
             std::cout << "\nPrinting code:\n" << out << "\nEnd code\n\n";
@@ -234,11 +232,11 @@ int main(int argc, char * const argv[])
             std::cout << "Can't open '" << name << "'\n";
             return 0;
         } else {
-            char* buf = reinterpret_cast<char*>(&(executable[0]));
+            char* buf = reinterpret_cast<char*>(&(compiler.code()[0]));
 
             if (!headerFile) {
                 // Write the buffer
-                outStream.write(buf, executable.size());
+                outStream.write(buf, compiler.code().size());
                 if (outStream.fail()) {
                     std::cout << "Save failed\n";
                     return 0;
@@ -251,9 +249,9 @@ int main(int argc, char * const argv[])
                 std::string name = path.substr(path.find_last_of('/') + 1);
                 outStream << "static const uint8_t PROGMEM EEPROM_Upload_" << name << "[ ] = {\n";
 
-                for (size_t i = 0; i < executable.size(); ++i) {
+                for (size_t i = 0; i < compiler.code().size(); ++i) {
                     char hexbuf[5];
-                    snprintf(hexbuf, 5, "0x%02x", executable[i]);
+                    snprintf(hexbuf, 5, "0x%02x", compiler.code()[i]);
                     outStream << hexbuf << ", ";
                     if (i % 8 == 7) {
                         outStream << std::endl;
@@ -268,7 +266,7 @@ int main(int argc, char * const argv[])
         // Execute if needed
         if (looping || singlePass) {
             // Setup executable pointer
-            lucid::ROMBase = &(executable[0]);
+            lucid::ROMBase = &(compiler.code()[0]);
             
             MyInterpreter interp;
             interp.instantiate();
