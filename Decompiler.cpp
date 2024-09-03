@@ -37,30 +37,38 @@ for (int i = 0; ; ++i) {
         
         // Emit version
         uint16_t majorVersion = getUInt16();
-        uint16_t minorVersion = getUInt16();
+        uint8_t minorVersion = getUInt8();
+        bool is32BitAddr = getUInt8() ? true : false;
         
         _out->append("\nVersion                                    : ");
         _out->append(std::to_string(majorVersion));
         _out->append(".");
         _out->append(std::to_string(minorVersion));
-        _out->append("\n");
+        _out->append(" (");
+        _out->append(std::to_string(is32BitAddr ? 32 : 16));
+        _out->append(" bit addresses)\n");
+        
+        if (is32BitAddr != Is32BitAddr) {
+            _error = Error::WrongAddressSize;
+            return false;
+        }
         
         // Emit main entry point
-        int32_t entryPoint = Is32BirAddr ? getInt32() : getUInt16();
+        int32_t entryPoint = Is32BitAddr ? getInt32() : getUInt16();
         
         _out->append("Main entry point                           : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         
         // Emit ctor entry point
-        entryPoint = Is32BirAddr ? getInt32() : getUInt16();
+        entryPoint = Is32BitAddr ? getInt32() : getUInt16();
         
         _out->append("Top-level srruct constructor entry point   : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         
         // Emit size
-        int32_t size = Is32BirAddr ? getInt32() : getUInt16();
+        int32_t size = Is32BitAddr ? getInt32() : getUInt16();
         
         _out->append("Top-level struct size                      : ");
         _out->append(std::to_string(size));

@@ -27,6 +27,7 @@ public:
     enum class Error {
         None,
         InvalidSignature,
+        WrongAddressSize,
         InvalidOp,
         PrematureEOF,
     };

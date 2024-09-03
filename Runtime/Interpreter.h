@@ -26,6 +26,7 @@ class InterpreterBase
         None,
         InvalidSignature,
         InvalidVersion,
+        WrongAddressSize,
         NoEntryPoint,
         NotInstantiated,
         UnexpectedOpInIf,

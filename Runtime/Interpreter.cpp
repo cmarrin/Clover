@@ -42,8 +42,14 @@ InterpreterBase::instantiate()
         return;
     }
     
-    if (getROM(MajorVersionAddr, 2) != 1 || getROM(MinorVersionAddr, 2) != 0) {
+    if (getROM(MajorVersionAddr, 2) != 1 || getROM(MinorVersionAddr, 1) != 0) {
         _error = Error::InvalidVersion;
+        return;
+    }
+
+    bool is32BitAddr = getROM(Is32BitAddrAddr, 1) != 0;
+    if (is32BitAddr != Is32BitAddr) {
+        _error = Error::WrongAddressSize;
         return;
     }
 

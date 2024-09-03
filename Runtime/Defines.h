@@ -21,7 +21,7 @@
 #endif
 
 // Uncomment this for 32 bit addresses, leave commented out for 16 bit
-//#define ADDR32
+#define ADDR32
 
 namespace lucid {
 
@@ -103,7 +103,7 @@ using AddrNativeType = uint32_t;
 using RelAddrNativeType = uint32_t;
 constexpr Type AddrType = Type::UInt32;
 constexpr Type RelAddrType = Type::Int32;
-constexpr bool Is32BirAddr = true;
+constexpr bool Is32BitAddr = true;
 constexpr OpSize AddrOpSize = OpSize::i32;
 constexpr uint8_t AddrSize = sizeof(AddrNativeType);
 #else
@@ -111,7 +111,7 @@ using AddrNativeType = uint16_t;
 using RelAddrNativeType = int16_t;
 constexpr Type AddrType = Type::UInt16;
 constexpr Type RelAddrType = Type::Int16;
-constexpr bool Is32BirAddr = false;
+constexpr bool Is32BitAddr = false;
 constexpr OpSize AddrOpSize = OpSize::i16;
 constexpr uint8_t AddrSize = sizeof(AddrNativeType);
 #endif
@@ -177,7 +177,8 @@ static inline uint8_t typeToSizeBits(Type type)
         
         0-3                     0-3                     : Signature - 'lucd'
         4-5                     4-5                     : Machine code format - major
-        6-7                     6-7                     ; Machine code format - minor
+        6                       6                       ; Machine code format - minor
+        7                       7                       ; Address size (0 - 16 bit, 1 - 32 bit)
         8-9                     8-11                    : Entry point of 'main' function, if any (0 if not)
         10-11                   12-15                   : Location of constructor function of top level struct
         12-13                   16-19                   : Bytes of storage needed for top-level struct
@@ -188,6 +189,7 @@ static inline uint8_t typeToSizeBits(Type type)
  
 constexpr AddrNativeType MajorVersionAddr = 4;
 constexpr AddrNativeType MinorVersionAddr = 6;
+constexpr AddrNativeType Is32BitAddrAddr = 7;
 constexpr AddrNativeType MainEntryPointAddr = 8;
 
 #ifdef ADDR32

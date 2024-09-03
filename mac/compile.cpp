@@ -194,6 +194,7 @@ int main(int argc, char * const argv[])
                 switch(decompiler.error()) {
                     case lucid::Decompiler::Error::None: err = "internal error"; break;
                     case lucid::Decompiler::Error::InvalidSignature: err = "invalid signature"; break;
+                    case lucid::Decompiler::Error::WrongAddressSize: err = "wrong address size"; break;
                     case lucid::Decompiler::Error::InvalidOp: err = "invalid op"; break;
                     case lucid::Decompiler::Error::PrematureEOF: err = "premature EOF"; break;
                 }
@@ -345,6 +346,7 @@ int main(int argc, char * const argv[])
                     case lucid::InterpreterBase::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
                     case lucid::InterpreterBase::Error::InvalidSignature: err = "invalid signature"; break;
                     case lucid::InterpreterBase::Error::InvalidVersion: err = "invalid version"; break;
+                    case lucid::InterpreterBase::Error::WrongAddressSize: err = "wrong address size"; break;
                     case lucid::InterpreterBase::Error::NoEntryPoint: err = "invalid entry point in executable"; break;
                     case lucid::InterpreterBase::Error::NotInstantiated: err = "Need to call instantiate, then construct"; break;
                     case lucid::InterpreterBase::Error::ImmedNotAllowedHere: err = "immediate not allowed here"; break;
