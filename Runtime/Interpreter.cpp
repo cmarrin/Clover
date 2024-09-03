@@ -41,6 +41,11 @@ InterpreterBase::instantiate()
         _error = Error::InvalidSignature;
         return;
     }
+    
+    if (getROM(MajorVersionAddr, 2) != 1 || getROM(MinorVersionAddr, 2) != 0) {
+        _error = Error::InvalidVersion;
+        return;
+    }
 
     _mainEntryPoint = getROM(MainEntryPointAddr, 4);
     _topLevelCtorEntryPoint = getROM(TopLevelCtorEntryPointAddr, 4);

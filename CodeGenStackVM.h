@@ -18,6 +18,9 @@ class CodeGenStackVM : public CodeGen
   public:
     virtual ~CodeGenStackVM() { }
     
+    virtual uint16_t majorVersion() const override { return 1; }
+    virtual uint16_t minorVersion() const override { return 0; }
+
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
 
   private:

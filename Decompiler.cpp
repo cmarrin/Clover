@@ -35,10 +35,20 @@ for (int i = 0; ; ++i) {
             return false;
         }
         
+        // Emit version
+        uint16_t majorVersion = getUInt16();
+        uint16_t minorVersion = getUInt16();
+        
+        _out->append("\nVersion                                    : ");
+        _out->append(std::to_string(majorVersion));
+        _out->append(".");
+        _out->append(std::to_string(minorVersion));
+        _out->append("\n");
+        
         // Emit main entry point
         int32_t entryPoint = getInt32();
         
-        _out->append("\nMain entry point                           : ");
+        _out->append("Main entry point                           : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         

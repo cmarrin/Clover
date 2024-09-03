@@ -344,6 +344,7 @@ int main(int argc, char * const argv[])
                     case lucid::InterpreterBase::Error::NotEnoughArgs: err = "not enough args on stack"; break;
                     case lucid::InterpreterBase::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
                     case lucid::InterpreterBase::Error::InvalidSignature: err = "invalid signature"; break;
+                    case lucid::InterpreterBase::Error::InvalidVersion: err = "invalid version"; break;
                     case lucid::InterpreterBase::Error::NoEntryPoint: err = "invalid entry point in executable"; break;
                     case lucid::InterpreterBase::Error::NotInstantiated: err = "Need to call instantiate, then construct"; break;
                     case lucid::InterpreterBase::Error::ImmedNotAllowedHere: err = "immediate not allowed here"; break;

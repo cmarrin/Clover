@@ -25,6 +25,7 @@ class InterpreterBase
     enum class Error {
         None,
         InvalidSignature,
+        InvalidVersion,
         NoEntryPoint,
         NotInstantiated,
         UnexpectedOpInIf,

@@ -157,19 +157,22 @@ static inline uint8_t typeToSizeBits(Type type)
         Bytes       Description
         
         0-3     : Signature - 'lucd'
-        4-7     : Entry point of 'main' function, if any (0 if not)
-        8-11    : Location of constructor function of top level struct
-        12-15   : Bytes of storage needed for top-level struct
-        16-17   : Size of constants in bytes
-        18-n    : Bytes of constant structs and arrays
+        4-5     : Machine code format - major
+        6-7     ; Machine code format - minor
+        8-11    : Entry point of 'main' function, if any (0 if not)
+        12-15   : Location of constructor function of top level struct
+        16-19   : Bytes of storage needed for top-level struct
+        20-21   : Size of constants in bytes
+        22-n    : Bytes of constant structs and arrays
         n-<end> : Executable code
  */
  
-constexpr AddrNativeType MainEntryPointAddr = 4;
-constexpr AddrNativeType TopLevelCtorEntryPointAddr = 8;
-constexpr AddrNativeType TopLevelStructSizeAddr = 12;
-constexpr uint16_t ConstStart = 18; // Past signature, entry point and top level size
-
+constexpr AddrNativeType MajorVersionAddr = 4;
+constexpr AddrNativeType MinorVersionAddr = 6;
+constexpr AddrNativeType MainEntryPointAddr = 8;
+constexpr AddrNativeType TopLevelCtorEntryPointAddr = 12;
+constexpr AddrNativeType TopLevelStructSizeAddr = 16;
+constexpr uint16_t ConstStart = 22; // Past signature, entry point and top level size
 
 /*
 

@@ -64,6 +64,10 @@ bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& m
         _codeGen->code().push_back('u');
         _codeGen->code().push_back('c');
         _codeGen->code().push_back('d');
+        
+        // Write major and minor version
+        appendValue(_codeGen->code(), _codeGen->majorVersion(), 2);
+        appendValue(_codeGen->code(), _codeGen->minorVersion(), 2);
 
         // Write dummy entry point address for main, to be filled in later
         appendValue(_codeGen->code(), 0, 4);
