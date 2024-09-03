@@ -97,6 +97,25 @@ static constexpr bool isInteger(Type t) { return t >= Type::Int8 && t <= Type::U
 static constexpr bool isEnum(Type t) { return uint8_t(t) >= EnumTypeStart && uint8_t(t) < StructTypeStart; }
 static constexpr bool isStruct(Type t) { return uint8_t(t) >= StructTypeStart; }
 
+// Defines for size of addresses
+#ifdef ADDR32
+using AddrNativeType = uint32_t;
+using RelAddrNativeType = uint32_t;
+constexpr Type AddrType = Type::UInt32;
+constexpr Type RelAddrType = Type::Int32;
+constexpr bool Is32BirAddr = true;
+constexpr OpSize AddrOpSize = OpSize::i32;
+constexpr uint8_t AddrSize = sizeof(AddrNativeType);
+#else
+using AddrNativeType = uint16_t;
+using RelAddrNativeType = int16_t;
+constexpr Type AddrType = Type::UInt16;
+constexpr Type RelAddrType = Type::Int16;
+constexpr bool Is32BirAddr = false;
+constexpr OpSize AddrOpSize = OpSize::i16;
+constexpr uint8_t AddrSize = sizeof(AddrNativeType);
+#endif
+
 static constexpr uint8_t opSizeToBytes(OpSize opSize)
 {
     return (opSize == OpSize::i8) ? 1 : ((opSize == OpSize::i16) ? 2 : 4);
@@ -108,24 +127,11 @@ static constexpr OpSize typeToOpSize(Type type)
         // FIXME: For now Enums are always 1 byte
         return OpSize::i8;
     }
+    if (type == Type::String) {
+        return AddrOpSize;
+    }
     return (type == Type::Int8 || type == Type::UInt8) ? OpSize::i8 : ((type == Type::Int16 || type == Type::UInt16) ? OpSize::i16 : OpSize::i32);
 };
-
-// Defines for size of addresses
-#ifdef ADDR32
-using AddrNativeType = uint32_t;
-using RelAddrNativeType = uint32_t;
-constexpr Type AddrType = Type::UInt32;
-constexpr Type RelAddrType = Type::Int32;
-#else
-using AddrNativeType = uint16_t;
-using RelAddrNativeType = int16_t;
-constexpr Type AddrType = Type::UInt16;
-constexpr Type RelAddrType = Type::Int16;
-#endif
-
-constexpr OpSize AddrOpSize = typeToOpSize(AddrType);
-constexpr uint8_t AddrSize = opSizeToBytes(AddrOpSize);
 
 static inline uint8_t typeToBytes(Type type)
 {

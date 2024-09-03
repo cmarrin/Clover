@@ -26,7 +26,7 @@ Compiler::Compiler(std::istream* stream, Annotations* annotations) : _scanner(st
     _codeGen = new CodeGenStackVM;
 }
 
-bool Compiler::compile(AddrNativeType maxExecutableSize, const std::vector<Module*>& modules)
+bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& modules)
 {    
     // Add built-in native modules
     ModulePtr coreModule = NativeCore::createModule();

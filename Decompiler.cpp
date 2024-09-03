@@ -46,21 +46,21 @@ for (int i = 0; ; ++i) {
         _out->append("\n");
         
         // Emit main entry point
-        int32_t entryPoint = getInt32();
+        int32_t entryPoint = Is32BirAddr ? getInt32() : getUInt16();
         
         _out->append("Main entry point                           : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         
         // Emit ctor entry point
-        entryPoint = getInt32();
+        entryPoint = Is32BirAddr ? getInt32() : getUInt16();
         
         _out->append("Top-level srruct constructor entry point   : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         
         // Emit size
-        int32_t size = getInt32();
+        int32_t size = Is32BirAddr ? getInt32() : getUInt16();
         
         _out->append("Top-level struct size                      : ");
         _out->append(std::to_string(size));
