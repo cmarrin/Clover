@@ -312,17 +312,22 @@ enum class Op: uint8_t {
     // Conditional branches. Bit 0 of opcode indicates that the next
     // byte (bit 0 = 0) or 2 bytes (bit 0 = 1) contain a signed
     // relative offset from the start of the next instruction.
-    BLE     = 0x54,
-    BLS     = 0x58,
-    BLT     = 0x5c,
-    BLO     = 0x60,
-    BGE     = 0x64,
-    BHS     = 0x68,
-    BGT     = 0x6c,
-    BHI     = 0x70,
-    BEQ     = 0x74,
-    BNE     = 0x78,
-    BRA     = 0x7c,
+    LE      = 0x54,
+    LS      = 0x58,
+    LT      = 0x5c,
+    LO      = 0x60,
+    GE      = 0x64,
+    HS      = 0x68,
+    GT      = 0x6c,
+    HI      = 0x70,
+    EQ      = 0x74,
+    NE      = 0x78,
+    
+    BR      = 0x7c, // Operand:
+                    //      00 - branch back always
+                    //      01 - branch forward always
+                    //      10 - branch forward if reg true
+                    //      11 - branch forward if reg false
 
     SWITCH  = 0x80, // Following opcode is an 8 or 16 bit operand followed by a table.
                     // Bits 1:0 of opcode is OpSize of values in table. Bit 7 of first
