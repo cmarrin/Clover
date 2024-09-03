@@ -47,10 +47,10 @@ InterpreterBase::instantiate()
         return;
     }
 
-    _mainEntryPoint = getROM(MainEntryPointAddr, 4);
-    _topLevelCtorEntryPoint = getROM(TopLevelCtorEntryPointAddr, 4);
+    _mainEntryPoint = getROM(MainEntryPointAddr, AddrSize);
+    _topLevelCtorEntryPoint = getROM(TopLevelCtorEntryPointAddr, AddrSize);
 
-    uint32_t topLevelStructSize = getROM(TopLevelStructSizeAddr, 4);
+    AddrNativeType topLevelStructSize = getROM(TopLevelStructSizeAddr, AddrSize);
 
 
     // Instantiate the top-level struct, but don't call the ctor

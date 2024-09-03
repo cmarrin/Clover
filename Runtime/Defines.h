@@ -20,6 +20,9 @@
 #include <memory>
 #endif
 
+// Uncomment this for 32 bit addresses, leave commented out for 16 bit
+//#define ADDR32
+
 namespace lucid {
 
 #ifdef ARDUINO
@@ -109,8 +112,18 @@ static constexpr OpSize typeToOpSize(Type type)
 };
 
 // Defines for size of addresses
+#ifdef ADDR32
 using AddrNativeType = uint32_t;
+using RelAddrNativeType = uint32_t;
 constexpr Type AddrType = Type::UInt32;
+constexpr Type RelAddrType = Type::Int32;
+#else
+using AddrNativeType = uint16_t;
+using RelAddrNativeType = int16_t;
+constexpr Type AddrType = Type::UInt16;
+constexpr Type RelAddrType = Type::Int16;
+#endif
+
 constexpr OpSize AddrOpSize = typeToOpSize(AddrType);
 constexpr uint8_t AddrSize = opSizeToBytes(AddrOpSize);
 
@@ -154,25 +167,32 @@ static inline uint8_t typeToSizeBits(Type type)
 /*
     Executable file format
     
-        Bytes       Description
+        Bytes (16 bit addr)     Bytes (32 bit addr)     Description
         
-        0-3     : Signature - 'lucd'
-        4-5     : Machine code format - major
-        6-7     ; Machine code format - minor
-        8-11    : Entry point of 'main' function, if any (0 if not)
-        12-15   : Location of constructor function of top level struct
-        16-19   : Bytes of storage needed for top-level struct
-        20-21   : Size of constants in bytes
-        22-n    : Bytes of constant structs and arrays
-        n-<end> : Executable code
+        0-3                     0-3                     : Signature - 'lucd'
+        4-5                     4-5                     : Machine code format - major
+        6-7                     6-7                     ; Machine code format - minor
+        8-9                     8-11                    : Entry point of 'main' function, if any (0 if not)
+        10-11                   12-15                   : Location of constructor function of top level struct
+        12-13                   16-19                   : Bytes of storage needed for top-level struct
+        14-15                   20-21                   : Size of constants in bytes
+        16-n                    22-n                    : Bytes of constant structs and arrays
+        n-<end>                 n-<end>                 : Executable code
  */
  
 constexpr AddrNativeType MajorVersionAddr = 4;
 constexpr AddrNativeType MinorVersionAddr = 6;
 constexpr AddrNativeType MainEntryPointAddr = 8;
+
+#ifdef ADDR32
 constexpr AddrNativeType TopLevelCtorEntryPointAddr = 12;
 constexpr AddrNativeType TopLevelStructSizeAddr = 16;
-constexpr uint16_t ConstStart = 22; // Past signature, entry point and top level size
+constexpr uint16_t ConstStart = 22;
+#else
+constexpr AddrNativeType TopLevelCtorEntryPointAddr = 10;
+constexpr AddrNativeType TopLevelStructSizeAddr = 12;
+constexpr uint16_t ConstStart = 16;
+#endif
 
 /*
 

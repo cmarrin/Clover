@@ -329,19 +329,19 @@ void Decompiler::emitSizeValue(uint8_t size)
 
 // Determine the addr mode. Addr is unsigned. See Defines.h (Address Mode)
 // for details
-uint32_t
+AddrNativeType
 Decompiler::addrMode(Index& index)
 {
     uint8_t mode = getUInt8();
     index = Index(mode & 0x03);
-    uint32_t v;
+    AddrNativeType v;
     
     if ((mode & 0x04) == 0) {
         // Short
         v = mode >> 3;
     } else if ((mode & 0x08) == 0) {
         // Upper 4 bits of mode prepended to next byte
-        v = (uint32_t(mode & 0xf0) << 4) | getUInt8();
+        v = (AddrNativeType(mode & 0xf0) << 4) | getUInt8();
     } else if (((mode & 0x10) == 0)) {
         v = getUInt16();
     } else {
@@ -355,9 +355,9 @@ void Decompiler::emitIndex()
 {
     _out->append(" ");
     Index index;
-    uint32_t value = addrMode(index);
+    AddrNativeType addr = addrMode(index);
 
-    _out->append(std::to_string(value));
+    _out->append(std::to_string(addr));
     _out->append(",");
     switch (index) {
         case Index::C: _out->append("C"); break;

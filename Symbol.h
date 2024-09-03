@@ -54,7 +54,7 @@ public:
     { }
     
     void setAddr(uint32_t addr, Index index) { _addr = addr; _index = index; }
-    uint32_t addr(Index& index) const { index = _index; return _addr; }
+    AddrNativeType addr(Index& index) const { index = _index; return _addr; }
     
     void setNElements(uint16_t n) { _nElements = n; }
     uint16_t nElements() const { return _nElements; }
@@ -90,7 +90,7 @@ private:
     std::string _name;
     Type _type = Type::None;
     bool _ptr = false;
-    uint32_t _addr = 0;
+    AddrNativeType _addr = 0;
     Index _index;
     FunctionPtr _function;
     uint16_t _nElements = 1;

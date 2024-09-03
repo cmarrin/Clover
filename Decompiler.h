@@ -63,7 +63,7 @@ private:
     
     bool atEnd() { return (_in->end() - _it) <= 0; }
 
-    uint32_t addrMode(Index& index);
+    AddrNativeType addrMode(Index& index);
 
     int32_t getInt32()
     {

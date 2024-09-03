@@ -44,7 +44,7 @@ CodeGenStackVM::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
     Op op;
     Type t = type;
     SymbolPtr symbol = std::static_pointer_cast<VarNode>(node)->symbol();
-    uint32_t offset = std::static_pointer_cast<VarNode>(node)->offset();
+    AddrNativeType offset = std::static_pointer_cast<VarNode>(node)->offset();
     
     if (t == Type::None) {
         t = node->isPointer() ? AddrType : symbol->type();
@@ -75,7 +75,7 @@ CodeGenStackVM::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
     // Determine the addr mode. Addr is unsigned. See Defines.h (Address Mode)
     // for details
     Index index;
-    uint32_t relAddr = symbol->addr(index);
+    AddrNativeType relAddr = symbol->addr(index);
     relAddr += (index == Index::L) ? -offset : offset;
     uint8_t extra = uint8_t(index);
     uint8_t addedBytes = 0;

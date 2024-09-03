@@ -140,13 +140,13 @@ class VarNode : public ASTNode
     
     // In cases where we have a constant offset to a member of a struct
     // we can skip the OFFSET op and just offset the address here
-    void setOffset(uint32_t offset) { _offset = offset; }
-    uint32_t offset() const { return _offset; }
+    void setOffset(AddrNativeType offset) { _offset = offset; }
+    AddrNativeType offset() const { return _offset; }
     SymbolPtr symbol() const { return _symbol; }
 
   private:    
     SymbolPtr _symbol = nullptr;
-    uint32_t _offset = 0;
+    AddrNativeType _offset = 0;
 };
 
 // This can hold a numeric float, int or a constant. Constants are

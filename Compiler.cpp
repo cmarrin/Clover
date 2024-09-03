@@ -26,7 +26,7 @@ Compiler::Compiler(std::istream* stream, Annotations* annotations) : _scanner(st
     _codeGen = new CodeGenStackVM;
 }
 
-bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& modules)
+bool Compiler::compile(AddrNativeType maxExecutableSize, const std::vector<Module*>& modules)
 {    
     // Add built-in native modules
     ModulePtr coreModule = NativeCore::createModule();
@@ -70,14 +70,14 @@ bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& m
         appendValue(_codeGen->code(), _codeGen->minorVersion(), 2);
 
         // Write dummy entry point address for main, to be filled in later
-        appendValue(_codeGen->code(), 0, 4);
+        appendValue(_codeGen->code(), 0, AddrSize);
         
         // Write dummy entry point address for top-level struct ctor, to be filled in later
-        appendValue(_codeGen->code(), 0, 4);
+        appendValue(_codeGen->code(), 0, AddrSize);
         
         // Write top level struct size
         int32_t topLevelSize = _topLevelStruct->sizeInBytes();
-        appendValue(_codeGen->code(), topLevelSize, 4);
+        appendValue(_codeGen->code(), topLevelSize, AddrSize);
         
         // Write constant size and then constants
         appendValue(_codeGen->code(), uint16_t(_constants.size()), 2);
@@ -145,13 +145,13 @@ Compiler::emitStruct(CodeGen* codeGen, const StructPtr& struc)
             // If this is the main function of the top level
             // struct, set the entry point
             if (itFunc->name() == "main") {
-                setValue(codeGen->code(), MainEntryPointAddr, uint32_t(codeGen->code().size()), Type::UInt32);
+                setValue(codeGen->code(), MainEntryPointAddr, AddrNativeType(codeGen->code().size()), AddrSize);
             }
             
             // If this is the ctor function of the top level
             // struct, set the entry point
             if (itFunc->name() == "") {
-                setValue(codeGen->code(), TopLevelCtorEntryPointAddr, uint32_t(codeGen->code().size()), Type::UInt32);
+                setValue(codeGen->code(), TopLevelCtorEntryPointAddr, AddrNativeType(codeGen->code().size()), AddrSize);
             }
         }
         
@@ -551,14 +551,14 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
     if (!isArray && isScalar(type)) {
         expect(value(v, type), Error::ExpectedValue);
         nElements = 1;
-        addr = uint32_t(_scalarConstants.size());
+        addr = AddrNativeType(_scalarConstants.size());
         _scalarConstants.push_back(v);
         isScalarConstant = true;
         return;
     }
 
     isScalarConstant = false;
-    addr = uint32_t(_constants.size());
+    addr = AddrNativeType(_constants.size());
        
     // This is an array of scalars, a struct or an array of structs
     expect(Token::OpenBrace);

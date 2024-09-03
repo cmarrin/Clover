@@ -275,7 +275,7 @@ class Compiler {
 public:
   	Compiler(std::istream* stream, Annotations* annotations);
 
-    bool compile(uint32_t maxExecutableSize, const std::vector<Module*>&);
+    bool compile(AddrNativeType maxExecutableSize, const std::vector<Module*>&);
 
     std::vector<uint8_t>& code() { return _codeGen->code(); }
     
@@ -390,14 +390,13 @@ private:
     
     uint16_t sizeInBytes(Type type) const;
     
-    void setValue(std::vector<uint8_t>& container, AddrNativeType addr, uint32_t v, Type t)
+    void setValue(std::vector<uint8_t>& container, AddrNativeType addr, uint8_t bytes)
     {
-        switch (typeToOpSize(t)) {
-            case OpSize::i32:
-            case OpSize::flt: container[addr] = v >> 24;
-                              container[addr + 1] = v >> 16;
-            case OpSize::i16: container[addr + 2] = v >> 8;
-            case OpSize::i8 : container[addr + 3] = v;
+        switch (bytes) {
+            case 4: container[addr] = v >> 24;
+                    container[addr + 1] = v >> 16;
+            case 2: container[addr + 2] = v >> 8;
+            case 1: container[addr + 3] = v;
         }
     }
     
