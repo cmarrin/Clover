@@ -2,108 +2,108 @@ Converting to 6809
 
 ex:
 
-A -> U
-L -> U
-
 [18] ENTERS 0
 [19] PUSH1 0,A
 [21] PUSH1 1,A
 [23] ADD<1>
-[24] RETR1
-[25] ENTERS 0
-[26] PUSHK11 #12
-[28] POP1 0,M
-[30] PUSHK12 #24
-[32] POP2 1,M
-[34] RET
-[35] ENTERS 7
-[36] PUSHREF  2,L
-[38] MCALL 25
-[41] PUSHKS1 #6
-[42] PUSHKS1 #5
-[43] PUSHREF  2,L
-[45] MCALL 18
-[48] DROPS 2
-[49] PUSHR4
-[50] POP4 6,L
-[52] PUSH4 6,L
-[54] PUSHREF  2,L
-[56] OFFSET1 1
-[58] DEREF2
-[59] CASTI1632
-[60] PUSHREF  2,L
-[62] DEREF1
-[63] CASTI832
-[64] PUSHS " a.b=%d, a.c=%d, result=%d\n"
-[94] NCALL 1
-[96] DROPS 16
-[97] PUSHKS1 #0
-[98] RETR1
+[24] CASTI816
+[25] RETR2
 
-***** Tests Complete: 0 errors - Passed
-Program ended with exit code: 1
+[26] ENTERS 0
+[27] PUSHK11 #12
+[29] POP1 0,M
+[31] PUSHK12 #24
+[33] POP2 1,M
+[35] RET
 
+[36] ENTERS 5
+[37] PUSHREF  2,L
+[39] MCALL 26
 
-	
+[42] PUSHKS1 #6
+[43] PUSHKS1 #5
+[44] PUSHREF  2,L
+[46] MCALL 18
+[49] DROPS 2
+[50] PUSHR2
+[51] POP2 4,L
+
+[53] PUSH2 4,L
+[55] CASTI1632
+[56] PUSH2 1,L
+[58] CASTI1632
+[59] PUSH1 2,L
+[61] CASTI832
+[62] PUSHS " a.b=%d, a.c=%d, result=%d\n"
+[92] NCALL 1
+[94] DROPS 16
+[95] PUSHKS2 #0
+                |    }
+[96] RETR2
+
 A_f:
-	PSHS	U
+	PSHS	U		; ENTERS 0
 	TFR		S, U
-	LEAS	-3, S
-	LDA		6, U
-	ADDA	7, U
-	TFR		U, S
+	LDA		6, U	; PUSH1 0,A
+	ADDA	7, U	; PUSH1 1,A / ADD<1>
+	SEX				; CASTI816	
+	TFR		U, S	; RETR2 (return value in D)
 	PULS	U
-	RTS				; return value is in A
+	PULS	X
+	PSHS	D
+	JMP		0,X
 
 A_ctor:
-	PSHS	U
+	PSHS	U		; ENTERS 0
 	TFR		S, U
-	LDA		#12
-	STA		0, Y
-	LDA		#24
-	STA		1, Y
-	TFR		U, S
+	LDA		#12		; PUSHK11 #12
+	STA		0, Y	; POP1 0,M
+	LDD		#24		; PUSHK12 #24
+	STD		1, Y	; POP2 1,M
+	TFR		U, S	; RET
 	PULS	U
 	RTS
 	
 ENTRY:	
-	PSHS	U
+	PSHS	U		; ENTERS 5
 	TFR		S, U
-	LEAS	-7, S
-	PSHS	Y
+	LEAS	-5, S
+	PSHS	Y		; PUSHREF  2,L (these 2 setup the self pointer)
 	LEAY	-3, U
-	JSR		A_ctor
+	JSR		A_ctor	; MCALL 25 (mext instruction restores self pointer)
 	PULS	Y
 	
-	LDA		#6
-	LDB		#5
-	PSHS	A, B
-	PSHS	Y
+	LDA		#6		; PUSHKS1 #6
+	PSHS	A
+	LDA		#5		; PUSHKS1 #5
+	PSHS	A
+	PSHS	Y		; PUSHREF  2,L (these 2 setup the self pointer)
 	LEAY	-3, U
-	JSR		A_f
+	JSR		A_f		; MCALL 18 (mext instruction restores self pointer)
 	PULS	Y
-	LEAS	2, S
-	STA		-7, U
+	LEAS	2, S	; DROPS 2
+	STD		-5, U	; PUSHR2 / POP2 4,L
 	
 	; How do we sign extend to 32 bits? Where do we put a 32 bit value? X:D?
 	; For now do 16 bit
 	
-	SEX
+	LDD		-5, U	; PUSH2 4,L
 	PSHS	D
-	LEAX	-2, U
-	LDD		0, X
+	LEAX	-3, U	; PUSHREF  2,L
+	LEAX	1, X	; OFFSET1 1 (this can be optimized out by doing LEAX, -2, U)
+	LDD		0, X	; DEREF2
 	PSHS	D
-	LEAX	-3, U
-	LDA		0, X
-	SEX
+	LEAX	-3, U	; PUSHREF  2,L
+	LDA		0, X	; DEREF1
+	SEX				; CASTI816
 	PSHS	D
-	LDX		STRING
-	LDD		#PRINTF
+	LDX		STRING	; PUSHS " a.b=%d, a.c=%d, result=%d\n"
+	LDD		#PRINTF	; NCALL 1
 	SWI1
-	LEAS	10, S
-	LDA		#0
-	RTS
+	LEAS	10, S	; DROPS 10
+	LDD		#0		; PUSHKS2 #0
+	RTS				; RETR2 (return value is in D)
 	
-	
+	STRING   fcn " a.b=%d, a.c=%d, result=%d\n"
 	
 	
