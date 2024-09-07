@@ -20,7 +20,7 @@ static uint32_t gamma(uint32_t rgb) { return Adafruit_NeoPixel::gamma32(rgb); }
 static uint32_t gamma(uint32_t rgb) { return rgb; }
 #endif
 
-using namespace lucid;
+using namespace clvr;
 
 #ifndef ARDUINO
 ModulePtr

@@ -19,7 +19,7 @@
 #include "NativeCore.h"
 #include "OpInfo.h"
 
-using namespace lucid;
+using namespace clvr;
 
 Compiler::Compiler(std::istream* stream, Annotations* annotations) : _scanner(stream, annotations)
 {
@@ -197,8 +197,8 @@ Compiler::import()
     // FIXME: For now only support built-in imports and only built-ins
     // we already know about (like "System").
     //
-    // If and when we support Lucid imports, compile the import inline.
-    // An import is a regular Lucid program but only the first struct is
+    // If and when we support Clover imports, compile the import inline.
+    // An import is a regular Clover program but only the first struct is
     // used. What about imports in the imported file? Are there warnings
     // if there are more structs? What about an entry struct?
     // Need to rename struct if there is an idAs. How do we deal with

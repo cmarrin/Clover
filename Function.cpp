@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-    This source file is a part of Lucid
-    For the latest info, see https://github.com/cmarrin/Lucid
+    This source file is a part of Clover
+    For the latest info, see https://github.com/cmarrin/Clover
     Copyright (c) 2021-2024, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
@@ -12,7 +12,7 @@
 #include "AST.h"
 #include "Symbol.h"
 
-using namespace lucid;
+using namespace clvr;
 
 Function::Function(const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals)
     : _name(name)

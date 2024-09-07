@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-    This source file is a part of Lucid
+    This source file is a part of Clover
 
-    For the latest info, see http:www.marrin.org/
+    For the latest info, see http:www.marrin.org/Clover
 
     Copyright (c) 2018-2024, Chris Marrin
     All rights reserved.
@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-using namespace lucid;
+using namespace clvr;
 
 class FormatterArgs
 {
@@ -28,31 +28,31 @@ class FormatterArgs
     
     virtual uint8_t getChar(uint32_t i) const = 0;
     virtual uint8_t getStringChar(uintptr_t p) const = 0;
-    virtual uintptr_t getArg(lucid::Type type) = 0;
+    virtual uintptr_t getArg(clvr::Type type) = 0;
 };
 
 class InterpFormatterArgs : public FormatterArgs
 {
   public:
-    InterpFormatterArgs(lucid::AddrNativeType fmt, lucid::VarArg& args)
+    InterpFormatterArgs(clvr::AddrNativeType fmt, clvr::VarArg& args)
         : _fmt(fmt)
         , _args(&args)
     { }
         
     virtual ~InterpFormatterArgs() { }
-    virtual uint8_t getChar(uint32_t i) const override { return lucid::rom(_fmt + i); }
-    virtual uintptr_t getArg(lucid::Type type) override { return _args->arg(type); }
+    virtual uint8_t getChar(uint32_t i) const override { return clvr::rom(_fmt + i); }
+    virtual uintptr_t getArg(clvr::Type type) override { return _args->arg(type); }
 
     // The interpreter keeps strings in ROM. The p pointer is actually an offset in the rom
     virtual uint8_t getStringChar(uintptr_t p) const override
     {
-        lucid::AddrNativeType addr = lucid::AddrNativeType(p);
-        return lucid::rom(addr);
+        clvr::AddrNativeType addr = clvr::AddrNativeType(p);
+        return clvr::rom(addr);
     }
 
   private:
-    lucid::AddrNativeType _fmt;
-    lucid::VarArg* _args;
+    clvr::AddrNativeType _fmt;
+    clvr::VarArg* _args;
 };
 
 class NativeFormatterArgs : public FormatterArgs
@@ -66,13 +66,13 @@ class NativeFormatterArgs : public FormatterArgs
         
     virtual ~NativeFormatterArgs() { }
     virtual uint8_t getChar(uint32_t i) const override { return _fmt[i]; }
-    virtual uintptr_t getArg(lucid::Type type) override
+    virtual uintptr_t getArg(clvr::Type type) override
     {
-        if (type == lucid::Type::Float) {
+        if (type == clvr::Type::Float) {
             double d = va_arg(_args, double);
-            return lucid::floatToInt(float(d));
+            return clvr::floatToInt(float(d));
         }
-        if (type == lucid::Type::String) {
+        if (type == clvr::Type::String) {
             return uintptr_t(va_arg(_args, const char*));
         }
         return va_arg(_args, uint32_t);
@@ -107,10 +107,10 @@ static constexpr uint32_t MaxIntegerBufferSize = 24; // Big enough for a 64 bit 
 
 int32_t doprintf(FormatterArgs*);
 
-namespace lucid {
+namespace clvr {
 
 int32_t
-printf(lucid::AddrNativeType fmt, lucid::VarArg& args)
+printf(clvr::AddrNativeType fmt, clvr::VarArg& args)
 {
     InterpFormatterArgs f(fmt, args);
     return doprintf(&f);
@@ -121,7 +121,7 @@ printf(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    return lucid::vprintf(fmt, args);
+    return clvr::vprintf(fmt, args);
 }
 
 int32_t
@@ -171,7 +171,7 @@ static int32_t handleWidth(FormatterArgs*f, uint32_t& fmt)
 {
     if (f->getChar(fmt) == '*') {
         ++fmt;
-        return int32_t(f->getArg(lucid::Type::UInt32));
+        return int32_t(f->getArg(clvr::Type::UInt32));
     }
     
     uint32_t n;
@@ -214,7 +214,7 @@ static Length handleLength(FormatterArgs*f, uint32_t& fmt)
 // 8 and 16 bit integers are upcast by the caller to 32 bit. Ignore the length field
 static int32_t getInteger(Length length, FormatterArgs* f)
 {
-    return int32_t(f->getArg(lucid::Type::UInt32));
+    return int32_t(f->getArg(clvr::Type::UInt32));
 }
 
 static char* intToString(uint64_t value, char* buf, size_t size, uint8_t base = 10, Capital cap = Capital::No)
@@ -244,18 +244,18 @@ static int32_t outInteger(uintmax_t value, Signed sign, int32_t width, int32_t p
         intmax_t signedValue = value;
         if (signedValue < 0) {
             value = -signedValue;
-            lucid::putChar('-');
+            clvr::putChar('-');
             size = 1;
             width--;
         }
     }
     
     if (isFlag(flags, Flag::alt) && base != 10) {
-        lucid::putChar('0');
+        clvr::putChar('0');
         size++;
         width--;
         if (base == 16) {
-            lucid::putChar((cap == Capital::Yes) ? 'X' : 'x');
+            clvr::putChar((cap == Capital::Yes) ? 'X' : 'x');
             size++;
             width--;
         }
@@ -270,13 +270,13 @@ static int32_t outInteger(uintmax_t value, Signed sign, int32_t width, int32_t p
     char padChar = isFlag(flags, Flag::zeroPad) ? '0' : ' ';
     
     while (pad > 0) {
-        lucid::putChar(padChar);
+        clvr::putChar(padChar);
         size++;
         pad--;
     }
     
     for ( ; *p; ++p) {
-        lucid::putChar(*p);
+        clvr::putChar(*p);
     }
 
     return size;
@@ -294,14 +294,14 @@ static int32_t outString(FormatterArgs* f, uintptr_t p, int32_t width, int32_t p
         if (c == '\0') {
             break;
         }
-        lucid::putChar(c);
+        clvr::putChar(c);
         ++size;
     }
     
     if (width > size) {
         width -= size;
         while (width--) {
-            lucid::putChar(' ');
+            clvr::putChar(' ');
         }
     }
 
@@ -325,7 +325,7 @@ int32_t doprintf(FormatterArgs* f)
     
     while (f->getChar(fmt)) {
         if (f->getChar(fmt) != '%') {
-            lucid::putChar(f->getChar(fmt++));
+            clvr::putChar(f->getChar(fmt++));
             size++;
             continue;
         }
@@ -377,34 +377,34 @@ int32_t doprintf(FormatterArgs* f)
             }
 
             char buf[20];
-            lucid::toString(buf, lucid::intToFloat(int32_t(f->getArg(lucid::Type::Float))), width, (precision < 0) ? 6 : precision);
+            clvr::toString(buf, clvr::intToFloat(int32_t(f->getArg(clvr::Type::Float))), width, (precision < 0) ? 6 : precision);
             for (int i = 0; buf[i] != '\0'; ++i) {
-                lucid::putChar(buf[i]);
+                clvr::putChar(buf[i]);
             }
             //size += outFloat(gen, flt::Float::fromArg(va_arg(va.value, flt::Float::arg_type)), width, precision, flags, cap, type);
             break;
         }
         case 'c':
             // Chars are passed in as uint32
-            lucid::putChar(static_cast<char>(f->getArg(lucid::Type::UInt32)));
+            clvr::putChar(static_cast<char>(f->getArg(clvr::Type::UInt32)));
             size++;
             break;
         case 'b': {
             // Booleans are passed in as uint32
-            const char* s = f->getArg(lucid::Type::UInt32) ? "true" : "false";
+            const char* s = f->getArg(clvr::Type::UInt32) ? "true" : "false";
             for (int i = 0; s[i] != '\0'; ++i) {
-                lucid::putChar(s[i]);
+                clvr::putChar(s[i]);
             }
             break;
         }
         case 's':
-            size += outString(f, f->getArg(lucid::Type::String), width, precision, flags);
+            size += outString(f, f->getArg(clvr::Type::String), width, precision, flags);
             break;
         case 'p':
-            size += outInteger(f->getArg(lucid::Type::UInt32), Signed::No, width, precision, flags, 16, Capital::No);
+            size += outInteger(f->getArg(clvr::Type::UInt32), Signed::No, width, precision, flags, 16, Capital::No);
             break;
         default:
-            lucid::putChar(f->getChar(fmt++));
+            clvr::putChar(f->getChar(fmt++));
             size++;
             break;
         }

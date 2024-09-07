@@ -46,24 +46,24 @@
 		4914A4872C3B624D003DDADA /* Memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Memory.h; path = ../Runtime/Memory.h; sourceTree = "<group>"; };
 		4914A4892C44A132003DDADA /* Print.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Print.cpp; path = ../Runtime/Print.cpp; sourceTree = "<group>"; };
 		4914A48D2C4DD665003DDADA /* TestCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestCore.h; path = ../Test/TestCore.h; sourceTree = "<group>"; };
-		4914A48E2C4DD665003DDADA /* TestPtrStruct.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestPtrStruct.lucid; path = ../Test/TestPtrStruct.lucid; sourceTree = "<group>"; };
-		4914A48F2C4DD665003DDADA /* TestIf.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestIf.lucid; path = ../Test/TestIf.lucid; sourceTree = "<group>"; };
+		4914A48E2C4DD665003DDADA /* TestPtrStruct.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestPtrStruct.clvr; path = ../Test/TestPtrStruct.clvr; sourceTree = "<group>"; };
+		4914A48F2C4DD665003DDADA /* TestIf.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestIf.clvr; path = ../Test/TestIf.clvr; sourceTree = "<group>"; };
 		4914A4902C4DD665003DDADA /* TestWhile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestWhile.h; path = ../Test/TestWhile.h; sourceTree = "<group>"; };
-		4914A4912C4DD665003DDADA /* TestCore.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestCore.lucid; path = ../Test/TestCore.lucid; sourceTree = "<group>"; };
-		4914A4922C4DD665003DDADA /* TestFor.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFor.lucid; path = ../Test/TestFor.lucid; sourceTree = "<group>"; };
+		4914A4912C4DD665003DDADA /* TestCore.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestCore.clvr; path = ../Test/TestCore.clvr; sourceTree = "<group>"; };
+		4914A4922C4DD665003DDADA /* TestFor.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFor.clvr; path = ../Test/TestFor.clvr; sourceTree = "<group>"; };
 		4914A4932C4DD665003DDADA /* TestFor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFor.h; path = ../Test/TestFor.h; sourceTree = "<group>"; };
 		4914A4942C4DD665003DDADA /* TestPtrStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestPtrStruct.h; path = ../Test/TestPtrStruct.h; sourceTree = "<group>"; };
-		4914A4962C4DD665003DDADA /* TestWhile.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestWhile.lucid; path = ../Test/TestWhile.lucid; sourceTree = "<group>"; };
+		4914A4962C4DD665003DDADA /* TestWhile.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestWhile.clvr; path = ../Test/TestWhile.clvr; sourceTree = "<group>"; };
 		4914A4972C4DD665003DDADA /* Test.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Test.ino; path = ../Test/Test.ino; sourceTree = "<group>"; };
 		4914A4982C4DD665003DDADA /* TestFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFunction.h; path = ../Test/TestFunction.h; sourceTree = "<group>"; };
 		4914A4992C4DD665003DDADA /* TestIf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestIf.h; path = ../Test/TestIf.h; sourceTree = "<group>"; };
-		4914A49A2C4DD665003DDADA /* TestFunction.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.lucid; path = ../Test/TestFunction.lucid; sourceTree = "<group>"; };
-		491886F42C5EDAE70053F2C0 /* Lucid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Lucid.h; path = ../Runtime/Lucid.h; sourceTree = "<group>"; };
+		4914A49A2C4DD665003DDADA /* TestFunction.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.clvr; path = ../Test/TestFunction.clvr; sourceTree = "<group>"; };
+		491886F42C5EDAE70053F2C0 /* Clover.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Clover.h; path = ../Runtime/Clover.h; sourceTree = "<group>"; };
 		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
-		492BB6322C6E58C20022D290 /* PostLightEffects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.lucid; path = ../PostLightEffects/PostLightEffects.lucid; sourceTree = "<group>"; };
+		492BB6322C6E58C20022D290 /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.clvr; path = ../PostLightEffects/PostLightEffects.clvr; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
-		4941A1012BBA1D2800CE3C9E /* Flicker.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.lucid; path = ../examples/Flicker.lucid; sourceTree = "<group>"; };
+		4941A1012BBA1D2800CE3C9E /* Flicker.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.clvr; path = ../examples/Flicker.clvr; sourceTree = "<group>"; };
 		4941A1042BBA28F000CE3C9E /* Defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Defines.h; path = ../Runtime/Defines.h; sourceTree = "<group>"; };
 		4941A1052BBA28F000CE3C9E /* Interpreter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Interpreter.cpp; path = ../Runtime/Interpreter.cpp; sourceTree = "<group>"; };
 		4941A1062BBA28F000CE3C9E /* Interpreter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Interpreter.h; path = ../Runtime/Interpreter.h; sourceTree = "<group>"; };
@@ -73,12 +73,12 @@
 		4941A10E2BBA290B00CE3C9E /* Decompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Decompiler.h; path = ../Decompiler.h; sourceTree = "<group>"; };
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Scanner.h; sourceTree = "<group>"; };
 		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
-		4941A1172BBB0B1200CE3C9E /* Effects.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.lucid; path = ../examples/Effects.lucid; sourceTree = "<group>"; };
-		49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestSwitchEnum.lucid; path = ../Test/TestSwitchEnum.lucid; sourceTree = "<group>"; };
-		49A85D842C7A220500E8F5F3 /* TestFloatExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestFloatExpr.lucid; path = ../Test/TestFloatExpr.lucid; sourceTree = "<group>"; };
-		49A85D852C7A220500E8F5F3 /* TestIntExpr.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr.lucid; path = ../Test/TestIntExpr.lucid; sourceTree = "<group>"; };
+		4941A1172BBB0B1200CE3C9E /* Effects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.clvr; path = ../examples/Effects.clvr; sourceTree = "<group>"; };
+		49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestSwitchEnum.clvr; path = ../Test/TestSwitchEnum.clvr; sourceTree = "<group>"; };
+		49A85D842C7A220500E8F5F3 /* TestFloatExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestFloatExpr.clvr; path = ../Test/TestFloatExpr.clvr; sourceTree = "<group>"; };
+		49A85D852C7A220500E8F5F3 /* TestIntExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr.clvr; path = ../Test/TestIntExpr.clvr; sourceTree = "<group>"; };
 		49AD783D2C77D53500ABC078 /* Enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Enum.h; path = ../Enum.h; sourceTree = "<group>"; };
-		49C164A42C025CD500981AD1 /* simple.lucid */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = simple.lucid; path = ../examples/simple.lucid; sourceTree = "<group>"; };
+		49C164A42C025CD500981AD1 /* simple.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = simple.clvr; path = ../examples/simple.clvr; sourceTree = "<group>"; };
 		49C164A92C0297FB00981AD1 /* interp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = interp; sourceTree = BUILT_PRODUCTS_DIR; };
 		49C164B22C03E84700981AD1 /* Function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Function.h; path = ../Function.h; sourceTree = "<group>"; };
 		49C164B32C03E90400981AD1 /* Symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Symbol.h; path = ../Symbol.h; sourceTree = "<group>"; };
@@ -123,21 +123,21 @@
 			isa = PBXGroup;
 			children = (
 				4914A4972C4DD665003DDADA /* Test.ino */,
-				4914A4912C4DD665003DDADA /* TestCore.lucid */,
+				4914A4912C4DD665003DDADA /* TestCore.clvr */,
 				4914A48D2C4DD665003DDADA /* TestCore.h */,
-				49A85D852C7A220500E8F5F3 /* TestIntExpr.lucid */,
-				49A85D842C7A220500E8F5F3 /* TestFloatExpr.lucid */,
-				4914A48F2C4DD665003DDADA /* TestIf.lucid */,
+				49A85D852C7A220500E8F5F3 /* TestIntExpr.clvr */,
+				49A85D842C7A220500E8F5F3 /* TestFloatExpr.clvr */,
+				4914A48F2C4DD665003DDADA /* TestIf.clvr */,
 				4914A4992C4DD665003DDADA /* TestIf.h */,
-				4914A4922C4DD665003DDADA /* TestFor.lucid */,
+				4914A4922C4DD665003DDADA /* TestFor.clvr */,
 				4914A4932C4DD665003DDADA /* TestFor.h */,
-				4914A49A2C4DD665003DDADA /* TestFunction.lucid */,
+				4914A49A2C4DD665003DDADA /* TestFunction.clvr */,
 				4914A4982C4DD665003DDADA /* TestFunction.h */,
-				4914A48E2C4DD665003DDADA /* TestPtrStruct.lucid */,
+				4914A48E2C4DD665003DDADA /* TestPtrStruct.clvr */,
 				4914A4942C4DD665003DDADA /* TestPtrStruct.h */,
-				4914A4962C4DD665003DDADA /* TestWhile.lucid */,
+				4914A4962C4DD665003DDADA /* TestWhile.clvr */,
 				4914A4902C4DD665003DDADA /* TestWhile.h */,
-				49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.lucid */,
+				49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.clvr */,
 			);
 			name = Test;
 			sourceTree = "<group>";
@@ -160,7 +160,7 @@
 				49C164B22C03E84700981AD1 /* Function.h */,
 				4941A1052BBA28F000CE3C9E /* Interpreter.cpp */,
 				4941A1062BBA28F000CE3C9E /* Interpreter.h */,
-				491886F42C5EDAE70053F2C0 /* Lucid.h */,
+				491886F42C5EDAE70053F2C0 /* Clover.h */,
 				4914A4872C3B624D003DDADA /* Memory.h */,
 				49C164B42C0409D700981AD1 /* Module.h */,
 				49C469C52C6A769E00588838 /* NativeColor.cpp */,
@@ -202,10 +202,10 @@
 			isa = PBXGroup;
 			children = (
 				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
-				492BB6322C6E58C20022D290 /* PostLightEffects.lucid */,
-				4941A1012BBA1D2800CE3C9E /* Flicker.lucid */,
-				4941A1172BBB0B1200CE3C9E /* Effects.lucid */,
-				49C164A42C025CD500981AD1 /* simple.lucid */,
+				492BB6322C6E58C20022D290 /* PostLightEffects.clvr */,
+				4941A1012BBA1D2800CE3C9E /* Flicker.clvr */,
+				4941A1172BBB0B1200CE3C9E /* Effects.clvr */,
+				49C164A42C025CD500981AD1 /* simple.clvr */,
 			);
 			name = examples;
 			sourceTree = "<group>";

@@ -12,7 +12,7 @@
 #include "NativeColor.h"
 #include "NativeCore.h"
 
-using namespace lucid;
+using namespace clvr;
 
 InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
     : _memMgr(mem, memSize)

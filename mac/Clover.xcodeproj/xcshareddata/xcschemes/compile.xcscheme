@@ -53,56 +53,56 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-d -t -h examples/simple.lucid"
+            argument = "-d -t -h examples/simple.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -a -l -h PostLightEffects/PostLightEffects.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -a -l PostLightEffects/PostLightEffects.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestCore.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestIntExpr.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestFloatExpr.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestIf.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestFunction.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestFor.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestWhile.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestPtrStruct.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d -t -h Test/TestSwitchEnum.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-h -t Test/TestCore.clvr Test/TestIntExpr.clvr Test/TestFloatExpr.clvr Test/TestIf.clvr Test/TestFunction.clvr Test/TestFor.clvr Test/TestWhile.clvr Test/TestPtrStruct.clvr Test/TestSwitchEnum.clvr"
             isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -a -l -h PostLightEffects/PostLightEffects.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -a -l PostLightEffects/PostLightEffects.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestCore.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestIntExpr.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestFloatExpr.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestIf.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestFunction.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestFor.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestWhile.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestPtrStruct.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestSwitchEnum.lucid"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-h -t Test/TestCore.lucid Test/TestIntExpr.lucid Test/TestFloatExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestPtrStruct.lucid Test/TestSwitchEnum.lucid"
-            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

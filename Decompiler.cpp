@@ -11,7 +11,7 @@
 
 #include "Compiler.h"
 
-using namespace lucid;
+using namespace clvr;
 
 bool Decompiler::decompile()
 {
@@ -21,7 +21,7 @@ for (int i = 0; ; ++i) {
     std::string line;
     int32_t addr = _annotations->getLine(i, line);
     
-    lucid::printf("[%d:%d] %s\n", i, addr, line.c_str());
+    clvr::printf("[%d:%d] %s\n", i, addr, line.c_str());
     
     if (addr == -2) {
         break;

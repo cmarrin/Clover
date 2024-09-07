@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 
-namespace lucid {
+namespace clvr {
 
 class InterpreterBase;
 

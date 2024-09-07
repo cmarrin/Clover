@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace lucid {
+namespace clvr {
 
 class OpInfo {
   public:

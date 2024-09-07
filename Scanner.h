@@ -14,7 +14,7 @@
 #include <istream>
 #include <vector>
 
-namespace lucid {
+namespace clvr {
 
 static constexpr uint8_t MAX_ID_LENGTH = 32;
 

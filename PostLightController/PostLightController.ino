@@ -63,7 +63,7 @@ Hue is an angle on the color wheel. A 0-360 degree value is obtained with hue / 
 
 */
 
-#include <Lucid.h>
+#include <Clover.h>
 
 #include <SoftwareSerial.h>
 #include <Adafruit_NeoPixel.h>

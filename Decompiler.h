@@ -17,7 +17,7 @@
 #include "Scanner.h"
 #include "Struct.h"
 
-namespace lucid {
+namespace clvr {
 
 class Compiler;
 

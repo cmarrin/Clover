@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-    This source file is a part of Lucid
-    For the latest info, see https://github.com/cmarrin/LucidVM
+    This source file is a part of Clover
+    For the latest info, see https://github.com/cmarrin/Clover
     Copyright (c) 2021-20224, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
@@ -15,7 +15,7 @@
 
 #include "Defines.h"
 
-namespace lucid {
+namespace clvr {
 
 // A symbol is a variable inside a struct or function. They have a name and type.
 // They also hae a flag to indicate if this is a pointer to that type. They also

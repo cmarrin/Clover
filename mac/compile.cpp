@@ -1,6 +1,6 @@
 //
 //  compile.cpp
-//  LucidVM
+//  Clover
 //
 //  Created by Chris Marrin on 3/29/24.
 //
@@ -16,79 +16,79 @@
 #include "Interpreter.h"
 
 // Base pointer of executable code (see Defines.h)
-uint8_t* lucid::ROMBase = nullptr;
+uint8_t* clvr::ROMBase = nullptr;
 
 static constexpr uint32_t MaxExecutableSize = 65536;
 static constexpr uint32_t StackSize = 2048;
 
-class MyInterpreter : public lucid::Interpreter<StackSize>
+class MyInterpreter : public clvr::Interpreter<StackSize>
 {
   public:
     virtual void setLight(uint8_t i, uint32_t rgb) override
     {
-        lucid::printf("setLight(%hhd, 0x%08x)\n", i, rgb);
+        clvr::printf("setLight(%hhd, 0x%08x)\n", i, rgb);
     }
 };
 
-static void showError(lucid::Error error, lucid::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
+static void showError(clvr::Error error, clvr::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
 {
     const char* err = "unknown";
     switch(error) {
-        case lucid::Error::None: err = "internal error"; break;
-        case lucid::Error::UnrecognizedLanguage: err = "unrecognized language"; break;
-        case lucid::Error::ExpectedToken: err = "expected token"; break;
-        case lucid::Error::ExpectedKeyword: err = "expected keyword"; break;
-        case lucid::Error::ExpectedType: err = "expected type"; break;
-        case lucid::Error::ExpectedValue: err = "expected value"; break;
-        case lucid::Error::ExpectedReturnValue: err = "return value required"; break;
-        case lucid::Error::UnexpectedReturnValue: err = "return value not allowed"; break;
-        case lucid::Error::ExpectedString: err = "expected string"; break;
-        case lucid::Error::ExpectedRef: err = "expected ref"; break;
-        case lucid::Error::ExpectedOpcode: err = "expected opcode"; break;
-        case lucid::Error::ExpectedEnd: err = "expected 'end'"; break;
-        case lucid::Error::ExpectedIdentifier: err = "expected identifier"; break;
-        case lucid::Error::ExpectedExpr: err = "expected expression"; break;
-        case lucid::Error::ExpectedEnum: err = "expected enum"; break;
-        case lucid::Error::ExpectedLHSExpr: err = "expected left-hand side expression"; break;
-        case lucid::Error::ExpectedArgList: err = "expected arg list"; break;
-        case lucid::Error::ExpectedFormalParams: err = "expected formal params"; break;
-        case lucid::Error::ExpectedFunction: err = "expected function name"; break;
-        case lucid::Error::ExpectedStructType: err = "expected Struct type"; break;
-        case lucid::Error::ExpectedVar: err = "expected var"; break;
-        case lucid::Error::AssignmentNotAllowedHere: err = "assignment not allowed here"; break;
-        case lucid::Error::InvalidParamCount: err = "invalid param count"; break;
-        case lucid::Error::UndefinedIdentifier: err = "undefined identifier"; break;
-        case lucid::Error::ParamOutOfRange: err = "param must be 0..15"; break;
-        case lucid::Error::JumpTooBig: err = "tried to jump too far"; break;
-        case lucid::Error::IfTooBig: err = "too many instructions in if"; break;
-        case lucid::Error::ElseTooBig: err = "too many instructions in else"; break;
-        case lucid::Error::StringTooLong: err = "string too long"; break;
-        case lucid::Error::TooManyConstants: err = "too many constants"; break;
-        case lucid::Error::TooManyVars: err = "too many vars"; break;
-        case lucid::Error::DefOutOfRange: err = "def out of range"; break;
-        case lucid::Error::ExpectedDef: err = "expected def"; break;
-        case lucid::Error::NoMoreTemps: err = "no more temp variables available"; break;
-        case lucid::Error::TempNotAllocated: err = "temp not allocated"; break;
-        case lucid::Error::InternalError: err = "internal error"; break;
-        case lucid::Error::StackTooBig: err = "stack too big"; break;
-        case lucid::Error::MismatchedType: err = "mismatched type"; break;
-        case lucid::Error::WrongType: err = "wrong type"; break;
-        case lucid::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
-        case lucid::Error::OnlyAllowedInLoop: err = "break/continue only allowed in loop"; break;
-        case lucid::Error::DuplicateIdentifier: err = "duplicate identifier"; break;
-        case lucid::Error::ExecutableTooBig: err = "executable too big"; break;
-        case lucid::Error::InitializerNotAllowed: err = "initializer not allowed for this type"; break;
-        case lucid::Error::ExpectedIndexable: err = "expected indexable variable"; break;
-        case lucid::Error::PointerConstantNotAllowed: err = "pointer constant not allowed"; break;
-        case lucid::Error::RequiresInitializer: err = "var requires initializer"; break;
-        case lucid::Error::PropertyDoesNotExist: err = "property does not exist"; break;
-        case lucid::Error::IteratorMustBeScalar: err = "iterator must be scalar"; break;
-        case lucid::Error::PtrAssignmentMustMatch: err = "pointer assignment must match"; break;
-        case lucid::Error::PtrTypeNotAllowed: err = "pointer type not allowed"; break;
-        case lucid::Error::WrongNumberOfInitializers: err = "wrong number of initializers"; break;
+        case clvr::Error::None: err = "internal error"; break;
+        case clvr::Error::UnrecognizedLanguage: err = "unrecognized language"; break;
+        case clvr::Error::ExpectedToken: err = "expected token"; break;
+        case clvr::Error::ExpectedKeyword: err = "expected keyword"; break;
+        case clvr::Error::ExpectedType: err = "expected type"; break;
+        case clvr::Error::ExpectedValue: err = "expected value"; break;
+        case clvr::Error::ExpectedReturnValue: err = "return value required"; break;
+        case clvr::Error::UnexpectedReturnValue: err = "return value not allowed"; break;
+        case clvr::Error::ExpectedString: err = "expected string"; break;
+        case clvr::Error::ExpectedRef: err = "expected ref"; break;
+        case clvr::Error::ExpectedOpcode: err = "expected opcode"; break;
+        case clvr::Error::ExpectedEnd: err = "expected 'end'"; break;
+        case clvr::Error::ExpectedIdentifier: err = "expected identifier"; break;
+        case clvr::Error::ExpectedExpr: err = "expected expression"; break;
+        case clvr::Error::ExpectedEnum: err = "expected enum"; break;
+        case clvr::Error::ExpectedLHSExpr: err = "expected left-hand side expression"; break;
+        case clvr::Error::ExpectedArgList: err = "expected arg list"; break;
+        case clvr::Error::ExpectedFormalParams: err = "expected formal params"; break;
+        case clvr::Error::ExpectedFunction: err = "expected function name"; break;
+        case clvr::Error::ExpectedStructType: err = "expected Struct type"; break;
+        case clvr::Error::ExpectedVar: err = "expected var"; break;
+        case clvr::Error::AssignmentNotAllowedHere: err = "assignment not allowed here"; break;
+        case clvr::Error::InvalidParamCount: err = "invalid param count"; break;
+        case clvr::Error::UndefinedIdentifier: err = "undefined identifier"; break;
+        case clvr::Error::ParamOutOfRange: err = "param must be 0..15"; break;
+        case clvr::Error::JumpTooBig: err = "tried to jump too far"; break;
+        case clvr::Error::IfTooBig: err = "too many instructions in if"; break;
+        case clvr::Error::ElseTooBig: err = "too many instructions in else"; break;
+        case clvr::Error::StringTooLong: err = "string too long"; break;
+        case clvr::Error::TooManyConstants: err = "too many constants"; break;
+        case clvr::Error::TooManyVars: err = "too many vars"; break;
+        case clvr::Error::DefOutOfRange: err = "def out of range"; break;
+        case clvr::Error::ExpectedDef: err = "expected def"; break;
+        case clvr::Error::NoMoreTemps: err = "no more temp variables available"; break;
+        case clvr::Error::TempNotAllocated: err = "temp not allocated"; break;
+        case clvr::Error::InternalError: err = "internal error"; break;
+        case clvr::Error::StackTooBig: err = "stack too big"; break;
+        case clvr::Error::MismatchedType: err = "mismatched type"; break;
+        case clvr::Error::WrongType: err = "wrong type"; break;
+        case clvr::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
+        case clvr::Error::OnlyAllowedInLoop: err = "break/continue only allowed in loop"; break;
+        case clvr::Error::DuplicateIdentifier: err = "duplicate identifier"; break;
+        case clvr::Error::ExecutableTooBig: err = "executable too big"; break;
+        case clvr::Error::InitializerNotAllowed: err = "initializer not allowed for this type"; break;
+        case clvr::Error::ExpectedIndexable: err = "expected indexable variable"; break;
+        case clvr::Error::PointerConstantNotAllowed: err = "pointer constant not allowed"; break;
+        case clvr::Error::RequiresInitializer: err = "var requires initializer"; break;
+        case clvr::Error::PropertyDoesNotExist: err = "property does not exist"; break;
+        case clvr::Error::IteratorMustBeScalar: err = "iterator must be scalar"; break;
+        case clvr::Error::PtrAssignmentMustMatch: err = "pointer assignment must match"; break;
+        case clvr::Error::PtrTypeNotAllowed: err = "pointer type not allowed"; break;
+        case clvr::Error::WrongNumberOfInitializers: err = "wrong number of initializers"; break;
     }
     
-    if (token == lucid::Token::EndOfFile) {
+    if (token == clvr::Token::EndOfFile) {
         err = "unexpected tokens after EOF";
     }
     
@@ -120,7 +120,7 @@ static void showError(lucid::Error error, lucid::Token token, const std::string&
 
 int main(int argc, char * const argv[])
 {
-    std::cout << "Lucid Compiler v0.1\n\n";
+    std::cout << "Clover Compiler v0.1\n\n";
     
     int c;
     bool singlePass = false;
@@ -155,7 +155,7 @@ int main(int argc, char * const argv[])
         }
     }
     
-    lucid::Annotations annotations;
+    clvr::Annotations annotations;
     std::vector<std::pair<int32_t, std::string>> functions;
     
     int32_t errors = 0;
@@ -170,12 +170,12 @@ int main(int argc, char * const argv[])
         
         std::cout << "Compiling '" << it << "'\n";
         
-        lucid::randomSeed(uint32_t(clock()));
+        clvr::randomSeed(uint32_t(clock()));
 
-        lucid::Compiler compiler(&stream, &annotations);
+        clvr::Compiler compiler(&stream, &annotations);
 
         compiler.compile(MaxExecutableSize, { });
-        if (compiler.error() != lucid::Error::None) {
+        if (compiler.error() != clvr::Error::None) {
             showError(compiler.error(), compiler.expectedToken(), compiler.expectedString(), compiler.lineno(), compiler.charno());
             std::cout << "          Executable size=" << std::to_string(compiler.code().size()) << "\n";
             return -1;
@@ -185,18 +185,18 @@ int main(int argc, char * const argv[])
 
         if (decompile) {
             std::string out;
-            lucid::Decompiler decompiler(&(compiler.code()), &out, annotate ? &annotations : nullptr);
+            clvr::Decompiler decompiler(&(compiler.code()), &out, annotate ? &annotations : nullptr);
             bool success = decompiler.decompile();
             
             std::cout << "\nPrinting code:\n" << out << "\nEnd code\n\n";
             if (!success) {
                 const char* err = "unknown";
                 switch(decompiler.error()) {
-                    case lucid::Decompiler::Error::None: err = "internal error"; break;
-                    case lucid::Decompiler::Error::InvalidSignature: err = "invalid signature"; break;
-                    case lucid::Decompiler::Error::WrongAddressSize: err = "wrong address size"; break;
-                    case lucid::Decompiler::Error::InvalidOp: err = "invalid op"; break;
-                    case lucid::Decompiler::Error::PrematureEOF: err = "premature EOF"; break;
+                    case clvr::Decompiler::Error::None: err = "internal error"; break;
+                    case clvr::Decompiler::Error::InvalidSignature: err = "invalid signature"; break;
+                    case clvr::Decompiler::Error::WrongAddressSize: err = "wrong address size"; break;
+                    case clvr::Decompiler::Error::InvalidOp: err = "invalid op"; break;
+                    case clvr::Decompiler::Error::PrematureEOF: err = "premature EOF"; break;
                 }
                 std::cout << "Decompile failed: " << err << "\n\n";
                 return 0;
@@ -267,12 +267,12 @@ int main(int argc, char * const argv[])
         // Execute if needed
         if (looping || singlePass) {
             // Setup executable pointer
-            lucid::ROMBase = &(compiler.code()[0]);
+            clvr::ROMBase = &(compiler.code()[0]);
             
             MyInterpreter interp;
             interp.instantiate();
             
-            if (interp.error() == lucid::InterpreterBase::Error::None) {
+            if (interp.error() == clvr::InterpreterBase::Error::None) {
                 uint32_t result = 0;
                 
                 if (looping) {
@@ -280,20 +280,20 @@ int main(int argc, char * const argv[])
                 
                     // Pass in 5 args, a uint8 command, speed, value, saturation and hue.
                     // Push them backwards
-                    interp.addArg(2, lucid::Type::UInt8); // speed (0-7)
-                    interp.addArg(200, lucid::Type::UInt8); // value
-                    interp.addArg(224, lucid::Type::UInt8); // saturation
-                    interp.addArg(200, lucid::Type::UInt8); // hue
-                    interp.addArg(200, lucid::Type::UInt8); // value
-                    interp.addArg(224, lucid::Type::UInt8); // saturation
-                    interp.addArg(150, lucid::Type::UInt8); // hue
-                    interp.addArg(200, lucid::Type::UInt8); // value
-                    interp.addArg(224, lucid::Type::UInt8); // saturation
-                    interp.addArg(100, lucid::Type::UInt8); // hue
-                    interp.addArg(200, lucid::Type::UInt8); // value
-                    interp.addArg(224, lucid::Type::UInt8); // saturation
-                    interp.addArg(50, lucid::Type::UInt8); // hue
-                    interp.addArg('m', lucid::Type::UInt8); // cmd
+                    interp.addArg(2, clvr::Type::UInt8); // speed (0-7)
+                    interp.addArg(200, clvr::Type::UInt8); // value
+                    interp.addArg(224, clvr::Type::UInt8); // saturation
+                    interp.addArg(200, clvr::Type::UInt8); // hue
+                    interp.addArg(200, clvr::Type::UInt8); // value
+                    interp.addArg(224, clvr::Type::UInt8); // saturation
+                    interp.addArg(150, clvr::Type::UInt8); // hue
+                    interp.addArg(200, clvr::Type::UInt8); // value
+                    interp.addArg(224, clvr::Type::UInt8); // saturation
+                    interp.addArg(100, clvr::Type::UInt8); // hue
+                    interp.addArg(200, clvr::Type::UInt8); // value
+                    interp.addArg(224, clvr::Type::UInt8); // saturation
+                    interp.addArg(50, clvr::Type::UInt8); // hue
+                    interp.addArg('m', clvr::Type::UInt8); // cmd
                     
                     std::cout << "\nInit\n";
                     interp.construct();
@@ -315,8 +315,8 @@ int main(int argc, char * const argv[])
 
                     // Pass in 2 args, a uint8 command and a uint16 number.
                     // Push them backwards
-                    interp.addArg(2, lucid::Type::UInt16);
-                    interp.addArg('f', lucid::Type::UInt8);
+                    interp.addArg(2, clvr::Type::UInt16);
+                    interp.addArg('f', clvr::Type::UInt8);
                     result = interp.interp(MyInterpreter::ExecMode::Start);
                     interp.dropArgs(14);
                     errors += result;
@@ -327,29 +327,29 @@ int main(int argc, char * const argv[])
                 }
             }
             
-            if (interp.error() != lucid::InterpreterBase::Error::None) {
+            if (interp.error() != clvr::InterpreterBase::Error::None) {
                 const char* err = "unknown";
                 switch(interp.error()) {
-                    case lucid::InterpreterBase::Error::None: err = "no error"; break;
-                    case lucid::InterpreterBase::Error::InternalError: err = "internal error"; break;
-                    case lucid::InterpreterBase::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
-                    case lucid::InterpreterBase::Error::InvalidOp: err = "invalid opcode"; break;
-                    case lucid::InterpreterBase::Error::InvalidNativeFunction: err = "invalid native function"; break;
-                    case lucid::InterpreterBase::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
-                    case lucid::InterpreterBase::Error::StackOverrun: err = "can't call, stack full"; break;
-                    case lucid::InterpreterBase::Error::StackUnderrun: err = "stack underrun"; break;
-                    case lucid::InterpreterBase::Error::StackOutOfRange: err = "stack access out of range"; break;
-                    case lucid::InterpreterBase::Error::AddressOutOfRange: err = "address out of range"; break;
-                    case lucid::InterpreterBase::Error::InvalidModuleOp: err = "invalid operation in module"; break;
-                    case lucid::InterpreterBase::Error::ExpectedSetFrame: err = "expected SetFrame as first function op"; break;
-                    case lucid::InterpreterBase::Error::NotEnoughArgs: err = "not enough args on stack"; break;
-                    case lucid::InterpreterBase::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
-                    case lucid::InterpreterBase::Error::InvalidSignature: err = "invalid signature"; break;
-                    case lucid::InterpreterBase::Error::InvalidVersion: err = "invalid version"; break;
-                    case lucid::InterpreterBase::Error::WrongAddressSize: err = "wrong address size"; break;
-                    case lucid::InterpreterBase::Error::NoEntryPoint: err = "invalid entry point in executable"; break;
-                    case lucid::InterpreterBase::Error::NotInstantiated: err = "Need to call instantiate, then construct"; break;
-                    case lucid::InterpreterBase::Error::ImmedNotAllowedHere: err = "immediate not allowed here"; break;
+                    case clvr::InterpreterBase::Error::None: err = "no error"; break;
+                    case clvr::InterpreterBase::Error::InternalError: err = "internal error"; break;
+                    case clvr::InterpreterBase::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
+                    case clvr::InterpreterBase::Error::InvalidOp: err = "invalid opcode"; break;
+                    case clvr::InterpreterBase::Error::InvalidNativeFunction: err = "invalid native function"; break;
+                    case clvr::InterpreterBase::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
+                    case clvr::InterpreterBase::Error::StackOverrun: err = "can't call, stack full"; break;
+                    case clvr::InterpreterBase::Error::StackUnderrun: err = "stack underrun"; break;
+                    case clvr::InterpreterBase::Error::StackOutOfRange: err = "stack access out of range"; break;
+                    case clvr::InterpreterBase::Error::AddressOutOfRange: err = "address out of range"; break;
+                    case clvr::InterpreterBase::Error::InvalidModuleOp: err = "invalid operation in module"; break;
+                    case clvr::InterpreterBase::Error::ExpectedSetFrame: err = "expected SetFrame as first function op"; break;
+                    case clvr::InterpreterBase::Error::NotEnoughArgs: err = "not enough args on stack"; break;
+                    case clvr::InterpreterBase::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
+                    case clvr::InterpreterBase::Error::InvalidSignature: err = "invalid signature"; break;
+                    case clvr::InterpreterBase::Error::InvalidVersion: err = "invalid version"; break;
+                    case clvr::InterpreterBase::Error::WrongAddressSize: err = "wrong address size"; break;
+                    case clvr::InterpreterBase::Error::NoEntryPoint: err = "invalid entry point in executable"; break;
+                    case clvr::InterpreterBase::Error::NotInstantiated: err = "Need to call instantiate, then construct"; break;
+                    case clvr::InterpreterBase::Error::ImmedNotAllowedHere: err = "immediate not allowed here"; break;
                 }
                 std::cout << "Interpreter failed: " << err;
                 

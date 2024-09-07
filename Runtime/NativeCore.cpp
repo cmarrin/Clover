@@ -11,7 +11,7 @@
 
 #include "Interpreter.h"
 
-using namespace lucid;
+using namespace clvr;
 
 #ifndef ARDUINO
 ModulePtr
@@ -46,7 +46,7 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
         case Id::PrintF: {
             VarArg va(interp->memMgr(), 0, Type::String);
             AddrNativeType fmt = interp->memMgr()->getArg(0, AddrType);
-            lucid::printf(fmt, va);
+            clvr::printf(fmt, va);
             break;
         }
         case Id::RandomInt: {
