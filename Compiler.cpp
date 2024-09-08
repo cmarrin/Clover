@@ -653,7 +653,7 @@ Compiler::type(Type& t)
         return false;
     }
     
-    // First look in the child structs then at the peers
+    // First look in the child structs
     StructPtr struc = currentStruct();
     expect(struc != nullptr, Error::InternalError);
     struc = struc->findStruct(id);
@@ -664,6 +664,19 @@ Compiler::type(Type& t)
         return true;
     }
     
+    // Now look at the peers, if any
+    if (_structStack.size() > 1) {
+        struc = _structStack[_structStack.size() - 2];
+        struc = struc->findStruct(id);
+        
+        if (struc) {
+            t = struc->type();
+            _scanner.retireToken();
+            return true;
+        }
+    }
+    
+    // Now see if it's an enum
     EnumPtr e = currentStruct()->findEnum(id);
     if (e) {
         t = e->type();

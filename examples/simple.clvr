@@ -45,10 +45,9 @@ struct Float16
         return Float16((int32(_value) << BitsOfPrecision) / int32(v._value));
     }
     
-    function uint8* toString()
+    function toString(uint8* buf, uint8 size)
     {
-        uint8 buf[25];
-        core.format(buf, 25, "%d.%d\n", _value >> BitsOfPrecision, (_value & ((1 << BitsOfPrecision) - 1)) << 16 - BitsOfPrecision);
+        core.format(buf, size, "%d.%d\n", _value >> BitsOfPrecision, (_value & ((1 << BitsOfPrecision) - 1)) << 16 - BitsOfPrecision);
     }
 };
 
@@ -62,7 +61,9 @@ function int32 main()
     b.setValue(3, 7000);
     c = a.add(b);
     
-    core.printf("a + b = %s\n", c.toString());
+    uint8 buf[25];
+    c.toString(buf, 25);
+    core.printf("a + b = %s\n", buf);
     return 0;
 }
 
