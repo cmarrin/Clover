@@ -123,6 +123,8 @@ enum class Token : uint8_t {
     GE          = 0xad,
     Inc         = 0xae,
     Dec         = 0xaf,
+    SHR         = 0xb0,
+    SHL         = 0xb1,
     
     EndOfFile   = 0xff,
 };

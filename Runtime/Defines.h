@@ -374,10 +374,32 @@ enum class Op: uint8_t {
 
     OFFSET1 = 0x3c, // 8 bit ubnsigned offset added to ref on TOS
     OFFSET2 = 0x3d, // 16 bit ubnsigned offset added to ref on TOS
+
+    AND1    = 0x3e,
+    AND2    = 0x3f,
+    AND4    = 0x40,
+    OR1     = 0x41,
+    OR2     = 0x42,
+    OR4     = 0x43,
+    XOR1    = 0x44,
+    XOR2    = 0x45,
+    XOR4    = 0x46,
+    NOT1    = 0x47,
+    NOT2    = 0x48,
+    NOT4    = 0x49,
+    SHR1    = 0x4a,
+    SHR2    = 0x4b,
+    SHR4    = 0x4c,
+    ASR1    = 0x4d,
+    ASR2    = 0x4e,
+    ASR4    = 0x4f,
+    SHL1    = 0x50,
+    SHL2    = 0x51,
+    SHL4    = 0x52,
     
 //
 //
-// Available opcodes 3e - 3f
+// Available opcodes 53
 //
 //
 
@@ -386,48 +408,43 @@ enum class Op: uint8_t {
 // This limits branches to the range -32768 to 32767.
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
-    BRF     = 0x40, // Branch if TOS is false, branch is always forward
-    BRT     = 0x42, // Branch if TOS is true, branch is always forward
-    FBRA    = 0x44, // Branch is always forward
-    RBRA    = 0x46, // Branch is always reverse
-    NCALL   = 0x48,
-    ENTER   = 0x4a,
+    BRF     = 0x54, // Branch if TOS is false, branch is always forward
+    BRT     = 0x58, // Branch if TOS is true, branch is always forward
+    FBRA    = 0x5c, // Branch is always forward
+    RBRA    = 0x60, // Branch is always reverse
+    NCALL   = 0x64,
+    ENTER   = 0x68,
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
-    ADD     = 0x4c,
-    SUB     = 0x50,
-    IMUL    = 0x54,
-    UMUL    = 0x58,
-    IDIV    = 0x5c,
-    UDIV    = 0x60,
+    ADD     = 0x6c,
+    SUB     = 0x70,
+    IMUL    = 0x74,
+    UMUL    = 0x78,
+    IDIV    = 0x7c,
+    UDIV    = 0x80,
     
-    AND     = 0x64,
-    OR      = 0x68,
-    XOR     = 0x6c,
-    NOT     = 0x70,
-    NEG     = 0x74,
+    NEG     = 0x84,
 
-    PREINC  = 0x78, // Next byte is addr mode
-    PREDEC  = 0x7c, // Next byte is addr mode
-    POSTINC = 0x80, // Next byte is addr mode
-    POSTDEC = 0x84, // Next byte is addr mode
+    PREINC  = 0x88, // Next byte is addr mode
+    PREDEC  = 0x8c, // Next byte is addr mode
+    POSTINC = 0x90, // Next byte is addr mode
+    POSTDEC = 0x94, // Next byte is addr mode
     
-    LE      = 0x88,
-    LS      = 0x8c,
-    LT      = 0x90,
-    LO      = 0x94,
-    GE      = 0x98,
-    HS      = 0x9c,
-    GT      = 0xa0,
-    HI      = 0xa4,
-    EQ      = 0xa8,
-    NE      = 0xac,
+    LE      = 0x98,
+    LS      = 0x9c,
+    LT      = 0xa0,
+    LO      = 0xa4,
+    GE      = 0xa8,
+    HS      = 0xac,
+    GT      = 0xb0,
+    HI      = 0xb4,
+    EQ      = 0xb8,
+    NE      = 0xbc,
 
 // These versions use the lower 4 bits of the opcode as a param (0-15)
-    PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
-    PUSHKS2 = 0xc0, // lower 4 bits is value from -8 to 7, push 2 bytes
-    PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
+    PUSHKS1 = 0xc0, // lower 4 bits is value from -8 to 7, push 1 byte
+    PUSHKS2 = 0xd0, // lower 4 bits is value from -8 to 7, push 2 bytes
     DROPS   = 0xe0, // lower 4 bits is bytes to drop from 1 to 16
     ENTERS  = 0xf0,
 };
@@ -597,6 +614,8 @@ enum class Operator : uint8_t {
     LNot    = '!',
     ArrIdx  = '[',
     Dot     = '.',
+    SHR     = 0xb0,
+    SHL     = 0xb1,
     
     // '&', '*' and '-' are used as unary operators. Represent those here.
     AddrOf  = 0xe0,

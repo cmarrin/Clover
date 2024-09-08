@@ -8,23 +8,61 @@
 struct Simple
 {
 
-struct A
+struct Float16
 {
-    int8 b = 12;
-    int16 c = 24;
+    // 16 bit float represented in an int16 as 1:1:14.
+    // Can represent numbers from -1.9999 to 1.9999
+    
+    int16 _value;
+
+    const uint8 BitsOfPrecision = 14;
+    
+    Float16(int16 v) { _value = v; }
+    
+    // Set value to integer part (i) and fraction part (f). Fraction part is
+    // a 4 digit integer that is (conceptually) divided by 10000 to arrive
+    // at the fraction. A value of 1 translates to 0.0001 and a value of
+    // 1000 translates to a value of 0.1. A value greater than 9999 will
+    // produce undefined results
+    function setValue(int16 i, uint16 f)
+    {
+        _value = i + ((uint32(f) << BitsOfPrecision) / 10000);
+    }
+    
+    // Add and subtract can be done as integers since no change in dp occurs
+    function Float16 add(Float16 v) { return Float16(_value + v._value); }
+    function Float16 sub(Float16 v) { return Float16(_value - v._value); }
+    
+    // multiply is done as a 32 bit integer multiply and then shifted right BitsOfPrecision bits
+    function Float16 mul(Float16 v)
+    {
+        return Float16((int32(_value) * int32(v._value)) >> BitsOfPrecision);
+    }
+    
+    // divide is done by shifting left BitsOfPrecision bits, then doing an integer divide
+    function Float16 div(Float16 v)
+    {
+        return Float16((int32(_value) << BitsOfPrecision) / int32(v._value));
+    }
+    
+    function uint8* toString()
+    {
+        uint8 buf[25];
+        core.format(buf, 25, "%d.%d\n", _value >> BitsOfPrecision, (_value & ((1 << BitsOfPrecision) - 1)) << 16 - BitsOfPrecision);
+    }
 };
-
-const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
-
-int8 xxx = 9;
 
 function int32 main()
 {
-    A a;
+    Float16 a;
+    Float16 b;
+    Float16 c;
     
-    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
-    core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
-    core.printf(" xxx=%d\n", xxx);
+    a.setValue(1, 5000);
+    b.setValue(3, 7000);
+    c = a.add(b);
+    
+    core.printf("a + b = %s\n", c.toString());
     return 0;
 }
 

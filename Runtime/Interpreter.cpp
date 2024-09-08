@@ -409,24 +409,95 @@ InterpreterBase::execute(ExecMode mode)
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(uint32_t(left) / uint32_t(right), opSize);
                 break;
-            case Op::AND:
+            case Op::AND1:
+            case Op::AND2:
+            case Op::AND4:
+                switch (opcode) {
+                    case Op::AND1: opSize = OpSize::i8; break;
+                    case Op::AND2: opSize = OpSize::i16; break;
+                    case Op::AND4: opSize = OpSize::i32; break;
+                    default: break;
+                }
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left & right, opSize);
                 break;
-            case Op::OR:
+            case Op::OR1:
+            case Op::OR2:
+            case Op::OR4:
+                switch (opcode) {
+                    case Op::OR1: opSize = OpSize::i8; break;
+                    case Op::OR2: opSize = OpSize::i16; break;
+                    case Op::OR4: opSize = OpSize::i32; break;
+                    default: break;
+                }
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left | right, opSize);
                 break;
-            case Op::XOR:
+            case Op::XOR1:
+            case Op::XOR2:
+            case Op::XOR4:
+                switch (opcode) {
+                    case Op::XOR1: opSize = OpSize::i8; break;
+                    case Op::XOR2: opSize = OpSize::i16; break;
+                    case Op::XOR4: opSize = OpSize::i32; break;
+                    default: break;
+                }
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left ^ right, opSize);
                 break;
-            case Op::NOT:
+            case Op::NOT1:
+            case Op::NOT2:
+            case Op::NOT4:
+                switch (opcode) {
+                    case Op::NOT1: opSize = OpSize::i8; break;
+                    case Op::NOT2: opSize = OpSize::i16; break;
+                    case Op::NOT4: opSize = OpSize::i32; break;
+                    default: break;
+                }
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(~left, opSize);
+                break;
+            case Op::SHR1:
+            case Op::SHR2:
+            case Op::SHR4:
+                switch (opcode) {
+                    case Op::SHR1: opSize = OpSize::i8; break;
+                    case Op::SHR2: opSize = OpSize::i16; break;
+                    case Op::SHR4: opSize = OpSize::i32; break;
+                    default: break;
+                }
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+                _memMgr.stack().push(uint32_t(left) >> right, opSize);
+                break;
+            case Op::ASR1:
+            case Op::ASR2:
+            case Op::ASR4:
+                switch (opcode) {
+                    case Op::ASR1: opSize = OpSize::i8; break;
+                    case Op::ASR2: opSize = OpSize::i16; break;
+                    case Op::ASR4: opSize = OpSize::i32; break;
+                    default: break;
+                }
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+                _memMgr.stack().push(left >> right, opSize);
+                break;
+            case Op::SHL1:
+            case Op::SHL2:
+            case Op::SHL4:
+                switch (opcode) {
+                    case Op::SHL1: opSize = OpSize::i8; break;
+                    case Op::SHL2: opSize = OpSize::i16; break;
+                    case Op::SHL4: opSize = OpSize::i32; break;
+                    default: break;
+                }
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+                _memMgr.stack().push(left << right, opSize);
                 break;
             case Op::NEG:
                 left = _memMgr.stack().pop(opSize);
@@ -575,18 +646,11 @@ InterpreterBase::execute(ExecMode mode)
                 }
                 _memMgr.stack().push(left, OpSize::i16);
                 break;
-            case Op::PUSHKS4:
-                left = operand;
-                if (left & 0x08) {
-                    left |= 0xfffffff0;
-                }
-                _memMgr.stack().push(left, OpSize::i32);
-                break;
             case Op::PUSHS: {
                 // String is in ROM memory. Push a pointer to it and
-                // set pc past it.
+                // set pc past it. ROM pointer is offset by stack size
                 uint8_t size = getUInt8ROM(_pc++);
-                _memMgr.stack().push(_pc, AddrOpSize);
+                _memMgr.stack().push(_pc + _memMgr.stack().size(), AddrOpSize);
                 _pc += size;
                 break;
             }

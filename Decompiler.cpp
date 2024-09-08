@@ -15,19 +15,6 @@ using namespace clvr;
 
 bool Decompiler::decompile()
 {
-
-
-for (int i = 0; ; ++i) {
-    std::string line;
-    int32_t addr = _annotations->getLine(i, line);
-    
-    clvr::printf("[%d:%d] %s\n", i, addr, line.c_str());
-    
-    if (addr == -2) {
-        break;
-    }
-}
-
     try {
         // Make sure we start with 'lucd'
         if (getUInt8() != 'l' || getUInt8() != 'u' || getUInt8() != 'c' || getUInt8() != 'd') {
@@ -40,13 +27,13 @@ for (int i = 0; ; ++i) {
         uint8_t minorVersion = getUInt8();
         bool is32BitAddr = getUInt8() ? true : false;
         
-        _out->append("\nVersion                                    : ");
+        _out->append("\nVersion                         : ");
         _out->append(std::to_string(majorVersion));
         _out->append(".");
         _out->append(std::to_string(minorVersion));
         _out->append(" (");
         _out->append(std::to_string(is32BitAddr ? 32 : 16));
-        _out->append(" bit addresses)\n");
+        _out->append(" bit addrs)\n");
         
         if (is32BitAddr != Is32BitAddr) {
             _error = Error::WrongAddressSize;
@@ -56,21 +43,21 @@ for (int i = 0; ; ++i) {
         // Emit main entry point
         int32_t entryPoint = Is32BitAddr ? getInt32() : getUInt16();
         
-        _out->append("Main entry point                           : ");
+        _out->append("Main entry pot                  : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         
         // Emit ctor entry point
         entryPoint = Is32BitAddr ? getInt32() : getUInt16();
         
-        _out->append("Top-level srruct constructor entry point   : ");
+        _out->append("Top-level struct ctor entry pt  : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         
         // Emit size
         int32_t size = Is32BitAddr ? getInt32() : getUInt16();
         
-        _out->append("Top-level struct size                      : ");
+        _out->append("Top-level struct size           : ");
         _out->append(std::to_string(size));
         _out->append("\n\n");
         
@@ -211,10 +198,9 @@ Decompiler::statement()
         case Op::PUSHK44 : emitOp("PUSHK44"); emitConstant(4); break;
         case Op::PUSHKS1 : emitOp("PUSHKS1"); emitShortConstant(size); break;
         case Op::PUSHKS2 : emitOp("PUSHKS2"); emitShortConstant(size); break;
-        case Op::PUSHKS4 : emitOp("PUSHKS4"); emitShortConstant(size); break;
-        case Op::DUP1    : emitOp("DUP1"); emitSize(size); break;
-        case Op::DUP2    : emitOp("DUP2"); emitSize(size); break;
-        case Op::DUP4    : emitOp("DUP4"); emitSize(size); break;
+        case Op::DUP1    : emitOp("DUP1"); break;
+        case Op::DUP2    : emitOp("DUP2"); break;
+        case Op::DUP4    : emitOp("DUP4"); break;
         case Op::DROPS   : emitOp("DROPS"); emitNumber(size + 1); break;
         case Op::DROP1   : emitOp("DROP1"); emitNumber(getUInt8()); break;
         case Op::DROP2   : emitOp("DROP2"); emitNumber(getUInt16()); break;
@@ -224,10 +210,27 @@ Decompiler::statement()
         case Op::UMUL    : emitOp("UMUL"); emitSize(size); break;
         case Op::IDIV    : emitOp("IDIV"); emitSize(size); break;
         case Op::UDIV    : emitOp("UDIV"); emitSize(size); break;
-        case Op::AND     : emitOp("AND"); emitSize(size); break;
-        case Op::OR      : emitOp("OR"); emitSize(size); break;
-        case Op::XOR     : emitOp("XOR"); emitSize(size); break;
-        case Op::NOT     : emitOp("NOT"); emitSize(size); break;
+        case Op::AND1    : emitOp("AND1"); break;
+        case Op::AND2    : emitOp("AND2"); break;
+        case Op::AND4    : emitOp("AND4"); break;
+        case Op::OR1     : emitOp("OR1"); break;
+        case Op::OR2     : emitOp("OR2"); break;
+        case Op::OR4     : emitOp("OR4"); break;
+        case Op::XOR1    : emitOp("XOR1"); break;
+        case Op::XOR2    : emitOp("XOR2"); break;
+        case Op::XOR4    : emitOp("XOR4"); break;
+        case Op::NOT1    : emitOp("NOT1"); break;
+        case Op::NOT2    : emitOp("NOT2"); break;
+        case Op::NOT4    : emitOp("NOT4"); break;
+        case Op::SHR1    : emitOp("SHR1"); break;
+        case Op::SHR2    : emitOp("SHR2"); break;
+        case Op::SHR4    : emitOp("SHR4"); break;
+        case Op::ASR1    : emitOp("ASR1"); break;
+        case Op::ASR2    : emitOp("ASR2"); break;
+        case Op::ASR4    : emitOp("ASR4"); break;
+        case Op::SHL1    : emitOp("SHL1"); break;
+        case Op::SHL2    : emitOp("SHL2"); break;
+        case Op::SHL4    : emitOp("SHL4"); break;
         case Op::NEG     : emitOp("NEG"); emitSize(size); break;
         case Op::LNOT    : emitOp("LNOT"); emitSize(size); break;
         case Op::PREINC  : emitOp("PREINC"); emitSize(size); break;
@@ -321,7 +324,7 @@ void Decompiler::emitNumber(int32_t number)
     _out->append(std::to_string(number));
 }
 
-void Decompiler::emitSizeValue(uint8_t size)
+void Decompiler::emitSize(uint8_t size)
 {
     _out->append("<");
     switch (size) {
