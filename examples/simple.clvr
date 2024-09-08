@@ -26,11 +26,18 @@ struct Float16
     // produce undefined results
     function setValue(int16 i, uint16 f)
     {
-        _value = i + ((uint32(f) << BitsOfPrecision) / 10000);
+        core.printf("setValue(%04x, %04x)\n", i, f);
+        core.printf("setValue:f=%08x\n", (uint32(f) << BitsOfPrecision) / 10000);
+        _value = (i << BitsOfPrecision) + ((uint32(f) << BitsOfPrecision) / 10000);
+        core.printf("setValue: value=%04x\n", _value);
     }
     
     // Add and subtract can be done as integers since no change in dp occurs
-    function Float16 add(Float16 v) { return Float16(_value + v._value); }
+    function Float16 add(Float16 v)
+    {
+        core.printf("v=%04x, self=%04x, sum=%04x\n", v._value, _value, v._value + _value);
+        return Float16(_value + v._value);
+    }
     function Float16 sub(Float16 v) { return Float16(_value - v._value); }
     
     // multiply is done as a 32 bit integer multiply and then shifted right BitsOfPrecision bits
@@ -47,7 +54,11 @@ struct Float16
     
     function toString(uint8* buf, uint8 size)
     {
-        core.format(buf, size, "%d.%d\n", _value >> BitsOfPrecision, (_value & ((1 << BitsOfPrecision) - 1)) << 16 - BitsOfPrecision);
+        uint8 intPart = _value >> BitsOfPrecision;
+        uint16 mask = ((uint16(1) << BitsOfPrecision) - 1);
+        uint16 fracPart = _value & mask;
+        core.printf("int=%02x, mask=%04x, frac=%04x\n", intPart, mask, fracPart);
+        core.format(buf, size, "%d.%d\n", intPart, ((uint32(fracPart) * 10000) + 5000) >> BitsOfPrecision);
     }
 };
 
@@ -57,9 +68,12 @@ function int32 main()
     Float16 b;
     Float16 c;
     
-    a.setValue(1, 5000);
-    b.setValue(3, 7000);
+    a.setValue(0, 5000);
+    b.setValue(1, 1000);
     c = a.add(b);
+    
+    core.printf("c=%04x\n", c._value);
+
     
     uint8 buf[25];
     c.toString(buf, 25);

@@ -281,9 +281,9 @@ Opcodes:
 */
 
 // 0 bit opcodes start at 0x00
-static constexpr uint8_t OneBitOperandStart  = 0x40;
-static constexpr uint8_t TwoBitOperandStart  = 0x4c;
-static constexpr uint8_t FoutBitOperandStart = 0xb0;
+static constexpr uint8_t OneBitOperandStart  = 0x54;
+static constexpr uint8_t TwoBitOperandStart  = 0x60;
+static constexpr uint8_t FoutBitOperandStart = 0xc0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
@@ -375,6 +375,10 @@ enum class Op: uint8_t {
     OFFSET1 = 0x3c, // 8 bit ubnsigned offset added to ref on TOS
     OFFSET2 = 0x3d, // 16 bit ubnsigned offset added to ref on TOS
 
+    // These must have their '1', '2, '4' forms sequential in that order.
+    // When generating code, the '1' form is passed in and we add one to
+    // the opcode if we need the '2' form and add two if we need the '4'
+    // form
     AND1    = 0x3e,
     AND2    = 0x3f,
     AND4    = 0x40,
@@ -409,38 +413,38 @@ enum class Op: uint8_t {
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
     BRF     = 0x54, // Branch if TOS is false, branch is always forward
-    BRT     = 0x58, // Branch if TOS is true, branch is always forward
-    FBRA    = 0x5c, // Branch is always forward
-    RBRA    = 0x60, // Branch is always reverse
-    NCALL   = 0x64,
-    ENTER   = 0x68,
+    BRT     = 0x56, // Branch if TOS is true, branch is always forward
+    FBRA    = 0x58, // Branch is always forward
+    RBRA    = 0x5a, // Branch is always reverse
+    NCALL   = 0x5c,
+    ENTER   = 0x5e,
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
-    ADD     = 0x6c,
-    SUB     = 0x70,
-    IMUL    = 0x74,
-    UMUL    = 0x78,
-    IDIV    = 0x7c,
-    UDIV    = 0x80,
+    ADD     = 0x60,
+    SUB     = 0x64,
+    IMUL    = 0x68,
+    UMUL    = 0x6c,
+    IDIV    = 0x70,
+    UDIV    = 0x74,
     
-    NEG     = 0x84,
+    NEG     = 0x78,
 
-    PREINC  = 0x88, // Next byte is addr mode
-    PREDEC  = 0x8c, // Next byte is addr mode
-    POSTINC = 0x90, // Next byte is addr mode
-    POSTDEC = 0x94, // Next byte is addr mode
+    PREINC  = 0x80, // Next byte is addr mode
+    PREDEC  = 0x84, // Next byte is addr mode
+    POSTINC = 0x88, // Next byte is addr mode
+    POSTDEC = 0x8c, // Next byte is addr mode
     
-    LE      = 0x98,
-    LS      = 0x9c,
-    LT      = 0xa0,
-    LO      = 0xa4,
-    GE      = 0xa8,
-    HS      = 0xac,
-    GT      = 0xb0,
-    HI      = 0xb4,
-    EQ      = 0xb8,
-    NE      = 0xbc,
+    LE      = 0x90,
+    LS      = 0x94,
+    LT      = 0x98,
+    LO      = 0x9c,
+    GE      = 0xa0,
+    HS      = 0xa4,
+    GT      = 0xa8,
+    HI      = 0xac,
+    EQ      = 0xb0,
+    NE      = 0xb4,
 
 // These versions use the lower 4 bits of the opcode as a param (0-15)
     PUSHKS1 = 0xc0, // lower 4 bits is value from -8 to 7, push 1 byte

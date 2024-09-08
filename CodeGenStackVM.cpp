@@ -192,6 +192,22 @@ CodeGenStackVM::emitCodeString(const ASTPtr& node, bool isLHS)
     code().push_back('\0');
 }
 
+static bool adjustType(Op& op, uint8_t bytes)
+{
+    switch (op) {
+        case Op::AND1:
+        case Op::OR1:
+        case Op::XOR1:
+        case Op::NOT1:
+        case Op::SHL1:
+        case Op::SHR1:
+        case Op::ASR1:
+            op = Op(uint8_t(op) + ((bytes == 1) ? 0 : ((bytes == 2) ? 1 : 2)));
+            return true;
+        default: return false;
+    }
+}
+
 void
 CodeGenStackVM::emitCodeOp(const ASTPtr& node, bool isLHS)
 {
@@ -219,7 +235,13 @@ CodeGenStackVM::emitCodeOp(const ASTPtr& node, bool isLHS)
         emitCode(opNode->right(), (opNode->left() == nullptr) ? opNode->isRef() : isLHS);
     }
     
-    code().push_back(uint8_t(opNode->op()) | typeToSizeBits(opType));
+    // Adjust the op according to the type (for operators that don't have type in the lower 2 bits
+    Op op = opNode->op();
+    if (adjustType(op, typeToBytes(opType))) {
+        code().push_back(uint8_t(op));
+    } else {
+        code().push_back(uint8_t(op) | typeToSizeBits(opType));
+    }
 }
 
 void
