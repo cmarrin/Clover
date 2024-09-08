@@ -18,7 +18,10 @@ ModulePtr
 NativeCore::createModule()
 {
     ModulePtr coreModule = std::make_shared<NativeCore>();
-    coreModule->addNativeFunction("printf", uint16_t(Id::PrintF), Type::None, {{ "s", Type::String, true, 1, 1 }});
+    coreModule->addNativeFunction("printf", uint16_t(Id::PrintF), Type::None, {{ "fmt", Type::String, true, AddrSize, 1 }});
+    coreModule->addNativeFunction("format", uint16_t(Id::Format), Type::None, {{ "s", Type::UInt8, true, AddrSize, 1 },
+                                                                           { "n", Type::UInt16, false, 2, 1 },
+                                                                           { "fmt", Type::String, true, AddrSize, 1 }});
     coreModule->addNativeFunction("memset", uint16_t(Id::MemSet), Type::None, {{ "p", Type::None, true, 1, 1 },
                                                                            { "v", Type::UInt8, false, 1, 1 },
                                                                            { "n", Type::UInt32, false, 1, 1 }});
@@ -47,6 +50,14 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
             VarArg va(interp->memMgr(), 0, Type::String);
             AddrNativeType fmt = interp->memMgr()->getArg(0, AddrType);
             clvr::printf(fmt, va);
+            break;
+        }
+        case Id::Format: {
+            VarArg va(interp->memMgr(), AddrSize + 2, Type::String);
+            AddrNativeType s = interp->memMgr()->getArg(0, AddrType);
+            uint16_t n = interp->memMgr()->getArg(AddrSize, Type::UInt16);
+            AddrNativeType fmt = interp->memMgr()->getArg(AddrSize + 2, AddrType);
+            clvr::format(s, n, fmt, va);
             break;
         }
         case Id::RandomInt: {

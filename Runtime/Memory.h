@@ -260,6 +260,10 @@ class VarArg
     }
     
     void reset() { _nextAddr = _initialAddr; }
+    
+    void putChar(AddrNativeType addr, uint8_t c) { _memMgr->setAbs(addr, c, OpSize::i8); }
+    
+    Memory* memMgr() const { return _memMgr; }
 
   private:
     AddrNativeType _nextAddr;

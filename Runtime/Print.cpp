@@ -27,45 +27,77 @@ class FormatterArgs
     virtual ~FormatterArgs() { }
     
     virtual uint8_t getChar(uint32_t i) const = 0;
+    virtual void putChar(uint8_t c) = 0;
     virtual uint8_t getStringChar(uintptr_t p) const = 0;
     virtual uintptr_t getArg(clvr::Type type) = 0;
+    virtual void end() { }
 };
 
-class InterpFormatterArgs : public FormatterArgs
+class InterpPrintArgs : public FormatterArgs
 {
   public:
-    InterpFormatterArgs(clvr::AddrNativeType fmt, clvr::VarArg& args)
+    InterpPrintArgs(clvr::AddrNativeType fmt, clvr::VarArg& args)
         : _fmt(fmt)
         , _args(&args)
     { }
         
-    virtual ~InterpFormatterArgs() { }
-    virtual uint8_t getChar(uint32_t i) const override { return clvr::rom(_fmt + i); }
+    virtual ~InterpPrintArgs() { }
+    virtual uint8_t getChar(uint32_t i) const override { return getStringChar(uintptr_t(_fmt + i)); }
+    virtual void putChar(uint8_t c) override { clvr::putChar(c); }
     virtual uintptr_t getArg(clvr::Type type) override { return _args->arg(type); }
 
     // The interpreter keeps strings in ROM. The p pointer is actually an offset in the rom
     virtual uint8_t getStringChar(uintptr_t p) const override
     {
-        clvr::AddrNativeType addr = clvr::AddrNativeType(p);
-        return clvr::rom(addr);
+        return _args->memMgr()->getAbs(clvr::AddrNativeType(p), OpSize::i8);
     }
+    
+    clvr::VarArg* args() { return _args; }
 
   private:
     clvr::AddrNativeType _fmt;
     clvr::VarArg* _args;
 };
 
-class NativeFormatterArgs : public FormatterArgs
+class InterpFormatArgs : public InterpPrintArgs
 {
   public:
-    NativeFormatterArgs(const char* fmt, va_list args)
+    InterpFormatArgs(AddrNativeType s, uint16_t n, clvr::AddrNativeType fmt, clvr::VarArg& args)
+        : InterpPrintArgs(fmt, args)
+        , _buf(s)
+        , _size(n)
+        , _index(0)
+    { }
+        
+    virtual ~InterpFormatArgs() { }
+
+    virtual void putChar(uint8_t c) override
+    {
+        if (_index < _size - 1) {
+            args()->putChar(_buf + _index++, c);
+        }
+    }
+
+    virtual void end() override { putChar('\0'); }
+
+  private:
+    AddrNativeType _buf;
+    uint16_t _size;
+    uint16_t _index;
+};
+
+class NativePrintArgs : public FormatterArgs
+{
+  public:
+    NativePrintArgs(const char* fmt, va_list args)
         : _fmt(fmt)
     {
         va_copy(_args, args);
     }
         
-    virtual ~NativeFormatterArgs() { }
+    virtual ~NativePrintArgs() { }
     virtual uint8_t getChar(uint32_t i) const override { return _fmt[i]; }
+    virtual void putChar(uint8_t c) override { clvr::putChar(c); }
     virtual uintptr_t getArg(clvr::Type type) override
     {
         if (type == clvr::Type::Float) {
@@ -90,6 +122,33 @@ class NativeFormatterArgs : public FormatterArgs
     va_list _args;
 };
 
+class NativeFormatArgs : public NativePrintArgs
+{
+  public:
+    NativeFormatArgs(char* buf, uint16_t n, const char* fmt, va_list args)
+        : NativePrintArgs(fmt, args)
+        , _buf(buf)
+        , _size(n)
+        , _index(0)
+    { }
+    
+    virtual ~NativeFormatArgs() { }
+
+    virtual void putChar(uint8_t c) override
+    {
+        if (_index < _size - 1) {
+            _buf[_index++] = c;
+        }
+    }
+
+    virtual void end() override { putChar('\0'); }
+
+  private:
+    char* _buf;
+    uint16_t _size;
+    uint16_t _index;
+};
+
 enum class Flag {
     leftJustify = 0x01,
     plus = 0x02,
@@ -112,7 +171,14 @@ namespace clvr {
 int32_t
 printf(clvr::AddrNativeType fmt, clvr::VarArg& args)
 {
-    InterpFormatterArgs f(fmt, args);
+    InterpPrintArgs f(fmt, args);
+    return doprintf(&f);
+}
+
+int32_t
+format(AddrNativeType s, uint16_t n, clvr::AddrNativeType fmt, clvr::VarArg& args)
+{
+    InterpFormatArgs f(s, n, fmt, args);
     return doprintf(&f);
 }
 
@@ -125,16 +191,31 @@ printf(const char* fmt, ...)
 }
 
 int32_t
+format(char* s, uint16_t n, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    return clvr::vformat(s, n, fmt, args);
+}
+
+int32_t
 vprintf(const char* fmt, va_list args)
 {
-    NativeFormatterArgs f(fmt, args);
+    NativePrintArgs f(fmt, args);
+    return doprintf(&f);
+}
+
+int32_t
+vformat(char* s, uint16_t n, const char* fmt, va_list args)
+{
+    NativeFormatArgs f(s, n, fmt, args);
     return doprintf(&f);
 }
 
 }
 
 bool
-toNumber(FormatterArgs*f, uint32_t& fmt, uint32_t& n)
+toNumber(FormatterArgs* f, uint32_t& fmt, uint32_t& n)
 {
     n = 0;
     bool haveNumber = false;
@@ -152,7 +233,7 @@ toNumber(FormatterArgs*f, uint32_t& fmt, uint32_t& n)
 enum class Signed { Yes, No };
 enum class FloatType { Float, Exp, Shortest };
  
-static void handleFlags(FormatterArgs*f, uint32_t& fmt, uint8_t& flags)
+static void handleFlags(FormatterArgs* f, uint32_t& fmt, uint8_t& flags)
 {
     while (1) {
         switch (f->getChar(fmt)) {
@@ -167,7 +248,7 @@ static void handleFlags(FormatterArgs*f, uint32_t& fmt, uint8_t& flags)
     }
 }
 
-static int32_t handleWidth(FormatterArgs*f, uint32_t& fmt)
+static int32_t handleWidth(FormatterArgs* f, uint32_t& fmt)
 {
     if (f->getChar(fmt) == '*') {
         ++fmt;
@@ -180,7 +261,7 @@ static int32_t handleWidth(FormatterArgs*f, uint32_t& fmt)
 
 enum class Length { None, H, HH, L, LL, J, Z, T };
 
-static Length handleLength(FormatterArgs*f, uint32_t& fmt)
+static Length handleLength(FormatterArgs* f, uint32_t& fmt)
 {
     Length length = Length::None;
     if (f->getChar(fmt) == 'h') {
@@ -237,25 +318,25 @@ static char* intToString(uint64_t value, char* buf, size_t size, uint8_t base = 
     return p;
 }
 
-static int32_t outInteger(uintmax_t value, Signed sign, int32_t width, int32_t precision, uint8_t flags, uint8_t base, Capital cap)
+static int32_t outInteger(FormatterArgs* f, uintmax_t value, Signed sign, int32_t width, int32_t precision, uint8_t flags, uint8_t base, Capital cap)
 {
     uint32_t size = 0;
     if (sign == Signed::Yes) {
         intmax_t signedValue = value;
         if (signedValue < 0) {
             value = -signedValue;
-            clvr::putChar('-');
+            f->putChar('-');
             size = 1;
             width--;
         }
     }
     
     if (isFlag(flags, Flag::alt) && base != 10) {
-        clvr::putChar('0');
+        f->putChar('0');
         size++;
         width--;
         if (base == 16) {
-            clvr::putChar((cap == Capital::Yes) ? 'X' : 'x');
+            f->putChar((cap == Capital::Yes) ? 'X' : 'x');
             size++;
             width--;
         }
@@ -270,13 +351,13 @@ static int32_t outInteger(uintmax_t value, Signed sign, int32_t width, int32_t p
     char padChar = isFlag(flags, Flag::zeroPad) ? '0' : ' ';
     
     while (pad > 0) {
-        clvr::putChar(padChar);
+        f->putChar(padChar);
         size++;
         pad--;
     }
     
     for ( ; *p; ++p) {
-        clvr::putChar(*p);
+        f->putChar(*p);
     }
 
     return size;
@@ -294,14 +375,14 @@ static int32_t outString(FormatterArgs* f, uintptr_t p, int32_t width, int32_t p
         if (c == '\0') {
             break;
         }
-        clvr::putChar(c);
+        f->putChar(c);
         ++size;
     }
     
     if (width > size) {
         width -= size;
         while (width--) {
-            clvr::putChar(' ');
+            f->putChar(' ');
         }
     }
 
@@ -322,10 +403,12 @@ int32_t doprintf(FormatterArgs* f)
     uint8_t flags = 0;
     int32_t size = 0;
     uint32_t fmt = 0;
+    uint8_t c;
     
-    while (f->getChar(fmt)) {
-        if (f->getChar(fmt) != '%') {
-            clvr::putChar(f->getChar(fmt++));
+    while ((c = f->getChar(fmt)) != '\0') {
+        if (c != '%') {
+            f->putChar(c);
+            fmt++;
             size++;
             continue;
         }
@@ -346,17 +429,17 @@ int32_t doprintf(FormatterArgs* f)
         {
         case 'd':
         case 'i':
-            size += outInteger(getInteger(length, f), Signed::Yes, width, precision, flags, 10, Capital::No);
+            size += outInteger(f, getInteger(length, f), Signed::Yes, width, precision, flags, 10, Capital::No);
             break;
         case 'u':
-            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 10, Capital::No);
+            size += outInteger(f, getInteger(length, f), Signed::No, width, precision, flags, 10, Capital::No);
             break;
         case 'o':
-            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 8, Capital::No);
+            size += outInteger(f, getInteger(length, f), Signed::No, width, precision, flags, 8, Capital::No);
             break;
         case 'x':
         case 'X':
-            size += outInteger(getInteger(length, f), Signed::No, width, precision, flags, 16, (f->getChar(fmt) == 'X') ? Capital::Yes : Capital::No);
+            size += outInteger(f, getInteger(length, f), Signed::No, width, precision, flags, 16, (f->getChar(fmt) == 'X') ? Capital::Yes : Capital::No);
             break;
         case 'f':
         case 'F':
@@ -379,21 +462,21 @@ int32_t doprintf(FormatterArgs* f)
             char buf[20];
             clvr::toString(buf, clvr::intToFloat(int32_t(f->getArg(clvr::Type::Float))), width, (precision < 0) ? 6 : precision);
             for (int i = 0; buf[i] != '\0'; ++i) {
-                clvr::putChar(buf[i]);
+                f->putChar(buf[i]);
             }
             //size += outFloat(gen, flt::Float::fromArg(va_arg(va.value, flt::Float::arg_type)), width, precision, flags, cap, type);
             break;
         }
         case 'c':
             // Chars are passed in as uint32
-            clvr::putChar(static_cast<char>(f->getArg(clvr::Type::UInt32)));
+            f->putChar(static_cast<char>(f->getArg(clvr::Type::UInt32)));
             size++;
             break;
         case 'b': {
             // Booleans are passed in as uint32
             const char* s = f->getArg(clvr::Type::UInt32) ? "true" : "false";
             for (int i = 0; s[i] != '\0'; ++i) {
-                clvr::putChar(s[i]);
+                f->putChar(s[i]);
             }
             break;
         }
@@ -401,15 +484,16 @@ int32_t doprintf(FormatterArgs* f)
             size += outString(f, f->getArg(clvr::Type::String), width, precision, flags);
             break;
         case 'p':
-            size += outInteger(f->getArg(clvr::Type::UInt32), Signed::No, width, precision, flags, 16, Capital::No);
+            size += outInteger(f, f->getArg(clvr::Type::UInt32), Signed::No, width, precision, flags, 16, Capital::No);
             break;
         default:
-            clvr::putChar(f->getChar(fmt++));
+            f->putChar(f->getChar(fmt++));
             size++;
             break;
         }
         ++fmt;
     }
     
+    f->end();
     return size;
 }
