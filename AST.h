@@ -691,7 +691,7 @@ class ReturnNode : public ASTNode
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Return; }
-    virtual Type type() const override { return _arg->type(); }
+    virtual Type type() const override { return _arg ? _arg->type() : Type::None; }
 
     ASTPtr arg() const { return _arg; }
 

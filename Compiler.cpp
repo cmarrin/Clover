@@ -1083,10 +1083,12 @@ Compiler::returnStatement(const ASTPtr& parent)
     
     // If expr and return type are both scalar they can be cast,
     // otherwise it's a type mismatch
-    if (isScalar(ast->type()) && isScalar(neededType)) {
-        ast = TypeCastNode::castIfNeeded(ast, neededType);
-    } else {
-        expect(ast->type() == neededType, Error::MismatchedType);
+    if (ast) {
+        if (isScalar(ast->type()) && isScalar(neededType)) {
+            ast = TypeCastNode::castIfNeeded(ast, neededType);
+        } else {
+            expect(ast->type() == neededType, Error::MismatchedType);
+        }
     }
     
     ASTPtr returnNode = std::make_shared<ReturnNode>(ast);
@@ -1254,7 +1256,7 @@ Compiler::unaryExpression()
         opcode = Op::NEG;
         isSigned = true;
     } else if (match(Token::Twiddle)) {
-        opcode = Op::NOT;
+        opcode = Op::NOT1;
     } else if (match(Token::Bang)) {
         opcode = Op::LNOT;
         resultType = Type::UInt8;
@@ -1527,8 +1529,8 @@ Compiler::argumentList(const ASTPtr& fun)
             expect(sym != nullptr, Error::InternalError);
             neededType = sym->type();
             
-            // If the arg is a struct and we're expecting a pointer ref it
-            if (sym->isPointer() && isStruct(arg->type()) && !arg->isPointer()) {
+            // If the arg is a struct or an array and we're expecting a pointer ref it
+            if (sym->isPointer() && !arg->isPointer() && (isStruct(arg->type()) || arg->isIndexable())) {
                 arg = std::make_shared<RefNode>(arg);
             } else if (sym->isPointer() || arg->isPointer()) {
                 // If both the sym and arg are scalar then we can cast.
@@ -1546,6 +1548,10 @@ Compiler::argumentList(const ASTPtr& fun)
         } else {
             // We are past the last arg. That makes this a vararg call. We upcast any integral
             // types to 32 bits.
+            if (!arg->isPointer() && (isStruct(arg->type()) || arg->isIndexable())) {
+                arg = std::make_shared<RefNode>(arg);
+            }
+            
             neededType = arg->type();
             if (isEnum(neededType)) {
                 neededType = Type::UInt8;

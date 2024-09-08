@@ -18,7 +18,7 @@ ASTPtr
 TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType)
 {
     // We can only cast scalar nodes
-    if ((!isEnum(node->type()) && !isScalar(node->type())) || !isScalar(neededType)) {
+    if ((!isEnum(node->type()) && !isScalar(node->type())) || !isScalar(neededType) || node->isPointer()) {
         return node;
     }
     
