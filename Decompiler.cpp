@@ -198,6 +198,7 @@ Decompiler::statement()
         case Op::PUSHK44 : emitOp("PUSHK44"); emitConstant(4); break;
         case Op::PUSHKS1 : emitOp("PUSHKS1"); emitShortConstant(size); break;
         case Op::PUSHKS2 : emitOp("PUSHKS2"); emitShortConstant(size); break;
+        case Op::PUSHKS4 : emitOp("PUSHKS4"); emitShortConstant(size); break;
         case Op::DUP1    : emitOp("DUP1"); break;
         case Op::DUP2    : emitOp("DUP2"); break;
         case Op::DUP4    : emitOp("DUP4"); break;

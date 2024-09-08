@@ -646,6 +646,13 @@ InterpreterBase::execute(ExecMode mode)
                 }
                 _memMgr.stack().push(left, OpSize::i16);
                 break;
+            case Op::PUSHKS4:
+                left = operand;
+                if (left & 0x08) {
+                    left |= 0xfffffff0;
+                }
+                _memMgr.stack().push(left, OpSize::i32);
+                break;
             case Op::PUSHS: {
                 // String is in ROM memory. Push a pointer to it and
                 // set pc past it. ROM pointer is offset by stack size

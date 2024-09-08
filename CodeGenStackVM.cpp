@@ -103,7 +103,7 @@ static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
     switch((bytesInOperand << 4) | bytesToPush) {
         case 0x01: return Op::PUSHKS1;
         case 0x02: return Op::PUSHKS2;
-        case 0x04: return Op::NOP;
+        case 0x04: return Op::PUSHKS4;
         case 0x11: return Op::PUSHK11;
         case 0x12: return Op::PUSHK12;
         case 0x14: return Op::PUSHK14;

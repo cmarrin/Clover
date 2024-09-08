@@ -281,9 +281,9 @@ Opcodes:
 */
 
 // 0 bit opcodes start at 0x00
-static constexpr uint8_t OneBitOperandStart  = 0x54;
-static constexpr uint8_t TwoBitOperandStart  = 0x60;
-static constexpr uint8_t FoutBitOperandStart = 0xc0;
+static constexpr uint8_t OneBitOperandStart  = 0x50;
+static constexpr uint8_t TwoBitOperandStart  = 0x5c;
+static constexpr uint8_t FoutBitOperandStart = 0xb0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
@@ -329,81 +329,75 @@ enum class Op: uint8_t {
                     // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
                     // there is none then this is a BRA to the end of the clauses.
 
-//
-//
-// Available opcodes 20 - 23
-//
-//
-
-    PUSHR1  = 0x24, // Push _returnValue (1 byte)
-    PUSHR2  = 0x25, // Push _returnValue (2 bytes)
-    PUSHR4  = 0x26, // Push _returnValue (4 bytes)
+    PUSHR1  = 0x20, // Push _returnValue (1 byte)
+    PUSHR2  = 0x21, // Push _returnValue (2 bytes)
+    PUSHR4  = 0x22, // Push _returnValue (4 bytes)
 
     // Cast operators are sparse. For narrowing cast you don't
     // need to worry about sign.
-    CASTF8  = 0x27,
-    CASTF16 = 0x28,
-    CASTF32 = 0x29,
+    CASTF8  = 0x23,
+    CASTF16 = 0x24,
+    CASTF32 = 0x25,
     
-    CAST32F = 0x2a,
-    CAST3216= 0x2b,
-    CAST328 = 0x2c,
+    CAST32F = 0x26,
+    CAST3216= 0x27,
+    CAST328 = 0x28,
     
-    CAST168 = 0x2d,
+    CAST168 = 0x29,
     
     // For widening casts you need signed and unsigned
     // versions so you know when to sign extend
-    CASTU16F= 0x2e,
-    CASTU1632=0x2f,
+    CASTU16F= 0x2a,
+    CASTU1632=0x2b,
     
-    CASTI16F= 0x30,
-    CASTI1632=0x31,
+    CASTI16F= 0x2c,
+    CASTI1632=0x2d,
 
-    CASTU8F = 0x32,
-    CASTU832= 0x33,
-    CASTU816= 0x34,
+    CASTU8F = 0x2e,
+    CASTU832= 0x2f,
+    CASTU816= 0x30,
 
-    CASTI8F = 0x35,
-    CASTI832= 0x36,
-    CASTI816= 0x37,
+    CASTI8F = 0x31,
+    CASTI832= 0x32,
+    CASTI816= 0x33,
     
-    RET     = 0x38, // Return without popping anything from the stack
-    RETR1   = 0x39, // Return after popping TOS into _returnValue
-    RETR2   = 0x3a, // Return after popping TOS into _returnValue
-    RETR4   = 0x3b, // Return after popping TOS into _returnValue
+    RET     = 0x34, // Return without popping anything from the stack
+    RETR1   = 0x35, // Return after popping TOS into _returnValue
+    RETR2   = 0x36, // Return after popping TOS into _returnValue
+    RETR4   = 0x37, // Return after popping TOS into _returnValue
 
-    OFFSET1 = 0x3c, // 8 bit ubnsigned offset added to ref on TOS
-    OFFSET2 = 0x3d, // 16 bit ubnsigned offset added to ref on TOS
+    OFFSET1 = 0x38, // 8 bit ubnsigned offset added to ref on TOS
+    OFFSET2 = 0x39, // 16 bit ubnsigned offset added to ref on TOS
 
     // These must have their '1', '2, '4' forms sequential in that order.
     // When generating code, the '1' form is passed in and we add one to
     // the opcode if we need the '2' form and add two if we need the '4'
     // form
-    AND1    = 0x3e,
-    AND2    = 0x3f,
-    AND4    = 0x40,
-    OR1     = 0x41,
-    OR2     = 0x42,
-    OR4     = 0x43,
-    XOR1    = 0x44,
-    XOR2    = 0x45,
-    XOR4    = 0x46,
-    NOT1    = 0x47,
-    NOT2    = 0x48,
-    NOT4    = 0x49,
-    SHR1    = 0x4a,
-    SHR2    = 0x4b,
-    SHR4    = 0x4c,
-    ASR1    = 0x4d,
-    ASR2    = 0x4e,
-    ASR4    = 0x4f,
-    SHL1    = 0x50,
-    SHL2    = 0x51,
-    SHL4    = 0x52,
+    AND1    = 0x3a,
+    AND2    = 0x3b,
+    AND4    = 0x3c,
+    OR1     = 0x3d,
+    OR2     = 0x3e,
+    OR4     = 0x3f,
+    XOR1    = 0x40,
+    XOR2    = 0x41,
+    XOR4    = 0x42,
+    NOT1    = 0x43,
+    NOT2    = 0x44,
+    NOT4    = 0x45,
+    SHR1    = 0x46,
+    SHR2    = 0x47,
+    SHR4    = 0x48,
+    ASR1    = 0x49,
+    ASR2    = 0x4a,
+    ASR4    = 0x4b,
+    SHL1    = 0x4c,
+    SHL2    = 0x4d,
+    SHL4    = 0x4e,
     
 //
 //
-// Available opcodes 53
+// Available opcodes 4f
 //
 //
 
@@ -412,43 +406,44 @@ enum class Op: uint8_t {
 // This limits branches to the range -32768 to 32767.
 // What happens if we go over that? do we fail or have some
 // kind of trampoline support?
-    BRF     = 0x54, // Branch if TOS is false, branch is always forward
-    BRT     = 0x56, // Branch if TOS is true, branch is always forward
-    FBRA    = 0x58, // Branch is always forward
-    RBRA    = 0x5a, // Branch is always reverse
-    NCALL   = 0x5c,
-    ENTER   = 0x5e,
+    BRF     = 0x50, // Branch if TOS is false, branch is always forward
+    BRT     = 0x52, // Branch if TOS is true, branch is always forward
+    FBRA    = 0x54, // Branch is always forward
+    RBRA    = 0x56, // Branch is always reverse
+    NCALL   = 0x58,
+    ENTER   = 0x5a,
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
-    ADD     = 0x60,
-    SUB     = 0x64,
-    IMUL    = 0x68,
-    UMUL    = 0x6c,
-    IDIV    = 0x70,
-    UDIV    = 0x74,
+    ADD     = 0x5c,
+    SUB     = 0x60,
+    IMUL    = 0x64,
+    UMUL    = 0x68,
+    IDIV    = 0x6c,
+    UDIV    = 0x70,
     
-    NEG     = 0x78,
+    NEG     = 0x74,
 
-    PREINC  = 0x80, // Next byte is addr mode
-    PREDEC  = 0x84, // Next byte is addr mode
-    POSTINC = 0x88, // Next byte is addr mode
-    POSTDEC = 0x8c, // Next byte is addr mode
+    PREINC  = 0x78, // Next byte is addr mode
+    PREDEC  = 0x7c, // Next byte is addr mode
+    POSTINC = 0x80, // Next byte is addr mode
+    POSTDEC = 0x84, // Next byte is addr mode
     
-    LE      = 0x90,
-    LS      = 0x94,
-    LT      = 0x98,
-    LO      = 0x9c,
-    GE      = 0xa0,
-    HS      = 0xa4,
-    GT      = 0xa8,
-    HI      = 0xac,
-    EQ      = 0xb0,
-    NE      = 0xb4,
+    LE      = 0x88,
+    LS      = 0x8c,
+    LT      = 0x90,
+    LO      = 0x94,
+    GE      = 0x98,
+    HS      = 0x9c,
+    GT      = 0xa0,
+    HI      = 0xa4,
+    EQ      = 0xa8,
+    NE      = 0xac,
 
 // These versions use the lower 4 bits of the opcode as a param (0-15)
-    PUSHKS1 = 0xc0, // lower 4 bits is value from -8 to 7, push 1 byte
-    PUSHKS2 = 0xd0, // lower 4 bits is value from -8 to 7, push 2 bytes
+    PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
+    PUSHKS2 = 0xc0, // lower 4 bits is value from -8 to 7, push 2 bytes
+    PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
     DROPS   = 0xe0, // lower 4 bits is bytes to drop from 1 to 16
     ENTERS  = 0xf0,
 };
