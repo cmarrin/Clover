@@ -304,14 +304,18 @@ enum class Op: uint8_t {
     MCALL   = 0x0c, // Call a member function. TOS has struct instance address that must be put in the Y register
     INDEX1  = 0x0d, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
     INDEX2  = 0x0e, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    PUSHREF = 0x0f, // Next byte is addr mode. Data width is used when computing negative offsets from U
     
-    DEREF1  = 0x0f, // TOS has ref, pop it, load the value at that address and push it
-    DEREF2  = 0x10,
-    DEREF4  = 0x11,
-    POP1    = 0x12, // Next byte is addr mode, pop TOS and store at address
-    POP2    = 0x13,
-    POP4    = 0x14,
-    PUSHREF = 0x15, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    // These must have their '1', '2, '4' forms sequential in that order.
+    // When generating code, the '1' form is passed in and we add one to
+    // the opcode if we need the '2' form and add two if we need the '4'
+    // form
+    DEREF1  = 0x10, // TOS has ref, pop it, load the value at that address and push it
+    DEREF2  = 0x11,
+    DEREF4  = 0x12,
+    POP1    = 0x13, // Next byte is addr mode, pop TOS and store at address
+    POP2    = 0x14,
+    POP4    = 0x15,
     POPDEREF1=0x16, // a = popaddr, v = pop1, mem1[a] = v
     POPDEREF2=0x17, // a = popaddr, v = pop2, mem2[a] = v
     POPDEREF4=0x18, // a = popaddr, v = pop4, mem4[a] = v
@@ -323,15 +327,15 @@ enum class Op: uint8_t {
     DUP2    = 0x1d,
     DUP4    = 0x1e,
     
-    SWITCH  = 0x1f, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr>
+    PUSHR1  = 0x1f, // Push _returnValue (1 byte)
+    PUSHR2  = 0x20, // Push _returnValue (2 bytes)
+    PUSHR4  = 0x21, // Push _returnValue (4 bytes)
+
+    SWITCH  = 0x22, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr>
                     // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
                     // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
                     // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
                     // there is none then this is a BRA to the end of the clauses.
-
-    PUSHR1  = 0x20, // Push _returnValue (1 byte)
-    PUSHR2  = 0x21, // Push _returnValue (2 bytes)
-    PUSHR4  = 0x22, // Push _returnValue (4 bytes)
 
     // Cast operators are sparse. For narrowing cast you don't
     // need to worry about sign.
