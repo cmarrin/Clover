@@ -36,34 +36,6 @@
 struct PostLightEffects
 {
 
-struct Float16
-{
-    // 16 bit float represented in an int16 as 1:1:14.
-    // Can represent numbers from -1.9999 to 1.9999
-
-    const uint8 BitsOfPrecision = 14;
-    
-    Float16(int16 v) { value = v; }
-    
-    // Add and subtract can be done as integers since no change in dp occurs
-    function Float16 add(Float16 v) { return Float16(value + v.value); }
-    function Float16 sub(Float16 v) { return Float16(value - v.value); }
-    
-    // multiply is done as a 32 bit integer multiply and then shifted right BitsOfPrecision bits
-    function Float16 mul(Float16 v)
-    {
-        return Float16((int32(value) * int32(v.value)) >> BitsOfPrecision);
-    }
-    
-    // divide is done by shifting left BitsOfPrecision bits, then doing an integer divide
-    function Float16 div(Float16 v)
-    {
-        return Float16((int32(value) << BitsOfPrecision) / int32(v.value));
-    }
-    
-    int16 value;
-};
-
 struct FlickerSpeedEntry
 {
     uint8 min;

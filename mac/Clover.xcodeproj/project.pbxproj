@@ -60,7 +60,6 @@
 		4914A49A2C4DD665003DDADA /* TestFunction.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.clvr; path = ../Test/TestFunction.clvr; sourceTree = "<group>"; };
 		491886F42C5EDAE70053F2C0 /* Clover.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Clover.h; path = ../Runtime/Clover.h; sourceTree = "<group>"; };
 		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
-		492BB6322C6E58C20022D290 /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.clvr; path = ../PostLightEffects/PostLightEffects.clvr; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compile; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A0F22BB6F59900CE3C9E /* compile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compile.cpp; sourceTree = "<group>"; };
 		4941A1012BBA1D2800CE3C9E /* Flicker.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.clvr; path = ../examples/Flicker.clvr; sourceTree = "<group>"; };
@@ -91,6 +90,7 @@
 		49C469C62C6A769E00588838 /* NativeColor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeColor.h; path = ../Runtime/NativeColor.h; sourceTree = "<group>"; };
 		49C469C72C6A83B100588838 /* NativeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeCore.h; path = ../Runtime/NativeCore.h; sourceTree = "<group>"; };
 		49C469C82C6A83B100588838 /* NativeCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCore.cpp; path = ../Runtime/NativeCore.cpp; sourceTree = "<group>"; };
+		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
 		49E9ACCB2C715C580074BD25 /* PostLightController.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostLightController.ino; path = ../PostLightController/PostLightController.ino; sourceTree = "<group>"; };
 		49E9ACCD2C715F990074BD25 /* Flash.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Flash.cpp; path = ../PostLightController/Flash.cpp; sourceTree = "<group>"; };
 		49E9ACCF2C715F990074BD25 /* InterpretedEffect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = InterpretedEffect.h; path = ../PostLightController/InterpretedEffect.h; sourceTree = "<group>"; };
@@ -202,7 +202,6 @@
 			isa = PBXGroup;
 			children = (
 				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
-				492BB6322C6E58C20022D290 /* PostLightEffects.clvr */,
 				4941A1012BBA1D2800CE3C9E /* Flicker.clvr */,
 				4941A1172BBB0B1200CE3C9E /* Effects.clvr */,
 				49C164A42C025CD500981AD1 /* simple.clvr */,
@@ -213,6 +212,7 @@
 		49E9ACCA2C715C420074BD25 /* PostLightController */ = {
 			isa = PBXGroup;
 			children = (
+				49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */,
 				49E9ACCB2C715C580074BD25 /* PostLightController.ino */,
 				49E9ACCD2C715F990074BD25 /* Flash.cpp */,
 				49E9ACD02C715F990074BD25 /* Flash.h */,
