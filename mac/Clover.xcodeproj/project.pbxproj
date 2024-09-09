@@ -91,6 +91,7 @@
 		49C469C72C6A83B100588838 /* NativeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeCore.h; path = ../Runtime/NativeCore.h; sourceTree = "<group>"; };
 		49C469C82C6A83B100588838 /* NativeCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCore.cpp; path = ../Runtime/NativeCore.cpp; sourceTree = "<group>"; };
 		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
+		49E2F2982C8F4652007E0F0A /* Float16.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = Float16.clvr; path = ../modules/Float16.clvr; sourceTree = "<group>"; };
 		49E9ACCB2C715C580074BD25 /* PostLightController.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostLightController.ino; path = ../PostLightController/PostLightController.ino; sourceTree = "<group>"; };
 		49E9ACCD2C715F990074BD25 /* Flash.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Flash.cpp; path = ../PostLightController/Flash.cpp; sourceTree = "<group>"; };
 		49E9ACCF2C715F990074BD25 /* InterpretedEffect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = InterpretedEffect.h; path = ../PostLightController/InterpretedEffect.h; sourceTree = "<group>"; };
@@ -177,6 +178,7 @@
 				49E9ACCA2C715C420074BD25 /* PostLightController */,
 				4914A48C2C4DD63C003DDADA /* Test */,
 				4941A1002BBA1CF300CE3C9E /* examples */,
+				49E2F2972C8F461F007E0F0A /* modules */,
 				4941A0F02BB6F59900CE3C9E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -207,6 +209,14 @@
 				49C164A42C025CD500981AD1 /* simple.clvr */,
 			);
 			name = examples;
+			sourceTree = "<group>";
+		};
+		49E2F2972C8F461F007E0F0A /* modules */ = {
+			isa = PBXGroup;
+			children = (
+				49E2F2982C8F4652007E0F0A /* Float16.clvr */,
+			);
+			name = modules;
 			sourceTree = "<group>";
 		};
 		49E9ACCA2C715C420074BD25 /* PostLightController */ = {

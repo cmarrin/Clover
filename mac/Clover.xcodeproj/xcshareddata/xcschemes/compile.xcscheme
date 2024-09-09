@@ -57,6 +57,10 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "-d -t -h modules/Float16.clvr"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-d -a -l -h PostLightEffects/PostLightEffects.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -66,7 +70,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestCore.clvr"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestIntExpr.clvr"
