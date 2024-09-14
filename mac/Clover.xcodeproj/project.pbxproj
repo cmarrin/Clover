@@ -22,7 +22,6 @@
 		49C9E7BC2C94FB4200E58516 /* clvr-interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7B32C94F87500E58516 /* clvr-interp.cpp */; };
 		49C9E7BD2C95089D00E58516 /* clvr in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4941A0EF2BB6F59900CE3C9E /* clvr */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		49C9E7CD2C95111C00E58516 /* clvr-interp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 49C164A92C0297FB00981AD1 /* clvr-interp */; };
-		49C9E7E52C95129300E58516 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7E42C95129300E58516 /* main.cpp */; };
 		49FAA0832C8BCF6C0060F8AA /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */; };
 /* End PBXBuildFile section */
 
@@ -109,7 +108,6 @@
 		49C9E7B22C94F87500E58516 /* clvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clvr.cpp; sourceTree = "<group>"; };
 		49C9E7B32C94F87500E58516 /* clvr-interp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "clvr-interp.cpp"; sourceTree = "<group>"; };
 		49C9E7E22C95129300E58516 /* Clover */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Clover; sourceTree = BUILT_PRODUCTS_DIR; };
-		49C9E7E42C95129300E58516 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
 		49E2F2982C8F4652007E0F0A /* Float16.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = Float16.clvr; path = ../modules/Float16.clvr; sourceTree = "<group>"; };
 		49E9ACCB2C715C580074BD25 /* PostLightController.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostLightController.ino; path = ../PostLightController/PostLightController.ino; sourceTree = "<group>"; };
@@ -206,7 +204,6 @@
 				4914A48C2C4DD63C003DDADA /* Test */,
 				4941A1002BBA1CF300CE3C9E /* examples */,
 				49E2F2972C8F461F007E0F0A /* modules */,
-				49C9E7E32C95129300E58516 /* Clover */,
 				4941A0F02BB6F59900CE3C9E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -239,14 +236,6 @@
 				49C164A42C025CD500981AD1 /* simple.clvr */,
 			);
 			name = examples;
-			sourceTree = "<group>";
-		};
-		49C9E7E32C95129300E58516 /* Clover */ = {
-			isa = PBXGroup;
-			children = (
-				49C9E7E42C95129300E58516 /* main.cpp */,
-			);
-			path = Clover;
 			sourceTree = "<group>";
 		};
 		49E2F2972C8F461F007E0F0A /* modules */ = {
@@ -397,7 +386,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				49C9E7E52C95129300E58516 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
