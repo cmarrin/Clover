@@ -9,3 +9,4 @@ PostLightEffects/*.h
 examples/*.h
 mac/Clover.xcodeproj/xcuserdata/cmarrin.xcuserdatad
 *.clvx
+*.lcdx

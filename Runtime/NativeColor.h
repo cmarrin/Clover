@@ -13,7 +13,7 @@
 
 #pragma once
 
-#ifndef RUNTIME
+#if COMPILE == 1
 #include "Module.h"
 #endif
 
@@ -24,7 +24,7 @@ namespace clvr {
 class InterpreterBase;
 
 class NativeColor
-#ifndef RUNTIME
+#if COMPILE == 1
     : public Module
 #endif
 {
@@ -35,14 +35,15 @@ public:
     };
     
     NativeColor()
-#ifndef RUNTIME
+#if COMPILE == 1
         : Module("clr")
 #endif
     { }
 
-#ifndef RUNTIME
+#if COMPILE == 1
     static ModulePtr createModule();
-#else
+#endif
+#if RUNTIME == 1
     static void callNative(uint16_t id, InterpreterBase* interp);
     static uint32_t hsvToRGB(float h, float s, float v);
 #endif

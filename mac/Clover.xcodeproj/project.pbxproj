@@ -22,6 +22,17 @@
 		49C9E7BC2C94FB4200E58516 /* clvr-interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7B32C94F87500E58516 /* clvr-interp.cpp */; };
 		49C9E7BD2C95089D00E58516 /* clvr in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4941A0EF2BB6F59900CE3C9E /* clvr */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		49C9E7CD2C95111C00E58516 /* clvr-interp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 49C164A92C0297FB00981AD1 /* clvr-interp */; };
+		49D70D2B2C95E86B000A325C /* Clover.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49D70D292C95E855000A325C /* Clover.cpp */; };
+		49D70D2C2C95E8B4000A325C /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */; };
+		49D70D2D2C95E8B8000A325C /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
+		49D70D2E2C95E8BB000A325C /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* Compiler.cpp */; };
+		49D70D2F2C95E8BE000A325C /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
+		49D70D302C95E8C1000A325C /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4842C2E0F92003DDADA /* Function.cpp */; };
+		49D70D312C95E8C4000A325C /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* Interpreter.cpp */; };
+		49D70D322C95E8C8000A325C /* NativeColor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C52C6A769E00588838 /* NativeColor.cpp */; };
+		49D70D332C95E8CC000A325C /* NativeCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C82C6A83B100588838 /* NativeCore.cpp */; };
+		49D70D342C95E8D2000A325C /* Print.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4892C44A132003DDADA /* Print.cpp */; };
+		49D70D352C95E8D5000A325C /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
 		49FAA0832C8BCF6C0060F8AA /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */; };
 /* End PBXBuildFile section */
 
@@ -108,6 +119,7 @@
 		49C9E7B22C94F87500E58516 /* clvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clvr.cpp; sourceTree = "<group>"; };
 		49C9E7B32C94F87500E58516 /* clvr-interp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "clvr-interp.cpp"; sourceTree = "<group>"; };
 		49C9E7E22C95129300E58516 /* Clover */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Clover; sourceTree = BUILT_PRODUCTS_DIR; };
+		49D70D292C95E855000A325C /* Clover.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Clover.cpp; sourceTree = "<group>"; };
 		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
 		49E2F2982C8F4652007E0F0A /* Float16.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = Float16.clvr; path = ../modules/Float16.clvr; sourceTree = "<group>"; };
 		49E9ACCB2C715C580074BD25 /* PostLightController.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostLightController.ino; path = ../PostLightController/PostLightController.ino; sourceTree = "<group>"; };
@@ -221,6 +233,7 @@
 		4941A0F12BB6F59900CE3C9E /* mac */ = {
 			isa = PBXGroup;
 			children = (
+				49D70D292C95E855000A325C /* Clover.cpp */,
 				49C9E7B32C94F87500E58516 /* clvr-interp.cpp */,
 				49C9E7B22C94F87500E58516 /* clvr.cpp */,
 			);
@@ -386,6 +399,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				49D70D2F2C95E8BE000A325C /* Decompiler.cpp in Sources */,
+				49D70D302C95E8C1000A325C /* Function.cpp in Sources */,
+				49D70D2E2C95E8BB000A325C /* Compiler.cpp in Sources */,
+				49D70D2D2C95E8B8000A325C /* AST.cpp in Sources */,
+				49D70D2B2C95E86B000A325C /* Clover.cpp in Sources */,
+				49D70D312C95E8C4000A325C /* Interpreter.cpp in Sources */,
+				49D70D322C95E8C8000A325C /* NativeColor.cpp in Sources */,
+				49D70D342C95E8D2000A325C /* Print.cpp in Sources */,
+				49D70D352C95E8D5000A325C /* Scanner.cpp in Sources */,
+				49D70D332C95E8CC000A325C /* NativeCore.cpp in Sources */,
+				49D70D2C2C95E8B4000A325C /* CodeGenStackVM.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -515,6 +539,10 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					COMPILE,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -526,6 +554,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = COMPILE;
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -541,7 +570,6 @@
 					RUNTIME,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				RUNTIME = 1;
 			};
 			name = Debug;
 		};
@@ -552,7 +580,6 @@
 				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = RUNTIME;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				RUNTIME = 1;
 			};
 			name = Release;
 		};
@@ -560,7 +587,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				MACOSX_DEPLOYMENT_TARGET = 14.5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					COMPILE,
+					RUNTIME,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -569,7 +602,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				MACOSX_DEPLOYMENT_TARGET = 14.5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					COMPILE,
+					RUNTIME,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

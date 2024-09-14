@@ -26,7 +26,7 @@
 
 #pragma once
 
-#ifndef RUNTIME
+#if COMPILE == 1
 #include "Module.h"
 #endif
 
@@ -37,7 +37,7 @@ namespace clvr {
 class InterpreterBase;
 
 class NativeCore
-#ifndef RUNTIME
+#if COMPILE == 1
     : public Module
 #endif
 {
@@ -62,14 +62,15 @@ class NativeCore
     };
     
     NativeCore()
-#ifndef RUNTIME
+#if COMPILE == 1
         : Module("core")
 #endif
     { }
     
-#ifndef RUNTIME
+#if COMPILE == 1
     static ModulePtr createModule();
-#else
+#endif
+#if RUNTIME == 1
     static void callNative(uint16_t id, InterpreterBase* interp);
 #endif
 };

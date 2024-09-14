@@ -13,7 +13,7 @@
 
 using namespace clvr;
 
-#ifndef RUNTIME
+#if COMPILE == 1
 ModulePtr
 NativeCore::createModule()
 {
@@ -39,7 +39,8 @@ NativeCore::createModule()
     coreModule->addNativeFunction("animate", uint16_t(Id::Animate), Type::Int8, { { "p", Type::None, true, 1, 1 } });
     return coreModule;
 }
-#else
+#endif
+#if RUNTIME == 1
 void
 NativeCore::callNative(uint16_t id, InterpreterBase* interp)
 {
