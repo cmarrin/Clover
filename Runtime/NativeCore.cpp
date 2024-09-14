@@ -13,7 +13,7 @@
 
 using namespace clvr;
 
-#ifndef ARDUINO
+#ifndef RUNTIME
 ModulePtr
 NativeCore::createModule()
 {
@@ -39,8 +39,7 @@ NativeCore::createModule()
     coreModule->addNativeFunction("animate", uint16_t(Id::Animate), Type::Int8, { { "p", Type::None, true, 1, 1 } });
     return coreModule;
 }
-#endif
-
+#else
 void
 NativeCore::callNative(uint16_t id, InterpreterBase* interp)
 {
@@ -164,3 +163,4 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
         }
     }
 }
+#endif

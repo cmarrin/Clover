@@ -121,7 +121,7 @@ static constexpr uint8_t opSizeToBytes(OpSize opSize)
     return (opSize == OpSize::i8) ? 1 : ((opSize == OpSize::i16) ? 2 : 4);
 }
 
-static constexpr OpSize typeToOpSize(Type type)
+static inline OpSize typeToOpSize(Type type)
 {
     if (isEnum(type)) {
         // FIXME: For now Enums are always 1 byte

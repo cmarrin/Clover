@@ -26,7 +26,7 @@
 
 #pragma once
 
-#ifndef ARDUINO
+#ifndef RUNTIME
 #include "Module.h"
 #endif
 
@@ -37,7 +37,7 @@ namespace clvr {
 class InterpreterBase;
 
 class NativeCore
-#ifndef ARDUINO
+#ifndef RUNTIME
     : public Module
 #endif
 {
@@ -62,19 +62,16 @@ class NativeCore
     };
     
     NativeCore()
-#ifndef ARDUINO
+#ifndef RUNTIME
         : Module("core")
 #endif
     { }
     
-#ifndef ARDUINO
+#ifndef RUNTIME
     static ModulePtr createModule();
-#endif
-
+#else
     static void callNative(uint16_t id, InterpreterBase* interp);
-
-
-  private:
+#endif
 };
 
 }

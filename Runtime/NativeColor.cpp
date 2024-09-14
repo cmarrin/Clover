@@ -17,12 +17,14 @@
 #include <Adafruit_NeoPixel.h>
 static uint32_t gamma(uint32_t rgb) { return Adafruit_NeoPixel::gamma32(rgb); }
 #else
+#ifdef RUNTIME
 static uint32_t gamma(uint32_t rgb) { return rgb; }
+#endif
 #endif
 
 using namespace clvr;
 
-#ifndef ARDUINO
+#ifndef RUNTIME
 ModulePtr
 NativeColor::createModule()
 {
@@ -31,8 +33,7 @@ NativeColor::createModule()
     module->addNativeFunction("setLight", uint16_t(Id::SetLight), Type::None, {{ "i", Type::UInt8, false, 1, 1 }, { "c", Type::None, true, 1, 1 }});
     return module;
 }
-#endif
-
+#else
 void
 NativeColor::callNative(uint16_t id, InterpreterBase* interp)
 {
@@ -116,4 +117,4 @@ NativeColor::hsvToRGB(float h, float s, float v)
 
     return gamma(rgb);
 }
-
+#endif

@@ -13,7 +13,7 @@
 
 #pragma once
 
-#ifndef ARDUINO
+#ifndef RUNTIME
 #include "Module.h"
 #endif
 
@@ -24,7 +24,7 @@ namespace clvr {
 class InterpreterBase;
 
 class NativeColor
-#ifndef ARDUINO
+#ifndef RUNTIME
     : public Module
 #endif
 {
@@ -35,20 +35,17 @@ public:
     };
     
     NativeColor()
-#ifndef ARDUINO
+#ifndef RUNTIME
         : Module("clr")
 #endif
     { }
 
-#ifndef ARDUINO
+#ifndef RUNTIME
     static ModulePtr createModule();
-#endif
-
+#else
     static void callNative(uint16_t id, InterpreterBase* interp);
-    
     static uint32_t hsvToRGB(float h, float s, float v);
-
-  private:
+#endif
 };
 
 }

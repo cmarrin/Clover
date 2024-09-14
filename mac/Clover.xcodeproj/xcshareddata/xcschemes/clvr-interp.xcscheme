@@ -4,7 +4,8 @@
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES">
+      buildImplicitDependencies = "YES"
+      buildArchitectures = "Automatic">
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
@@ -14,9 +15,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4941A0EE2BB6F59900CE3C9E"
-               BuildableName = "compile"
-               BlueprintName = "compile"
+               BlueprintIdentifier = "49C164A82C0297FB00981AD1"
+               BuildableName = "clvr-interp"
+               BlueprintName = "clvr-interp"
                ReferencedContainer = "container:Clover.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,68 +46,20 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4941A0EE2BB6F59900CE3C9E"
-            BuildableName = "compile"
-            BlueprintName = "compile"
+            BlueprintIdentifier = "49C164A82C0297FB00981AD1"
+            BuildableName = "clvr-interp"
+            BlueprintName = "clvr-interp"
             ReferencedContainer = "container:Clover.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-d -t -h examples/simple.clvr"
+            argument = "PostLightController/PostLightEffects.clvx"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h modules/Float16.clvr"
+            argument = "examples/simple.clvx"
             isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -a -l -h PostLightEffects/PostLightEffects.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -a -l PostLightEffects/PostLightEffects.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestCore.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestIntExpr.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestFloatExpr.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestIf.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestFunction.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestFor.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestWhile.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestPtrStruct.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-d -t -h Test/TestSwitchEnum.clvr"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-h -t Test/TestCore.clvr Test/TestIntExpr.clvr Test/TestFloatExpr.clvr Test/TestIf.clvr Test/TestFunction.clvr Test/TestFor.clvr Test/TestWhile.clvr Test/TestPtrStruct.clvr Test/TestSwitchEnum.clvr"
-            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>
@@ -120,9 +73,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4941A0EE2BB6F59900CE3C9E"
-            BuildableName = "compile"
-            BlueprintName = "compile"
+            BlueprintIdentifier = "49C164A82C0297FB00981AD1"
+            BuildableName = "clvr-interp"
+            BlueprintName = "clvr-interp"
             ReferencedContainer = "container:Clover.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -12,15 +12,23 @@
 bool
 InterpretedEffect::init(uint8_t cmd, const uint8_t* buf, uint32_t size)
 {
-    _interp.init();
+    _interp.instantiate();
+    if (_interp.error() != MyInterpreter::Error::None) {
+        return false;
+    }
 
     for (int i = size - 1; i >= 0; --i) {
         _interp.addArg(buf[i], clvr::Type::UInt8);
     }
     _interp.addArg(cmd, clvr::Type::UInt8); // cmd
+    _interp.construct();
+    _interp.dropArgs(size + 1);
+    
+    if (_interp.error() != MyInterpreter::Error::None) {
+        return false;
+    }
     
     _interp.interp(MyInterpreter::ExecMode::Start);
-    _interp.dropArgs(size + 1);
 
 	if (_interp.error() != MyInterpreter::Error::None) {
 		return false;
