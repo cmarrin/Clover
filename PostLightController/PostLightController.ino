@@ -82,8 +82,6 @@ constexpr char EndChar = ')';
 constexpr unsigned long SerialTimeOut = 2000; // ms
 constexpr int32_t MaxDelay = 1000; // ms
 
-static void setLight(uint8_t i, uint32_t rgb);
-
 class PostLightController
 {
 public:
@@ -97,12 +95,6 @@ public:
 
 	~PostLightController() { }
 	
-    void setLight(uint8_t i, uint32_t rgb)
-    {
-        _pixels.setPixelColor(i, rgb);
-		_pixels.show();
-    }
-    
 	void setup()
 	{
 	    Serial.begin(115200);
@@ -472,11 +464,6 @@ private:
 };
 
 PostLightController controller;
-
-static void setLight(uint8_t i, uint32_t rgb)
-{
-    controller.setLight(i, rgb);
-}
 
 void setup()
 {
