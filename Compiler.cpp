@@ -14,6 +14,7 @@
 #include <cmath>
 
 #include "AST.h"
+#include "CodeGen6809.h"
 #include "CodeGenStackVM.h"
 #include "NativeColor.h"
 #include "NativeCore.h"
@@ -21,9 +22,13 @@
 
 using namespace clvr;
 
-Compiler::Compiler(std::istream* stream, Annotations* annotations) : _scanner(stream, annotations)
+Compiler::Compiler(OutputFormat fmt, std::istream* stream, Annotations* annotations) : _scanner(stream, annotations)
 {
-    _codeGen = new CodeGenStackVM;
+    if (fmt == OutputFormat::ASM6809) {
+        _codeGen = new CodeGen6809;
+    } else {
+        _codeGen = new CodeGenStackVM;
+    }
 }
 
 bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& modules)

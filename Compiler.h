@@ -273,7 +273,9 @@ enum class Error {
 
 class Compiler {
 public:
-  	Compiler(std::istream* stream, Annotations* annotations);
+    enum class OutputFormat { StackVM, ASM6809 };
+    
+  	Compiler(OutputFormat, std::istream* stream, Annotations* annotations);
 
     bool compile(uint32_t maxExecutableSize, const std::vector<Module*>&);
 

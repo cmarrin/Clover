@@ -90,6 +90,7 @@ static void showError(clvr::Error error, clvr::Token token, const std::string& s
 
 // clvr [-hda] <clvr file>...
 //
+//      -9      output 6809 assembly. Output file is <root name>.asm
 //      -h      output in include file format. Output file is <root name>.h
 //      -d      decompile and print result
 //      -a      omit annotations in decompiled output
@@ -110,20 +111,27 @@ int main(int argc, char * const argv[])
     std::cout << "Clover Compiler v0.1\n\n";
     
     int c;
+    bool asm6809 = false;
     bool decompile = false;
     bool headerFile = false;
     bool annotate = true;
     
-    while ((c = getopt(argc, argv, "dahtl")) != -1) {
+    while ((c = getopt(argc, argv, "9dha")) != -1) {
         switch(c) {
+            case '9': asm6809 = true; break;
             case 'd': decompile = true; break;
             case 'h': headerFile = true; break;
             case 'a': annotate = false; break;
             default: break;
         }
     }
+
+    // If asm6809 never emit as .h and don't decompile
+    if (asm6809) {
+        headerFile = false;
+        decompile = false;
+    }
     
-    // If headerFile is true, segmented is ignored.
     if (optind >= argc) {
         std::cout << "No input file given\n";
         return 0;
@@ -153,7 +161,8 @@ int main(int argc, char * const argv[])
         
         clvr::randomSeed(uint32_t(clock()));
 
-        clvr::Compiler compiler(&stream, &annotations);
+        clvr::Compiler::OutputFormat fmt = asm6809 ? clvr::Compiler::OutputFormat::ASM6809 : clvr::Compiler::OutputFormat::StackVM;
+        clvr::Compiler compiler(fmt, &stream, &annotations);
 
         compiler.compile(MaxExecutableSize, { });
         if (compiler.error() != clvr::Error::None) {
@@ -195,14 +204,19 @@ int main(int argc, char * const argv[])
         name = path + ".clvx";
         remove(name.c_str());
 
-        std::cout << "\nEmitting executable to '" << path << "'\n";
-        std::fstream outStream;
+        name = path + ".asm";
+        remove(name.c_str());
 
-        if (headerFile) {
+        if (asm6809) {
+            name = path + ".asm";
+        } else if (headerFile) {
             name = path + ".h";
         } else {
             name = path + ".clvx";
         }
+
+        std::cout << "\nEmitting executable to '" << name << "'\n";
+        std::fstream outStream;
 
         std::ios_base::openmode mode = std::fstream::out;
         if (!headerFile) {

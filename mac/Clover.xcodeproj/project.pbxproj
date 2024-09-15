@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		49021E8E2C971FF5008F821F /* Print.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4892C44A132003DDADA /* Print.cpp */; };
 		4914A4852C2E0F92003DDADA /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4842C2E0F92003DDADA /* Function.cpp */; };
 		49279C2A2C1903BE00294992 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
@@ -22,6 +23,8 @@
 		49C9E7BC2C94FB4200E58516 /* clvr-interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7B32C94F87500E58516 /* clvr-interp.cpp */; };
 		49C9E7BD2C95089D00E58516 /* clvr in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4941A0EF2BB6F59900CE3C9E /* clvr */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		49C9E7CD2C95111C00E58516 /* clvr-interp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 49C164A92C0297FB00981AD1 /* clvr-interp */; };
+		49C9E7EE2C97154100E58516 /* CodeGen6809.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */; };
+		49C9E7EF2C97154200E58516 /* CodeGen6809.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */; };
 		49D70D2B2C95E86B000A325C /* Clover.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49D70D292C95E855000A325C /* Clover.cpp */; };
 		49D70D2C2C95E8B4000A325C /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */; };
 		49D70D2D2C95E8B8000A325C /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
@@ -119,6 +122,8 @@
 		49C9E7B22C94F87500E58516 /* clvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clvr.cpp; sourceTree = "<group>"; };
 		49C9E7B32C94F87500E58516 /* clvr-interp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "clvr-interp.cpp"; sourceTree = "<group>"; };
 		49C9E7E22C95129300E58516 /* Clover */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Clover; sourceTree = BUILT_PRODUCTS_DIR; };
+		49C9E7EC2C9714CA00E58516 /* CodeGen6809.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGen6809.h; path = ../CodeGen6809.h; sourceTree = "<group>"; };
+		49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CodeGen6809.cpp; path = ../CodeGen6809.cpp; sourceTree = "<group>"; };
 		49D70D292C95E855000A325C /* Clover.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Clover.cpp; sourceTree = "<group>"; };
 		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
 		49E2F2982C8F4652007E0F0A /* Float16.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = Float16.clvr; path = ../modules/Float16.clvr; sourceTree = "<group>"; };
@@ -184,6 +189,8 @@
 			isa = PBXGroup;
 			children = (
 				49FAA0812C8BCF550060F8AA /* CodeGen.h */,
+				49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */,
+				49C9E7EC2C9714CA00E58516 /* CodeGen6809.h */,
 				49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */,
 				49FAA0822C8BCF550060F8AA /* CodeGenStackVM.h */,
 				49C164B82C04EC6400981AD1 /* AST.cpp */,
@@ -371,7 +378,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				49C9E7EF2C97154200E58516 /* CodeGen6809.cpp in Sources */,
 				49279C2A2C1903BE00294992 /* AST.cpp in Sources */,
+				49021E8E2C971FF5008F821F /* Print.cpp in Sources */,
 				4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */,
 				49C9E7BA2C94F99400E58516 /* NativeColor.cpp in Sources */,
 				49C9E7BB2C94F99700E58516 /* NativeCore.cpp in Sources */,
@@ -407,6 +416,7 @@
 				49D70D312C95E8C4000A325C /* Interpreter.cpp in Sources */,
 				49D70D322C95E8C8000A325C /* NativeColor.cpp in Sources */,
 				49D70D342C95E8D2000A325C /* Print.cpp in Sources */,
+				49C9E7EE2C97154100E58516 /* CodeGen6809.cpp in Sources */,
 				49D70D352C95E8D5000A325C /* Scanner.cpp in Sources */,
 				49D70D332C95E8CC000A325C /* NativeCore.cpp in Sources */,
 				49D70D2C2C95E8B4000A325C /* CodeGenStackVM.cpp in Sources */,

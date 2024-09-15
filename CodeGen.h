@@ -37,6 +37,16 @@ class CodeGen
 
     std::vector<uint8_t>& code() { return _code; }
     
+    void format(const char* fmt, ...)
+    {
+        va_list args;
+        va_start(args, fmt);
+        vformat(_code, fmt, args);
+        
+        // vformat adds a null terminator. We don't want that
+        _code.pop_back();
+    }
+    
   private:
     std::vector<uint8_t> _code;
 };

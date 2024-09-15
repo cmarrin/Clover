@@ -172,7 +172,7 @@ int main(int argc, char * const argv[])
         
         clvr::randomSeed(uint32_t(clock()));
 
-        clvr::Compiler compiler(&stream, &annotations);
+        clvr::Compiler compiler(clvr::Compiler::OutputFormat::StackVM, &stream, &annotations);
 
         compiler.compile(MaxExecutableSize, { });
         if (compiler.error() != clvr::Error::None) {
