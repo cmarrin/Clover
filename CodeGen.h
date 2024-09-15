@@ -33,6 +33,8 @@ class CodeGen
     virtual uint16_t majorVersion() const = 0;
     virtual uint8_t minorVersion() const = 0;
     
+    virtual void emitPreamble(const Compiler*) = 0;
+    
     virtual void emitCode(const ASTPtr& node, bool isLHS) = 0;
 
     std::vector<uint8_t>& code() { return _code; }

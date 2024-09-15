@@ -280,6 +280,8 @@ public:
     bool compile(uint32_t maxExecutableSize, const std::vector<Module*>&);
 
     std::vector<uint8_t>& code() { return _codeGen->code(); }
+    const std::vector<uint8_t>& constants() const { return _constants; }
+    const StructPtr& topLevelStruct() const { return _topLevelStruct; }
     
     bool program();
 

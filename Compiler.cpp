@@ -63,34 +63,7 @@ bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& m
     
     for (int i = 0; i < 3; i ++) {
         _codeGen->code().clear();
-        
-        // Write signature
-        _codeGen->code().push_back('l');
-        _codeGen->code().push_back('u');
-        _codeGen->code().push_back('c');
-        _codeGen->code().push_back('d');
-        
-        // Write major and minor version, and address size
-        appendValue(_codeGen->code(), _codeGen->majorVersion(), 2);
-        appendValue(_codeGen->code(), _codeGen->minorVersion(), 1);
-        appendValue(_codeGen->code(), Is32BitAddr ? 1 : 0, 1);
-
-        // Write dummy entry point address for main, to be filled in later
-        appendValue(_codeGen->code(), 0, AddrSize);
-        
-        // Write dummy entry point address for top-level struct ctor, to be filled in later
-        appendValue(_codeGen->code(), 0, AddrSize);
-        
-        // Write top level struct size
-        int32_t topLevelSize = _topLevelStruct->sizeInBytes();
-        appendValue(_codeGen->code(), topLevelSize, AddrSize);
-        
-        // Write constant size and then constants
-        appendValue(_codeGen->code(), uint16_t(_constants.size()), 2);
-        for (auto it : _constants) {
-            _codeGen->code().push_back(it);
-        }
-        
+        _codeGen->emitPreamble(this);
         emitStruct(_codeGen, _topLevelStruct);
     }
     

@@ -9,7 +9,40 @@
 
 #include "CodeGenStackVM.h"
 
+#include "Compiler.h"
+
 using namespace clvr;
+
+void
+CodeGenStackVM::emitPreamble(const Compiler* compiler)
+{
+    // Write signature
+    code().push_back('l');
+    code().push_back('u');
+    code().push_back('c');
+    code().push_back('d');
+    
+    // Write major and minor version, and address size
+    appendValue(code(), majorVersion(), 2);
+    appendValue(code(), minorVersion(), 1);
+    appendValue(code(), Is32BitAddr ? 1 : 0, 1);
+
+    // Write dummy entry point address for main, to be filled in later
+    appendValue(code(), 0, AddrSize);
+    
+    // Write dummy entry point address for top-level struct ctor, to be filled in later
+    appendValue(code(), 0, AddrSize);
+    
+    // Write top level struct size
+    int32_t topLevelSize = compiler->topLevelStruct()->sizeInBytes();
+    appendValue(code(), topLevelSize, AddrSize);
+    
+    // Write constant size and then constants
+    appendValue(code(), uint16_t(compiler->constants().size()), 2);
+    for (auto it : compiler->constants()) {
+        code().push_back(it);
+    }
+}
 
 void
 CodeGenStackVM::emitCodeStatements(const ASTPtr& node, bool isLHS)
