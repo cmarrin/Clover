@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdarg.h>
+#include <vector>
 
 using namespace clvr;
 
@@ -149,6 +150,27 @@ class NativeFormatArgs : public NativePrintArgs
     uint16_t _index;
 };
 
+class VectorFormatArgs : public NativePrintArgs
+{
+  public:
+    VectorFormatArgs(std::vector<uint8_t>& vec, const char* fmt, va_list args)
+        : NativePrintArgs(fmt, args)
+        , _vec(&vec)
+    { }
+    
+    virtual ~VectorFormatArgs() { }
+
+    virtual void putChar(uint8_t c) override
+    {
+        _vec->push_back(c);
+    }
+
+    virtual void end() override { putChar('\0'); }
+
+  private:
+    std::vector<uint8_t>* _vec;
+};
+
 enum class Flag {
     leftJustify = 0x01,
     plus = 0x02,
@@ -209,6 +231,13 @@ int32_t
 vformat(char* s, uint16_t n, const char* fmt, va_list args)
 {
     NativeFormatArgs f(s, n, fmt, args);
+    return doprintf(&f);
+}
+
+int32_t
+vformat(std::vector<uint8_t>& vec, const char* fmt, va_list args)
+{
+    VectorFormatArgs f(vec, fmt, args);
     return doprintf(&f);
 }
 

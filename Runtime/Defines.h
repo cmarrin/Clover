@@ -634,6 +634,7 @@ int32_t printf(const char* fmt, ...);
 int32_t format(char* s, uint16_t n, const char* fmt, ...);
 int32_t vprintf(const char* fmt, va_list args);
 int32_t vformat(char* s, uint16_t n, const char* fmt, va_list args);
+int32_t vformat(std::vector<uint8_t>&, const char* fmt, va_list args);
 
 // Native Modules contain native functions that can be called
 // by the interpreter. Modules are numbered starting at 0. There
