@@ -51,6 +51,14 @@ class CodeGen6809 : public CodeGen
     void emitCodeDrop(const ASTPtr& node, bool isLHS);
     void emitCodeRef(const ASTPtr& node, bool isLHS);
     void emitCodeDeref(const ASTPtr& node, bool isLHS);
+    
+    // Strings will go after the code in a series of FCB entries.
+    // The first entry will have a label and all string addresses
+    // will be relative to this. Any ASCII character (0x20-0x7e)
+    // are emitted as characters, prefixed with a single quote.
+    // All other characters are emitted as hex.
+    static constexpr const char* StringLabel = "String";
+    std::string _strings;
 };
 
 }

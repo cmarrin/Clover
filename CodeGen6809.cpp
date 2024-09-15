@@ -166,31 +166,12 @@ CodeGen6809::emitCodeConstant(const ASTPtr& node, bool isLHS)
 void
 CodeGen6809::emitCodeString(const ASTPtr& node, bool isLHS)
 {
-    // We will push a null terminator in addition to the size. Make room for it
-    const std::string& string = std::static_pointer_cast<StringNode>(node)->string();
+    // Add string to list
+    uint32_t addr = uint32_t(_strings.size());
+    _strings += std::static_pointer_cast<StringNode>(node)->string();
     
-    code().push_back(uint8_t(Op::PUSHS));
-    code().push_back(string.size() + 1);
-    for (const char& c : string) {
-        code().push_back(c);
-    }
-    code().push_back('\0');
-}
-
-static bool adjustType(Op& op, uint8_t bytes)
-{
-    switch (op) {
-        case Op::AND1:
-        case Op::OR1:
-        case Op::XOR1:
-        case Op::NOT1:
-        case Op::SHL1:
-        case Op::SHR1:
-        case Op::ASR1:
-            op = Op(uint8_t(op) + ((bytes == 1) ? 0 : ((bytes == 2) ? 1 : 2)));
-            return true;
-        default: return false;
-    }
+    format("LEAX %s+$%x\n", StringLabel, addr);
+    format("PSHS X\n");
 }
 
 void
@@ -221,12 +202,12 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     }
     
     // Adjust the op according to the type (for operators that don't have type in the lower 2 bits
-    Op op = opNode->op();
-    if (adjustType(op, typeToBytes(opType))) {
-        code().push_back(uint8_t(op));
-    } else {
-        code().push_back(uint8_t(op) | typeToSizeBits(opType));
-    }
+//    Op op = opNode->op();
+//    if (adjustType(op, typeToBytes(opType))) {
+//        code().push_back(uint8_t(op));
+//    } else {
+//        code().push_back(uint8_t(op) | typeToSizeBits(opType));
+//    }
 }
 
 void
