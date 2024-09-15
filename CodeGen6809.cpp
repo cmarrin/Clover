@@ -137,84 +137,29 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
     }
 }
 
-// If short, bytesInOperand is 0
-static Op constantOp(uint8_t bytesInOperand, uint8_t bytesToPush)
-{
-    switch((bytesInOperand << 4) | bytesToPush) {
-        case 0x01: return Op::PUSHKS1;
-        case 0x02: return Op::PUSHKS2;
-        case 0x04: return Op::PUSHKS4;
-        case 0x11: return Op::PUSHK11;
-        case 0x12: return Op::PUSHK12;
-        case 0x14: return Op::PUSHK14;
-        case 0x22: return Op::PUSHK22;
-        case 0x24: return Op::PUSHK24;
-        case 0x44: return Op::PUSHK44;
-        default: return Op::NOP;
-    }
-}
-
 void
 CodeGen6809::emitCodeConstant(const ASTPtr& node, bool isLHS)
 {
     assert(!isLHS);
-    
-    // Small floating point numbers is a common case. We currently
-    // push these as float constants, which takes 5 bytes. If we
-    // push them as small integers and cast, that's only 2 bytes.
-    bool isSmallFloat = false;
-    Type t = node->type();
-    int32_t i = std::static_pointer_cast<ConstantNode>(node)->rawInteger();
-    float f = intToFloat(i);
-    
-    if (t == Type::Float && f >= -8 && f <= 7) {
-        i = int32_t(f);
-        if (float(i) == f) {
-            // It's an integer
-            isSmallFloat = true;
-            t = Type::Int8;
-        } else {
-            i = std::static_pointer_cast<ConstantNode>(node)->rawInteger();
-        }
-    }
-    
-    uint8_t bytesInOperand;
-    uint8_t bytesPushed = typeToBytes(t);
-    
-    if (t == Type::Float) {
-        bytesInOperand = 4;
-    } else if (i >= -8 && i <= 7) {
-        bytesInOperand = 0;
-    } else if (i >= -128 && i <= 127) {
-        bytesInOperand = 1;
-    } else if (i >= -32768 && i <= 32767) {
-        bytesInOperand = 2;
-    } else {
-        bytesInOperand = 4;
-    }
 
-    Op op = constantOp(bytesInOperand, bytesPushed);
+    int32_t i = std::static_pointer_cast<ConstantNode>(node)->rawInteger();
     
-    if (op == Op::NOP) {
-        // This is a case where bytesInOperand is > bytesPushed.
-        // This happens when the value is unsigned and is
-        // outside the signed range but inside the unsigned
-        // range. We just need to try again with a smaller
-        // bytesInOperand.
-        bytesInOperand = bytesPushed;
-        op = constantOp(bytesInOperand, bytesPushed);
-    }
-    
-    if (bytesInOperand == 0) {
-        code().push_back(uint8_t(op) | i);
-    } else {
-        code().push_back(uint8_t(op));
-        appendValue(code(), i, bytesInOperand);
-    }
-    
-    if (isSmallFloat) {
-        // Cast it
-        code().push_back(uint8_t(castOp(Type::Int8, Type::Float)));
+    switch (typeToOpSize(node->type())) {
+        case OpSize::i8:
+            format("LDA #$%02x\n", uint8_t(i));
+            format("PSHS A\n");
+            break;
+        case OpSize::i16:
+            format("LDD #$%04x\n", uint16_t(i));
+            format("PSHS D\n");
+            break;
+        case OpSize::i32:
+        case OpSize::flt:
+            format("LDD #$%04x\n", uint16_t(i >> 16));
+            format("PSHS D\n");
+            format("LDD #$%04x\n", uint16_t(i));
+            format("PSHS D\n");
+            break;
     }
 }
 
