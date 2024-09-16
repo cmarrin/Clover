@@ -24,6 +24,8 @@ class CodeGen6809 : public CodeGen
     virtual void emitPreamble(const Compiler*) override;
 
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
+    
+    uint32_t nextLabelId() { return _labelId++; }
 
   private:
     void emitAddr(const SymbolPtr&, AddrNativeType offset, bool is32BitLSB = false);
@@ -59,6 +61,9 @@ class CodeGen6809 : public CodeGen
     // All other characters are emitted as hex.
     static constexpr const char* StringLabel = "String";
     std::string _strings;
+    
+    // Unique identifier for labels
+    uint32_t _labelId = 0;
 };
 
 }

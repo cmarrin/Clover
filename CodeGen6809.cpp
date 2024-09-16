@@ -15,8 +15,8 @@ void
 CodeGen6809::emitPreamble(const Compiler* compiler)
 {
     format("* 6809 assembly generated from Clover source\n\n");
-    format("include BOSS9.inc\n");
-    format("org $200\n");
+    format("    include BOSS9.inc\n");
+    format("    org $200\n");
 }
 
 void
@@ -92,46 +92,33 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
     if (pop) {
         // Generate POP optimization
         switch (typeToOpSize(type)) {
+            default: break;
             case OpSize::i8:
-                format("PULS A\nSTA ");
+                format("    PULS A\nSTA ");
                 emitAddr(symbol, offset);
                 break;
             case OpSize::i16:
-                format("PULS D\nSTD ");
+                format("    PULS D\nSTD ");
                 emitAddr(symbol, offset);
-                break;
-            case OpSize::i32:
-            case OpSize::flt:
-                format("PULS D,X\nSTD ");
-                emitAddr(symbol, offset);
-                format("STX ");
-                emitAddr(symbol, offset, true);
                 break;
         }
     } else if (ref) {
         // If ref is true, code generated will be a Ref
-        format("LEAX ");
+        format("    LEAX ");
         emitAddr(symbol, offset);
-        format("PSHS X\n");
+        format("    PSHS X\n");
     } else {
         switch (typeToOpSize(type)) {
+            default: break;
             case OpSize::i8:
-                format("LDA ");
+                format("    LDA ");
                 emitAddr(symbol, offset);
-                format("PSHS A\n");
+                format("    PSHS A\n");
                 break;
             case OpSize::i16:
-                format("LDD ");
+                format("    LDD ");
                 emitAddr(symbol, offset);
-                format("PSHS D\n");
-                break;
-            case OpSize::i32:
-            case OpSize::flt:
-                format("LDD ");
-                emitAddr(symbol, offset);
-                format("LDX ");
-                emitAddr(symbol, offset, true);
-                format("PSHS D,X\n");
+                format("    PSHS D\n");
                 break;
         }
     }
@@ -145,20 +132,14 @@ CodeGen6809::emitCodeConstant(const ASTPtr& node, bool isLHS)
     int32_t i = std::static_pointer_cast<ConstantNode>(node)->rawInteger();
     
     switch (typeToOpSize(node->type())) {
+        default: break;
         case OpSize::i8:
-            format("LDA #$%02x\n", uint8_t(i));
-            format("PSHS A\n");
+            format("    LDA #$%02x\n", uint8_t(i));
+            format("    PSHS A\n");
             break;
         case OpSize::i16:
-            format("LDD #$%04x\n", uint16_t(i));
-            format("PSHS D\n");
-            break;
-        case OpSize::i32:
-        case OpSize::flt:
-            format("LDD #$%04x\n", uint16_t(i >> 16));
-            format("PSHS D\n");
-            format("LDD #$%04x\n", uint16_t(i));
-            format("PSHS D\n");
+            format("    LDD #$%04x\n", uint16_t(i));
+            format("    PSHS D\n");
             break;
     }
 }
@@ -170,8 +151,26 @@ CodeGen6809::emitCodeString(const ASTPtr& node, bool isLHS)
     uint32_t addr = uint32_t(_strings.size());
     _strings += std::static_pointer_cast<StringNode>(node)->string();
     
-    format("LEAX %s+$%x\n", StringLabel, addr);
-    format("PSHS X\n");
+    format("    LEAX %s+$%x\n", StringLabel, addr);
+    format("    PSHS X\n");
+}
+
+
+static const char* relopToString(Op op)
+{
+    switch (op) {
+        default: return nullptr;
+        case Op::EQ: return "BEQ";
+        case Op::NE: return "BNE";
+        case Op::LT: return "BLT";
+        case Op::LO: return "BLO";
+        case Op::LE: return "BLE";
+        case Op::LS: return "BLS";
+        case Op::GE: return "BGE";
+        case Op::HS: return "BHS";
+        case Op::GT: return "BGT";
+        case Op::HI: return "BHI";
+    }
 }
 
 void
@@ -186,14 +185,12 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     bool isLogical = opNode->op() == Op::LNOT;
     
     if (opNode->left()) {
-        if (!isLogical) {
-            opType = opNode->left()->type();
-        }
+        opType = opNode->left()->type();
         emitCode(opNode->left(), opNode->isRef());
     }
     
     if (opNode->right()) {
-        if (!isLogical && opNode->left() == nullptr) {
+        if (opNode->left() == nullptr) {
             opType = opNode->right()->type();
         }
         
@@ -201,13 +198,75 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         emitCode(opNode->right(), (opNode->left() == nullptr) ? opNode->isRef() : isLHS);
     }
     
-    // Adjust the op according to the type (for operators that don't have type in the lower 2 bits
-//    Op op = opNode->op();
-//    if (adjustType(op, typeToBytes(opType))) {
-//        code().push_back(uint8_t(op));
-//    } else {
-//        code().push_back(uint8_t(op) | typeToSizeBits(opType));
-//    }
+    bool is16Bit = typeToOpSize(opType) == OpSize::i16;
+    
+    // Handle Op::LNOT as a special case. There's no logical not opcode
+    // so we just test if TOS is zero. If so, push a 1 otherwise push a 0.
+    if (isLogical) {
+        uint32_t label = nextLabelId();
+        
+        format("    CLRB\n");
+        if (is16Bit) {
+            format("    PULS X\n");
+        } else {
+            format("    PULS A\n");
+        }
+        format("    BNE L%d\n", label);
+        format("    INCB\n");
+        format("L%d\n", label);
+        format("    PSHS B\n");
+        
+        return;
+    }
+
+    // If it's a relational operator, do the unoptimized case:
+    //
+    //	    LDA 1,S
+    //	    CMPA 0,S
+    //      LEAS 2,S
+    //	    BLT L1
+    //	    CLRA
+    //	    BRA L2
+    // L1:  LDA #1
+    // L2:  PSHS A
+    //
+    const char* relOp = relopToString(opNode->op());
+    
+    uint32_t labelA = nextLabelId();
+    uint32_t labelB = nextLabelId();
+
+    if (relOp) {
+        format("    LDA 1,S\n");
+        format("    CMPA 0,S\n");
+        format("    LEAS 2,S\n");
+        format("    BLT L%d\n", labelA);
+        format("    CLRA\n");
+        format("    BRA L2\n", labelB);
+        format("L%d\n", labelA);
+        format("    LDA #1\n");
+        format("L%d\n", labelB);
+        format("    PSHS A\n");
+        return;
+    }
+
+    switch (typeToOpSize(opType)) {
+        case OpSize::i8:
+            format("LDA 1,S\n");
+            format("ADDA 0,S\n"); // FIXME. Handle all the other opcodes
+            format("LEAS 2,S\n");
+            format("PSHS A\n");
+            break;
+        case OpSize::i16:
+            format("LDD 2,S\n");
+            format("ADDD 0,S\n"); // FIXME. Handle all the other opcodes
+            format("LEAS 4,S\n");
+            format("PSHS D\n");
+            break;
+        case OpSize::i32:
+        case OpSize::flt:
+            format("JSR add32\n"); // FIXME. Handle all the other opcodes
+            break;
+    }
 }
 
 void
