@@ -595,10 +595,12 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
 bool
 Compiler::type(Type& t)
 {
+#ifdef SUPPORT_FLOAT
     if (match(Reserved::Float)) {
         t = Type::Float;
         return true;
     }
+#endif
     if (match(Reserved::Int8)) {
         t = Type::Int8;
         return true;
@@ -616,6 +618,7 @@ Compiler::type(Type& t)
         t = Type::UInt16;
         return true;
     }
+#ifdef SUPPORT_INT32
     if (match(Reserved::Int32)) {
         t = Type::Int32;
         return true;
@@ -624,6 +627,7 @@ Compiler::type(Type& t)
         t = Type::UInt32;
         return true;
     }
+#endif
         
     // See if it's a struct or enum
     std::string id;
@@ -1738,14 +1742,17 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "loop",       Reserved::Loop },
         { "true",       Reserved::True },
         { "false",      Reserved::False },
+#ifdef SUPPORT_FLOAT
         { "float",      Reserved::Float },
-        { "fixed",      Reserved::Fixed },
+#endif
         { "int8",       Reserved::Int8 },
         { "uint8",      Reserved::UInt8 },
         { "int16",      Reserved::Int16 },
         { "uint16",     Reserved::UInt16 },
+#ifdef SUPPORT_INT32
         { "int32",      Reserved::Int32 },
         { "uint32",     Reserved::UInt32 },
+#endif
         { "bool",       Reserved::Bool },
     };
 

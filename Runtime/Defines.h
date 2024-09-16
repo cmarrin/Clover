@@ -20,8 +20,10 @@
 #include <memory>
 #endif
 
-// Uncomment this for 32 bit addresses, leave commented out for 16 bit
-#define ADDR32
+
+//#define ADDR32          // Uncomment for 32 bit addr, leave commented out for 16 bit
+//#define SUPPORT_FLOAT   // Uncomment for float support, leave commented out for no floats
+//#define SUPPORT_INT32   // Uncomment for int32/uint32 support, leave commented out for no support
 
 namespace clvr {
 
