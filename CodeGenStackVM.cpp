@@ -278,6 +278,29 @@ CodeGenStackVM::emitCodeOp(const ASTPtr& node, bool isLHS)
 }
 
 void
+CodeGenStackVM::emitCodeInc(const ASTPtr& node, bool isLHS)
+{
+    auto incNode = std::static_pointer_cast<IncNode>(node);
+
+    emitCode(incNode->node(), true);
+    
+    int16_t inc = incNode->inc();
+    bool isLong = inc < -128 || inc > 127;
+    Op op;
+    if (incNode->isPre()) {
+        op = isLong ? Op::PREINC2 : Op::PREINC1;
+    } else {
+        op = isLong ? Op::POSTINC2 : Op::POSTINC1;
+    }
+    
+    code().push_back(uint8_t(op) | typeToSizeBits(node->type()));
+    if (isLong) {
+        code().push_back(int8_t(inc >> 8));
+    }
+    code().push_back(int8_t(inc));
+}
+
+void
 CodeGenStackVM::emitCodeAssignment(const ASTPtr& node, bool isLHS)
 {
     // If op is not NOP this is operator assignment. Handle a += b like a = a + b
@@ -811,6 +834,7 @@ CodeGenStackVM::emitCode(const ASTPtr& node, bool isLHS)
     switch (node->astNodeType()) {
         case ASTNodeType::Statements    : emitCodeStatements(node, isLHS); break;
         case ASTNodeType::Op            : emitCodeOp(node, isLHS); break;
+        case ASTNodeType::Inc           : emitCodeInc(node, isLHS); break;
         case ASTNodeType::Var           : emitCodeVar(node, isLHS); break;
         case ASTNodeType::Constant      : emitCodeConstant(node, isLHS); break;
         case ASTNodeType::String        : emitCodeString(node, isLHS); break;

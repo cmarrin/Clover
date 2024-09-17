@@ -234,10 +234,10 @@ Decompiler::statement()
         case Op::SHL4    : emitOp("SHL4"); break;
         case Op::NEG     : emitOp("NEG"); emitSize(size); break;
         case Op::LNOT    : emitOp("LNOT"); emitSize(size); break;
-        case Op::PREINC  : emitOp("PREINC"); emitSize(size); break;
-        case Op::PREDEC  : emitOp("PREDEC"); emitSize(size); break;
-        case Op::POSTINC : emitOp("POSTINC"); emitSize(size); break;
-        case Op::POSTDEC : emitOp("POSTDEC"); emitSize(size); break;
+        case Op::PREINC1 : emitOp("PREINC1"); emitSize(size); emitNumber(getInt8()); break;
+        case Op::PREINC2 : emitOp("PREINC2"); emitSize(size); emitNumber(getInt16()); break;
+        case Op::POSTINC1: emitOp("POSTINC1"); emitSize(size); emitNumber(getInt8()); emitSize(size); break;
+        case Op::POSTINC2: emitOp("POSTINC2"); emitSize(size); emitNumber(getInt16()); emitSize(size); break;
         case Op::LE      : emitOp("LE"); emitSize(size); break;
         case Op::LS      : emitOp("LS"); emitSize(size); break;
         case Op::LT      : emitOp("LT"); emitSize(size); break;

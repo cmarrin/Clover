@@ -320,23 +320,25 @@ InterpreterBase::execute(ExecMode mode)
                 _memMgr.stack().push(addr, AddrOpSize);
                 break;
             }
-            case Op::PREINC:
-            case Op::PREDEC:
-            case Op::POSTINC:
-            case Op::POSTDEC: {
+            case Op::PREINC1:
+            case Op::PREINC2:
+            case Op::POSTINC1:
+            case Op::POSTINC2: {
+                OpSize opndSize = (opcode == Op::PREINC1 || opcode == Op::POSTINC1) ? OpSize::i8 : OpSize::i16;
+                int16_t inc = getIOpnd(opndSize);
                 AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
                 uint32_t oldValue = _memMgr.getAbs(addr, opSize);
                 uint32_t newValue;
                 
                 if (opSize == OpSize::flt) {
                     float oldFloatValue = intToFloat(oldValue);
-                    float newFloatValue = oldFloatValue + ((opcode == Op::PREINC || opcode == Op::POSTINC) ? 1 : -1);
+                    float newFloatValue = oldFloatValue + inc;
                     newValue = floatToInt(newFloatValue);
                 } else {
-                    newValue = oldValue + ((opcode == Op::PREINC || opcode == Op::POSTINC) ? 1 : -1);
+                    newValue = oldValue + inc;
                 }
                 _memMgr.setAbs(addr, newValue, opSize);
-                _memMgr.stack().push((opcode == Op::PREINC || opcode == Op::PREDEC) ? newValue : oldValue, opSize);
+                _memMgr.stack().push((opcode == Op::PREINC1 || opcode == Op::PREINC2) ? newValue : oldValue, opSize);
                 break;
             }
             case Op::ADD:

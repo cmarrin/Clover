@@ -270,6 +270,11 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
 }
 
 void
+CodeGen6809::emitCodeInc(const ASTPtr& node, bool isLHS)
+{
+}
+
+void
 CodeGen6809::emitCodeAssignment(const ASTPtr& node, bool isLHS)
 {
     // If op is not NOP this is operator assignment. Handle a += b like a = a + b
@@ -803,6 +808,7 @@ CodeGen6809::emitCode(const ASTPtr& node, bool isLHS)
     switch (node->astNodeType()) {
         case ASTNodeType::Statements    : emitCodeStatements(node, isLHS); break;
         case ASTNodeType::Op            : emitCodeOp(node, isLHS); break;
+        case ASTNodeType::Inc           : emitCodeInc(node, isLHS); break;
         case ASTNodeType::Var           : emitCodeVar(node, isLHS); break;
         case ASTNodeType::Constant      : emitCodeConstant(node, isLHS); break;
         case ASTNodeType::String        : emitCodeString(node, isLHS); break;

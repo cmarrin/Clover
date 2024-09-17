@@ -1246,6 +1246,7 @@ Compiler::unaryExpression()
     Type resultType = Type::None;
     bool isRef = false;
     bool isSigned = false;
+    bool isInc = false;
     
     if (match(Token::Minus)) {
         opcode = Op::NEG;
@@ -1256,11 +1257,10 @@ Compiler::unaryExpression()
         opcode = Op::LNOT;
         resultType = Type::UInt8;
     } else if (match(Token::Inc)) {
-        opcode = Op::PREINC;
-        isRef = true;
+        opcode = Op::PREINC1;
+        isInc = true;
     } else if (match(Token::Dec)) {
-        opcode = Op::PREDEC;
-        isRef = true;
+        opcode = Op::PREINC1;
     } else if (match(Token::And)) {
         // Ref (addressof)
         node = unaryExpression();
@@ -1277,6 +1277,11 @@ Compiler::unaryExpression()
     }
     
     node = unaryExpression();
+    
+    if (opcode == Op::PREINC1) {
+        // FIXME: Handle pointers (inc values other than 1)
+        return std::make_shared<IncNode>(node, true, isInc ? 1 : -1);
+    }
     
     // If result needs to be signed (for Op::NEG) do a cast here
     if (isSigned && !node->isSigned()) {
@@ -1362,9 +1367,9 @@ Compiler::postfixExpression()
                 lhs = std::make_shared<DotNode>(lhs, prop);
             }
         } else if (match(Token::Inc)) {
-            lhs = std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true);
+            lhs = std::make_shared<IncNode>(lhs, false, 1);
         } else if (match(Token::Dec)) {
-            lhs = std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, true);
+            lhs = std::make_shared<IncNode>(lhs, false, -1);
         } else {
             return lhs;
         }

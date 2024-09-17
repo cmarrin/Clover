@@ -38,6 +38,7 @@ class CodeGen6809 : public CodeGen
     void emitCodeConstant(const ASTPtr& node, bool isLHS);
     void emitCodeString(const ASTPtr& node, bool isLHS);
     void emitCodeOp(const ASTPtr& node, bool isLHS);
+    void emitCodeInc(const ASTPtr& node, bool isLHS);
     void emitCodeAssignment(const ASTPtr& node, bool isLHS);
     void emitCodeDot(const ASTPtr& node, bool isLHS);
     void emitCodeModule(const ASTPtr& node, bool isLHS);

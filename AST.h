@@ -25,6 +25,7 @@ namespace clvr {
 enum class ASTNodeType {
     Statements,
     Op,
+    Inc,
     Var,
     Constant,
     String,
@@ -331,6 +332,44 @@ class OpNode : public ASTNode
     Op _op;
     Type _type;
     ASTPtr _left, _right;
+};
+
+class IncNode : public ASTNode
+{
+  public:
+    IncNode(const ASTPtr& node, bool isPre, int16_t inc)
+        :_node(node)
+        , _isPre(isPre)
+        , _inc(inc)
+    {
+        // If node is a pointer, multiply size by inc
+        if (node->isPointer()) {
+            _inc *= node->elementSizeInBytes();
+        }
+    }
+    
+    virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Inc; }
+
+    virtual Type type() const override { return _node->type(); }
+
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (i == 0) {
+            return _node;
+        }
+        return nullptr;
+    }
+
+    virtual const uint32_t numChildren() const override { return 1; }
+
+    const ASTPtr& node() const { return _node; }
+    bool isPre() const { return _isPre; }
+    int16_t inc() const { return _inc; }
+
+  private:
+    ASTPtr _node;
+    bool _isPre = false;
+    int16_t _inc = 1;
 };
 
 class AssignmentNode : public ASTNode

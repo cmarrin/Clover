@@ -442,10 +442,10 @@ enum class Op: uint8_t {
     
     NEG     = 0x74,
 
-    PREINC  = 0x78, // Next byte is addr mode
-    PREDEC  = 0x7c, // Next byte is addr mode
-    POSTINC = 0x80, // Next byte is addr mode
-    POSTDEC = 0x84, // Next byte is addr mode
+    PREINC1 = 0x78, // Next byte is signed bytes to inc/dec
+    PREINC2 = 0x7c, // Next 2 bytes is signed bytes to inc/dec
+    POSTINC1= 0x80, // Next byte is signed bytes to inc/dec
+    POSTINC2= 0x84, // Next 2 bytes is signed bytes to inc/dec
     
     LE      = 0x88,
     LS      = 0x8c,
