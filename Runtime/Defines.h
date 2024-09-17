@@ -118,6 +118,18 @@ constexpr OpSize AddrOpSize = OpSize::i16;
 constexpr uint8_t AddrSize = sizeof(AddrNativeType);
 #endif
 
+#ifdef SUPPORT_INT32
+using ArgUNativeType = uint32_t;
+using ArgINativeType = int32_t;
+constexpr Type ArgUType = Type::UInt32;
+constexpr Type ArgIType = Type::Int32;
+#else
+using ArgUNativeType = uint16_t;
+using ArgINativeType = int16_t;
+constexpr Type ArgUType = Type::UInt16;
+constexpr Type ArgIType = Type::Int16;
+#endif
+
 static constexpr uint8_t opSizeToBytes(OpSize opSize)
 {
     return (opSize == OpSize::i8) ? 1 : ((opSize == OpSize::i16) ? 2 : 4);

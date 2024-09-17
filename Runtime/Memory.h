@@ -242,8 +242,8 @@ class VarArg
         _nextAddr = memMgr->index(0, Index::A);
     }
     
-    // Type returned is always uint32_t. Use reinterpret_cast to convert to the proper type
-    uint32_t arg(Type type)
+    // Type returned is always ArgUNativeType. Use reinterpret_cast to convert to the proper type
+    ArgUNativeType arg(Type type)
     {
         AddrNativeType argAddr = _nextAddr;
         _nextAddr += typeToBytes(type);
