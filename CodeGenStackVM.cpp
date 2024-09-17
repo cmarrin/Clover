@@ -793,7 +793,7 @@ CodeGenStackVM::emitCodeDeref(const ASTPtr& node, bool isLHS)
     // We're guaranteed that _operand is a ref, so we want to push it
     // as though it's not a LHS. This will push the ref itself and not 
     // a reference to the reference.
-    emitCode(std::static_pointer_cast<RefNode>(node)->operand(), false);
+    emitCode(std::static_pointer_cast<DerefNode>(node)->operand(), false);
     
     // If this is LHS then we are done. The ref is on TOS, ready to be assigned to.
     // Otherwise we need to get the refed value.
