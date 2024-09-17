@@ -106,4 +106,242 @@ ENTRY:
 	
 	STRING   fcn " a.b=%d, a.c=%d, result=%d\n"
 	
+
+For comparison operators, currently they are binary ops, so:
+
+	if (a == b) c = d;
+	
+translates to:
+
+	PUSH a,L
+	PUSH b,L
+	EQ
+	BRF L1
+	PUSH d,L
+	POP c,L
+L1:
+	
+On 6809 that is:
+
+	LDA a,U		LDA a,U
+	PSHS A		CMPA b,U
+	LDA b,U		BNE L4
+	PSHS A
+	LDA 1,S
+	CMPA 0,s
+	BEQ L2
+	LDA #0
+	BRA L3
+L2:
+	LDA #1
+L3:
+	PSHS A
+	PULS A
+	TSTA
+	BEQ L4
+	
+	LDA d,U		LDA d,U
+	PSHS A		STA c,U
+	PULS A
+	STA c,U
+L4:
+	
+	
+	
+                |        if (a < b && c > d) {
+                |            core.printf("Hello\n");
+[36] PUSH1 0,L
+[38] PUSH1 1,L
+[40] LT<1>
+[41] BRF 7
+[43] PUSH1 2,L
+[45] PUSH1 3,L
+[47] GT<1>
+[48] FBRA 1
+[50] PUSHKS1 #0
+[51] BRF 12
+[53] PUSHS "Hello\n"
+                |        }
+[62] NCALL 1
+[64] DROPS 4
+
+
+	LDA -1,U
+	CMPA -2,U
+	BHS L1
+	LDA, -3,U
+	CMPA -4,U
+	BLS L1
+	LDX Hello
+	PSHS X
+	JSR printf
+	LEAS 2,S
+L1:
+
+
+
+		x = a < b;
+		
+[36] PUSH1 0,L
+[38] PUSH1 1,L
+[40] LT<1>
+[41] POP1 4,L
+
+
+	LDA -1,U
+	CMPA -2,U
+	BHS L1
+	LDA #1
+	BRA L2
+L1:
+	CLRA
+L2:
+	STA -5,U
+
+
+
+
+Ops: Binary
+        Op::OR1               OR (only 8 bit)
+        Op::XOR1              EOR (only 8 bit)
+        Op::AND1              AND (only 8 bit)
+        Op::EQ                CMP
+        Op::NE
+        Op::LT
+        Op::GT
+        Op::GE
+        Op::LE
+        Op::SHR1              ASR/LSR (only 8 bit)
+        Op::SHL1              ASL/LSL (only 8 bit)
+        Op::ADD               ADD (8 and 16 bit)
+        Op::SUB               SUB (8 and 16 bit)
+        Op::IMUL/Op::UMUL     MUL (8 bit unsigned only)
+        Op::IDIV/Op::UDIV     No opcode
+
+    Unary
+        Op::NEG               NEG (8 bit only)
+        Op::NOT1              COM (8 bit only)
+        Op::LNOT              If value is zero, result is 1, otherwise 0
+        Op::PREINC
+        Op::PREDEC
+        Op::POSTINC
+        Op::POSTDEC
+
+    Assignment
+        Op::ADD
+        Op::SUB
+        Op::IMUL/Op::UMUL
+        Op::IDIV/Op::UDIV
+        Op::AND1
+        Op::OR1
+        Op::XOR1
+
+Relational operators on 6809 translate to branch instructions:
+
+     BEQ, BNE            - Signed or unsigned equal or not
+     BLT, BLE, BGE, BGT  - Signed <, <=, >=, >
+     BLO, BLS, BHS, BHI  - Unsigned <, <=, >=, >
+
+The most fundamental operation is to compare top 2 values on the stack
+and place a 1 or 0 on the stack based on the result, e.g,:
+
+	 LDA 1,S
+	 CMPA 0,S
+     LEAS 2,S
+	 BLT L1
+	 CLRA
+	 BRA L2
+ L1: LDA #1
+ L2: PSHS A
+
+This would be very expensive if done during and if test just to turn around
+and branch on the result sitting on the stack. It would result in the this
+code for the following clover statement:
+
+ if (a < b) core.printf("Hello\n");
+
+     LDA -1,U
+     PSHS A
+     LDA -2,U
+     PSHS A
+     LDA 1,S
+     CMP 0,S
+     BHS L1
+     LDA #1
+     BRA L2
+ L1:
+     CLRA
+ L2:
+     LEAS 2,S
+     PSHS A
+     PULS A
+     TSTA
+     BEQ L3
+     LDX Hello
+     PSHS X
+     JSR printf
+     LEAS 2,S
+ L3:
+
+By knowing the operands are local vars, we can significantly optimize
+
+     LDA -1,U
+     CMPA -2,U
+     BGE L1
+     LDX Hello
+     PSHS X
+     JSR printf
+     LEAS 2,S
+ L1:
+
+Goes from 19 instructions to 7. But what about cases where the operands are not vars?
+
+ if (a + 1 < b + 2) core.printf("Hello\n");
+
+We will need to start with the values on TOS-1 and TOS. We can do:
+
+     LDA 1,S
+     CMPA 0,S
+     LEAS 2,S
+     BGE L1
+     LDX Hello
+     PSHS X
+     JSR printf
+     LEAS 2,S
+ L1:
+
+The only issue here is the extra LEAS to get the operands off the stack.
+Fortunately LEAS doesn't affect the CC register so we can still do the
+branch.
+
+We can have 2 levels of optimization. First is the last example where
+we make no assumptions about the values on the stack and just avoid
+pushing a bool result from the operation. Second is dealing directly
+with var operands.
+
+But we can only do this optimization if the next op is an if test.
+How do we know that? We can avoid generating the code for a relational
+opcode until the parent node is processed
+
+
+Pre/Post Inc/Dec on 6809
+
+TOS has address of variable to inc/dec
+
+	PULS X		; Byte post-inc example
+	LDA 0,X
+	PSH A
+	INCA
+	STA 0,X
+	
+But if the value is a pointer we need to inc or dec by the size of the underlying array (this is a bug in the current VM implementation). Probably should just get rid of ops for VM and implement with primitives. Or maybe 2 instructions which together would do the work and would allow a value to be specified for inc or dec.
+
+	DUP
+	DEREF1
+	PUSHK <size of inc>
+	
+	
+	
+	
+	
 	
