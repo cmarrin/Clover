@@ -1542,7 +1542,7 @@ Compiler::argumentList(const ASTPtr& fun)
             }
         } else {
             // We are past the last arg. That makes this a vararg call. We upcast any integral
-            // types to 32 bits.
+            // types to ArgNativeType.
             if (!arg->isPointer() && (isStruct(arg->type()) || arg->isIndexable())) {
                 arg = std::make_shared<RefNode>(arg);
             }
@@ -1554,9 +1554,9 @@ Compiler::argumentList(const ASTPtr& fun)
             
             switch (neededType) {
                 case Type::Int8:
-                case Type::Int16: neededType = Type::Int32; break;
+                case Type::Int16: neededType = ArgIType; break;
                 case Type::UInt8:
-                case Type::UInt16: neededType = Type::UInt32; break;
+                case Type::UInt16: neededType = ArgUType; break;
                 default: break;
             }
         }
