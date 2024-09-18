@@ -184,28 +184,6 @@ static inline uint8_t typeToSizeBits(Type type)
     }
 };
 
-/*
-    Executable file format
-    
-        Bytes (16 bit addr)     Bytes (32 bit addr)     Description
-        
-        0-3                     0-3                     : Signature - 'lucd'
-        4-5                     4-5                     : Machine code format - major
-        6                       6                       ; Machine code format - minor
-        7                       7                       ; Address size (0 - 16 bit, 1 - 32 bit)
-        8-9                     8-11                    : Entry point of 'main' function, if any (0 if not)
-        10-11                   12-15                   : Location of constructor function of top level struct
-        12-13                   16-19                   : Bytes of storage needed for top-level struct
-        14-15                   20-21                   : Size of constants in bytes
-        16-n                    22-n                    : Bytes of constant structs and arrays
-        n-<end>                 n-<end>                 : Executable code
- */
- 
-constexpr AddrNativeType MajorVersionAddr = 4;
-constexpr AddrNativeType MinorVersionAddr = 6;
-constexpr AddrNativeType Is32BitAddrAddr = 7;
-constexpr AddrNativeType MainEntryPointAddr = 8;
-
 #ifdef ADDR32
 constexpr AddrNativeType TopLevelCtorEntryPointAddr = 12;
 constexpr AddrNativeType TopLevelStructSizeAddr = 16;

@@ -120,22 +120,7 @@ Compiler::emitStruct(CodeGen* codeGen, const StructPtr& struc)
     
     // Emit functions
     for (auto& itFunc : struc->functions()) {
-        if (struc == _topLevelStruct) {
-            // If this is the main function of the top level
-            // struct, set the entry point
-            if (itFunc->name() == "main") {
-                setValue(codeGen->code(), MainEntryPointAddr, AddrNativeType(codeGen->code().size()), AddrSize);
-            }
-            
-            // If this is the ctor function of the top level
-            // struct, set the entry point
-            if (itFunc->name() == "") {
-                setValue(codeGen->code(), TopLevelCtorEntryPointAddr, AddrNativeType(codeGen->code().size()), AddrSize);
-            }
-        }
-        
-        // Set addr of this function
-        itFunc->setAddr(AddrNativeType(codeGen->code().size()));
+        _codeGen->handleFunction(this, itFunc, struc == _topLevelStruct);
         codeGen->emitCode(itFunc->astNode(), false);
     }
 }

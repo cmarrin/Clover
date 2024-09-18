@@ -25,6 +25,16 @@ static inline void appendValue(std::vector<uint8_t>& container, uint32_t v, uint
     }
 }
 
+static inline void setValue(std::vector<uint8_t>& container, AddrNativeType addr, uint32_t v, uint8_t bytes)
+{
+    switch (bytes) {
+        case 4: container[addr++] = v >> 24;
+                container[addr++] = v >> 16;
+        case 2: container[addr++] = v >> 8;
+        case 1: container[addr++] = v;
+    }
+}
+    
 class CodeGen
 {
   public:
@@ -34,6 +44,7 @@ class CodeGen
     virtual uint8_t minorVersion() const = 0;
     
     virtual void emitPreamble(const Compiler*) = 0;
+    virtual void handleFunction(const Compiler*, const FunctionPtr&, bool isTopLevel) { }
     
     virtual void emitCode(const ASTPtr& node, bool isLHS) = 0;
 

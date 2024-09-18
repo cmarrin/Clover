@@ -394,16 +394,6 @@ private:
     
     uint16_t sizeInBytes(Type type) const;
     
-    void setValue(std::vector<uint8_t>& container, AddrNativeType addr, uint32_t v, uint8_t bytes)
-    {
-        switch (bytes) {
-            case 4: container[addr++] = v >> 24;
-                    container[addr++] = v >> 16;
-            case 2: container[addr++] = v >> 8;
-            case 1: container[addr++] = v;
-        }
-    }
-    
     FunctionPtr currentFunction()
     {
         expect(_inFunction && _currentFunction, Error::InternalError);

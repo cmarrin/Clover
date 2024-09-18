@@ -45,6 +45,27 @@ CodeGenStackVM::emitPreamble(const Compiler* compiler)
 }
 
 void
+CodeGenStackVM::handleFunction(const Compiler* compiler, const FunctionPtr& function, bool isTopLevel)
+{
+    if (isTopLevel) {
+        // If this is the main function of the top level
+        // struct, set the entry point
+        if (function->name() == "main") {
+            setValue(code(), MainEntryPointAddr, AddrNativeType(code().size()), AddrSize);
+        }
+        
+        // If this is the ctor function of the top level
+        // struct, set the entry point
+        if (function->name() == "") {
+            setValue(code(), TopLevelCtorEntryPointAddr, AddrNativeType(code().size()), AddrSize);
+        }
+    }
+    
+    // Set addr of this function
+    function->setAddr(AddrNativeType(code().size()));
+}
+
+void
 CodeGenStackVM::emitCodeStatements(const ASTPtr& node, bool isLHS)
 {
     for (int i = 0; i < node->numChildren(); ++i) {
