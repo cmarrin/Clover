@@ -94,11 +94,11 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
         switch (typeToOpSize(type)) {
             default: break;
             case OpSize::i8:
-                format("    PULS A\nSTA ");
+                format("    PULS A\n    STA ");
                 emitAddr(symbol, offset);
                 break;
             case OpSize::i16:
-                format("    PULS D\nSTD ");
+                format("    PULS D\n    STD ");
                 emitAddr(symbol, offset);
                 break;
         }
@@ -170,24 +170,6 @@ static const char* relopToString(Op op)
         case Op::HS: return "BHS";
         case Op::GT: return "BGT";
         case Op::HI: return "BHI";
-    }
-}
-
-static const char* opToString(Op op, bool& has16Bit)
-{
-    has16Bit = false;
-    
-    switch (op) {
-        default: return nullptr;
-        case Op::NEG: return "NEG";
-        case Op::NOT1: return "COM";
-        case Op::OR1: return "OR";
-        case Op::XOR1: return "EOR";
-        case Op::AND1: return "AND";
-        case Op::SHR1: return "SHR";
-        case Op::SHL1: return "SHL";
-        case Op::ADD: has16Bit = true; return "ADD";
-        case Op::SUB: has16Bit = true; return "SUB";
     }
 }
 
@@ -273,53 +255,150 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         return;
     }
 
-    // Handle MUL.
-    if (op == Op::UMUL || op == Op::IMUL) {
-        bool isSigned = op == Op::IMUL;
-        uint32_t labelA = nextLabelId();
-        uint32_t labelB = nextLabelId();
-        uint32_t labelC = nextLabelId();
-        
-        if (opSize == OpSize::i8) {
-            format("    CLRA\n");       // TOS has sign (for both signed and unsigned case)
-            format("    PSHS A\n");
-            if (isSigned) {
-                format("    LDA 2,S\n");
-                format("    BPL L%d\n", labelA);
-                format("    NEG 0,S\n");
-                format("    NEG 2,S\n");
-                format("L%d\n", labelA);
-                format("    LDA 1,S\n");
-                format("    BPL L%d\n", labelB);
-                format("    NEG 0,S\n");
-                format("    NEG 1,S\n");
-                format("L%d\n", labelB);
-            }
+    switch (op) {
+        default: break;
+        case Op::UMUL:
+        case Op::IMUL: {
+            // Handle MUL.
+            bool isSigned = op == Op::IMUL;
+            uint32_t labelA = nextLabelId();
+            uint32_t labelB = nextLabelId();
+            uint32_t labelC = nextLabelId();
+            format("    CLRA\n");
+            format("    PSHS A\n");      // TOS is sign, TOS+1 is rhs, TOS+3 is lhs
             
-            // At this point TOS has a sign byte either way
-            format("LDB 1,S\n");
-            format("LDA 2,S\n");
-            format("MUL\n");
-            format("TST 0,S\n");
-            format("    BPL L%d\n", labelC);
-            format("    NEGB\n");
-            format("L%d\n", labelC);
-            format("    LEAS 3,S\n");
-            format("    PSHS B\n");
-            return;
+            if (is16Bit) {
+                if (isSigned) {
+                    format("    TST 3,S\n");
+                    format("    BPL L1\n");
+                    format("L1\n");
+                    format("    NEG 0,S\n");
+                    format("    LDD #0\n");
+                    format("    SUBD 3,S\n");
+                    format("    STD 3,S\n");
+                    format("    TST 1,S\n");
+                    format("    BPL L2\n");
+                    format("    NEG 0,S\n");
+                    format("    LDD #0\n");
+                    format("    SUBD 1,S\n");
+                    format("    STD 1,S\n");
+                    format("L2\n");
+                }
+                format("    LDD #0\n");      // TOS is the accumulator, TOS+2 is sign, TOS+3 is rhs, TOS+5 is lhs
+                format("    PSHS D\n");
+                format("    LDA 6,S\n");
+                format("    LDB 4,S\n");
+                format("    MUL\n");
+                format("    STD 0,S\n");
+                format("    LDA 5,S\n");
+                format("    LDB 4,S\n");
+                format("    MUL\n");
+                format("    ADDB 1,S\n");    // Toss MSB of result
+                format("    LDA 6,S\n");
+                format("    LDB 3,S\n");
+                format("    MUL\n");
+                format("    ADDB 1,S\n");    // Toss MSB of result
+                format("    TST 2,S\n");     // Do the sign
+                format("    BPL L3\n");
+                format("    LDD #0\n");
+                format("    SUBD 0,S\n");
+                format("L3\n");
+                format("    LEAS 7,S\n");
+                format("    PSHS D\n");      // TOS now has 16 bit result
+            } else {
+                if (isSigned) {
+                    format("    LDA 2,S\n");
+                    format("    BPL L%d\n", labelA);
+                    format("    NEG 0,S\n");
+                    format("    NEG 2,S\n");
+                    format("L%d\n", labelA);
+                    format("    LDA 1,S\n");
+                    format("    BPL L%d\n", labelB);
+                    format("    NEG 0,S\n");
+                    format("    NEG 1,S\n");
+                    format("L%d\n", labelB);
+                }
+                
+                // At this point TOS has a sign byte either way
+                format("    LDB 1,S\n");
+                format("    LDA 2,S\n");
+                format("    MUL\n");
+                format("    TST 0,S\n");
+                format("    BPL L%d\n", labelC);
+                format("    NEGB\n");
+                format("L%d\n", labelC);
+                format("    LEAS 3,S\n");
+                format("    PSHS B\n");
+            }
+            break;
         }
-        
-        // Handle 16 bit case
-        return;
+        case Op::UDIV:
+        case Op::IDIV: {
+            // Handle Div (done with a call to BOSS9)
+            bool isSigned = op == Op::IDIV;
+            format("JSR %Sdiv%s\n", isSigned ? "i" : "u", is16Bit ? "16" : "8");
+            break;
+        }
+        case Op::NEG:
+            if (is16Bit) {
+                format("    LDD #0\n");
+                format("    SUBD 0,S\n");
+            } else {
+                format("    NEG 0,S\n");
+            }
+            break;
+        case Op::NOT1:
+            if (is16Bit) {
+                format("    NOT 0,S\n");
+                format("    NOT 1,S\n");
+            } else {
+                format("    NOT 0,S\n");
+            }
+            break;
+        case Op::ADD:
+        case Op::SUB:
+            if (is16Bit) {
+                format("    LDD 2,S\n");
+                format("    %s 0,S\n", (op == Op::ADD) ? "ADDD" : "SUBD");
+            } else {
+                format("    LDA 1,S\n");
+                format("    %s 0,S\n", (op == Op::ADD) ? "ADDA" : "SUBA");
+            }
+            break;
+        case Op::OR1:
+        case Op::AND1:
+        case Op::XOR1: {
+            const char* opStr = (op == Op::OR1) ? "OR" : ((op == Op::AND1) ? "AND" : "EOR");
+            if (is16Bit) {
+                format("    LDD 2,S\n");
+                format("    %sA 0,S\n", opStr);
+                format("    %sB 1,S\n", opStr);
+            } else {
+                format("    LDA 1,S\n");
+                format("    %s 0,S\n", opStr);
+            }
+            break;
+        }
+        case Op::SHR1:
+        case Op::ASR1:
+            // For 16 bit ASR/LSR shift a sign or 0 into MSB and shift LSB into C
+            // ROR shifts C into the MSB of the lower byte
+            format("    %s 0,S\n", (op == Op::SHR1) ? "LSR" : "ASR");
+            if (is16Bit) {
+                format("    ROR 1,S\n");
+            }
+            break;
+        case Op::SHL1:
+            // For 16 bit LSL shifts 0 into LSB and shift MSB into C
+            // ROL shifts C into the MSB of the higher byte
+            if (is16Bit) {
+                format("    LSL 1,S\n");
+                format("    ROL 0,S\n");
+            } else {
+                format("    LSL 0,S\n");
+            }
+            break;
     }
-    
-    // Handle Div (done with a call to BOSS9)
-    
-    // Handle unary ops NEG and NOT1, which only have 8 bit variants
-    
-    // Handle ADD and SUB which have 16 bit variants
-    
-    // Handle OR1, AND1 and XOR1, which only have 8 bit variants
     
     // Handle SHR1 and SHL1, which only have 8 bit variants and need to use ASR for signed
 }

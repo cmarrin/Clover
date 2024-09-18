@@ -103,6 +103,7 @@
 		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
 		4941A1172BBB0B1200CE3C9E /* Effects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.clvr; path = ../examples/Effects.clvr; sourceTree = "<group>"; };
 		499B10C62C9B0B9D0060AF63 /* CodeGenNotes.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CodeGenNotes.txt; path = ../CodeGenNotes.txt; sourceTree = "<group>"; };
+		499B10C72C9B9A0B0060AF63 /* simple.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; name = simple.asm; path = ../examples/simple.asm; sourceTree = "<group>"; };
 		49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestSwitchEnum.clvr; path = ../Test/TestSwitchEnum.clvr; sourceTree = "<group>"; };
 		49A85D842C7A220500E8F5F3 /* TestFloatExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestFloatExpr.clvr; path = ../Test/TestFloatExpr.clvr; sourceTree = "<group>"; };
 		49A85D852C7A220500E8F5F3 /* TestIntExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr.clvr; path = ../Test/TestIntExpr.clvr; sourceTree = "<group>"; };
@@ -252,6 +253,7 @@
 		4941A1002BBA1CF300CE3C9E /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				499B10C72C9B9A0B0060AF63 /* simple.asm */,
 				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
 				4941A1012BBA1D2800CE3C9E /* Flicker.clvr */,
 				4941A1172BBB0B1200CE3C9E /* Effects.clvr */,
