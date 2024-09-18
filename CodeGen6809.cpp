@@ -173,6 +173,24 @@ static const char* relopToString(Op op)
     }
 }
 
+static const char* opToString(Op op, bool& has16Bit)
+{
+    has16Bit = false;
+    
+    switch (op) {
+        default: return nullptr;
+        case Op::NEG: return "NEG";
+        case Op::NOT1: return "COM";
+        case Op::OR1: return "OR";
+        case Op::XOR1: return "EOR";
+        case Op::AND1: return "AND";
+        case Op::SHR1: return "SHR";
+        case Op::SHL1: return "SHL";
+        case Op::ADD: has16Bit = true; return "ADD";
+        case Op::SUB: has16Bit = true; return "SUB";
+    }
+}
+
 void
 CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
 {
@@ -182,7 +200,10 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     // to get that from the left or right operand
     auto opNode = std::static_pointer_cast<OpNode>(node);
     Type opType = Type::UInt8;
+    OpSize opSize = typeToOpSize(opType);
+    
     bool isLogical = opNode->op() == Op::LNOT;
+    bool isBinary = false;
     
     if (opNode->left()) {
         opType = opNode->left()->type();
@@ -192,13 +213,15 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     if (opNode->right()) {
         if (opNode->left() == nullptr) {
             opType = opNode->right()->type();
+        } else {
+            isBinary = true;
         }
         
         // If this is a unary operation (like INC) then _isAssignment is used
         emitCode(opNode->right(), (opNode->left() == nullptr) ? opNode->isRef() : isLHS);
     }
     
-    bool is16Bit = typeToOpSize(opType) == OpSize::i16;
+    bool is16Bit = opSize == OpSize::i16;
     
     // Handle Op::LNOT as a special case. There's no logical not opcode
     // so we just test if TOS is zero. If so, push a 1 otherwise push a 0.
@@ -230,7 +253,8 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     // L1:  LDA #1
     // L2:  PSHS A
     //
-    const char* relOp = relopToString(opNode->op());
+    Op op = opNode->op();
+    const char* relOp = relopToString(op);
     
     uint32_t labelA = nextLabelId();
     uint32_t labelB = nextLabelId();
@@ -249,24 +273,55 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         return;
     }
 
-    switch (typeToOpSize(opType)) {
-        case OpSize::i8:
-            format("LDA 1,S\n");
-            format("ADDA 0,S\n"); // FIXME. Handle all the other opcodes
-            format("LEAS 2,S\n");
-            format("PSHS A\n");
-            break;
-        case OpSize::i16:
-            format("LDD 2,S\n");
-            format("ADDD 0,S\n"); // FIXME. Handle all the other opcodes
-            format("LEAS 4,S\n");
-            format("PSHS D\n");
-            break;
-        case OpSize::i32:
-        case OpSize::flt:
-            format("JSR add32\n"); // FIXME. Handle all the other opcodes
-            break;
+    // Handle MUL.
+    if (op == Op::UMUL || op == Op::IMUL) {
+        bool isSigned = op == Op::IMUL;
+        uint32_t labelA = nextLabelId();
+        uint32_t labelB = nextLabelId();
+        uint32_t labelC = nextLabelId();
+        
+        if (opSize == OpSize::i8) {
+            format("    CLRA\n");       // TOS has sign (for both signed and unsigned case)
+            format("    PSHS A\n");
+            if (isSigned) {
+                format("    LDA 2,S\n");
+                format("    BPL L%d\n", labelA);
+                format("    NEG 0,S\n");
+                format("    NEG 2,S\n");
+                format("L%d\n", labelA);
+                format("    LDA 1,S\n");
+                format("    BPL L%d\n", labelB);
+                format("    NEG 0,S\n");
+                format("    NEG 1,S\n");
+                format("L%d\n", labelB);
+            }
+            
+            // At this point TOS has a sign byte either way
+            format("LDB 1,S\n");
+            format("LDA 2,S\n");
+            format("MUL\n");
+            format("TST 0,S\n");
+            format("    BPL L%d\n", labelC);
+            format("    NEGB\n");
+            format("L%d\n", labelC);
+            format("    LEAS 3,S\n");
+            format("    PSHS B\n");
+            return;
+        }
+        
+        // Handle 16 bit case
+        return;
     }
+    
+    // Handle Div (done with a call to BOSS9)
+    
+    // Handle unary ops NEG and NOT1, which only have 8 bit variants
+    
+    // Handle ADD and SUB which have 16 bit variants
+    
+    // Handle OR1, AND1 and XOR1, which only have 8 bit variants
+    
+    // Handle SHR1 and SHL1, which only have 8 bit variants and need to use ASR for signed
 }
 
 void

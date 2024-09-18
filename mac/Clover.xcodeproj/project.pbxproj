@@ -102,6 +102,7 @@
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Scanner.h; sourceTree = "<group>"; };
 		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
 		4941A1172BBB0B1200CE3C9E /* Effects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.clvr; path = ../examples/Effects.clvr; sourceTree = "<group>"; };
+		499B10C62C9B0B9D0060AF63 /* CodeGenNotes.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CodeGenNotes.txt; path = ../CodeGenNotes.txt; sourceTree = "<group>"; };
 		49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestSwitchEnum.clvr; path = ../Test/TestSwitchEnum.clvr; sourceTree = "<group>"; };
 		49A85D842C7A220500E8F5F3 /* TestFloatExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestFloatExpr.clvr; path = ../Test/TestFloatExpr.clvr; sourceTree = "<group>"; };
 		49A85D852C7A220500E8F5F3 /* TestIntExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr.clvr; path = ../Test/TestIntExpr.clvr; sourceTree = "<group>"; };
@@ -188,6 +189,7 @@
 		4941A0E62BB6F59900CE3C9E = {
 			isa = PBXGroup;
 			children = (
+				499B10C52C9B0B880060AF63 /* doc */,
 				49FAA0812C8BCF550060F8AA /* CodeGen.h */,
 				49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */,
 				49C9E7EC2C9714CA00E58516 /* CodeGen6809.h */,
@@ -256,6 +258,14 @@
 				49C164A42C025CD500981AD1 /* simple.clvr */,
 			);
 			name = examples;
+			sourceTree = "<group>";
+		};
+		499B10C52C9B0B880060AF63 /* doc */ = {
+			isa = PBXGroup;
+			children = (
+				499B10C62C9B0B9D0060AF63 /* CodeGenNotes.txt */,
+			);
+			name = doc;
 			sourceTree = "<group>";
 		};
 		49E2F2972C8F461F007E0F0A /* modules */ = {

@@ -205,12 +205,6 @@ Ops: Binary
         Op::OR1               OR (only 8 bit)
         Op::XOR1              EOR (only 8 bit)
         Op::AND1              AND (only 8 bit)
-        Op::EQ                CMP
-        Op::NE
-        Op::LT
-        Op::GT
-        Op::GE
-        Op::LE
         Op::SHR1              ASR/LSR (only 8 bit)
         Op::SHL1              ASL/LSL (only 8 bit)
         Op::ADD               ADD (8 and 16 bit)
@@ -340,8 +334,38 @@ But if the value is a pointer we need to inc or dec by the size of the underlyin
 	DEREF1
 	PUSHK <size of inc>
 	
-	
-	
-	
-	
-	
+
+
+16 bit signed MUL on 6809
+
+    CLRA
+    PSHS A      ; TOS is sign, TOS+1 is rhs, TOS+3 is lhs
+    LDD 3,S     ; Skip if unsigned
+    BPL L1      ; Skip if unsigned
+L1              ; Skip if unsigned
+    NEG 0,S     ; Skip if unsigned
+    LDD 1,S     ; Skip if unsigned
+    BPL L2      ; Skip if unsigned
+    NEG 0,S     ; Skip if unsigned
+L2
+    LDD #0      ; TOS is the accumulator, TOS+2 is sign, TOS+3 is rhs, TOS+5 is lhs
+    PSHS D
+    LDA 6,S
+    LDB 4,S
+    MUL
+    STD 0,S
+    LDA 5,S
+    LDB 4,S
+    MUL
+    ADDB 1,S    ; Toss MSB of result
+    LDA 6,S
+    LDB 3,S
+    MUL
+    ADDB 1,S    ; Toss MSB of result
+    PULS D
+    TST S,2     ; Do the sign
+    BPL L3
+    NEG D
+L3
+    LEAS 5,S
+    PSHS D      ; TOS now has 16 bit result
