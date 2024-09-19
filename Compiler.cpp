@@ -25,9 +25,9 @@ using namespace clvr;
 Compiler::Compiler(OutputFormat fmt, std::istream* stream, Annotations* annotations) : _scanner(stream, annotations)
 {
     if (fmt == OutputFormat::ASM6809) {
-        _codeGen = new CodeGen6809;
+        _codeGen = new CodeGen6809(annotations);
     } else {
-        _codeGen = new CodeGenStackVM;
+        _codeGen = new CodeGenStackVM(annotations);
     }
 }
 

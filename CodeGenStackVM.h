@@ -38,6 +38,8 @@ constexpr AddrNativeType MainEntryPointAddr = 8;
 class CodeGenStackVM : public CodeGen
 {
   public:
+    CodeGenStackVM(Annotations* annotations) : CodeGen(annotations) { }
+
     virtual ~CodeGenStackVM() { }
     
     virtual uint16_t majorVersion() const override { return 1; }

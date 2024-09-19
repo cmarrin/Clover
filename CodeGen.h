@@ -10,10 +10,13 @@
 #pragma once
 
 #include "AST.h"
+#include "Scanner.h"
 
 #include <vector>
 
 namespace clvr {
+
+class Annotations;
 
 static inline void appendValue(std::vector<uint8_t>& container, uint32_t v, uint8_t bytes)
 {
@@ -38,8 +41,12 @@ static inline void setValue(std::vector<uint8_t>& container, AddrNativeType addr
 class CodeGen
 {
   public:
+    CodeGen(Annotations* annotations) : _annotations(annotations) { }
+
     virtual ~CodeGen() { }
     
+    virtual void init() { _code.clear(); _annotationIndex = 0; }
+
     virtual uint16_t majorVersion() const = 0;
     virtual uint8_t minorVersion() const = 0;
     
@@ -60,8 +67,35 @@ class CodeGen
         _code.pop_back();
     }
     
+    void emitAnnotations(int32_t index, const char* commentString)
+    {
+        if (_annotations) {
+            while (true) {
+                if (index < _annotationIndex) {
+                    break;
+                }
+                
+                std::string line;
+                int32_t addr = _annotations->getLine(_annotationIndex, line);
+            
+                if (addr == -2 || index < _annotationIndex) {
+                    break;
+                }
+            
+                format("    %s %s", commentString, line.c_str());
+                _annotationIndex += 1;
+
+                if (_code.back() != '\n') {
+                    format("\n");
+                }
+            }
+        }
+    }
+    
   private:
     std::vector<uint8_t> _code;
+    Annotations* _annotations = nullptr;
+    int32_t _annotationIndex = 0;
 };
 
 }

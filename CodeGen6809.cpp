@@ -937,8 +937,8 @@ CodeGen6809::emitCodeDeref(const ASTPtr& node, bool isLHS)
 void
 CodeGen6809::emitCode(const ASTPtr& node, bool isLHS)
 {
-    node->setAnnotationAddr(AddrNativeType(code().size()));
-    
+    emitAnnotations(node->annotationIndex(), ";");
+
     switch (node->astNodeType()) {
         case ASTNodeType::Statements    : emitCodeStatements(node, isLHS); break;
         case ASTNodeType::Op            : emitCodeOp(node, isLHS); break;
