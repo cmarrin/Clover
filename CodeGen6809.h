@@ -16,8 +16,17 @@ namespace clvr {
 class CodeGen6809 : public CodeGen
 {
   public:
+    CodeGen6809(Annotations* annotations) : CodeGen(annotations) { }
+    
     virtual ~CodeGen6809() { }
     
+    virtual void init() override
+    {
+        CodeGen::init();
+        _strings.clear();
+        _labelId = 0;
+    }
+
     virtual uint16_t majorVersion() const override { return 1; }
     virtual uint8_t minorVersion() const override { return 0; }
 

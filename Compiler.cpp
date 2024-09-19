@@ -62,7 +62,7 @@ bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& m
     //          we need a third pass to make them correct
     
     for (int i = 0; i < 3; i ++) {
-        _codeGen->code().clear();
+        _codeGen->init();
         _codeGen->emitPreamble(this);
         emitStruct(_codeGen, _topLevelStruct);
     }
@@ -483,10 +483,12 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
                 // that struct and node, which is the value to assign.
                 ASTPtr dot = std::make_shared<DotNode>(idNode, sym);
                 ASTPtr assignment = std::make_shared<AssignmentNode>(dot, Op::NOP, node);
+                assignment->setAnnotationIndex(annotationIndex());
                 parent->addNode(assignment);
             }
         } else {
             ASTPtr assignment = std::make_shared<AssignmentNode>(idNode, Op::NOP, ast);
+            assignment->setAnnotationIndex(annotationIndex());
             parent->addNode(assignment);
         }
     }
