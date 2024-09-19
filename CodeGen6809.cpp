@@ -507,6 +507,7 @@ CodeGen6809::emitCodeDot(const ASTPtr& node, bool isLHS)
 {
     ASTPtr operand = std::static_pointer_cast<DotNode>(node)->operand();
     SymbolPtr property = std::static_pointer_cast<DotNode>(node)->property();
+    bool is16Bit = typeToOpSize(node->type()) == OpSize::i16;
     
     Index index;
     uint16_t offset = property->addr(index);
@@ -523,13 +524,31 @@ CodeGen6809::emitCodeDot(const ASTPtr& node, bool isLHS)
 
     // We can skip the OFFSET if offset value is 0
     if (offset) {
-        code().push_back((offset > 255) ? uint8_t(Op::OFFSET2) : uint8_t(Op::OFFSET1));
-        appendValue(code(), offset, (offset > 255) ? 2 : 1);
-    }
-    
-    if (!isLHS) {
-        uint8_t bytes = typeToBytes(node->type());
-        code().push_back(uint8_t((bytes == 1) ? Op::DEREF1 : ((bytes == 2) ? Op::DEREF2 : Op::DEREF4)));
+        format("    PULS D\n");
+        format("    ADDD #%d\n", offset);
+        if (!isLHS) {
+            // Just Deref
+            format("    TFR D,X\n");
+            if (is16Bit) {
+                format("    LDD 0,X\n");
+                format("    PSHS D\n");
+            } else {
+                format("    LDA 0,X\n");
+                format("    PSHS A\n");
+            }
+            return;
+        }
+        format("    PSHS D\n");
+    } else if (!isLHS) {
+        // Just Deref
+        format("    PULS X\n");
+        if (is16Bit) {
+            format("    LDD 0,X\n");
+            format("    PSHS D\n");
+        } else {
+            format("    LDA 0,X\n");
+            format("    PSHS A\n");
+        }
     }
 }
 
