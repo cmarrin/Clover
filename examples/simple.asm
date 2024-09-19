@@ -51,7 +51,7 @@ L0
     LDA #1
 L1
     PSHS A
-P©    ;         core.printf("array[%d] = %d\n", i, *p);
+QM    ;         core.printf("array[%d] = %d\n", i, *p);
     ;         p++;
     LDD 1,U
     PSHS D
@@ -60,7 +60,21 @@ P©    ;         core.printf("array[%d] = %d\n", i, *p);
 0    LEAX String+$0
     PSHS X
 Xå    ;     }
-W:    ;     
+    LEAX 1,U
+    PSHS X
+    PULS X
+    LDD 0,X
+    PSHS D
+    ADDD #2
+    STD 0,X
+    LEAX 2,U
+    PSHS X
+    PULS X
+    LDA 0,X
+    PSHS A
+    ADDA #1
+    STA 0,X
+Wß    ;     
     ; //    int16 a = 5;
     ; //    uint16 b = 6;
     ; //    int8 c = 8;

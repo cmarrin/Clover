@@ -174,87 +174,8 @@ static const char* relopToString(Op op)
 }
 
 void
-CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
+CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
 {
-    assert(!isLHS);
-    
-    // _type is the result type not the type used for operation. We need
-    // to get that from the left or right operand
-    auto opNode = std::static_pointer_cast<OpNode>(node);
-    Type opType = Type::UInt8;
-    OpSize opSize = typeToOpSize(opType);
-    
-    bool isLogical = opNode->op() == Op::LNOT;
-    bool isBinary = false;
-    
-    if (opNode->left()) {
-        opType = opNode->left()->type();
-        emitCode(opNode->left(), opNode->isRef());
-    }
-    
-    if (opNode->right()) {
-        if (opNode->left() == nullptr) {
-            opType = opNode->right()->type();
-        } else {
-            isBinary = true;
-        }
-        
-        // If this is a unary operation (like INC) then _isAssignment is used
-        emitCode(opNode->right(), (opNode->left() == nullptr) ? opNode->isRef() : isLHS);
-    }
-    
-    bool is16Bit = opSize == OpSize::i16;
-    
-    // Handle Op::LNOT as a special case. There's no logical not opcode
-    // so we just test if TOS is zero. If so, push a 1 otherwise push a 0.
-    if (isLogical) {
-        uint32_t label = nextLabelId();
-        
-        format("    CLRB\n");
-        if (is16Bit) {
-            format("    PULS X\n");
-        } else {
-            format("    PULS A\n");
-        }
-        format("    BNE L%d\n", label);
-        format("    INCB\n");
-        format("L%d\n", label);
-        format("    PSHS B\n");
-        
-        return;
-    }
-
-    // If it's a relational operator, do the unoptimized case:
-    //
-    //	    LDA 1,S
-    //	    CMPA 0,S
-    //      LEAS 2,S
-    //	    BLT L1
-    //	    CLRA
-    //	    BRA L2
-    // L1:  LDA #1
-    // L2:  PSHS A
-    //
-    Op op = opNode->op();
-    const char* relOp = relopToString(op);
-    
-    uint32_t labelA = nextLabelId();
-    uint32_t labelB = nextLabelId();
-
-    if (relOp) {
-        format("    LDA 1,S\n");
-        format("    CMPA 0,S\n");
-        format("    LEAS 2,S\n");
-        format("    BLT L%d\n", labelA);
-        format("    CLRA\n");
-        format("    BRA L2\n", labelB);
-        format("L%d\n", labelA);
-        format("    LDA #1\n");
-        format("L%d\n", labelB);
-        format("    PSHS A\n");
-        return;
-    }
-
     switch (op) {
         default: break;
         case Op::UMUL:
@@ -399,13 +320,127 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
             }
             break;
     }
+}
+
+void
+CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
+{
+    assert(!isLHS);
     
-    // Handle SHR1 and SHL1, which only have 8 bit variants and need to use ASR for signed
+    // _type is the result type not the type used for operation. We need
+    // to get that from the left or right operand
+    auto opNode = std::static_pointer_cast<OpNode>(node);
+    Type opType = Type::UInt8;
+    OpSize opSize = typeToOpSize(opType);
+    
+    bool isLogical = opNode->op() == Op::LNOT;
+    bool isBinary = false;
+    
+    if (opNode->left()) {
+        opType = opNode->left()->type();
+        emitCode(opNode->left(), opNode->isRef());
+    }
+    
+    if (opNode->right()) {
+        if (opNode->left() == nullptr) {
+            opType = opNode->right()->type();
+        } else {
+            isBinary = true;
+        }
+        
+        // If this is a unary operation (like INC) then _isAssignment is used
+        emitCode(opNode->right(), (opNode->left() == nullptr) ? opNode->isRef() : isLHS);
+    }
+    
+    bool is16Bit = opSize == OpSize::i16;
+    
+    // Handle Op::LNOT as a special case. There's no logical not opcode
+    // so we just test if TOS is zero. If so, push a 1 otherwise push a 0.
+    if (isLogical) {
+        uint32_t label = nextLabelId();
+        
+        format("    CLRB\n");
+        if (is16Bit) {
+            format("    PULS X\n");
+        } else {
+            format("    PULS A\n");
+        }
+        format("    BNE L%d\n", label);
+        format("    INCB\n");
+        format("L%d\n", label);
+        format("    PSHS B\n");
+        
+        return;
+    }
+
+    // If it's a relational operator, do the unoptimized case:
+    //
+    //	    LDA 1,S
+    //	    CMPA 0,S
+    //      LEAS 2,S
+    //	    BLT L1
+    //	    CLRA
+    //	    BRA L2
+    // L1:  LDA #1
+    // L2:  PSHS A
+    //
+    Op op = opNode->op();
+    const char* relOp = relopToString(op);
+    
+    uint32_t labelA = nextLabelId();
+    uint32_t labelB = nextLabelId();
+
+    if (relOp) {
+        format("    LDA 1,S\n");
+        format("    CMPA 0,S\n");
+        format("    LEAS 2,S\n");
+        format("    BLT L%d\n", labelA);
+        format("    CLRA\n");
+        format("    BRA L2\n", labelB);
+        format("L%d\n", labelA);
+        format("    LDA #1\n");
+        format("L%d\n", labelB);
+        format("    PSHS A\n");
+        return;
+    }
+    
+    emitBinaryOp(op, is16Bit);
 }
 
 void
 CodeGen6809::emitCodeInc(const ASTPtr& node, bool isLHS)
 {
+    auto incNode = std::static_pointer_cast<IncNode>(node);
+
+    emitCode(incNode->node(), true);
+    
+    int16_t inc = incNode->inc();
+
+    format("    PULS X\n");
+    
+    bool is16Bit = typeToOpSize(node->type()) == OpSize::i16;
+    
+    if (is16Bit) {
+        format("    LDD 0,X\n");
+        if (incNode->isPre()) {
+            format("    ADDD #%d\n", inc);
+            format("    PSHS D\n");
+        } else {
+            format("    PSHS D\n");
+            format("    ADDD #%d\n", inc);
+        }
+        format("    STD 0,X\n");
+    } else {
+        format("    LDA 0,X\n");
+        if (incNode->isPre()) {
+            format("    ADDA #%d\n", inc);
+            format("    PSHS A\n");
+        } else {
+            format("    PSHS A\n");
+            format("    ADDA #%d\n", inc);
+        }
+        format("    STA 0,X\n");
+    }
 }
 
 void
@@ -422,25 +457,28 @@ CodeGen6809::emitCodeAssignment(const ASTPtr& node, bool isLHS)
     //
     // Now TOS has the value. do a pushref of the lhs and then popderef
     auto assignmentNode = std::static_pointer_cast<AssignmentNode>(node);
+    bool is16Bit = typeToOpSize(node->type()) == OpSize::i16;
 
     if (assignmentNode->op() != Op::NOP) {
         emitCode(assignmentNode->left(), false);
+        emitCode(assignmentNode->right(), false);
+        emitBinaryOp(assignmentNode->op(), is16Bit);
+    } else {
+        emitCode(assignmentNode->right(), false);
     }
     
-    emitCode(assignmentNode->right(), false);
-    
-    if (assignmentNode->op() != Op::NOP) {
-        code().push_back(uint8_t(assignmentNode->op()) | typeToSizeBits(assignmentNode->type()));
-    }
-
     // If lhs is a VarNode, we can optimize to turn this:
     //
-    //      PUSHREFx i,U
-    //      POPDEREFx
+    //      LEAX i,U
+    //      PSHS X
+    //      PULS X
+    //      PULS <A/D>
+    //      ST<A/D> 0,X
     
     // into:
     //
-    //      POPx i,U
+    //      PUL<A/D>
+    //      ST<A/D> i,U
     //
     if (assignmentNode->left()->astNodeType() == ASTNodeType::Var) {
         emitPopCodeVar(assignmentNode->left());
@@ -449,18 +487,19 @@ CodeGen6809::emitCodeAssignment(const ASTPtr& node, bool isLHS)
         emitCode(assignmentNode->left(), true);
     }
     
-    // If this is a pointer assignment, we need to use the pointer
-    // type for the POPDEREF
-    Type t = assignmentNode->left()->isPointer() ? AddrType : assignmentNode->type();
-    Op op = Op::NOP;
-    
-    switch (typeToOpSize(t)) {
-        case OpSize::i8:  op = Op::POPDEREF1; break;
-        case OpSize::i16: op = Op::POPDEREF2; break;
-        case OpSize::i32:
-        case OpSize::flt: op = Op::POPDEREF4; break;
+    // If this is a pointer assignment, we need to use the pointer type
+    if (assignmentNode->left()->isPointer()) {
+        is16Bit = true;
     }
-    code().push_back(uint8_t(op));
+    
+    format("    PULS X\n");
+    if (is16Bit) {
+        format("    PULS D\n");
+        format("    STD 0,X\n");
+    } else {
+        format("    PULS A\n");
+        format("    STA 0,X\n");
+    }
 }
 
 void

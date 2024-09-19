@@ -325,8 +325,14 @@ TOS has address of variable to inc/dec
 	PULS X		; Byte post-inc example
 	LDA 0,X
 	PSH A
-	INCA
+	ADDA #<inc>
 	STA 0,X
+	
+	PULS X		; Word pre-inc example
+	LDD 0,X
+	ADDD #<inc>
+    PSHS D
+	STD 0,X
 	
 But if the value is a pointer we need to inc or dec by the size of the underlying array (this is a bug in the current VM implementation). Probably should just get rid of ops for VM and implement with primitives. Or maybe 2 instructions which together would do the work and would allow a value to be specified for inc or dec.
 

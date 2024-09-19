@@ -38,6 +38,19 @@ class CodeGen6809 : public CodeGen
 
   private:
     void emitAddr(const SymbolPtr&, AddrNativeType offset, bool is32BitLSB = false);
+    
+    // This assumes op is one of:
+    //
+    //      Op::ADD
+    //      Op::SUB
+    //      Op::IMUL/Op::UMUL
+    //      Op::IDIV/Op::UDIV
+    //      Op::AND1
+    //      Op::OR1
+    //      Op::XOR1
+    //
+    // and that the lhs and rhs are pushed. Leave result on TOS
+    void emitBinaryOp(Op op, bool is16Bit);
 
     void emitCodeStatements(const ASTPtr& node, bool isLHS);
     void emitCodeVar(const ASTPtr& node, bool isLHS);
