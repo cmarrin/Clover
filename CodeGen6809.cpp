@@ -623,12 +623,11 @@ void
 CodeGen6809::emitCodeEnter(const ASTPtr& node, bool isLHS)
 {
     uint16_t localSize = std::static_pointer_cast<EnterNode>(node)->localSize();
-    if (localSize < 15) {
-        code().push_back(uint8_t(Op::ENTERS) | localSize);
-    } else {
-        bool isLong = localSize > 255;
-        code().push_back(uint8_t(Op::ENTER) | (isLong ? 0x01 : 0x00));
-        appendValue(code(), localSize, isLong ? 2 : 1);
+
+    format("    PSHS U\n");
+    format("    TFR S,U\n");
+    if (localSize) {
+        format("    LEAS -%d,S\n", localSize);
     }
 }
 
