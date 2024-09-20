@@ -637,9 +637,25 @@ CodeGen6809::emitCodeTypeCast(const ASTPtr& node, bool isLHS)
     ASTPtr arg = std::static_pointer_cast<TypeCastNode>(node)->arg();
     emitCode(arg, isLHS);
     
-    Op op = castOp(arg->type(), node->type());
-    if (op != Op::NOP) {
-        code().push_back(uint8_t(op));
+    // We're casting from 8 to 16 or from 16 to 8
+    // If going from 8 to 16, we sign extend if neededType is signed.
+    // If we're casting to the same size (e.g., going from signed to unsigned)
+    // just skip it
+    Type fromType = arg->type();
+    Type toType = node->type();
+    
+    if (typeToBytes(fromType) != typeToBytes(toType)) {
+        format("    PULS %s\n", (typeToBytes(fromType) == 1) ? "B" : "D");
+            
+        if (typeToBytes(toType) == 2) {
+            if (node->isSigned()) {
+                // Sign extend
+                format("    SEX\n");
+            } else {
+                format("    CLRA\n");
+            }
+        }
+        format("    PSHS %s\n", (typeToBytes(toType) == 1) ? "B" : "D");
     }
 }
 

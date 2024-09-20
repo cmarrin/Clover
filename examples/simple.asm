@@ -2,7 +2,10 @@
 
     include BOSS9.inc
     org $200
-ó    ; //
+    PSHS U
+    TFR S,U
+    LEAS -3,S
+    ; //
     ; //  simple.Clover
     ; //  Clover
     ; //
@@ -29,7 +32,7 @@
     ; {
     ;     uint16* p = &array[0];
     ;     for (uint8 i = 0; i < 4; i++) {
-    LEAX 0,?
+    LEAX Constants+0
     PSHS X
     PULS D
     STD 1,U
@@ -37,6 +40,7 @@
     PSHS A
     PULS A
     STA 2,U
+L1
     LDA 2,U
     PSHS A
     LDA #$04
@@ -44,20 +48,25 @@
     LDA 1,S
     CMPA 0,S
     LEAS 2,S
-    BLT L0
+    BLT L2
     CLRA
     BRA L2
-L0
+L2
     LDA #1
-L1
+L3
     PSHS A
-QY    ;         core.printf("array[%d] = %d\n", i, *p);
+    PULS A
+    BEQ L4
+    ;         core.printf("array[%d] = %d\n", i, *p);
     ;         p++;
     LDD 1,U
     PSHS D
     LDA 2,U
     PSHS A
-0    LEAX String+$0
+    PULS B
+    CLRA
+    PSHS D
+    LEAX String+$0
     PSHS X
     JSR printf
     ;     }
@@ -68,6 +77,7 @@ QY    ;         core.printf("array[%d] = %d\n", i, *p);
     PSHS D
     ADDD #2
     STD 0,X
+L5
     LEAX 2,U
     PSHS X
     PULS X
@@ -75,7 +85,9 @@ QY    ;         core.printf("array[%d] = %d\n", i, *p);
     PSHS A
     ADDA #1
     STA 0,X
-Wë    ;     
+    BRA L1
+L4
+    ;     
     ; //    int16 a = 5;
     ; //    uint16 b = 6;
     ; //    int8 c = 8;
