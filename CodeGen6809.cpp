@@ -56,15 +56,13 @@ static const char* indexToString(Index index)
 }
 
 void
-CodeGen6809::emitAddr(const SymbolPtr& symbol, AddrNativeType offset, bool is32BitLSB)
+CodeGen6809::emitAddr(const SymbolPtr& symbol, AddrNativeType offset)
 {
     // Determine the addr mode. Addr is unsigned. See Defines.h (Address Mode)
     // for details
     Index index;
     AddrNativeType relAddr = symbol->addr(index);
     relAddr += (index == Index::L) ? -offset : offset;
-    if (is32BitLSB) {
-        relAddr += 2;
     if (index == Index::C) {
         format("Constants+%d\n", relAddr); // FIXME: Need to emit Constants
     } else {

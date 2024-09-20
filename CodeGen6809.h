@@ -37,7 +37,7 @@ class CodeGen6809 : public CodeGen
     uint32_t nextLabelId() { return _labelId++; }
 
   private:
-    void emitAddr(const SymbolPtr&, AddrNativeType offset, bool is32BitLSB = false);
+    void emitAddr(const SymbolPtr&, AddrNativeType offset);
     
     // This assumes op is one of:
     //
