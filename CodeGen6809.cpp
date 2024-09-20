@@ -51,7 +51,7 @@ static const char* indexToString(Index index)
         case Index::A:
         case Index::L: return "U";
         case Index::M: return "Y";
-        case Index::C: return "?"; // FIXME: How do we handle constants (abs addressing?)
+        case Index::C: return "?"; // Constant address is handled elsewhere
     }
 }
 
@@ -65,9 +65,11 @@ CodeGen6809::emitAddr(const SymbolPtr& symbol, AddrNativeType offset, bool is32B
     relAddr += (index == Index::L) ? -offset : offset;
     if (is32BitLSB) {
         relAddr += 2;
+    if (index == Index::C) {
+        format("Constants+%d\n", relAddr); // FIXME: Need to emit Constants
+    } else {
+        format("%d,%s\n", relAddr, indexToString(index));
     }
-    
-    format("%d,%s\n", relAddr, indexToString(index));
 }
 
 void
