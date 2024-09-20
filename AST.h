@@ -476,17 +476,18 @@ class FunctionCallNode : public ASTNode
         : _function(func)
     { }
     
-    // Call a raw function with no instance value
+    // Call a function with an instance value
     FunctionCallNode(FunctionPtr func, const ASTPtr& instance)
         : _function(func)
         , _instance(instance)
     { }
     
     // Call function in the passed module
-    FunctionCallNode(FunctionPtr func, uint8_t moduleId)
-        : _moduleId(moduleId)
-        , _function(func)
-    { }
+    FunctionCallNode(FunctionPtr func, uint8_t moduleId, const std::string& moduleName)
+        : _function(func)
+        , _moduleId(moduleId)
+        , _moduleName(moduleName)
+        { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::FunctionCall; }
     
@@ -514,6 +515,7 @@ class FunctionCallNode : public ASTNode
     FunctionPtr function() const { return _function; }
     const ASTNodeList& args() const { return _args; }
     uint8_t moduleId() const { return _moduleId; }
+    const std::string& moduleName() const { return _moduleName; }
     ASTPtr instance() const { return _instance; }
     bool pushReturn() const { return _pushReturn; }
     
@@ -522,10 +524,10 @@ class FunctionCallNode : public ASTNode
   private:
     FunctionPtr _function;
     uint8_t _moduleId = 0;
+    std::string _moduleName;
     ASTNodeList _args;
     bool _pushReturn = true;
     ASTPtr _instance;
-
 };
 
 class EnterNode : public ASTNode

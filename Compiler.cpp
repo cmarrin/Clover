@@ -1328,7 +1328,7 @@ Compiler::postfixExpression()
                 expect(moduleId < _modules.size(), Error::InternalError);
                 FunctionPtr f = _modules[moduleId]->findFunction(id);
                 expect(f != nullptr, Error::UndefinedIdentifier);
-                lhs = std::make_shared<FunctionCallNode>(f, moduleId);
+                lhs = std::make_shared<FunctionCallNode>(f, moduleId, _modules[moduleId]->name());
                 continue;
             }
             

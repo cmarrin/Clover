@@ -557,18 +557,6 @@ CodeGen6809::emitCodeModule(const ASTPtr& node, bool isLHS)
 {    
 }
 
-static void emitDrop(std::vector<uint8_t>& code, uint16_t argSize)
-{
-    if (argSize) {
-        if (argSize <= 16) {
-            code.push_back(uint8_t(Op::DROPS) | (argSize - 1));
-        } else {
-            code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
-            appendValue(code, argSize, (argSize > 255) ? 2 : 1);
-        }
-    }
-}
-
 void
 CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
 {
@@ -582,31 +570,37 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
         emitCode(fNode->args()[i], isLHS);
     }
     
-    // Add a function call. args will already be pushed
-    int32_t addr = fNode->function()->addr();
+    std::string callName = fNode->moduleName();
+    
+    // If this is a native call, push the name of the call. If the
+    // module is not "core" prefix it with <module name>_
     if (fNode->function()->isNative()) {
-        // Add moduleId to addr
-        addr |= fNode->moduleId() << BitsPerFunctionId;
-        code().push_back(uint8_t(Op::NCALL) | ((addr <= 255) ? 0x00 : 0x01));
-        appendValue(code(), addr, (addr <= 255) ? 1 : 2);
-    } else if (addr) {
-        // A member function pushes the instance and then calls MCALL. A bare function
-        // uses CALL and does not push an instance.
-        //
-        // When MCALL is executed it first pops the instance, pushes the return address,
-        // pushes the current value of the Y register and then places the popped
-        // instance pointer in Y, then calls the function.
-        //
-        // When CALL is executed it pushes the return address, then a 4 bytes of 0 as
-        // a dummy address to make arg accesses align correctly, then calls the
-        // function.
-        if (fNode->instance()) {
-            emitCode(fNode->instance(), true);
-            code().push_back(uint8_t(Op::MCALL));
+        callName = fNode->moduleName();
+        if (callName == "core") {
+            callName.clear();
         } else {
-            code().push_back(uint8_t(Op::CALL));
+            callName += "_";
         }
-        appendValue(code(), addr, 2);
+        
+        callName += fNode->function()->name();
+        format("    JSR %s\n", callName.c_str());
+        return;
+    }
+    
+    callName = fNode->function()->name();
+
+    // If this is a member call, save the old Y and put the instance
+    // pointer in Y. On return pop TOS back to Y
+    if (fNode->instance()) {
+        format("    PSHS Y\n");
+        emitCode(fNode->instance(), true);
+        format("    PULS Y\n");
+    }
+
+    format("    JSR %s\n", callName.c_str());
+
+    if (fNode->instance()) {
+        format("    PULS Y\n");
     }
     
     // Pop the args after the call returns. Args pushed is not necessarily the
@@ -617,16 +611,11 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
         argSize += it->elementSizeInBytes();
     }
     
-    emitDrop(code(), argSize);
+    format("    LEAS %d,S\n", argSize);
 
-    // If we want to use the _returnValue, push it
+    // Push return value (in A/D) if needed
     if (fNode->pushReturn()) {
-        switch (typeToOpSize(fNode->function()->returnType())) {
-            case OpSize::i8:  code().push_back(uint8_t(Op::PUSHR1)); break;
-            case OpSize::i16: code().push_back(uint8_t(Op::PUSHR2)); break;
-            case OpSize::i32: 
-            case OpSize::flt: code().push_back(uint8_t(Op::PUSHR4)); break;
-        }
+        format("    PSHS %s\n", (typeToOpSize(fNode->function()->returnType()) == OpSize::i16) ? "D" : "A");
     }
 }
 
@@ -965,7 +954,7 @@ CodeGen6809::emitCodeReturn(const ASTPtr& node, bool isLHS)
 void
 CodeGen6809::emitCodeDrop(const ASTPtr& node, bool isLHS)
 {
-    emitDrop(code(), std::static_pointer_cast<DropNode>(node)->bytesToDrop());
+    format("    LEAS %d,S\n", std::static_pointer_cast<DropNode>(node)->bytesToDrop());
 }
 
 void
