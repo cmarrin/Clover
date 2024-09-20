@@ -182,9 +182,9 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
         case Op::IMUL: {
             // Handle MUL.
             bool isSigned = op == Op::IMUL;
-            uint32_t labelA = nextLabelId();
-            uint32_t labelB = nextLabelId();
-            uint32_t labelC = nextLabelId();
+            uint16_t labelA = nextLabelId();
+            uint16_t labelB = nextLabelId();
+            uint16_t labelC = nextLabelId();
             format("    CLRA\n");
             format("    PSHS A\n");      // TOS is sign, TOS+1 is rhs, TOS+3 is lhs
             
@@ -357,7 +357,7 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     // Handle Op::LNOT as a special case. There's no logical not opcode
     // so we just test if TOS is zero. If so, push a 1 otherwise push a 0.
     if (isLogical) {
-        uint32_t label = nextLabelId();
+        uint16_t label = nextLabelId();
         
         format("    CLRB\n");
         if (is16Bit) {
@@ -387,8 +387,8 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     Op op = opNode->op();
     const char* relOp = relopToString(op);
     
-    uint32_t labelA = nextLabelId();
-    uint32_t labelB = nextLabelId();
+    uint16_t labelA = nextLabelId();
+    uint16_t labelB = nextLabelId();
 
     if (relOp) {
         format("    LDA 1,S\n");
@@ -644,63 +644,57 @@ CodeGen6809::emitCodeTypeCast(const ASTPtr& node, bool isLHS)
     }
 }
 
+static uint16_t getLabelId(CodeGen6809* codeGen, const ASTPtr& node)
+{
+    auto bNode = std::static_pointer_cast<BranchNode>(node);
+    if (bNode->fixupIndex() == 0) {
+        bNode->setFixupIndex(codeGen->nextLabelId());
+    }
+    return bNode->fixupIndex();
+}
+
 void
 CodeGen6809::emitCodeBranch(const ASTPtr& node, bool isLHS)
 {
+    // There are separate BranchNodes for each branch point
+    // in an IF or LOOP statement. Some Branch nodes have a
+    // "fixupNode" which is the node that matches its branch point.
+    // Labels have a unique numeric id. Store that in the fixupIndex
+    // field of the BranchNode
+    // Nodes that have a fixupNode are:
+    //
+    //      ElseStart   -> IfStart
+    //      IFEnd       -> (ElseStart or IfStart if no else)
+    //      LoopEnd     -> LoopStart
+    //      Continue    -> LoopNext
+    //      Break       -> IfEnd
     auto bNode = std::static_pointer_cast<BranchNode>(node);
     
     switch (bNode->kind()) {
         case BranchNode::Kind::IfStart:
-            // Emit the opcode with a 0 branch address and mark it
-            
-            // If this is the first pass, we don't know how long the
-            // branch should be so we make enough space for a long
-            // branch
-            code().push_back(uint8_t(Op::BRF) | ((bNode->branchSize() == BranchSize::Short) ? 0x00 : 0x01));
-            bNode->setFixupIndex(AddrNativeType(code().size()));
-            code().push_back(0);
-            if (bNode->branchSize() != BranchSize::Short) {
-                code().push_back(0);
-            }
+            format("    PULS A\n");
+            format("    BEQ L%d\n", getLabelId(this, bNode));
+            break;
+        case BranchNode::Kind::ElseStart:
+            format("    BRA L%d\n", getLabelId(this, bNode));
+            format("L%d\n", getLabelId(this, bNode->fixupNode()));
+            break;
+        case BranchNode::Kind::IfEnd:
+            format("L%d\n", getLabelId(this, bNode->fixupNode()));
+            break;
+        case BranchNode::Kind::LoopStart:
+            format("L%d\n", getLabelId(this, bNode));
+            break;
+        case BranchNode::Kind::LoopNext:
+            format("L%d\n", getLabelId(this, bNode));
+            break;
+        case BranchNode::Kind::LoopEnd:
+            format("    BRA L%d\n", getLabelId(this, bNode->fixupNode()));
             break;
         case BranchNode::Kind::Break:
         case BranchNode::Kind::Continue:
-        case BranchNode::Kind::ElseStart:
-            // Emit the opcode with a 0 branch address and mark it
-
-            // If this is the first pass, we don't know how long the
-            // branch should be so we make enough space for a long
-            // branch
-            code().push_back(uint8_t(Op::FBRA) | ((bNode->branchSize() == BranchSize::Short) ? 0x00 : 0x01));
-            bNode->setFixupIndex(AddrNativeType(code().size()));
-            code().push_back(0);
-            if (bNode->branchSize() != BranchSize::Short) {
-                code().push_back(0);
-            }
-            // Fallthrough to fixup the IfStartNode
-        case BranchNode::Kind::LoopNext:
-        case BranchNode::Kind::IfEnd:
-            // Fixup branch
-            if (bNode->fixupNode() != nullptr) {
-                std::static_pointer_cast<BranchNode>(bNode->fixupNode())->fixup(code(), AddrNativeType(code().size()));
-            }
+            format("    BRA L%d\n", getLabelId(this, bNode->fixupNode()));
             break;
-        case BranchNode::Kind::LoopStart:
-            // Save this for LoopEnd
-            bNode->setFixupIndex(AddrNativeType(code().size()));
-            break;
-        case BranchNode::Kind::LoopEnd: {
-            // branch back to fixupNode
-            AddrNativeType addr = std::static_pointer_cast<BranchNode>(bNode->fixupNode())->fixupIndex();
-            int16_t relAddr = int16_t(addr - AddrNativeType(code().size())) - 2;
-            assert(relAddr < 0);
-            
-            // RBRA has a positive addr which is subtracted from pc
-            relAddr = -relAddr;
-            code().push_back(uint8_t(Op::RBRA) | ((relAddr <= 255) ? 0x00 : 0x01));
-            appendValue(code(), relAddr, (relAddr <= 255) ? 1 : 2);
-            break;
-        }
         default:
             break;
     }

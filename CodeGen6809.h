@@ -24,7 +24,7 @@ class CodeGen6809 : public CodeGen
     {
         CodeGen::init();
         _strings.clear();
-        _labelId = 0;
+        _labelId = 1; // Start at 1 so we can use 0 as a "NoId" indicator
     }
 
     virtual uint16_t majorVersion() const override { return 1; }
@@ -34,7 +34,7 @@ class CodeGen6809 : public CodeGen
 
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
     
-    uint32_t nextLabelId() { return _labelId++; }
+    uint16_t nextLabelId() { return _labelId++; }
 
   private:
     void emitAddr(const SymbolPtr&, AddrNativeType offset);
@@ -86,7 +86,7 @@ class CodeGen6809 : public CodeGen
     std::string _strings;
     
     // Unique identifier for labels
-    uint32_t _labelId = 0;
+    uint16_t _labelId = 1; // Start at 1 so we can use 0 as a "NoId" indicator
 };
 
 }
