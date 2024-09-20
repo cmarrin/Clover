@@ -47,21 +47,8 @@ bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& m
         return false;
     }
     
-    // Do 3 code generation:
-    //
-    //      1)  On the first pass we don't know how long most of the branch
-    //          instructions need to be so we make them long. But as we fill
-    //          in the jump addresses we remember which branches can be short
-    //
-    //      2)  Now go back for a second pass to shorten the ones that have
-    //          been marked as such.
-    //
-    //      3)  But we're not done. If we have forward function declarations
-    //          their addresses will have been set from the previous pass
-    //          and if we've shortened any branches they will be wrong so
-    //          we need a third pass to make them correct
-    
-    for (int i = 0; i < 3; i ++) {
+    // Do as many passes as are needed by the codegen
+    for (int i = 0; i < _codeGen->passesNeeded(); i ++) {
         _codeGen->init();
         _codeGen->emitPreamble(this);
         emitStruct(_codeGen, _topLevelStruct);

@@ -30,6 +30,8 @@ class CodeGen6809 : public CodeGen
     virtual uint16_t majorVersion() const override { return 1; }
     virtual uint8_t minorVersion() const override { return 0; }
 
+    virtual uint8_t passesNeeded() const override { return 1; }
+
     virtual void emitPreamble(const Compiler*) override;
 
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
