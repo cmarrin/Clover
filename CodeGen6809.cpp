@@ -156,20 +156,20 @@ CodeGen6809::emitCodeString(const ASTPtr& node, bool isLHS)
 }
 
 
-static const char* relopToString(Op op)
+static const char* relopToString(Op op, bool inv)
 {
     switch (op) {
         default: return nullptr;
-        case Op::EQ: return "BEQ";
-        case Op::NE: return "BNE";
-        case Op::LT: return "BLT";
-        case Op::LO: return "BLO";
-        case Op::LE: return "BLE";
-        case Op::LS: return "BLS";
-        case Op::GE: return "BGE";
-        case Op::HS: return "BHS";
-        case Op::GT: return "BGT";
-        case Op::HI: return "BHI";
+        case Op::EQ: return inv ? "BNE" : "BEQ";
+        case Op::NE: return inv ? "BEQ" : "BNE";
+        case Op::LT: return inv ? "BGE" : "BLT";
+        case Op::LO: return inv ? "BHS" : "BLO";
+        case Op::LE: return inv ? "BGT" : "BLE";
+        case Op::LS: return inv ? "BHI" : "BLS";
+        case Op::GE: return inv ? "BLT" : "BGE";
+        case Op::HS: return inv ? "BLO" : "BHS";
+        case Op::GT: return inv ? "BLE" : "BGT";
+        case Op::HI: return inv ? "BLS" : "BHI";
     }
 }
 
@@ -336,6 +336,14 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     bool isLogical = opNode->op() == Op::LNOT;
     bool isBinary = false;
     
+    const char* relOp = relopToString(opNode->op(), true);
+    bool isRelOp = relOp;
+    
+    if (isRelOp) {
+        // Push the bool result before the lhs and rhs
+        format("    CLR ,-S\n");
+    }
+    
     if (opNode->left()) {
         opType = opNode->left()->type();
         emitCode(opNode->left(), opNode->isRef());
@@ -375,36 +383,37 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
 
     // If it's a relational operator, do the unoptimized case:
     //
-    //	    LDA 1,S
-    //	    CMPA 0,S
-    //      LEAS 2,S
-    //	    BLT L1
-    //	    CLRA
-    //	    BRA L2
-    // L1:  LDA #1
-    // L2:  PSHS A
+    //	    CLR ,-S
+    //      <push lhs>
+    //      <push rhs>
+    //	    LD<A/D> <1/2>,S
+    //	    CMP<A/D> 0,S
+    //      LEAS <2/4>,S
+    //	    B<op> L1
+    //	    INC 0,S
+    // L1
     //
-    Op op = opNode->op();
-    const char* relOp = relopToString(op);
-    
-    uint16_t labelA = nextLabelId();
-    uint16_t labelB = nextLabelId();
+    uint16_t label = nextLabelId();
 
     if (relOp) {
-        format("    LDA 1,S\n");
-        format("    CMPA 0,S\n");
-        format("    LEAS 2,S\n");
-        format("    %s L%d\n", relOp, labelA);
-        format("    CLRA\n");
-        format("    BRA L%d\n", labelB);
-        format("L%d\n", labelA);
-        format("    LDA #1\n");
-        format("L%d\n", labelB);
-        format("    PSHS A\n");
+        // There is a boolean value of 0 on the stack, followed by lhs and rhs
+        if (is16Bit) {
+            format("    LDD 2,S\n");
+            format("    CMPD 0,S\n");
+            format("    LEAS 4,S\n");
+            format("    %s L%d\n", relOp, label);
+        } else {
+            format("    LDA 1,S\n");
+            format("    CMPA 0,S\n");
+            format("    LEAS 2,S\n");
+            format("    %s L%d\n", relOp, label);
+        }
+        format("    INC 0,S\n");
+        format("L%d\n", label);
         return;
     }
     
-    emitBinaryOp(op, is16Bit);
+    emitBinaryOp(opNode->op(), is16Bit);
 }
 
 void

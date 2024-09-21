@@ -4,7 +4,7 @@
     org $200
     PSHS U
     TFR S,U
-    LEAS -4,S
+    LEAS -2,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -30,38 +30,55 @@
     ; 
     ; function int16 main()
     ; {
-    ;     int16 a = 3;
-    ;     int16 b = array[a];
-    LDD #$0003
-    PSHS D
-    PULS D
-    STD 1,U
-    ; //    if (a == 1 && b == 3) {
-    LEAX Constants+0
-    PSHS X
-    LDD 1,U
-    PSHS D
-    PULS D
-    PSHS D
-    PSHS D
-    LDA #2
-    MUL
-    STD 0,S
-    LDA 2,S
-    LDB #2
-    MUL
-    ADDB 0,S
-    PULS D
+    ;     int8 a = 3;
+    ;     int8 b = 4;
+    LDA #$03
+    PSHS A
+    PULS A
+    STA 0,U
+    ;     if (a == 1 && b == 3) {
+    LDA #$04
+    PSHS A
+    PULS A
+    STA 1,U
+    CLR ,-S
+    LDA 0,U
+    PSHS A
+    LDA #$01
+    PSHS A
+    LDA 1,S
+    CMPA 0,S
     LEAS 2,S
-    ADDD 0,S
-    STD 0,S
-    PULS X
-    LDD 0,X
-    PSHS D
-    PULS D
-    STD 3,U
-    ; //        b = 10;
-    ; //    }
+    BNE L1
+    INC 0,S
+L1
+    PULS A
+    BEQ L2
+    CLR ,-S
+    LDA 1,U
+    PSHS A
+    LDA #$03
+    PSHS A
+    LDA 1,S
+    CMPA 0,S
+    LEAS 2,S
+    BNE L4
+    INC 0,S
+L4
+    BRA L3
+L2
+    LDA #0
+    PSHS A
+L3
+    PULS A
+    BEQ L5
+    ;         b = 10;
+    ;     }
+    LDA #$0a
+    PSHS A
+    PULS A
+    STA 1,U
+L5
     ; //    uint16* p = &array[0];
     ; //    for (uint8 i = 0; i < 4; i++) {
     ; //        core.printf("array[%d] = %d\n", i, *p);

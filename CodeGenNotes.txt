@@ -109,13 +109,13 @@ ENTRY:
 
 For comparison operators, currently they are binary ops, so:
 
-	if (a == b) c = d;
+	if (a < b) c = d;
 	
 translates to:
 
 	PUSH a,L
 	PUSH b,L
-	EQ
+	LT
 	BRF L1
 	PUSH d,L
 	POP c,L
@@ -123,28 +123,32 @@ L1:
 	
 On 6809 that is:
 
-	LDA a,U		LDA a,U
-	PSHS A		CMPA b,U
-	LDA b,U		BNE L4
+    CLR ,-S     ; Push result boolean value
+	LDA a,U     ; Push lhs
 	PSHS A
-	LDA 1,S
-	CMPA 0,s
-	BEQ L2
-	LDA #0
-	BRA L3
-L2:
-	LDA #1
-L3:
-	PSHS A
+	LDA b,U     ; Load rhs in A
+	CMPA 0,s    ; Reverse test (true if GE, so jump if LT)
+	BLT L1
+	INC 1,S     ; Make result 1
+L1
+	LEA 1,S     ; Pop (TOS now has boolean result)
 	PULS A
 	TSTA
-	BEQ L4
+	BEQ L2
 	
-	LDA d,U		LDA d,U
-	PSHS A		STA c,U
-	PULS A
+	LDA d,U
 	STA c,U
-L4:
+L2
+
+This shortens to:
+
+    LDA a,U
+    CMPA b,U
+    BGE L1
+    LDA d,U
+    STA c,U
+L1
+
 	
 	
 	
@@ -169,14 +173,14 @@ L4:
 	LDA -1,U
 	CMPA -2,U
 	BHS L1
-	LDA, -3,U
+	LDA -3,U
 	CMPA -4,U
 	BLS L1
 	LDX Hello
 	PSHS X
 	JSR printf
 	LEAS 2,S
-L1:
+L1
 
 
 
