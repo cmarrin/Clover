@@ -394,7 +394,7 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         format("    LDA 1,S\n");
         format("    CMPA 0,S\n");
         format("    LEAS 2,S\n");
-        format("    BLT L%d\n", labelA);
+        format("    %s L%d\n", relOp, labelA);
         format("    CLRA\n");
         format("    BRA L2\n", labelB);
         format("L%d\n", labelA);
