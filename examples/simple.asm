@@ -4,7 +4,7 @@
     org $200
     PSHS U
     TFR S,U
-    LEAS -2,S
+    LEAS -4,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -30,57 +30,38 @@
     ; 
     ; function int16 main()
     ; {
-    ;     int8 a = 2;
-    ;     int8 b;
-    LDA #$02
-    PSHS A
-    PULS A
-    STA 0,U
-    ;     switch (a) {
-    ;         case 1: b = 1;
-    LDA 0,U
-    PSHS A
-    LEAX L1
-    PSHS X
-    LDD #3
+    ;     int16 a = 3;
+    ;     int16 b = array[a];
+    LDD #$0003
     PSHS D
-    JSR switch1
+    PULS D
+    STD 1,U
+    ; //    if (a == 1 && b == 3) {
+    LEAX Constants+0
+    PSHS X
+    LDD 1,U
+    PSHS D
+    PULS D
+    PSHS D
+    PSHS D
+    LDA #2
+    MUL
+    STD 0,S
+    LDA 2,S
+    LDB #2
+    MUL
+    ADDB 0,S
+    PULS D
+    LEAS 2,S
+    ADDD 0,S
+    STD 0,S
     PULS X
-    JMP 0,X
-L1
-    FCB 1
-    LBRA L2
-    FCB 2
-    LBRA L3
-    FCB 3
-    LBRA L4
-    ;         case 2: b = 2;
-    ;         case 3: b = 3;
-    ;         default: b = 4;
-    ;     }
-    LDA #$04
-    PSHS A
-    PULS A
-    STA 1,U
-    LBRA L5
-L2
-    LDA #$01
-    PSHS A
-    PULS A
-    STA 1,U
-    LBRA L5
-L3
-    LDA #$02
-    PSHS A
-    PULS A
-    STA 1,U
-    LBRA L5
-L4
-    LDA #$03
-    PSHS A
-    PULS A
-    STA 1,U
-L5
+    LDD 0,X
+    PSHS D
+    PULS D
+    STD 3,U
+    ; //        b = 10;
+    ; //    }
     ; //    uint16* p = &array[0];
     ; //    for (uint8 i = 0; i < 4; i++) {
     ; //        core.printf("array[%d] = %d\n", i, *p);
@@ -107,4 +88,4 @@ L5
     ; }
     LDD #$0000
     PSHS D
-6
+    RTS
