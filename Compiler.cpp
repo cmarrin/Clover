@@ -52,6 +52,7 @@ bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& m
         _codeGen->init();
         _codeGen->emitPreamble(this);
         emitStruct(_codeGen, _topLevelStruct);
+        _codeGen->emitPostamble(this);
     }
     
     // Add the annotation info

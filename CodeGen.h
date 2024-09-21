@@ -54,6 +54,7 @@ class CodeGen
 
     virtual void emitPreamble(const Compiler*) = 0;
     virtual void handleFunction(const Compiler*, const FunctionPtr&, bool isTopLevel) { }
+    virtual void emitPostamble(const Compiler*) { }
     
     virtual void emitCode(const ASTPtr& node, bool isLHS) = 0;
 

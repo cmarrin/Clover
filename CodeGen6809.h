@@ -33,6 +33,7 @@ class CodeGen6809 : public CodeGen
     virtual uint8_t passesNeeded() const override { return 1; }
 
     virtual void emitPreamble(const Compiler*) override;
+    virtual void emitPostamble(const Compiler*) override;
 
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
     
