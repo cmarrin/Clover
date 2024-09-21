@@ -830,29 +830,23 @@ CodeGen6809::emitCodeLogical(const ASTPtr& node, bool isLHS)
     // First emit lhs
     emitCode(lNode->lhs(), false);
     
-    // Now emit if. We use BRF for LAnd and BRT for LOr
-    Op op = (lNode->kind() == LogicalNode::Kind::LAnd) ? Op::BRF : Op::BRT;
-    code().push_back(uint8_t(op) | ((lNode->branchSize() == BranchSize::Short) ? 0x00 : 0x01));
-    AddrNativeType fixupIndex = AddrNativeType(code().size());
-    code().push_back(0);
-    if (lNode->branchSize() != BranchSize::Short) {
-        code().push_back(0);
-    }
+    // Now emit if. We use BEQ for LAnd and BNE for LOr
+    uint16_t labelA = nextLabelId();
+    uint16_t labelB = nextLabelId();
+    
+    format("    PULS A\n");
+    
+    const char* op = (lNode->kind() == LogicalNode::Kind::LAnd) ? "BEQ" : "BNE";
+    format("    %s L%d\n", op, labelA);
     
     // Emit rhs
     emitCode(lNode->rhs(), false);
     
-    // Fixup the IF, It needs to jump past the FBRA
-    // Fixed adjustment of 1 for both long and short versions
-    BranchNode::fixup(code(), fixupIndex, AddrNativeType(code().size()) - fixupIndex + 1, lNode->branchSize());
-    
-    // Branch past the result push. It will always be short. And we can emit jump address
-    // since it will always just jump past a PUSHKS1 which is 1 byte.
-    code().push_back(uint8_t(Op::FBRA));
-    code().push_back(1);
-    
-    // Emit the PUSHKS1. If this is LAnd then push a 0, otherwise push a 1
-    code().push_back(uint8_t(Op::PUSHKS1) | ((lNode->kind() == LogicalNode::Kind::LAnd) ? 0 : 1));
+    // emit the postamble
+    format("    BRA L%d\n", labelB);
+    format("L%d\n", labelA);
+    format("    LDA #%d\n", (lNode->kind() == LogicalNode::Kind::LAnd) ? 0 : 1);
+    format("L%d\n", labelB);
 }
 
 void
