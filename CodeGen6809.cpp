@@ -863,24 +863,55 @@ CodeGen6809::emitCodeIndex(const ASTPtr& node, bool isLHS)
         }
     }
 
-    // index can be 8 or 16 bit. We know its a valid type because the caller checked it
     emitCode(iNode->rhs(), false);
 
     uint16_t size = node->elementSizeInBytes();
-    code().push_back(uint8_t((size <= 255) ? Op::INDEX1 : Op::INDEX2));
-    appendValue(code(), size, (size <= 255) ? 1 : 2);
+    bool is16BitIndex = typeToOpSize(iNode->rhs()->type()) == OpSize::i16;
+    bool is16BitSize = size > 255;
     
+    // index can be 8 or 16 bit. We know its a valid type because the caller checked it.
+    // And size can be 8 or 16 bits. If either is 16 bits we need to do a 16x16
+    // multiply and get a 16 bit result. If both are 8 bit we can just do an 8x8
+    // multiply and use the 16 bit result. Then we add the 16 bit result to the ref.
+    format("    PULS %s\n", is16BitIndex ? "D" : "B");
+    
+    if (!is16BitIndex && !is16BitSize) {
+        format("    LDA #%d\n", size);
+        format("    MUL\n");
+    } else {
+        if (!is16BitIndex) {
+            // extend to 16 bits
+            format("    CLRA\n");
+        }
+        format("    PSHS D\n");     // TOS is the accumulator, TOS+2 is index, size is constant
+        format("    PSHS D\n");     // Push accumulator and index
+        format("    LDA #%d\n", uint8_t(size));
+        format("    MUL\n");
+        format("    STD 0,S\n");
+        format("    LDA 2,S\n");
+        format("    LDB #%d\n", uint8_t(size));
+        format("    MUL\n");
+        format("    ADDB 0,S\n");    // Toss MSB of result
+        if (is16BitSize) {
+            format("    LDA 3,S\n");
+            format("    LDB #%d\n", uint8_t(size >> 8));
+            format("    MUL\n");
+            format("    ADDB 0,S\n");    // Toss MSB of result
+        }
+        format("    PULS D\n");
+        format("    LEAS 2,S\n");
+    }
+    
+    format("    ADDD 0,S\n");
+    format("    STD 0,S\n");
+
+
     // if isLHS is true then we're done, we have a ref on TOS. If not we need to DEREF
     if (!isLHS) {
-        Op op;
-        switch (typeToOpSize(node->type())) {
-            case OpSize::i8:  op = Op::DEREF1; break;
-            case OpSize::i16: op = Op::DEREF2; break;
-            case OpSize::i32:
-            case OpSize::flt: op = Op::DEREF4; break;
-        }
-        
-        code().push_back(uint8_t(op));
+        format("    PULS X\n");
+        const char* reg = (typeToOpSize(node->type()) == OpSize::i16) ? "D" : "A";
+        format("    LD%s 0,X\n", reg);
+        format("    PSHS %s\n", reg);
     }
 }
 
