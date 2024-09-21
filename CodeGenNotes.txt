@@ -78,7 +78,7 @@ ENTRY:
 	LDA		#5		; PUSHKS1 #5
 	PSHS	A
 	PSHS	Y		; PUSHREF  2,L (these 2 setup the self pointer)
-	LEAY	-3, U
+	LEAY	-3,U
 	JSR		A_f		; MCALL 18 (mext instruction restores self pointer)
 	PULS	Y
 	LEAS	2, S	; DROPS 2
