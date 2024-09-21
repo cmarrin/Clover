@@ -157,7 +157,7 @@ CodeGen6809::emitCodeString(const ASTPtr& node, bool isLHS)
     uint32_t addr = uint32_t(_strings.size());
     _strings += std::static_pointer_cast<StringNode>(node)->string();
     
-    format("    LEAX %s+$%x\n", StringLabel, addr);
+    format("    LDX #%s+$%x\n", StringLabel, addr);
     format("    PSHS X\n");
 }
 
