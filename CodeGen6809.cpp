@@ -9,6 +9,8 @@
 
 #include "CodeGen6809.h"
 
+#include "Compiler.h"
+
 using namespace clvr;
 
 void
@@ -22,6 +24,59 @@ CodeGen6809::emitPreamble(const Compiler* compiler)
 void
 CodeGen6809::emitPostamble(const Compiler* compiler)
 {
+    // Add constants
+    format("\nConstants");
+    uint32_t i = 0;
+    for (const auto& it : compiler->constants()) {
+        if ((i++ % 8) == 0) {
+            format("\n    FCB $%02x", it);
+        } else {
+            format(",$%02x", it);
+        }
+    }
+    
+    format("\n");
+    
+    // add strings
+    format("\n%s\n", StringLabel);
+    
+    for (const auto& it : _strings) {
+        // For each string we must split it at escape characters and add them as FCB entries
+        std::string str = it;
+        
+        while (true) {
+            const auto& result = std::find_if(str.begin(), str.end(), [ ](char c) { return !isprint(c); });
+            std::string printable;
+            if (result == str.end()) {
+                // At the end of the string without finding a non-printable char
+                printable = str;
+                str.clear();
+            } else {
+                printable = str.substr(0, result - str.begin());
+                str = str.substr(result - str.begin());
+            }
+            
+            if (!printable.empty()) {
+                format("    FCC \"%s\"\n", printable.c_str());
+            }
+            
+            // If str still has chars then the first char is non-printable
+            if (!str.empty()) {
+                format("    FCB $%02x\n", uint32_t(str[0]));
+                str = str.substr(1);
+            } else {
+                format("    FCB $00\n");
+                break;
+            }
+        }
+    }
+    
+    if ((i++ % 8) != 0) {
+        format("\n");
+    }
+    
+    
+    // set entry point
     format("\n    end $200\n");
 }
 
