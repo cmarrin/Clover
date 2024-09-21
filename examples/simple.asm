@@ -91,7 +91,7 @@ L2
 L3
     PULS A
     BEQ L5
-    ;         core.printf("Hello\n");
+    ;         core.printf("Hello\n\n");
     ;     }
     LDX #String+$0
     PSHS X
@@ -109,7 +109,13 @@ L5
     PSHS D
     RTS
 
+Constants
+    FCB $00,$02,$00,$04,$00,$06,$00,$08
+
 String
     FCC "Hello"
-    FCB $0a,$00
+    FCB $0a
+    FCB $0a
+    FCB $00
+
     end $200

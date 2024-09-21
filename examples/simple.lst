@@ -35,15 +35,29 @@
      FC14             (        BOSS9.inc):00032         ldLine  equ     $FC14   ; Load an s-record line
      FC16             (        BOSS9.inc):00033         ldEnd   equ     $FC16   ; End loading s-records
                       (        BOSS9.inc):00034         
-                      (        BOSS9.inc):00035         * Misc equates
-                      (        BOSS9.inc):00036         
-     000A             (        BOSS9.inc):00037         newline equ     $0a
-                      (        BOSS9.inc):00038                                 
-                      (        BOSS9.inc):00039         
+                      (        BOSS9.inc):00035         *
+                      (        BOSS9.inc):00036         * Core functions
+                      (        BOSS9.inc):00037         *
+     FC18             (        BOSS9.inc):00038         printf   equ    $FC18   ; Formatted print: TOS=fmt, (varargs)
+     FC1A             (        BOSS9.inc):00039         format   equ    $FC1a   ; Format string
+     FC1C             (        BOSS9.inc):00040         memset   equ    $FC1c   ; Set memory: TOS=
+     FC1E             (        BOSS9.inc):00041         irand    equ    $FC1e   ;
+     FC20             (        BOSS9.inc):00042         imin     equ    $FC20   ;
+     FC22             (        BOSS9.inc):00043         imax     equ    $FC22   ;
+     FC24             (        BOSS9.inc):00044         initargs equ    $FC24   ;
+     FC26             (        BOSS9.inc):00045         argint8  equ    $FC26   ;
+     FC28             (        BOSS9.inc):00046         argint16 equ    $FC28   ;
+                      (        BOSS9.inc):00047         
+                      (        BOSS9.inc):00048         
+                      (        BOSS9.inc):00049         * Misc equates
+                      (        BOSS9.inc):00050         
+     000A             (        BOSS9.inc):00051         newline equ     $0a
+                      (        BOSS9.inc):00052                                 
+                      (        BOSS9.inc):00053         
                       (       simple.asm):00004             org $200
 0200 3440             (       simple.asm):00005             PSHS U
 0202 1F43             (       simple.asm):00006             TFR S,U
-0204 327E             (       simple.asm):00007             LEAS -2,S
+0204 327A             (       simple.asm):00007             LEAS -6,S
                       (       simple.asm):00008             ; //
                       (       simple.asm):00009             ; //  simple.Clover
                       (       simple.asm):00010             ; //  Clover
@@ -69,81 +83,92 @@
                       (       simple.asm):00030             ; 
                       (       simple.asm):00031             ; function int16 main()
                       (       simple.asm):00032             ; {
-                      (       simple.asm):00033             ;     int8 a = 3;
-                      (       simple.asm):00034             ;     int8 b = 4;
-0206 8603             (       simple.asm):00035             LDA #$03
-0208 3402             (       simple.asm):00036             PSHS A
-020A 3502             (       simple.asm):00037             PULS A
-020C A740             (       simple.asm):00038             STA 0,U
-                      (       simple.asm):00039             ;     if (a == 1 && b == 3) {
-020E 8604             (       simple.asm):00040             LDA #$04
-0210 3402             (       simple.asm):00041             PSHS A
-0212 3502             (       simple.asm):00042             PULS A
-0214 A741             (       simple.asm):00043             STA 1,U
-0216 6FE2             (       simple.asm):00044             CLR ,-S
-0218 A640             (       simple.asm):00045             LDA 0,U
-021A 3402             (       simple.asm):00046             PSHS A
-021C 8601             (       simple.asm):00047             LDA #$01
-021E 3402             (       simple.asm):00048             PSHS A
-0220 A661             (       simple.asm):00049             LDA 1,S
-0222 A160             (       simple.asm):00050             CMPA 0,S
-0224 3262             (       simple.asm):00051             LEAS 2,S
-0226 2602             (       simple.asm):00052             BNE L1
-0228 6C60             (       simple.asm):00053             INC 0,S
-022A                  (       simple.asm):00054         L1
-022A 3502             (       simple.asm):00055             PULS A
-022C 2716             (       simple.asm):00056             BEQ L2
-022E 6FE2             (       simple.asm):00057             CLR ,-S
-0230 A641             (       simple.asm):00058             LDA 1,U
-0232 3402             (       simple.asm):00059             PSHS A
-0234 8603             (       simple.asm):00060             LDA #$03
-0236 3402             (       simple.asm):00061             PSHS A
-0238 A661             (       simple.asm):00062             LDA 1,S
-023A A160             (       simple.asm):00063             CMPA 0,S
-023C 3262             (       simple.asm):00064             LEAS 2,S
-023E 2602             (       simple.asm):00065             BNE L4
-0240 6C60             (       simple.asm):00066             INC 0,S
-0242                  (       simple.asm):00067         L4
-0242 2004             (       simple.asm):00068             BRA L3
-0244                  (       simple.asm):00069         L2
-0244 8600             (       simple.asm):00070             LDA #0
-0246 3402             (       simple.asm):00071             PSHS A
-0248                  (       simple.asm):00072         L3
-0248 3502             (       simple.asm):00073             PULS A
-024A 2708             (       simple.asm):00074             BEQ L5
-                      (       simple.asm):00075             ;         b = 10;
-                      (       simple.asm):00076             ;     }
-024C 860A             (       simple.asm):00077             LDA #$0a
-024E 3402             (       simple.asm):00078             PSHS A
-0250 3502             (       simple.asm):00079             PULS A
-0252 A741             (       simple.asm):00080             STA 1,U
-0254                  (       simple.asm):00081         L5
-                      (       simple.asm):00082             ; //    uint16* p = &array[0];
-                      (       simple.asm):00083             ; //    for (uint8 i = 0; i < 4; i++) {
-                      (       simple.asm):00084             ; //        core.printf("array[%d] = %d\n", i, *p);
-                      (       simple.asm):00085             ; //        p++;
-                      (       simple.asm):00086             ; //    }
-                      (       simple.asm):00087             ; //
-                      (       simple.asm):00088             ; //    int16 a = 5;
-                      (       simple.asm):00089             ; //    uint16 b = 6;
-                      (       simple.asm):00090             ; //    int8 c = 8;
-                      (       simple.asm):00091             ; //    int8 d = 7;
-                      (       simple.asm):00092             ; // 
-                      (       simple.asm):00093             ; //    bool x = a < b;
-                      (       simple.asm):00094             ; //    
-                      (       simple.asm):00095             ; //    if (a < b && c > d) {
-                      (       simple.asm):00096             ; //        core.printf("Hello\n");
-                      (       simple.asm):00097             ; //    }
-                      (       simple.asm):00098             ;     
-                      (       simple.asm):00099             ; //    A a;
-                      (       simple.asm):00100             ; //    
-                      (       simple.asm):00101             ; //    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
-                      (       simple.asm):00102             ; //    core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
-                      (       simple.asm):00103             ; //    core.printf(" xxx=%d\n", xxx);
-                      (       simple.asm):00104             ;     return 0;
-                      (       simple.asm):00105             ; }
-0254 CC0000           (       simple.asm):00106             LDD #$0000
-0257 3406             (       simple.asm):00107             PSHS D
-0259 39               (       simple.asm):00108             RTS
-                      (       simple.asm):00109         
-                      (       simple.asm):00110             end $200
+                      (       simple.asm):00033             ; //    uint16* p = &array[0];
+                      (       simple.asm):00034             ; //    for (uint8 i = 0; i < 4; i++) {
+                      (       simple.asm):00035             ; //        core.printf("array[%d] = %d\n", i, *p);
+                      (       simple.asm):00036             ; //        p++;
+                      (       simple.asm):00037             ; //    }
+                      (       simple.asm):00038             ; //
+                      (       simple.asm):00039             ;     int16 a = 5;
+                      (       simple.asm):00040             ;     uint16 b = 6;
+0206 CC0005           (       simple.asm):00041             LDD #$0005
+0209 3406             (       simple.asm):00042             PSHS D
+020B 3506             (       simple.asm):00043             PULS D
+020D ED41             (       simple.asm):00044             STD 1,U
+                      (       simple.asm):00045             ;     int8 c = 8;
+020F CC0006           (       simple.asm):00046             LDD #$0006
+0212 3406             (       simple.asm):00047             PSHS D
+0214 3506             (       simple.asm):00048             PULS D
+0216 ED43             (       simple.asm):00049             STD 3,U
+                      (       simple.asm):00050             ;     int8 d = 7;
+0218 8608             (       simple.asm):00051             LDA #$08
+021A 3402             (       simple.asm):00052             PSHS A
+021C 3502             (       simple.asm):00053             PULS A
+021E A744             (       simple.asm):00054             STA 4,U
+                      (       simple.asm):00055             ;  
+0220 8607             (       simple.asm):00056             LDA #$07
+0222 3402             (       simple.asm):00057             PSHS A
+0224 3502             (       simple.asm):00058             PULS A
+0226 A745             (       simple.asm):00059             STA 5,U
+                      (       simple.asm):00060             ; //    bool x = a < b;
+                      (       simple.asm):00061             ;     
+                      (       simple.asm):00062             ;     if (a < b && c > d) {
+0228 6FE2             (       simple.asm):00063             CLR ,-S
+022A EC41             (       simple.asm):00064             LDD 1,U
+022C 3406             (       simple.asm):00065             PSHS D
+022E EC43             (       simple.asm):00066             LDD 3,U
+0230 3406             (       simple.asm):00067             PSHS D
+0232 A661             (       simple.asm):00068             LDA 1,S
+0234 A160             (       simple.asm):00069             CMPA 0,S
+0236 3262             (       simple.asm):00070             LEAS 2,S
+0238 2C02             (       simple.asm):00071             BGE L1
+023A 6C60             (       simple.asm):00072             INC 0,S
+023C                  (       simple.asm):00073         L1
+023C 3502             (       simple.asm):00074             PULS A
+023E 2716             (       simple.asm):00075             BEQ L2
+0240 6FE2             (       simple.asm):00076             CLR ,-S
+0242 A644             (       simple.asm):00077             LDA 4,U
+0244 3402             (       simple.asm):00078             PSHS A
+0246 A645             (       simple.asm):00079             LDA 5,U
+0248 3402             (       simple.asm):00080             PSHS A
+024A A661             (       simple.asm):00081             LDA 1,S
+024C A160             (       simple.asm):00082             CMPA 0,S
+024E 3262             (       simple.asm):00083             LEAS 2,S
+0250 2F02             (       simple.asm):00084             BLE L4
+0252 6C60             (       simple.asm):00085             INC 0,S
+0254                  (       simple.asm):00086         L4
+0254 2004             (       simple.asm):00087             BRA L3
+0256                  (       simple.asm):00088         L2
+0256 8600             (       simple.asm):00089             LDA #0
+0258 3402             (       simple.asm):00090             PSHS A
+025A                  (       simple.asm):00091         L3
+025A 3502             (       simple.asm):00092             PULS A
+025C 2708             (       simple.asm):00093             BEQ L5
+                      (       simple.asm):00094             ;         core.printf("Hello\n\n");
+                      (       simple.asm):00095             ;     }
+025E 8E0274           (       simple.asm):00096             LDX #String+$0
+0261 3410             (       simple.asm):00097             PSHS X
+0263 BDFC18           (       simple.asm):00098             JSR printf
+0266                  (       simple.asm):00099         L5
+                      (       simple.asm):00100             ;     
+                      (       simple.asm):00101             ; //    A a;
+                      (       simple.asm):00102             ; //    
+                      (       simple.asm):00103             ; //    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
+                      (       simple.asm):00104             ; //    core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
+                      (       simple.asm):00105             ; //    core.printf(" xxx=%d\n", xxx);
+                      (       simple.asm):00106             ;     return 0;
+                      (       simple.asm):00107             ; }
+0266 CC0000           (       simple.asm):00108             LDD #$0000
+0269 3406             (       simple.asm):00109             PSHS D
+026B 39               (       simple.asm):00110             RTS
+                      (       simple.asm):00111         
+026C                  (       simple.asm):00112         Constants
+026C 0002000400060008 (       simple.asm):00113             FCB $00,$02,$00,$04,$00,$06,$00,$08
+                      (       simple.asm):00114         
+0274                  (       simple.asm):00115         String
+0274 48656C6C6F       (       simple.asm):00116             FCC "Hello"
+0279 0A               (       simple.asm):00117             FCB $0a
+027A 0A               (       simple.asm):00118             FCB $0a
+027B 00               (       simple.asm):00119             FCB $00
+                      (       simple.asm):00120         
+                      (       simple.asm):00121             end $200

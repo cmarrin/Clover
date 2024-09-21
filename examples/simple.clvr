@@ -37,7 +37,7 @@ function int16 main()
 //    bool x = a < b;
     
     if (a < b && c > d) {
-        core.printf("Hello\n");
+        core.printf("Hello\n\n");
     }
     
 //    A a;
