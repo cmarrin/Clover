@@ -86,7 +86,8 @@ class CodeGen6809 : public CodeGen
     // are emitted as characters, prefixed with a single quote.
     // All other characters are emitted as hex.
     static constexpr const char* StringLabel = "String";
-    std::string _strings;
+    std::vector<std::string> _strings;
+    uint32_t _stringSize = 0;
     
     // Unique identifier for labels
     uint16_t _labelId = 1; // Start at 1 so we can use 0 as a "NoId" indicator

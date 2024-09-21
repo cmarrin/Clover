@@ -154,8 +154,12 @@ void
 CodeGen6809::emitCodeString(const ASTPtr& node, bool isLHS)
 {
     // Add string to list
-    uint32_t addr = uint32_t(_strings.size());
-    _strings += std::static_pointer_cast<StringNode>(node)->string();
+    uint32_t addr = _stringSize;
+    const std::string& s = std::static_pointer_cast<StringNode>(node)->string();
+    _strings.push_back(s);
+    
+    // stringSize includes null terminator
+    _stringSize += uint32_t(s.size()) + 1;
     
     format("    LDX #%s+$%x\n", StringLabel, addr);
     format("    PSHS X\n");
