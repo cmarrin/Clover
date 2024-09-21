@@ -375,3 +375,62 @@ L2
 L3
     LEAS 5,S
     PSHS D      ; TOS now has 16 bit result
+
+
+Switch on 6809
+
+We can use the same table driven technique on 6809. Put the binary search in BOSS9.
+
+Where to put the table? It can go inline, since we're branching from here anyway
+
+int8 b;
+switch (a) {
+    default: b = 0;
+    case 1: b = 1;
+    case 2: b = 2;
+    case 3" b = 3;
+}
+
+Table always has long branches. switch1 expects an 8 bit switch value on the stack and switch2
+expects 16 bits. Address of table is passed on the stack. Number of entries in the table is
+also on the stack.
+
+Stack:  value (8 or 16 bits)
+        Address of table
+        Number of entries in table
+        
+Return: Address of BRA for matched table entry, or address just past table if no match.
+
+    LDA a,U
+    PSHS A
+    LEAX L1
+    PSHS X
+    LDD #3
+    PSHS D
+    JSR switch1
+    PULS X
+    JMP 0,X
+L1
+    FCB 1
+    LBRA L3
+    FCB 2
+    LBRA L4
+    FCB 3
+    LBRA L5
+    
+L2  LDA #0
+    STA b,U
+    BRA L6
+    
+L3  LDA #1
+    STA b,U
+    BRA L6
+
+L4  LDA #2
+    STA b,U
+    BRA L6
+
+L5  LDA #2
+    STA b,U
+    BRA L6
+L6

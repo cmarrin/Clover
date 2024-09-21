@@ -4,7 +4,7 @@
     org $200
     PSHS U
     TFR S,U
-    LEAS -3,S
+    LEAS -2,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -30,64 +30,63 @@
     ; 
     ; function int16 main()
     ; {
-    ;     uint16* p = &array[0];
-    ;     for (uint8 i = 0; i < 4; i++) {
-    LEAX Constants+0
-    PSHS X
-    PULS D
-    STD 1,U
-    LDA #$00
+    ;     int8 a = 2;
+    ;     int8 b;
+    LDA #$02
     PSHS A
     PULS A
-    STA 2,U
-L1
-    LDA 2,U
+    STA 0,U
+    ;     switch (a) {
+    ;         case 1: b = 1;
+    LDA 0,U
     PSHS A
+    LEAX L1
+    PSHS X
+    LDD #3
+    PSHS D
+    JSR switch1
+    PULS X
+    JMP 0,X
+L1
+    FCB 1
+    LBRA L2
+    FCB 2
+    LBRA L3
+    FCB 3
+    LBRA L4
+    ;         case 2: b = 2;
+    ;         case 3: b = 3;
+    ;         default: b = 4;
+    ;     }
     LDA #$04
     PSHS A
-    LDA 1,S
-    CMPA 0,S
-    LEAS 2,S
-    BLT L2
-    CLRA
-    BRA L2
+    PULS A
+    STA 1,U
+    LBRA L5
 L2
-    LDA #1
-L3
+    LDA #$01
     PSHS A
     PULS A
-    BEQ L4
-    ;         core.printf("array[%d] = %d\n", i, *p);
-    ;         p++;
-    LDD 1,U
-    PSHS D
-    LDA 2,U
+    STA 1,U
+    LBRA L5
+L3
+    LDA #$02
     PSHS A
-    PULS B
-    CLRA
-    PSHS D
-    LEAX String+$0
-    PSHS X
-    JSR printf
-    ;     }
-    LEAX 1,U
-    PSHS X
-    PULS X
-    LDD 0,X
-    PSHS D
-    ADDD #2
-    STD 0,X
-L5
-    LEAX 2,U
-    PSHS X
-    PULS X
-    LDA 0,X
-    PSHS A
-    ADDA #1
-    STA 0,X
-    BRA L1
+    PULS A
+    STA 1,U
+    LBRA L5
 L4
-    ;     
+    LDA #$03
+    PSHS A
+    PULS A
+    STA 1,U
+L5
+    ; //    uint16* p = &array[0];
+    ; //    for (uint8 i = 0; i < 4; i++) {
+    ; //        core.printf("array[%d] = %d\n", i, *p);
+    ; //        p++;
+    ; //    }
+    ; //
     ; //    int16 a = 5;
     ; //    uint16 b = 6;
     ; //    int8 c = 8;

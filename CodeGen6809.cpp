@@ -723,30 +723,22 @@ CodeGen6809::emitCodeSwitch(const ASTPtr& node, bool isLHS)
     // First emit expression
     emitCode(sNode->expr(), false);
     
-    Type type = sNode->expr()->type();
-    
-    // See Defines.h for the definition of the SWITCH opcode.
     uint16_t n = uint16_t(sNode->clauses().size());
     if (sNode->haveDefault()) {
         n -= 1;
     }
-    uint16_t operand = n << 3;
-    
-    bool longAddr = sNode->branchSize() != BranchSize::Short;
-    OpSize opSize = typeToOpSize(type);
-    
-    if (longAddr) {
-        operand |= 0x04;
-    }
-    
-    operand |= uint16_t(opSize);
 
-    // emit the opcode and operand
-    code().push_back(uint8_t(Op::SWITCH));
-    appendValue(code(), operand, 2);
-    
-    // Jump addresses in list are relative to this point
-    AddrNativeType jumpSourceAddr = AddrNativeType(code().size());
+    bool is16Bit = typeToOpSize(sNode->expr()->type()) == OpSize::i16;
+    uint16_t tableLabel = nextLabelId();
+
+    format("    LEAX L%d\n", tableLabel);
+    format("    PSHS X\n");
+    format("    LDD #%d\n", n);
+    format("    PSHS D\n");
+    format("    JSR switch%d\n", is16Bit ? 2 : 1);
+    format("    PULS X\n");
+    format("    JMP 0,X\n");
+    format("L%d\n", tableLabel);
     
     // Now we need to sort the clauses, so we can binary search at runtime.
     std::sort(sNode->clauses().begin(), sNode->clauses().end(),
@@ -766,9 +758,9 @@ CodeGen6809::emitCodeSwitch(const ASTPtr& node, bool isLHS)
     // Now emit the list
     for (auto& it : sNode->clauses()) {
         if (!it.isDefault()) {
-            appendValue(code(), it.value(), opSizeToBytes(opSize));
-            it.setFixupIndex(AddrNativeType(code().size()));
-            appendValue(code(), 0, longAddr ? 2 : 1);
+            format("    FCB %d\n", it.value());
+            it.setFixupIndex(nextLabelId());
+            format("    LBRA L%d\n", it.fixupIndex());
         }
     }
     
@@ -780,60 +772,27 @@ CodeGen6809::emitCodeSwitch(const ASTPtr& node, bool isLHS)
     //
     // If we have a default clause it will be first and it gets emitted right after the list
     // otherwise we need to put a BRA first in place of the default clause
-    AddrNativeType missingDefaultFixupIndex = 0;
+    uint16_t endLabel = nextLabelId();
     
     if (!sNode->haveDefault()) {
-        code().push_back(uint8_t(Op::FBRA) | ((sNode->defaultBranchSize() != BranchSize::Short) ? 0x01 : 0x00));
-
-        missingDefaultFixupIndex = AddrNativeType(code().size());
-        appendValue(code(), 0, (sNode->defaultBranchSize() == BranchSize::Short) ? 1 : 2);
+        format("    LBRA %d\n", endLabel);
     }
-    
-    // If all branches in the list are short, we can make the list entry short
-    bool allShortBranches = true;
     
     for (auto it = sNode->clauses().begin(); it != sNode->clauses().end(); ++it) {
         if (!it->isDefault()) {
-            // No need to fixup default. It's always first
-            AddrNativeType addr = AddrNativeType(code().size()) - jumpSourceAddr;
-            if (addr >= 256) {
-                allShortBranches = true;
-            }
-            it->fixup(code(), addr);
+            format("L%d\n", it->fixupIndex());
         }
-        
         emitCode(it->stmt(), false);
 
         // The last clause will always have a branch of 0 so we can skip it
         if (it == sNode->clauses().end() - 1) {
             continue;
         }
-        code().push_back(uint8_t(Op::FBRA) | ((it->branchSize() != BranchSize::Short) ? 0x01 : 0x00));
 
-        // We can reuse the fixupIndex beacuse we're done with it
-        it->setFixupIndex(AddrNativeType(code().size()));
-        appendValue(code(), 0, ((it->branchSize() == BranchSize::Short) ? 1 : 2));
+        format("    LBRA L%d\n", endLabel);
     }
-    
-    // Set branchSize if needed
-    if (sNode->branchSize() == BranchSize::Unknown) {
-        sNode->setBranchSize(allShortBranches ? BranchSize::Short : BranchSize::Long);
-    }
-    
-    // Finally, fixup the branches at the end of the case statements
-    if (!sNode->haveDefault()) {
-        uint8_t adjustment = (sNode->defaultBranchSize() == BranchSize::Short) ? 1 : 2;
-        BranchNode::fixup(code(), missingDefaultFixupIndex,
-            AddrNativeType(code().size()) - missingDefaultFixupIndex - adjustment, sNode->defaultBranchSize());
-    }
-    
-    for (auto it = sNode->clauses().begin(); it != sNode->clauses().end(); ++it) {
-        if (it == sNode->clauses().end() - 1) {
-            continue;
-        }
-        uint8_t adjustment = (it->branchSize() == BranchSize::Short) ? 1 : 2;
-        it->fixup(code(), AddrNativeType(code().size()) - it->fixupIndex() - adjustment);
-    }
+
+    format("L%d\n", endLabel);
 }
 
 void
