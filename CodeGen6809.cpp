@@ -855,6 +855,7 @@ CodeGen6809::emitCodeLogical(const ASTPtr& node, bool isLHS)
     format("    BRA L%d\n", labelB);
     format("L%d\n", labelA);
     format("    LDA #%d\n", (lNode->kind() == LogicalNode::Kind::LAnd) ? 0 : 1);
+    format("    PSHS A\n");
     format("L%d\n", labelB);
 }
 
