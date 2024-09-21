@@ -804,34 +804,20 @@ CodeGen6809::emitCodeConditional(const ASTPtr& node, bool isLHS)
     emitCode(cNode->expr(), false);
     
     // Now emit if. If expr is false, jump to second expression, otherwise fall through to first
-    code().push_back(uint8_t(Op::BRF) | ((cNode->ifBranchSize() == BranchSize::Short) ? 0x00 : 0x01));
-    AddrNativeType fixupIndex = AddrNativeType(code().size());
-    code().push_back(0);
-    if (cNode->ifBranchSize() != BranchSize::Short) {
-        code().push_back(0);
-    }
+    uint16_t elseLabel = nextLabelId();
+    uint16_t endLabel = nextLabelId();
     
+    format("    PULS A\n");
+    format("    BEQ L%d\n", elseLabel);
+
     // Emit the first expr
     emitCode(cNode->first(), false);
-    
-    // Fixup the IF, It needs to jump past the FBRA
-    // Fixed adjustment of 1 for both long and short versions
-    BranchNode::fixup(code(), fixupIndex, AddrNativeType(code().size()) - fixupIndex + 1, cNode->ifBranchSize());
-    
-    // Now emit the branch past the first expr
-    code().push_back(uint8_t(Op::FBRA) | ((cNode->elseBranchSize() == BranchSize::Short) ? 0x00 : 0x01));
-    fixupIndex = AddrNativeType(code().size());
-    code().push_back(0);
-    if (cNode->elseBranchSize() != BranchSize::Short) {
-        code().push_back(0);
-    }
+    format("    BRA L%d\n", endLabel);
     
     // Emit the second expr
+    format("L%d\n", elseLabel);
     emitCode(cNode->second(), false);
-    
-    // Fixup the else
-    AddrNativeType adjustment = (cNode->elseBranchSize() == BranchSize::Short) ? -1 : -2;
-    BranchNode::fixup(code(), fixupIndex, AddrNativeType(code().size()) - fixupIndex + adjustment, cNode->elseBranchSize());
+    format("L%d\n", endLabel);
 }
 
 void
