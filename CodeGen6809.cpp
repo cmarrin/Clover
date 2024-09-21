@@ -920,14 +920,10 @@ CodeGen6809::emitCodeReturn(const ASTPtr& node, bool isLHS)
 {
     auto rNode = std::static_pointer_cast<ReturnNode>(node);
 
-    if (rNode->arg() == nullptr) {
-        code().push_back(uint8_t(Op::RET));
-    } else {
+    if (rNode->arg() != nullptr) {
         emitCode(rNode->arg(), false);
-        uint8_t size = typeToBytes(rNode->arg()->type());
-        Op op = (size == 1) ? Op::RETR1 : ((size == 2) ? Op::RETR2 : Op::RETR4);
-        code().push_back(uint8_t(op));
     }
+    format("    RTS\n");
 }
 
 void
@@ -955,8 +951,10 @@ CodeGen6809::emitCodeDeref(const ASTPtr& node, bool isLHS)
     // If this is LHS then we are done. The ref is on TOS, ready to be assigned to.
     // Otherwise we need to get the refed value.
     if (!isLHS) {
-        uint8_t bytes = typeToBytes(node->type());
-        code().push_back(uint8_t((bytes == 1) ? Op::DEREF1 : ((bytes == 2) ? Op::DEREF2 : Op::DEREF4)));
+        format("    PULS X\n");
+        const char* reg = (typeToOpSize(node->type()) == OpSize::i16) ? "D" : "A";
+        format("    LD%s 0,X\n", reg);
+        format("    PSHS %s\n", reg);
     }
 }
 
