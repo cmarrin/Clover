@@ -1,0 +1,149 @@
+                      (       simple.asm):00001         * 6809 assembly generated from Clover source
+                      (       simple.asm):00002         
+                      (       simple.asm):00003             include BOSS9.inc
+                      (        BOSS9.inc):00001         *-------------------------------------------------------------------------
+                      (        BOSS9.inc):00002         *    This source file is a part of the MC6809 Simulator
+                      (        BOSS9.inc):00003         *    For the latest info, see http:www.marrin.org/
+                      (        BOSS9.inc):00004         *    Copyright (c) 2018-2024, Chris Marrin
+                      (        BOSS9.inc):00005         *    All rights reserved.
+                      (        BOSS9.inc):00006         *    Use of this source code is governed by the MIT license that can be
+                      (        BOSS9.inc):00007         *    found in the LICENSE file.
+                      (        BOSS9.inc):00008         *-------------------------------------------------------------------------
+                      (        BOSS9.inc):00009         *
+                      (        BOSS9.inc):00010         *  BOSS9.inc
+                      (        BOSS9.inc):00011         *  Assembly language function and address includes for BOSS9
+                      (        BOSS9.inc):00012         *
+                      (        BOSS9.inc):00013         *  Created by Chris Marrin on 5/4/24.
+                      (        BOSS9.inc):00014         *
+                      (        BOSS9.inc):00015         
+                      (        BOSS9.inc):00016         *
+                      (        BOSS9.inc):00017         * Console functions
+                      (        BOSS9.inc):00018         *
+     FC00             (        BOSS9.inc):00019         putc    equ     $FC00   ; output char in A to console
+     FC02             (        BOSS9.inc):00020         puts    equ     $FC02   ; output string pointed to by X (null terminated)
+     FC04             (        BOSS9.inc):00021         putsn   equ     $FC04   ; Output string pointed to by X for length in Y
+     FC06             (        BOSS9.inc):00022         getc    equ     $FC06   ; Get char from console, return it in A
+     FC08             (        BOSS9.inc):00023         peekc   equ     $FC08   ; Return in A a 1 if a char is available and 0 otherwise
+     FC0A             (        BOSS9.inc):00024         gets    equ     $FC0A   ; Get a line terminated by \n, place in buffer
+                      (        BOSS9.inc):00025                                 ; pointed to by X, with max length in Y
+     FC0C             (        BOSS9.inc):00026         peeks   equ     $FC0C   ; Return in A a 1 if a line is available and 0 otherwise.
+                      (        BOSS9.inc):00027                                 ; If available return length of line in Y
+                      (        BOSS9.inc):00028         
+     FC0E             (        BOSS9.inc):00029         exit    equ     $FC0E   ; Exit program. A ccontains exit code
+     FC10             (        BOSS9.inc):00030         mon     equ     $FC10   ; Enter monitor
+     FC12             (        BOSS9.inc):00031         ldStart equ     $FC12   ; Start loading s-records
+     FC14             (        BOSS9.inc):00032         ldLine  equ     $FC14   ; Load an s-record line
+     FC16             (        BOSS9.inc):00033         ldEnd   equ     $FC16   ; End loading s-records
+                      (        BOSS9.inc):00034         
+                      (        BOSS9.inc):00035         * Misc equates
+                      (        BOSS9.inc):00036         
+     000A             (        BOSS9.inc):00037         newline equ     $0a
+                      (        BOSS9.inc):00038                                 
+                      (        BOSS9.inc):00039         
+                      (       simple.asm):00004             org $200
+0200 3440             (       simple.asm):00005             PSHS U
+0202 1F43             (       simple.asm):00006             TFR S,U
+0204 327E             (       simple.asm):00007             LEAS -2,S
+                      (       simple.asm):00008             ; //
+                      (       simple.asm):00009             ; //  simple.Clover
+                      (       simple.asm):00010             ; //  Clover
+                      (       simple.asm):00011             ; //
+                      (       simple.asm):00012             ; //  Created by Chris Marrin on 5/25/24.
+                      (       simple.asm):00013             ; //
+                      (       simple.asm):00014             ; 
+                      (       simple.asm):00015             ; struct Simple
+                      (       simple.asm):00016             ; {
+                      (       simple.asm):00017             ; 
+                      (       simple.asm):00018             ; //struct A
+                      (       simple.asm):00019             ; //{
+                      (       simple.asm):00020             ; //    int8 b = 12;
+                      (       simple.asm):00021             ; //    int16 c = 24;
+                      (       simple.asm):00022             ; //};
+                      (       simple.asm):00023             ; //
+                      (       simple.asm):00024             ; //const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
+                      (       simple.asm):00025             ; //
+                      (       simple.asm):00026             ; //int8 xxx = 9;
+                      (       simple.asm):00027             ; //
+                      (       simple.asm):00028             ; 
+                      (       simple.asm):00029             ; const uint16 array[4] = { 2, 4, 6, 8 };
+                      (       simple.asm):00030             ; 
+                      (       simple.asm):00031             ; function int16 main()
+                      (       simple.asm):00032             ; {
+                      (       simple.asm):00033             ;     int8 a = 3;
+                      (       simple.asm):00034             ;     int8 b = 4;
+0206 8603             (       simple.asm):00035             LDA #$03
+0208 3402             (       simple.asm):00036             PSHS A
+020A 3502             (       simple.asm):00037             PULS A
+020C A740             (       simple.asm):00038             STA 0,U
+                      (       simple.asm):00039             ;     if (a == 1 && b == 3) {
+020E 8604             (       simple.asm):00040             LDA #$04
+0210 3402             (       simple.asm):00041             PSHS A
+0212 3502             (       simple.asm):00042             PULS A
+0214 A741             (       simple.asm):00043             STA 1,U
+0216 6FE2             (       simple.asm):00044             CLR ,-S
+0218 A640             (       simple.asm):00045             LDA 0,U
+021A 3402             (       simple.asm):00046             PSHS A
+021C 8601             (       simple.asm):00047             LDA #$01
+021E 3402             (       simple.asm):00048             PSHS A
+0220 A661             (       simple.asm):00049             LDA 1,S
+0222 A160             (       simple.asm):00050             CMPA 0,S
+0224 3262             (       simple.asm):00051             LEAS 2,S
+0226 2602             (       simple.asm):00052             BNE L1
+0228 6C60             (       simple.asm):00053             INC 0,S
+022A                  (       simple.asm):00054         L1
+022A 3502             (       simple.asm):00055             PULS A
+022C 2716             (       simple.asm):00056             BEQ L2
+022E 6FE2             (       simple.asm):00057             CLR ,-S
+0230 A641             (       simple.asm):00058             LDA 1,U
+0232 3402             (       simple.asm):00059             PSHS A
+0234 8603             (       simple.asm):00060             LDA #$03
+0236 3402             (       simple.asm):00061             PSHS A
+0238 A661             (       simple.asm):00062             LDA 1,S
+023A A160             (       simple.asm):00063             CMPA 0,S
+023C 3262             (       simple.asm):00064             LEAS 2,S
+023E 2602             (       simple.asm):00065             BNE L4
+0240 6C60             (       simple.asm):00066             INC 0,S
+0242                  (       simple.asm):00067         L4
+0242 2004             (       simple.asm):00068             BRA L3
+0244                  (       simple.asm):00069         L2
+0244 8600             (       simple.asm):00070             LDA #0
+0246 3402             (       simple.asm):00071             PSHS A
+0248                  (       simple.asm):00072         L3
+0248 3502             (       simple.asm):00073             PULS A
+024A 2708             (       simple.asm):00074             BEQ L5
+                      (       simple.asm):00075             ;         b = 10;
+                      (       simple.asm):00076             ;     }
+024C 860A             (       simple.asm):00077             LDA #$0a
+024E 3402             (       simple.asm):00078             PSHS A
+0250 3502             (       simple.asm):00079             PULS A
+0252 A741             (       simple.asm):00080             STA 1,U
+0254                  (       simple.asm):00081         L5
+                      (       simple.asm):00082             ; //    uint16* p = &array[0];
+                      (       simple.asm):00083             ; //    for (uint8 i = 0; i < 4; i++) {
+                      (       simple.asm):00084             ; //        core.printf("array[%d] = %d\n", i, *p);
+                      (       simple.asm):00085             ; //        p++;
+                      (       simple.asm):00086             ; //    }
+                      (       simple.asm):00087             ; //
+                      (       simple.asm):00088             ; //    int16 a = 5;
+                      (       simple.asm):00089             ; //    uint16 b = 6;
+                      (       simple.asm):00090             ; //    int8 c = 8;
+                      (       simple.asm):00091             ; //    int8 d = 7;
+                      (       simple.asm):00092             ; // 
+                      (       simple.asm):00093             ; //    bool x = a < b;
+                      (       simple.asm):00094             ; //    
+                      (       simple.asm):00095             ; //    if (a < b && c > d) {
+                      (       simple.asm):00096             ; //        core.printf("Hello\n");
+                      (       simple.asm):00097             ; //    }
+                      (       simple.asm):00098             ;     
+                      (       simple.asm):00099             ; //    A a;
+                      (       simple.asm):00100             ; //    
+                      (       simple.asm):00101             ; //    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
+                      (       simple.asm):00102             ; //    core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
+                      (       simple.asm):00103             ; //    core.printf(" xxx=%d\n", xxx);
+                      (       simple.asm):00104             ;     return 0;
+                      (       simple.asm):00105             ; }
+0254 CC0000           (       simple.asm):00106             LDD #$0000
+0257 3406             (       simple.asm):00107             PSHS D
+0259 39               (       simple.asm):00108             RTS
+                      (       simple.asm):00109         
+                      (       simple.asm):00110             end $200

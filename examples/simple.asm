@@ -4,7 +4,7 @@
     org $200
     PSHS U
     TFR S,U
-    LEAS -2,S
+    LEAS -6,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -30,39 +30,58 @@
     ; 
     ; function int16 main()
     ; {
-    ;     int8 a = 3;
-    ;     int8 b = 4;
-    LDA #$03
+    ; //    uint16* p = &array[0];
+    ; //    for (uint8 i = 0; i < 4; i++) {
+    ; //        core.printf("array[%d] = %d\n", i, *p);
+    ; //        p++;
+    ; //    }
+    ; //
+    ;     int16 a = 5;
+    ;     uint16 b = 6;
+    LDD #$0005
+    PSHS D
+    PULS D
+    STD 1,U
+    ;     int8 c = 8;
+    LDD #$0006
+    PSHS D
+    PULS D
+    STD 3,U
+    ;     int8 d = 7;
+    LDA #$08
     PSHS A
     PULS A
-    STA 0,U
-    ;     if (a == 1 && b == 3) {
-    LDA #$04
+    STA 4,U
+    ;  
+    LDA #$07
     PSHS A
     PULS A
-    STA 1,U
+    STA 5,U
+    ; //    bool x = a < b;
+    ;     
+    ;     if (a < b && c > d) {
     CLR ,-S
-    LDA 0,U
-    PSHS A
-    LDA #$01
-    PSHS A
+    LDD 1,U
+    PSHS D
+    LDD 3,U
+    PSHS D
     LDA 1,S
     CMPA 0,S
     LEAS 2,S
-    BNE L1
+    BGE L1
     INC 0,S
 L1
     PULS A
     BEQ L2
     CLR ,-S
-    LDA 1,U
+    LDA 4,U
     PSHS A
-    LDA #$03
+    LDA 5,U
     PSHS A
     LDA 1,S
     CMPA 0,S
     LEAS 2,S
-    BNE L4
+    BLE L4
     INC 0,S
 L4
     BRA L3
@@ -72,29 +91,12 @@ L2
 L3
     PULS A
     BEQ L5
-    ;         b = 10;
+    ;         core.printf("Hello\n");
     ;     }
-    LDA #$0a
-    PSHS A
-    PULS A
-    STA 1,U
+    LDX #String+$0
+    PSHS X
+    JSR printf
 L5
-    ; //    uint16* p = &array[0];
-    ; //    for (uint8 i = 0; i < 4; i++) {
-    ; //        core.printf("array[%d] = %d\n", i, *p);
-    ; //        p++;
-    ; //    }
-    ; //
-    ; //    int16 a = 5;
-    ; //    uint16 b = 6;
-    ; //    int8 c = 8;
-    ; //    int8 d = 7;
-    ; // 
-    ; //    bool x = a < b;
-    ; //    
-    ; //    if (a < b && c > d) {
-    ; //        core.printf("Hello\n");
-    ; //    }
     ;     
     ; //    A a;
     ; //    
@@ -106,3 +108,8 @@ L5
     LDD #$0000
     PSHS D
     RTS
+
+String
+    FCC "Hello"
+    FCB $0a,$00
+    end $200

@@ -23,27 +23,22 @@ const uint16 array[4] = { 2, 4, 6, 8 };
 
 function int16 main()
 {
-    int8 a = 3;
-    int8 b = 4;
-    if (a == 1 && b == 3) {
-        b = 10;
-    }
 //    uint16* p = &array[0];
 //    for (uint8 i = 0; i < 4; i++) {
 //        core.printf("array[%d] = %d\n", i, *p);
 //        p++;
 //    }
 //
-//    int16 a = 5;
-//    uint16 b = 6;
-//    int8 c = 8;
-//    int8 d = 7;
-// 
+    int16 a = 5;
+    uint16 b = 6;
+    int8 c = 8;
+    int8 d = 7;
+ 
 //    bool x = a < b;
-//    
-//    if (a < b && c > d) {
-//        core.printf("Hello\n");
-//    }
+    
+    if (a < b && c > d) {
+        core.printf("Hello\n");
+    }
     
 //    A a;
 //    
