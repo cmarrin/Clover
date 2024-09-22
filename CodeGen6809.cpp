@@ -106,28 +106,34 @@ CodeGen6809::emitPopCodeVar(const ASTPtr& node)
     emitCodeVar(node, Type::None, false, true);
 }
 
-static const char* indexToString(Index index)
-{
-    switch (index) {
-        case Index::A:
-        case Index::L: return "U";
-        case Index::M: return "Y";
-        case Index::C: return "?"; // Constant address is handled elsewhere
-    }
-}
-
 void
 CodeGen6809::emitAddr(const SymbolPtr& symbol, AddrNativeType offset)
 {
     // Determine the addr mode. Addr is unsigned. See Defines.h (Address Mode)
     // for details
     Index index;
-    AddrNativeType relAddr = symbol->addr(index);
+    int16_t relAddr = symbol->addr(index);
     relAddr += (index == Index::L) ? -offset : offset;
     if (index == Index::C) {
         format("Constants+%d\n", relAddr); // FIXME: Need to emit Constants
     } else {
-        format("%d,%s\n", relAddr, indexToString(index));
+        const char* indexReg;
+        
+        switch (index) {
+            default: break;
+            case Index::L:
+                relAddr = -relAddr - 1;
+                indexReg = "U";
+                break;
+            case Index::A:
+                relAddr += 6;
+                indexReg = "U";
+                break;
+            case Index::M:
+                indexReg = "Y";
+                break;
+        }
+        format("%d,%s\n", relAddr, indexReg);
     }
 }
 
@@ -155,11 +161,13 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
         switch (typeToOpSize(type)) {
             default: break;
             case OpSize::i8:
-                format("    PULS A\n    STA ");
+                format("    PULS A\n");
+                format("    STA ");
                 emitAddr(symbol, offset);
                 break;
             case OpSize::i16:
-                format("    PULS D\n    STD ");
+                format("    PULS D\n");
+                format("    STD ");
                 emitAddr(symbol, offset);
                 break;
         }
@@ -664,17 +672,23 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
     callName = fNode->function()->name();
 
     // If this is a member call, save the old Y and put the instance
-    // pointer in Y. On return pop TOS back to Y
+    // pointer in Y. On return pop TOS back to Y. If there's no instance
+    // we need to push a dummy pointer so all the arg offsets work
     if (fNode->instance()) {
         format("    PSHS Y\n");
         emitCode(fNode->instance(), true);
         format("    PULS Y\n");
+    } else {
+        format("    LEAS -2,S\n");
     }
 
     format("    JSR %s\n", callName.c_str());
 
+    // Now we need to pop the previous Y or toss the dummy pointer
     if (fNode->instance()) {
         format("    PULS Y\n");
+    } else {
+        format("    LEAS 2,S\n");
     }
     
     // Pop the args after the call returns. Args pushed is not necessarily the
