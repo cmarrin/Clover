@@ -31,22 +31,12 @@ namespace clvr {
     static inline uint8_t rom(uint16_t addr) { return EEPROM.read(addr); }
     
     static inline void putChar(uint8_t c) { Serial.print(char(c)); }
-
-    static inline void toString(char* s, float val, int8_t width = 0, uint8_t precision = 0)
-    {
-        dtostrf(val, width, precision, s);
-    }
 #else
     extern uint8_t* ROMBase;
 
     static inline uint8_t rom(uint16_t addr) { return ROMBase[addr]; }
 
     static inline void putChar(uint8_t c) { ::putchar(c); }
-    
-    static inline void toString(char* s, float val, int8_t width = 0, uint8_t precision = 0)
-    {
-        snprintf(s, 20, "%*.*g", width, precision, val);
-    }
 
     static inline void randomSeed(uint32_t s) { srand(s); }
     static inline int32_t random(int32_t min, int32_t max)
@@ -619,14 +609,6 @@ enum class Operator : uint8_t {
 };
 
 class VarArg;
-
-int32_t printf(AddrNativeType fmt, VarArg&);    
-int32_t format(AddrNativeType s, uint16_t n, AddrNativeType fmt, VarArg&);    
-int32_t printf(const char* fmt, ...);
-int32_t format(char* s, uint16_t n, const char* fmt, ...);
-int32_t vprintf(const char* fmt, va_list args);
-int32_t vformat(char* s, uint16_t n, const char* fmt, va_list args);
-int32_t vformat(std::vector<uint8_t>&, const char* fmt, va_list args);
 
 // Native Modules contain native functions that can be called
 // by the interpreter. Modules are numbered starting at 0. There

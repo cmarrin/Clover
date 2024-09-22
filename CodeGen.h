@@ -10,6 +10,7 @@
 #pragma once
 
 #include "AST.h"
+#include "Format.h"
 #include "Scanner.h"
 
 #include <vector>
@@ -64,7 +65,7 @@ class CodeGen
     {
         va_list args;
         va_start(args, fmt);
-        vformat(_code, fmt, args);
+        fmt::vformat(_code, fmt, args);
         
         // vformat adds a null terminator. We don't want that
         _code.pop_back();

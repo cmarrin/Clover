@@ -145,36 +145,34 @@ class Memory
         }
     }
     
-    uint32_t getAbs(uint32_t addr, OpSize opSize)
+    uint32_t getAbs(uint32_t addr, uint8_t size)
     {
         uint32_t v = 0;
         
         if (addr >= stack().size()) {
             // This is a constant
             addr -= stack().size();
-            switch (opSize) {
-                case OpSize::flt:
-                case OpSize::i32: v |= uint32_t(rom(addr++)) << 24;
+            switch (size) {
+                case 4: v |= uint32_t(rom(addr++)) << 24;
                                   v |= uint32_t(rom(addr++)) << 16;
-                case OpSize::i16: v |= uint32_t(rom(addr++)) << 8;
-                case OpSize::i8 : v |= uint32_t(rom(addr++));
+                case 2: v |= uint32_t(rom(addr++)) << 8;
+                case 1: v |= uint32_t(rom(addr++));
             }
         } else {
-            switch (opSize) {
-                case OpSize::flt:
-                case OpSize::i32: v |= uint32_t(_stack.getAbs(addr++)) << 24;
+            switch (size) {
+                case 4: v |= uint32_t(_stack.getAbs(addr++)) << 24;
                                   v |= uint32_t(_stack.getAbs(addr++)) << 16;
-                case OpSize::i16: v |= uint32_t(_stack.getAbs(addr++)) << 8;
-                case OpSize::i8 : v |= uint32_t(_stack.getAbs(addr++));
+                case 2: v |= uint32_t(_stack.getAbs(addr++)) << 8;
+                case 1: v |= uint32_t(_stack.getAbs(addr++));
             }
         }
         
         return v;
     }
     
-    uint32_t getArg(int32_t offset, Type type)
+    uint32_t getArg(int32_t offset, uint8_t size)
     {
-        return getAbs(index(offset, Index::A), typeToOpSize(type));
+        return getAbs(index(offset, Index::A), size);
     }
     
     // On entry args are pushed on stack followed by retAddr.
@@ -243,11 +241,11 @@ class VarArg
     }
     
     // Type returned is always ArgUNativeType. Use reinterpret_cast to convert to the proper type
-    ArgUNativeType arg(Type type)
+    ArgUNativeType arg(uint8_t bytes)
     {
         AddrNativeType argAddr = _nextAddr;
-        _nextAddr += typeToBytes(type);
-        return _memMgr->getAbs(argAddr, typeToOpSize(type));
+        _nextAddr += bytes;
+        return _memMgr->getAbs(argAddr, bytes);
     }
     
     

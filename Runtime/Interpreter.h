@@ -12,12 +12,93 @@
 #pragma once
 
 #include "Defines.h"
+#include "Format.h"
 #include "Memory.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 namespace clvr {
+
+class InterpPrintArgs : public fmt::FormatterArgs
+{
+  public:
+    InterpPrintArgs(clvr::AddrNativeType fmt, clvr::VarArg& args)
+        : _fmt(fmt)
+        , _args(&args)
+    { }
+        
+    virtual ~InterpPrintArgs() { }
+    virtual uint8_t getChar(uint32_t i) const override { return getStringChar(uintptr_t(_fmt + i)); }
+    virtual void putChar(uint8_t c) override { clvr::putChar(c); }
+    virtual uintptr_t getArg(fmt::Type type) override
+    {
+        uint8_t bytes;
+        
+        switch (type) {
+            case fmt::Type::i8 : bytes = 1;
+            case fmt::Type::i16: bytes = 2;
+            case fmt::Type::i32: bytes = 4;
+            case fmt::Type::flt: bytes = 4;
+            case fmt::Type::str: bytes = AddrSize;
+            case fmt::Type::ptr: bytes = AddrSize;
+        }
+        return _args->arg(bytes);
+    }
+
+    // The interpreter keeps strings in ROM. The p pointer is actually an offset in the rom
+    virtual uint8_t getStringChar(uintptr_t p) const override
+    {
+        return _args->memMgr()->getAbs(clvr::AddrNativeType(p), 1);
+    }
+    
+    clvr::VarArg* args() { return _args; }
+
+  private:
+    clvr::AddrNativeType _fmt;
+    clvr::VarArg* _args;
+};
+
+class InterpFormatArgs : public InterpPrintArgs
+{
+  public:
+    InterpFormatArgs(AddrNativeType s, uint16_t n, clvr::AddrNativeType fmt, clvr::VarArg& args)
+        : InterpPrintArgs(fmt, args)
+        , _buf(s)
+        , _size(n)
+        , _index(0)
+    { }
+        
+    virtual ~InterpFormatArgs() { }
+
+    virtual void putChar(uint8_t c) override
+    {
+        if (_index < _size - 1) {
+            args()->putChar(_buf + _index++, c);
+        }
+    }
+
+    virtual void end() override { putChar('\0'); }
+
+  private:
+    AddrNativeType _buf;
+    uint16_t _size;
+    uint16_t _index;
+};
+
+static inline int32_t
+printf(clvr::AddrNativeType fmt, clvr::VarArg& args)
+{
+    InterpPrintArgs f(fmt, args);
+    return fmt::doprintf(&f);
+}
+
+static inline int32_t
+format(AddrNativeType s, uint16_t n, clvr::AddrNativeType fmt, clvr::VarArg& args)
+{
+    InterpFormatArgs f(s, n, fmt, args);
+    return fmt::doprintf(&f);
+}
 
 class InterpreterBase
 {
@@ -160,7 +241,7 @@ class InterpreterBase
     
     uint32_t value(OpSize opSize)
     {
-        return _memMgr.getAbs(ea(), opSize);
+        return _memMgr.getAbs(ea(), opSizeToBytes(opSize));
     }
     
     void handleReturn()
