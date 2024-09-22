@@ -41,29 +41,29 @@
     LDD #$0005
     PSHS D
     PULS D
-    STD 1,U
+    STD -2,U
     ;     int8 c = 8;
     LDD #$0006
     PSHS D
     PULS D
-    STD 3,U
+    STD -4,U
     ;     int8 d = 7;
     LDA #$08
     PSHS A
     PULS A
-    STA 4,U
+    STA -5,U
     ;  
     LDA #$07
     PSHS A
     PULS A
-    STA 5,U
+    STA -6,U
     ; //    bool x = a < b;
     ;     
     ;     if (a < b && c > d) {
     CLR ,-S
-    LDD 1,U
+    LDD -2,U
     PSHS D
-    LDD 3,U
+    LDD -4,U
     PSHS D
     LDA 1,S
     CMPA 0,S
@@ -74,9 +74,9 @@ L1
     PULS A
     BEQ L2
     CLR ,-S
-    LDA 4,U
+    LDA -5,U
     PSHS A
-    LDA 5,U
+    LDA -6,U
     PSHS A
     LDA 1,S
     CMPA 0,S
