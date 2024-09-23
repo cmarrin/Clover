@@ -17,8 +17,8 @@ using namespace clvr;
 ASTPtr
 TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType)
 {
-    // We can only cast scalar nodes
-    if ((!isEnum(node->type()) && !isScalar(node->type())) || !isScalar(neededType) || node->isPointer()) {
+    // We can only cast scalar nodes and pointers
+    if ((!isEnum(node->type()) && !isScalar(node->type()) && !node->isPointer()) || !isScalar(neededType)) {
         return node;
     }
     

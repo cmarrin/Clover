@@ -122,8 +122,10 @@ constexpr Type ArgIType = Type::Int16;
 
 #if SUPPORT32 || SUPPORT_FLOAT || ADDR32
 using VarArgNativeType = uint32_t;
+constexpr Type VarArgType = Type::UInt32;
 #else
 using VarArgNativeType = uint16_t;
+constexpr Type VarArgType = Type::UInt16;
 #endif
 
 constexpr uint8_t VarArgSize = sizeof(VarArgNativeType);
@@ -515,6 +517,14 @@ static inline Op castOp(Type from, Type to)
             case Type::Int16:
             case Type::UInt16: return Op::CASTI816;
             default: return Op::NOP;
+        }
+    }
+    
+    if (from == Type::String) {
+        // A string will only ever be cast if it's a vararg in which
+        // case it's being cast to VarArgType
+        if (AddrSize != VarArgSize) {
+            return (AddrSize == 2) ? Op::CASTU1632 : Op::CAST3216;
         }
     }
     

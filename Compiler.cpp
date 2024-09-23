@@ -1522,22 +1522,15 @@ Compiler::argumentList(const ASTPtr& fun)
             }
         } else {
             // We are past the last arg. That makes this a vararg call. We upcast any integral
-            // types to ArgNativeType.
+            // or pointer types to VarArgNativeType.
             if (!arg->isPointer() && (isStruct(arg->type()) || arg->isIndexable())) {
                 arg = std::make_shared<RefNode>(arg);
             }
             
             neededType = arg->type();
-            if (isEnum(neededType)) {
-                neededType = Type::UInt8;
-            }
             
-            switch (neededType) {
-                case Type::Int8:
-                case Type::Int16: neededType = ArgIType; break;
-                case Type::UInt8:
-                case Type::UInt16: neededType = ArgUType; break;
-                default: break;
+            if (neededType != Type::Float) {
+                neededType = VarArgType;
             }
         }
 

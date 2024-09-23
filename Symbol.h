@@ -75,7 +75,7 @@ public:
     
     uint16_t elementSizeInBytes() const
     {
-        if (_ptr && _nElements > 1) {
+        if (_ptr) {
             return AddrSize;
         }
         
