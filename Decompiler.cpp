@@ -43,7 +43,7 @@ bool Decompiler::decompile()
         // Emit main entry point
         int32_t entryPoint = Is32BitAddr ? getInt32() : getUInt16();
         
-        _out->append("Main entry pot                  : ");
+        _out->append("Main entry point                : ");
         _out->append(std::to_string(entryPoint));
         _out->append("\n");
         
