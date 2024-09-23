@@ -26,7 +26,7 @@ class MyInterpreter : public clvr::Interpreter<StackSize>
   public:
     virtual void setLight(uint8_t i, uint32_t rgb) override
     {
-        clvr::printf("setLight(%hhd, 0x%08x)\n", i, rgb);
+        fmt::printf("setLight(%hhd, 0x%08x)\n", i, rgb);
     }
 };
 
