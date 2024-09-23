@@ -21,9 +21,9 @@
 #endif
 
 
-//#define ADDR32          // Uncomment for 32 bit addr, leave commented out for 16 bit
-//#define SUPPORT_FLOAT   // Uncomment for float support, leave commented out for no floats
-//#define SUPPORT_INT32   // Uncomment for int32/uint32 support, leave commented out for no support
+//#define ADDR32 1          // Uncomment for 32 bit addr, leave commented out for 16 bit
+#define SUPPORT_FLOAT 1   // Uncomment for float support, leave commented out for no floats
+#define SUPPORT_INT32 1   // Uncomment for int32/uint32 support, leave commented out for no support
 
 namespace clvr {
 
@@ -119,6 +119,14 @@ using ArgINativeType = int16_t;
 constexpr Type ArgUType = Type::UInt16;
 constexpr Type ArgIType = Type::Int16;
 #endif
+
+#if SUPPORT32 || SUPPORT_FLOAT || ADDR32
+using VarArgNativeType = uint32_t;
+#else
+using VarArgNativeType = uint16_t;
+#endif
+
+constexpr uint8_t VarArgSize = sizeof(VarArgNativeType);
 
 static constexpr uint8_t opSizeToBytes(OpSize opSize)
 {

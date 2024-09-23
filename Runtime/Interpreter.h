@@ -33,17 +33,8 @@ class InterpPrintArgs : public fmt::FormatterArgs
     virtual void putChar(uint8_t c) override { clvr::putChar(c); }
     virtual uintptr_t getArg(fmt::Type type) override
     {
-        uint8_t bytes;
-        
-        switch (type) {
-            case fmt::Type::i8 : bytes = 1;
-            case fmt::Type::i16: bytes = 2;
-            case fmt::Type::i32: bytes = 4;
-            case fmt::Type::flt: bytes = 4;
-            case fmt::Type::str: bytes = AddrSize;
-            case fmt::Type::ptr: bytes = AddrSize;
-        }
-        return _args->arg(bytes);
+        // varargs are always the same size
+        return _args->arg(VarArgSize);
     }
 
     // The interpreter keeps strings in ROM. The p pointer is actually an offset in the rom

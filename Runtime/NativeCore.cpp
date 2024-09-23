@@ -48,34 +48,34 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
         default: break;
         case Id::PrintF: {
             VarArg va(interp->memMgr(), 0, Type::String);
-            AddrNativeType fmt = interp->memMgr()->getArg(0, AddrType);
+            AddrNativeType fmt = interp->memMgr()->getArg(0, AddrSize);
             clvr::printf(fmt, va);
             break;
         }
         case Id::Format: {
             VarArg va(interp->memMgr(), AddrSize + 2, Type::String);
-            AddrNativeType s = interp->memMgr()->getArg(0, AddrType);
-            uint16_t n = interp->memMgr()->getArg(AddrSize, Type::UInt16);
-            AddrNativeType fmt = interp->memMgr()->getArg(AddrSize + 2, AddrType);
+            AddrNativeType s = interp->memMgr()->getArg(0, AddrSize);
+            uint16_t n = interp->memMgr()->getArg(AddrSize, 2);
+            AddrNativeType fmt = interp->memMgr()->getArg(AddrSize + 2, AddrSize);
             clvr::format(s, n, fmt, va);
             break;
         }
         case Id::RandomInt: {
-            int32_t a = interp->memMgr()->getArg(0, Type::Int32);
-            int32_t b = interp->memMgr()->getArg(4, Type::Int32);
+            int32_t a = interp->memMgr()->getArg(0, 4);
+            int32_t b = interp->memMgr()->getArg(4, 4);
             interp->setReturnValue(random(a, b));
             break;
         }
         case Id::RandomFloat: {
-            float a = intToFloat(interp->memMgr()->getArg(0, Type::Float));
-            float b = intToFloat(interp->memMgr()->getArg(4, Type::Float));
+            float a = intToFloat(interp->memMgr()->getArg(0, 4));
+            float b = intToFloat(interp->memMgr()->getArg(4, 4));
             interp->setReturnValue(floatToInt(float(random(int32_t(a * 1000), int32_t(b * 1000))) / 1000));
             break;
         }
         case Id::MemSet: {
-            AddrNativeType addr = interp->memMgr()->getArg(0, AddrType);
-            uint8_t v = interp->memMgr()->getArg(AddrSize, Type::UInt8);
-            uint32_t n = interp->memMgr()->getArg(AddrSize + 1, Type::UInt32);
+            AddrNativeType addr = interp->memMgr()->getArg(0, AddrSize);
+            uint8_t v = interp->memMgr()->getArg(AddrSize, 1);
+            uint32_t n = interp->memMgr()->getArg(AddrSize + 1, 4);
             if (n == 0) {
                 break;
             }
@@ -85,28 +85,28 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
             break;
         }
         case Id::MinInt: {
-            int32_t a = interp->memMgr()->getArg(0, Type::Int32);
-            int32_t b = interp->memMgr()->getArg(4, Type::Int32);
+            int32_t a = interp->memMgr()->getArg(0, 4);
+            int32_t b = interp->memMgr()->getArg(4, 4);
             
             interp->setReturnValue((a < b) ? a : b);
             break;
         }
         case Id::MaxInt: {
-            int32_t a = interp->memMgr()->getArg(0, Type::Int32);
-            int32_t b = interp->memMgr()->getArg(4, Type::Int32);
+            int32_t a = interp->memMgr()->getArg(0, 4);
+            int32_t b = interp->memMgr()->getArg(4, 4);
             
             interp->setReturnValue((a > b) ? a : b);
             break;
         }
         case Id::MinFloat: {
-            float a = intToFloat(interp->memMgr()->getArg(0, Type::Float));
-            float b = intToFloat(interp->memMgr()->getArg(4, Type::Float));
+            float a = intToFloat(interp->memMgr()->getArg(0, 4));
+            float b = intToFloat(interp->memMgr()->getArg(4, 4));
             interp->setReturnValue(floatToInt((a < b) ? a : b));
             break;
         }
         case Id::MaxFloat: {
-            float a = intToFloat(interp->memMgr()->getArg(0, Type::Float));
-            float b = intToFloat(interp->memMgr()->getArg(4, Type::Float));
+            float a = intToFloat(interp->memMgr()->getArg(0, 4));
+            float b = intToFloat(interp->memMgr()->getArg(4, 4));
             interp->setReturnValue(floatToInt((a > b) ? a : b));
             break;
         }
@@ -114,16 +114,16 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
             interp->topLevelArgs()->reset();
             break;
         case Id::ArgInt8:
-            interp->setReturnValue(interp->topLevelArgs()->arg(Type::Int8));
+            interp->setReturnValue(interp->topLevelArgs()->arg(1));
             break;
         case Id::ArgInt16:
-            interp->setReturnValue(interp->topLevelArgs()->arg(Type::Int16));
+            interp->setReturnValue(interp->topLevelArgs()->arg(2));
             break;
         case Id::ArgInt32:
-            interp->setReturnValue(interp->topLevelArgs()->arg(Type::Int32));
+            interp->setReturnValue(interp->topLevelArgs()->arg(4));
             break;
         case Id::ArgFloat:
-            interp->setReturnValue(interp->topLevelArgs()->arg(Type::Float));
+            interp->setReturnValue(interp->topLevelArgs()->arg(4));
             break;
         case Id::Animate: {
             // Passes in a pointer to a struct with cur, inc, min and max
@@ -133,11 +133,11 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
             // finished going down, or 1 if we just finished going up.
             // Otherwise return 0.
             float cur, inc, min, max;
-            AddrNativeType addr = interp->memMgr()->getArg(0, AddrType);
-            cur = intToFloat(interp->memMgr()->getAbs(addr, OpSize::flt));
-            inc = intToFloat(interp->memMgr()->getAbs(addr + 4, OpSize::flt));
-            min = intToFloat(interp->memMgr()->getAbs(addr + 8, OpSize::flt));
-            max = intToFloat(interp->memMgr()->getAbs(addr + 12, OpSize::flt));
+            AddrNativeType addr = interp->memMgr()->getArg(0, AddrSize);
+            cur = intToFloat(interp->memMgr()->getAbs(addr, 4));
+            inc = intToFloat(interp->memMgr()->getAbs(addr + 4, 4));
+            min = intToFloat(interp->memMgr()->getAbs(addr + 8, 4));
+            max = intToFloat(interp->memMgr()->getAbs(addr + 12, 4));
 
             cur += inc;
             interp->memMgr()->setAbs(addr, floatToInt(cur), OpSize::flt);

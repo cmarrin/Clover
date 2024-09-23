@@ -9,6 +9,7 @@
 
 #include "Interpreter.h"
 
+#include "CodeGenStackVM.h"
 #include "NativeColor.h"
 #include "NativeCore.h"
 
@@ -258,7 +259,7 @@ InterpreterBase::execute(ExecMode mode)
             case Op::DEREF4:
                 opSize = op3ToOpSize(opcode, Op::DEREF1);
                 left = _memMgr.stack().pop(AddrOpSize);
-                right = _memMgr.getAbs(left, opSize);
+                right = _memMgr.getAbs(left, opSizeToBytes(opSize));
                 _memMgr.stack().push(right, opSize);
                 break;
             case Op::RETR1:
@@ -327,7 +328,7 @@ InterpreterBase::execute(ExecMode mode)
                 OpSize opndSize = (opcode == Op::PREINC1 || opcode == Op::POSTINC1) ? OpSize::i8 : OpSize::i16;
                 int16_t inc = getIOpnd(opndSize);
                 AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
-                uint32_t oldValue = _memMgr.getAbs(addr, opSize);
+                uint32_t oldValue = _memMgr.getAbs(addr, opSizeToBytes(opSize));
                 uint32_t newValue;
                 
                 if (opSize == OpSize::flt) {
