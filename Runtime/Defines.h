@@ -21,9 +21,9 @@
 #endif
 
 
-//#define ADDR32 1          // Uncomment for 32 bit addr, leave commented out for 16 bit
-//#define SUPPORT_FLOAT 1   // Uncomment for float support, leave commented out for no floats
-//#define SUPPORT_INT32 1   // Uncomment for int32/uint32 support, leave commented out for no support
+#define ADDR32 1          // Uncomment for 32 bit addr, leave commented out for 16 bit
+#define SUPPORT_FLOAT 1   // Uncomment for float support, leave commented out for no floats
+#define SUPPORT_INT32 1   // Uncomment for int32/uint32 support, leave commented out for no support
 
 namespace clvr {
 
