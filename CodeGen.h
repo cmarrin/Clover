@@ -17,6 +17,33 @@
 
 namespace clvr {
 
+class VectorFormatArgs : public fmt::NativePrintArgs
+{
+  public:
+    VectorFormatArgs(std::vector<uint8_t>& vec, const char* fmt, va_list args)
+        : NativePrintArgs(fmt, args)
+        , _vec(&vec)
+    { }
+    
+    virtual ~VectorFormatArgs() { }
+
+    virtual void putChar(uint8_t c) override
+    {
+        _vec->push_back(c);
+    }
+
+    virtual void end() override { putChar('\0'); }
+
+  private:
+    std::vector<uint8_t>* _vec;
+};
+
+static inline int32_t vformat(std::vector<uint8_t>& vec, const char* fmt, va_list args)
+{
+    VectorFormatArgs f(vec, fmt, args);
+    return doprintf(&f);
+}
+
 class Annotations;
 
 static inline void appendValue(std::vector<uint8_t>& container, uint32_t v, uint8_t bytes)
@@ -65,7 +92,7 @@ class CodeGen
     {
         va_list args;
         va_start(args, fmt);
-        fmt::vformat(_code, fmt, args);
+        vformat(_code, fmt, args);
         
         // vformat adds a null terminator. We don't want that
         _code.pop_back();

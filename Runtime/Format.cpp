@@ -15,7 +15,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdarg.h>
-#include <vector>
 
 using namespace fmt;
 
@@ -61,13 +60,6 @@ int32_t
 fmt::vformat(char* s, uint16_t n, const char* fmt, va_list args)
 {
     NativeFormatArgs f(s, n, fmt, args);
-    return doprintf(&f);
-}
-
-int32_t
-fmt::vformat(std::vector<uint8_t>& vec, const char* fmt, va_list args)
-{
-    VectorFormatArgs f(vec, fmt, args);
     return doprintf(&f);
 }
 

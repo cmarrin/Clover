@@ -112,33 +112,11 @@ class NativeFormatArgs : public NativePrintArgs
     uint16_t _index;
 };
 
-class VectorFormatArgs : public NativePrintArgs
-{
-  public:
-    VectorFormatArgs(std::vector<uint8_t>& vec, const char* fmt, va_list args)
-        : NativePrintArgs(fmt, args)
-        , _vec(&vec)
-    { }
-    
-    virtual ~VectorFormatArgs() { }
-
-    virtual void putChar(uint8_t c) override
-    {
-        _vec->push_back(c);
-    }
-
-    virtual void end() override { putChar('\0'); }
-
-  private:
-    std::vector<uint8_t>* _vec;
-};
-
 int32_t doprintf(FormatterArgs*);
 
 int32_t printf(const char* fmt, ...);
 int32_t format(char* s, uint16_t n, const char* fmt, ...);
 int32_t vprintf(const char* fmt, va_list args);
 int32_t vformat(char* s, uint16_t n, const char* fmt, va_list args);
-int32_t vformat(std::vector<uint8_t>& vec, const char* fmt, va_list args);
 
 }
