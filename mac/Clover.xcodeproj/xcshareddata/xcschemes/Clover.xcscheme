@@ -70,7 +70,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestCore.clvr"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestIntExpr.clvr"
@@ -106,7 +106,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-h -t Test/TestCore.clvr Test/TestIntExpr.clvr Test/TestFloatExpr.clvr Test/TestIf.clvr Test/TestFunction.clvr Test/TestFor.clvr Test/TestWhile.clvr Test/TestPtrStruct.clvr Test/TestSwitchEnum.clvr"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>
