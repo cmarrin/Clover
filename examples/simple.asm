@@ -4,7 +4,6 @@
     org $200
     PSHS U
     TFR S,U
-    LEAS -6,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -15,107 +14,119 @@
     ; struct Simple
     ; {
     ; 
-    ; //struct A
-    ; //{
-    ; //    int8 b = 12;
-    ; //    int16 c = 24;
-    ; //};
-    ; //
-    ; //const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
-    ; //
-    ; //int8 xxx = 9;
-    ; //
+    ; struct A
+    ; {
+    ;     int8 b = 12;
+    ;     int16 c = 24;
+    LDA #$0c
+    PSHS A
+    PULS A
+    STA 0,Y
+    ; };
+    LDD #$0018
+    PSHS D
+    PULS D
+    STD 1,Y
+    RTS
+    PSHS U
+    TFR S,U
+    LEAS -3,S
     ; 
-    ; const uint16 array[4] = { 2, 4, 6, 8 };
+    ; const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
+    ; 
+    ; int8 xxx = 9;
     ; 
     ; function int16 main()
     ; {
-    ; //    uint16* p = &array[0];
-    ; //    for (uint8 i = 0; i < 4; i++) {
-    ; //        core.printf("array[%d] = %d\n", i, *p);
-    ; //        p++;
-    ; //    }
-    ; //
-    ;     int16 a = 5;
-    ;     uint16 b = 6;
-    LDD #$0005
-    PSHS D
-    PULS D
-    STD -2,U
-    ;     int8 c = 8;
-    LDD #$0006
-    PSHS D
-    PULS D
-    STD -4,U
-    ;     int8 d = 7;
-    LDA #$08
-    PSHS A
-    PULS A
-    STA -5,U
-    ;  
-    LDA #$07
-    PSHS A
-    PULS A
-    STA -6,U
-    ; //    bool x = a < b;
+    ;     A a;
     ;     
-    ;     if (a < b && c > d) {
-    CLR ,-S
-    LDD -2,U
+    PSHS Y
+    LEAX -3,U
+    PSHS X
+    PULS Y
+    JSR 
+    PULS Y
+    LEAS 0,S
+    ;     core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
+    ;     core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
+    LEAX Constants+0
+    PSHS X
+    LDA #$02
+    PSHS A
+    PULS B
+    LDA #3
+    MUL
+    ADDD 0,S
+    STD 0,S
+    PULS D
+    ADDD #1
+    TFR D,X
+    LDD 0,X
     PSHS D
-    LDD -4,U
+    LEAX Constants+0
+    PSHS X
+    LDA #$01
+    PSHS A
+    PULS B
+    LDA #3
+    MUL
+    ADDD 0,S
+    STD 0,S
+    PULS X
+    LDA 0,X
+    PSHS A
+    PULS B
+    CLRA
     PSHS D
-    LDA 1,S
-    CMPA 0,S
-    LEAS 2,S
-    BGE L1
-    INC 0,S
-L1
-    PULS A
-    BEQ L2
-    CLR ,-S
-    LDA -5,U
-    PSHS A
-    LDA -6,U
-    PSHS A
-    LDA 1,S
-    CMPA 0,S
-    LEAS 2,S
-    BLE L4
-    INC 0,S
-L4
-    BRA L3
-L2
-    LDA #0
-    PSHS A
-L3
-    PULS A
-    BEQ L5
-    ;         core.printf("Hello\n\n");
-    ;     }
     LDX #String+$0
     PSHS X
     JSR printf
-L5
-    ;     
-    ; //    A a;
-    ; //    
-    ; //    core.printf(" v1=%d, v2=%d\n", arr[1].b, arr[2].c);
-    ; //    core.printf(" a.b=%d, a.c=%d\n", a.b, a.c);
-    ; //    core.printf(" xxx=%d\n", xxx);
+    ;     core.printf(" xxx=%d\n", xxx);
+    LDD -2,U
+    PSHS D
+    LDA -3,U
+    PSHS A
+    PULS B
+    CLRA
+    PSHS D
+    LDX #String+$f
+    PSHS X
+    JSR printf
     ;     return 0;
+    LDA 0,Y
+    PSHS A
+    PULS B
+    CLRA
+    PSHS D
+    LDX #String+$20
+    PSHS X
+    JSR printf
     ; }
     LDD #$0000
     PSHS D
     RTS
+    PSHS U
+    TFR S,U
+    LDA #$09
+    PSHS A
+    PULS A
+    STA 0,Y
+    RTS
 
 Constants
-    FCB $00,$02,$00,$04,$00,$06,$00,$08
+    FCB $08,$00,$09,$0a,$00,$0b,$0c,$00
+    FCB $0d
 
 String
-    FCC "Hello"
-    FCB $0a
+    FCC " v1=%d, v2=%d"
     FCB $0a
     FCB $00
+    FCC " a.b=%d, a.c=%d"
+    FCB $0a
+    FCB $00
+    FCC " xxx=%d"
+    FCB $0a
+    FCB $00
+
 
     end $200
