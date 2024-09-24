@@ -28,6 +28,7 @@
 namespace clvr {
 
 #ifdef ARDUINO
+    #define RUNTIME 1
     static inline uint8_t rom(uint16_t addr) { return EEPROM.read(addr); }
     
     static inline void putChar(uint8_t c) { Serial.print(char(c)); }

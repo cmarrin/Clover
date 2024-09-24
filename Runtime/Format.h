@@ -11,12 +11,14 @@
 
 #pragma once
 
-#include <cstdint>
-#include <cstdarg>
-#include <cstdio>
-#include <vector>
+#include <stdint.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #ifdef ARDUINO
+    #include <Arduino.h>
+    #include <EEPROM.h>
+    
     static inline void putChar(uint8_t c) { Serial.print(char(c)); }
     static inline void toString(char* s, float val, int8_t width = 0, uint8_t precision = 0)
     {

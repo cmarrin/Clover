@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include "Defines.h"
+
 #if COMPILE == 1
 #include "Module.h"
 #endif
