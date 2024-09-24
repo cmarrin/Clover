@@ -649,6 +649,10 @@ class ConditionalNode : public ASTNode
     // first and second have to be the same type. That should have been validated by the caller
     virtual Type type() const override { return _first->type(); }
 
+    virtual bool isIndexable() const override { return _first->isIndexable(); }
+    virtual bool isAssignable() const override { return _first->isAssignable(); }
+    virtual bool isPointer() const override { return _first->isPointer(); }
+
     ASTPtr expr() const { return _expr; }
     ASTPtr first() const { return _first; }
     ASTPtr second() const { return _second; }
