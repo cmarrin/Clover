@@ -784,7 +784,11 @@ class DerefNode : public ASTNode
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Deref; }
     virtual Type type() const override { return _operand->type(); }
     virtual bool isAssignable() const override { return true; }
-    virtual bool isPointer() const override { return _operand->isPointer(); }
+    
+    // The operand is obviously a pointer because it has to be to be deref'ed. But once deref'ed
+    // it's no longer a pointer
+    //virtual bool isPointer() const override { return _operand->isPointer(); }
+    
     virtual bool isIndexable() const override { return true; }
 
     ASTPtr operand() const { return _operand; }
