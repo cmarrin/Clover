@@ -20,6 +20,11 @@
 
 namespace clvr {
 
+constexpr AddrNativeType MajorVersionAddr = 4;
+constexpr AddrNativeType MinorVersionAddr = 6;
+constexpr AddrNativeType Is32BitAddrAddr = 7;
+constexpr AddrNativeType MainEntryPointAddr = 8;
+
 class InterpPrintArgs : public fmt::FormatterArgs
 {
   public:

@@ -10,6 +10,7 @@
 #include "CodeGenStackVM.h"
 
 #include "Compiler.h"
+#include "Interpreter.h"
 
 using namespace clvr;
 
