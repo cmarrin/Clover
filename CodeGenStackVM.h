@@ -57,7 +57,7 @@ class CodeGenStackVM : public CodeGen
     virtual uint8_t passesNeeded() const override { return 3; }
 
     virtual void emitPreamble(const Compiler*) override;
-    virtual void handleFunction(const Compiler*, const FunctionPtr&, bool isTopLevel) override;
+    virtual void handleFunction(const Compiler*, const FunctionPtr&, const StructPtr&, bool isTopLevel) override;
 
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
 

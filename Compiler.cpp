@@ -108,7 +108,7 @@ Compiler::emitStruct(CodeGen* codeGen, const StructPtr& struc)
     
     // Emit functions
     for (auto& itFunc : struc->functions()) {
-        _codeGen->handleFunction(this, itFunc, struc == _topLevelStruct);
+        _codeGen->handleFunction(this, itFunc, struc, struc == _topLevelStruct);
         codeGen->emitCode(itFunc->astNode(), false);
     }
 }

@@ -94,29 +94,29 @@
 0206 CC0005           (       simple.asm):00041             LDD #$0005
 0209 3406             (       simple.asm):00042             PSHS D
 020B 3506             (       simple.asm):00043             PULS D
-020D ED41             (       simple.asm):00044             STD 1,U
+020D ED5E             (       simple.asm):00044             STD -2,U
                       (       simple.asm):00045             ;     int8 c = 8;
 020F CC0006           (       simple.asm):00046             LDD #$0006
 0212 3406             (       simple.asm):00047             PSHS D
 0214 3506             (       simple.asm):00048             PULS D
-0216 ED43             (       simple.asm):00049             STD 3,U
+0216 ED5C             (       simple.asm):00049             STD -4,U
                       (       simple.asm):00050             ;     int8 d = 7;
 0218 8608             (       simple.asm):00051             LDA #$08
 021A 3402             (       simple.asm):00052             PSHS A
 021C 3502             (       simple.asm):00053             PULS A
-021E A744             (       simple.asm):00054             STA 4,U
+021E A75B             (       simple.asm):00054             STA -5,U
                       (       simple.asm):00055             ;  
 0220 8607             (       simple.asm):00056             LDA #$07
 0222 3402             (       simple.asm):00057             PSHS A
 0224 3502             (       simple.asm):00058             PULS A
-0226 A745             (       simple.asm):00059             STA 5,U
+0226 A75A             (       simple.asm):00059             STA -6,U
                       (       simple.asm):00060             ; //    bool x = a < b;
                       (       simple.asm):00061             ;     
                       (       simple.asm):00062             ;     if (a < b && c > d) {
 0228 6FE2             (       simple.asm):00063             CLR ,-S
-022A EC41             (       simple.asm):00064             LDD 1,U
+022A EC5E             (       simple.asm):00064             LDD -2,U
 022C 3406             (       simple.asm):00065             PSHS D
-022E EC43             (       simple.asm):00066             LDD 3,U
+022E EC5C             (       simple.asm):00066             LDD -4,U
 0230 3406             (       simple.asm):00067             PSHS D
 0232 A661             (       simple.asm):00068             LDA 1,S
 0234 A160             (       simple.asm):00069             CMPA 0,S
@@ -127,9 +127,9 @@
 023C 3502             (       simple.asm):00074             PULS A
 023E 2716             (       simple.asm):00075             BEQ L2
 0240 6FE2             (       simple.asm):00076             CLR ,-S
-0242 A644             (       simple.asm):00077             LDA 4,U
+0242 A65B             (       simple.asm):00077             LDA -5,U
 0244 3402             (       simple.asm):00078             PSHS A
-0246 A645             (       simple.asm):00079             LDA 5,U
+0246 A65A             (       simple.asm):00079             LDA -6,U
 0248 3402             (       simple.asm):00080             PSHS A
 024A A661             (       simple.asm):00081             LDA 1,S
 024C A160             (       simple.asm):00082             CMPA 0,S

@@ -18,7 +18,57 @@ CodeGen6809::emitPreamble(const Compiler* compiler)
 {
     format("* 6809 assembly generated from Clover source\n\n");
     format("    include BOSS9.inc\n");
-    format("    org $200\n");
+    format("    org $200\n\n");
+
+    // On entry the stack is set to TOS and PC is set to $200.
+    // We need to instantiate the top level struct, then call
+    // its ctor, then call main
+    
+    // Allocate memory for top-level struct
+    format("    LEAS -%d,S\n", compiler->topLevelStruct()->sizeInBytes());
+    
+    // Set top-level self pointer
+    format("    TFR S,Y\n");
+    
+    // Call top-level ctor, if any
+    if (compiler->topLevelStruct()->hasCtor()) {
+        std::string ctorName = compiler->topLevelStruct()->name() + "_ctor";
+        
+        // Push a dummy self pointer
+        format("    LEAS -2,S\n");
+        
+        // Call the ctor
+        format("    JSR %s\n", ctorName.c_str());
+        
+        // Toss the self pointer
+        format("    LEAS 2,S\n");
+    }
+    
+    // Now call main
+    std::string mainName = compiler->topLevelStruct()->name() + "_main";
+    
+    // Push a dummy self pointer
+    format("    LEAS -2,S\n");
+    
+    // Call the ctor
+    format("    JSR %s\n", mainName.c_str());
+    
+    // Toss the self pointer
+    format("    LEAS 2,S\n");
+    
+    // Now jump to exit to end the program or enter the monitor
+    format("    JMP exit\n");
+}
+
+void
+CodeGen6809::handleFunction(const Compiler* compiler, const FunctionPtr& function, const StructPtr& struc, bool isTopLevel)
+{
+    // emit function name
+    std::string funcName = function->name();
+    if (funcName.empty()) {
+        funcName = "ctor";
+    }
+    format("\n%s_%s\n", struc->name().c_str(), funcName.c_str());
 }
 
 void
@@ -1012,6 +1062,11 @@ CodeGen6809::emitCodeReturn(const ASTPtr& node, bool isLHS)
     if (rNode->arg() != nullptr) {
         emitCode(rNode->arg(), false);
     }
+    
+    // restoreFrame
+    format("    TFR U,S\n");
+    format("    PULS U\n");
+
     format("    RTS\n");
 }
 

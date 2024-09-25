@@ -16,7 +16,7 @@ struct Simple
 //
 //const A arr[ ] = { 8, 9, 10, 11, 12, 13 };
 //
-//int8 xxx = 9;
+int8 xxx = 9;
 //
 
 const uint16 array[4] = { 2, 4, 6, 8 };

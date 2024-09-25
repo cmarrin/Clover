@@ -138,7 +138,7 @@ public:
 
     const ASTPtr& initASTNode() const { return _initASTNode; }
 
-    bool haveCtor() const { return _ctor != nullptr; }
+    bool hasCtor() const { return _ctor != nullptr; }
 
 private:
     std::vector<StructPtr> _structs;

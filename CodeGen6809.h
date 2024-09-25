@@ -35,6 +35,8 @@ class CodeGen6809 : public CodeGen
     virtual void emitPreamble(const Compiler*) override;
     virtual void emitPostamble(const Compiler*) override;
 
+    virtual void handleFunction(const Compiler*, const FunctionPtr&, const StructPtr&, bool isTopLevel) override;
+
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
     
     uint16_t nextLabelId() { return _labelId++; }
