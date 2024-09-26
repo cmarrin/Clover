@@ -43,6 +43,25 @@ class CodeGen6809 : public CodeGen
 
   private:
     void emitAddr(const SymbolPtr&, AddrNativeType offset);
+
+    void stashRegIfNeeded()
+    {
+        if (_lastRegState == RegState::A) {
+            format("    PSHS A\n");
+            _lastRegState = RegState::StackI8;
+        } else if (_lastRegState == RegState::D) {
+            format("    PSHS D\n");
+            _lastRegState = RegState::StackI16;
+        }
+    }
+    
+    void stashPtrIfNeeded()
+    {
+        if (_lastPtrState == RegState::X) {
+            format("    PSHS X\n");
+            _lastPtrState = RegState::StackPtr;
+        }
+    }
     
     // This assumes op is one of:
     //
@@ -93,6 +112,12 @@ class CodeGen6809 : public CodeGen
     
     // Unique identifier for labels
     uint16_t _labelId = 1; // Start at 1 so we can use 0 as a "NoId" indicator
+    
+    // Remember how the last emitNode left the regs
+    enum class RegState { None, A, D, X, StackI8, StackI16, StackPtr };
+    
+    RegState _lastRegState = RegState::None;
+    RegState _lastPtrState = RegState::None;
 };
 
 }
