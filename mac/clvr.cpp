@@ -134,7 +134,7 @@ int main(int argc, char * const argv[])
     
     if (optind >= argc) {
         std::cout << "No input file given\n";
-        return 0;
+        return -1;
     }
     
     std::vector<std::string> inputFiles;
@@ -154,7 +154,7 @@ int main(int argc, char * const argv[])
         stream.open(it.c_str(), std::fstream::in);
         if (stream.fail()) {
             std::cout << "Can't open '" << it << "'\n";
-            return 0;
+            return -1;
         }
         
         std::cout << "Compiling '" << it << "'\n";
@@ -189,7 +189,7 @@ int main(int argc, char * const argv[])
                     case clvr::Decompiler::Error::PrematureEOF: err = "premature EOF"; break;
                 }
                 std::cout << "Decompile failed: " << err << "\n\n";
-                return 0;
+                return -1;
             }
         }
         
@@ -226,7 +226,7 @@ int main(int argc, char * const argv[])
         outStream.open(name.c_str(), mode);
         if (outStream.fail()) {
             std::cout << "Can't open '" << name << "'\n";
-            return 0;
+            return -1;
         } else {
             char* buf = reinterpret_cast<char*>(&(compiler.code()[0]));
 
@@ -235,7 +235,7 @@ int main(int argc, char * const argv[])
                 outStream.write(buf, compiler.code().size());
                 if (outStream.fail()) {
                     std::cout << "Save failed\n";
-                    return 0;
+                    return -1;
                 } else {
                     outStream.close();
                     std::cout << "    Saved " << name << "\n";
@@ -260,5 +260,5 @@ int main(int argc, char * const argv[])
         std::cout << "Executables saved\n";
     }
 
-    return 1;
+    return 0;
 }
