@@ -47,26 +47,32 @@ bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& m
         return false;
     }
     
-    // Do as many passes as are needed by the codegen
-    for (int i = 0; i < _codeGen->passesNeeded(); i ++) {
-        _codeGen->init();
-        _codeGen->emitPreamble(this);
-        emitStruct(_codeGen, _topLevelStruct);
-        _codeGen->emitPostamble(this);
-    }
-    
-    // Add the annotation info
-    TraversalVisitor func = [this] (const ASTPtr& node) {
-        int32_t index;
-        int32_t addr;
-        node->annotation(index, addr);
-        if (index >= 0 && addr >= 0) {
-            setAnnotation(index, addr);
+    try {
+        // Do as many passes as are needed by the codegen
+        for (int i = 0; i < _codeGen->passesNeeded(); i ++) {
+            _codeGen->init();
+            _codeGen->emitPreamble(this);
+            emitStruct(_codeGen, _topLevelStruct);
+            _codeGen->emitPostamble(this);
         }
-    };
-    
-    traverseStruct(_topLevelStruct, func);
-    
+        
+        // Add the annotation info
+        TraversalVisitor func = [this] (const ASTPtr& node) {
+            int32_t index;
+            int32_t addr;
+            node->annotation(index, addr);
+            if (index >= 0 && addr >= 0) {
+                setAnnotation(index, addr);
+            }
+        };
+        
+        traverseStruct(_topLevelStruct, func);
+    }
+    catch(...) {
+        _error = Error::CodeGenFailed;
+        return false;
+    }
+        
     return _error == Error::None;
 }
 

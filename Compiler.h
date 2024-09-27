@@ -269,6 +269,7 @@ enum class Error {
     PtrAssignmentMustMatch,
     PtrTypeNotAllowed,
     WrongNumberOfInitializers,
+    CodeGenFailed,
 };
 
 class Compiler {
