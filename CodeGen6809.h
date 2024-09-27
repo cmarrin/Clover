@@ -119,7 +119,7 @@ class CodeGen6809 : public CodeGen
         }
     }
     
-    void clearRegState() { _lastRegState = RegState::None; }
+    void clearRegState() { _lastRegState = RegState::None; _lastPtrState = RegState::None; }
     
     // This assumes op is one of:
     //

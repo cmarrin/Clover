@@ -139,8 +139,6 @@ CodeGen6809::emitCodeStatements(const ASTPtr& node, bool isLHS)
     for (int i = 0; i < node->numChildren(); ++i) {
         emitCode(node->child(i), isLHS);
     }
-
-    expectRegState(RegState::None);
 }
 
 void
@@ -760,7 +758,7 @@ CodeGen6809::emitCodeAssignment(const ASTPtr& node, bool isLHS)
         format("    STA 0,X\n");
     }
     
-   setRegState(RegState::None);
+   clearRegState();
 }
 
 void
