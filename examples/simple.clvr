@@ -16,8 +16,8 @@ struct A
 
 function int16 main()
 {
-    A a;
-    a.b = a.c;
+    A a[3];
+    a[1].b = a[2].c;
     return 0;
 }
 

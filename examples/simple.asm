@@ -13,7 +13,7 @@
 Simple_main
     PSHS U
     TFR S,U
-    LEAS -4,S
+    LEAS -12,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -32,11 +32,23 @@ Simple_main
     ; 
     ; function int16 main()
     ; {
-    ;     A a;
-    ;     a.b = a.c;
+    ;     A a[3];
+    ;     a[1].b = a[2].c;
     ;     return 0;
-    LDD -2,U
-    LEAX -4,U
+    LEAX -12,U
+    LDA #$02
+    LDB #4
+    MUL
+    LEAX D,X
+    LEAX 2,X
+    LDD 0,X
+    LEAX -12,U
+    PSHS D
+    LDA #$01
+    LDB #4
+    MUL
+    LEAX D,X
+    PULS D
     STD 0,X
     ; }
     LDD #$0000

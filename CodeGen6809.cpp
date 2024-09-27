@@ -781,35 +781,39 @@ CodeGen6809::emitCodeDot(const ASTPtr& node, bool isLHS)
 
     emitCode(operand, true);
 
+    if (!isReg(RegState::X)) {
+        format("    PULS X\n");
+    }
+    
+    setRegState(RegState::X);
+
     // We can skip the OFFSET if offset value is 0
     if (offset) {
-        format("    PULS D\n");
-        format("    ADDD #%d\n", offset);
-        if (!isLHS) {
-            // Just Deref
-            format("    TFR D,X\n");
-            if (is16Bit) {
-                format("    LDD 0,X\n");
-                format("    PSHS D\n");
-            } else {
-                format("    LDA 0,X\n");
-                format("    PSHS A\n");
-            }
-            return;
-        }
-        format("    PSHS D\n");
-    } else if (!isLHS) {
+        format("    LEAX %d,X\n", offset);
+    }
+
+    clearRegState();
+    
+    if (!isLHS) {
         // Just Deref
-        format("    PULS X\n");
-        if (is16Bit) {
-            format("    LDD 0,X\n");
-            format("    PSHS D\n");
-        } else {
-            format("    LDA 0,X\n");
-            format("    PSHS A\n");
-        }
+        format("    LD%s 0,X\n", is16Bit ? "D" : "A");
+        setRegState(is16Bit ? RegState::D : RegState::A);
+    } else {
+        // Pass back the addr in X
+        setRegState(RegState::X);
     }
 }
+
+
+
+
+
+        
+        // X now has the final addr
+
+
+
+
 
 void
 CodeGen6809::emitCodeModule(const ASTPtr& node, bool isLHS)
@@ -1122,6 +1126,8 @@ CodeGen6809::emitCodeIndex(const ASTPtr& node, bool isLHS)
 
     emitCode(iNode->lhs(), true);
     
+    // X will have the addr
+    
     // Optimization. If rhs is a constant 0, we can skip the index. Just emit the lhs.
     if (iNode->rhs()->astNodeType() == ASTNodeType::Constant) {
         if (std::reinterpret_pointer_cast<ConstantNode>(iNode->rhs())->integerValue() == 0) {
@@ -1130,6 +1136,9 @@ CodeGen6809::emitCodeIndex(const ASTPtr& node, bool isLHS)
     }
 
     emitCode(iNode->rhs(), false);
+    
+    //Now X has the un-indexed addr and A or D has the index
+    // Multiply index by the element size and add that to X
 
     uint16_t size = node->elementSizeInBytes();
     bool is16BitIndex = typeToOpSize(iNode->rhs()->type()) == OpSize::i16;
@@ -1139,18 +1148,21 @@ CodeGen6809::emitCodeIndex(const ASTPtr& node, bool isLHS)
     // And size can be 8 or 16 bits. If either is 16 bits we need to do a 16x16
     // multiply and get a 16 bit result. If both are 8 bit we can just do an 8x8
     // multiply and use the 16 bit result. Then we add the 16 bit result to the ref.
-    format("    PULS %s\n", is16BitIndex ? "D" : "B");
-    
+    if (!isReg(is16BitIndex ? RegState::D : RegState::A)) {
+        format("    PULS %s\n", is16BitIndex ? "D" : "A");
+    }
+
     if (!is16BitIndex && !is16BitSize) {
-        format("    LDA #%d\n", size);
+        format("    LDB #%d\n", size);
         format("    MUL\n");
     } else {
         if (!is16BitIndex) {
             // extend to 16 bits
+            format("    TFR A,B\n");
             format("    CLRA\n");
         }
         format("    PSHS D\n");     // TOS is the accumulator, TOS+2 is index, size is constant
-        format("    PSHS D\n");     // Push accumulator and index
+        format("    PSHS D\n");     // Push accumulator and index (value in TOS doesn't matter it will be replaced)
         format("    LDA #%d\n", uint8_t(size));
         format("    MUL\n");
         format("    STD 0,S\n");
@@ -1168,16 +1180,18 @@ CodeGen6809::emitCodeIndex(const ASTPtr& node, bool isLHS)
         format("    LEAS 2,S\n");
     }
     
-    format("    ADDD 0,S\n");
-    format("    STD 0,S\n");
+    // D now has index * size, and X has the un-indexed addr
+    format("    LEAX D,X\n");
+    
+    clearRegState();
+    setRegState(RegState::X);
 
-
-    // if isLHS is true then we're done, we have a ref on TOS. If not we need to DEREF
+    // if isLHS is true then we're done, we have a ref in X. If not we need to DEREF
     if (!isLHS) {
-        format("    PULS X\n");
-        const char* reg = (typeToOpSize(node->type()) == OpSize::i16) ? "D" : "A";
+        bool is16Bit = typeToOpSize(node->type()) == OpSize::i16;
+        const char* reg = is16Bit ? "D" : "A";
         format("    LD%s 0,X\n", reg);
-        format("    PSHS %s\n", reg);
+        setRegState(is16Bit ? RegState::D : RegState::A);
     }
 }
 
