@@ -50,7 +50,7 @@ CodeGen6809::emitPreamble(const Compiler* compiler)
     // Push a dummy self pointer
     format("    LEAS -2,S\n");
     
-    // Call the ctor
+    // Call main
     format("    JSR %s\n", mainName.c_str());
     
     // Toss the self pointer
