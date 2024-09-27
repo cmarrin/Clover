@@ -662,7 +662,7 @@ CodeGen6809::emitCodeInc(const ASTPtr& node, bool isLHS)
     
     int16_t inc = incNode->inc();
 
-    if (!isReg(RegState::X) {
+    if (!isReg(RegState::X)) {
         format("    PULS X\n");
     }
     
