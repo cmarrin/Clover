@@ -81,7 +81,7 @@ class CodeGen6809 : public CodeGen
             if (_lastRegState == RegState::D) {
                 return true;
             }
-            expectRegState(RegState::StackI16);
+            //expectRegState(RegState::StackI16);
             return false;
         }
         
