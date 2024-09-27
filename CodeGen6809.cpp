@@ -134,13 +134,13 @@ void
 CodeGen6809::emitCodeStatements(const ASTPtr& node, bool isLHS)
 {
     // There should never be any value left over at the start of a statement
-    assert(_lastRegState == RegState::None);
+    expectRegState(RegState::None);
     
     for (int i = 0; i < node->numChildren(); ++i) {
         emitCode(node->child(i), isLHS);
     }
 
-    _lastRegState = RegState::None;
+    expectRegState(RegState::None);
 }
 
 void
@@ -202,6 +202,8 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
     if (type == Type::None) {
         type = node->isPointer() ? AddrType : symbol->type();
     }
+
+    bool is16Bit = typeToOpSize(type) == OpSize::i16;
     
     // We either generate:
     //
@@ -213,52 +215,24 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
     
     if (pop) {
         // Generate POP optimization
-        switch (typeToOpSize(type)) {
-            default: break;
-            case OpSize::i8:
-                if (_lastRegState == RegState::StackI8) {
-                    format("    PULS A\n");
-                } else {
-                    assert(_lastRegState == RegState::A);
-                }
-                format("    STA ");
-                emitAddr(symbol, offset);
-                break;
-            case OpSize::i16:
-                if (_lastRegState == RegState::StackI16) {
-                    format("    PULS A\n");
-                } else {
-                    assert(_lastRegState == RegState::D);
-                }
-                format("    STD ");
-                emitAddr(symbol, offset);
-                break;
+        if (!isReg(is16Bit ? RegState::D : RegState::A)) {
+            format("    PULS %s\n", is16Bit ? "D" : "A");
+            format("    ST%s ", is16Bit ? "D" : "A");
+            emitAddr(symbol, offset);
         }
-        
-        _lastRegState = RegState::None;
+        clearRegState();
     } else if (ref) {
         stashPtrIfNeeded();
 
-        // If ref is true, code generated will be a Ref
         format("    LEAX ");
         emitAddr(symbol, offset);
-        _lastPtrState = RegState::X;
+        setRegState(RegState::X);
     } else {
         stashRegIfNeeded();
-
-        switch (typeToOpSize(type)) {
-            default: break;
-            case OpSize::i8:
-                format("    LDA ");
-                emitAddr(symbol, offset);
-                _lastRegState = RegState::A;
-                break;
-            case OpSize::i16:
-                format("    LDD ");
-                emitAddr(symbol, offset);
-                _lastRegState = RegState::D;
-                break;
-        }
+        
+        format("    LD%s ", is16Bit ? "D" : "A");
+        emitAddr(symbol, offset);
+        setRegState(is16Bit ? RegState::D : RegState::A);
     }
 }
 
@@ -271,23 +245,19 @@ CodeGen6809::emitCodeConstant(const ASTPtr& node, bool isLHS)
 
     int32_t i = std::static_pointer_cast<ConstantNode>(node)->rawInteger();
     
-    switch (typeToOpSize(node->type())) {
-        default: break;
-        case OpSize::i8:
-            format("    LDA #$%02x\n", uint8_t(i));
-            _lastRegState = RegState::A;
-            break;
-        case OpSize::i16:
-            format("    LDD #$%04x\n", uint16_t(i));
-            _lastRegState = RegState::D;
-            break;
+    if (typeToOpSize(node->type()) == OpSize::i16) {
+        format("    LDD #$%04x\n", uint16_t(i));
+        setRegState(RegState::D);
+    } else {
+        format("    LDA #$%02x\n", uint8_t(i));
+        setRegState(RegState::A);
     }
 }
 
 void
 CodeGen6809::emitCodeString(const ASTPtr& node, bool isLHS)
 {
-    stashRegIfNeeded();
+    stashPtrIfNeeded();
 
     // Add string to list
     uint32_t addr = _stringSize;
@@ -298,9 +268,8 @@ CodeGen6809::emitCodeString(const ASTPtr& node, bool isLHS)
     _stringSize += uint32_t(s.size()) + 1;
     
     format("    LDX #%s+$%x\n", StringLabel, addr);
-    _lastRegState = RegState::X;
+    setRegState(RegState::X);
 }
-
 
 static const char* relopToString(Op op, bool inv)
 {
@@ -375,7 +344,7 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
                 format("    SUBD 0,S\n");
                 format("L3\n");
                 format("    LEAS 7,S\n");
-                _lastRegState = RegState::D;
+                setRegState(RegState::D);
             } else {
                 if (isSigned) {
                     format("    LDA 2,S\n");
@@ -400,7 +369,7 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
                 format("L%d\n", labelC);
                 format("    LEAS 3,S\n");
                 format("    TFR B, A\n");
-                _lastRegState = RegState::A;
+                setRegState(RegState::A);
             }
             break;
         }
@@ -414,7 +383,7 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
             format("JSR %Sdiv%s\n", isSigned ? "i" : "u", is16Bit ? "16" : "8");
 
             // Result is left on the stack
-            _lastRegState = is16Bit ? RegState::StackI16 : RegState::StackI8;
+            setRegState(is16Bit ? RegState::StackI16 : RegState::StackI8);
             break;
         }
         case Op::NEG:
@@ -427,29 +396,26 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
                 format("    SUBD 0,S\n");
             } else {
                 // Handle stack and non-stack case
-                if (_lastRegState == RegState::A) {
+                if (isReg(RegState::A)) {
                     format("    NEGA\n");
                 } else {
-                    assert(_lastRegState == RegState::StackI8);
                     format("    NEG 0,S\n");
                 }
             }
             break;
         case Op::NOT1:
             if (is16Bit) {
-                if (_lastRegState == RegState::D) {
+                if (isReg(RegState::D)) {
                     format("    COMA\n");
                     format("    COMB\n");
                 } else {
-                    assert(_lastRegState == RegState::StackI16);
                     format("    COM 0,S\n");
                     format("    COM 1,S\n");
                 }
             } else {
-                if (_lastRegState == RegState::A) {
+                if (isReg(RegState::A)) {
                     format("    COMA\n");
                 } else {
-                    assert(_lastRegState == RegState::StackI8);
                     format("    COM 0,S\n");
                 }
             }
@@ -458,29 +424,26 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
             // Add can be done in either order so we can do it efficiently 
             // if the rhs is in a reg
             if (is16Bit) {
-                if (_lastRegState == RegState::D) {
+                if (isReg(RegState::D)) {
                     format("    ADDD 0,S\n");
                     format("    LEAS 2,S\n");
                 } else {
-                    assert(_lastRegState == RegState::StackI16);
                     format("    LDD 0,S\n");
                     format("    ADDD 2,S\n");
                     format("    LEAS 4,S\n");
                 }
-                
-                _lastRegState = RegState::D;
+                setRegState(RegState::D);
             } else {
-                if (_lastRegState == RegState::A) {
+                if (isReg(RegState::A)) {
                     format("    ADDA 0,S\n");
                     format("    LEAS 1,S\n");
                 } else {
-                    assert(_lastRegState == RegState::StackI8);
                     format("    LDA 0,S\n");
                     format("    ADDA 1,S\n");
                     format("    LEAS 2,S\n");
                 }
 
-                _lastRegState = RegState::A;
+                setRegState(RegState::A);
             }
             break;
         case Op::SUB:
@@ -490,12 +453,12 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
                 format("    LDD 2,S\n");
                 format("    SUBD 0,S\n");
                 format("    LEAS 2,S\n");
-                _lastRegState = RegState::D;
+                setRegState(RegState::D);
             } else {
                 format("    LDA 1,S\n");
                 format("    SUBA 0,S\n");
                 format("    LEAS 1,S\n");
-                _lastRegState = RegState::A;
+                setRegState(RegState::A);
             }
             break;
         case Op::OR1:
@@ -506,31 +469,27 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
             // These ops can be done in either order so we can do it efficiently 
             // if the rhs is in a reg
             if (is16Bit) {
-                if (_lastRegState == RegState::D) {
+                if (isReg(RegState::D)) {
                     format("    %sA 0,S\n", opStr);
                     format("    %sB 1,S\n", opStr);
                     format("    LEAS 2,S\n");
                 } else {
-                    assert(_lastRegState == RegState::StackI16);
                     format("    LDD 2,S\n");
                     format("    %sA 0,S\n", opStr);
                     format("    %sB 1,S\n", opStr);
                     format("    LEAS 4,S\n");
                 }
-                
-                _lastRegState = RegState::D;
+                setRegState(RegState::D);
             } else {
-                if (_lastRegState == RegState::A) {
+                if (isReg(RegState::A)) {
                     format("    %sA 0,S\n", opStr);
                     format("    LEAS 1,S\n");
                 } else {
-                    assert(_lastRegState == RegState::StackI8);
                     format("    LDA 0,S\n");
                     format("    %sA 1,S\n", opStr);
                     format("    LEAS 2,S\n");
                 }
-
-                _lastRegState = RegState::A;
+                setRegState(RegState::A);
             }
             break;
         }
@@ -631,76 +590,63 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     // Handle Op::LNOT as a special case. There's no logical not opcode
     // so we just test if TOS is zero. If so, put a 1 in A otherwise put a 0.
     if (isLogical) {
-        // Always do this on the stack
-        stashRegIfNeeded();
+        uint16_t labelA = nextLabelId();
+        uint16_t labelB = nextLabelId();
         
-        uint16_t label = nextLabelId();
-        
-        format("    CLRB\n");
+        // Assume CC is correctly set if value is in A or D
         if (is16Bit) {
-            format("    PULS X\n");
+            if (!isReg(RegState::D)) {
+                format("    PULS D\n");
+            }
         } else {
-            format("    PULS A\n");
+            if (!isReg(RegState::A)) {
+                format("    PULS D\n");
+            }
         }
-        format("    BNE L%d\n", label);
-        format("    INCB\n");
-        format("L%d\n", label);
-        format("    PSHS B\n");
-        _lastRegState = RegState::StackI8;
+        
+        format("    BNE L%d\n", labelA);
+        format("    LDA #1\n");
+        format("    BRA L%d\n", labelB);
+        format("L%d\n", labelA);
+        format("    CLRA\n");
+        format("L%d\n", labelB);
+        setRegState(RegState::A);
         
         return;
     }
 
     // If it's a relational operator, do the unoptimized case:
     //
-    //      <push lhs>
-    //      <push rhs>
+    //	    PULS <A/D>      if rhs is on stack
     //
-    //	    CLR ,-S
-    //	    LD<A/D> <2/3>,S
-    //	    CMP<A/D> 1,S
-    //	    B<op> L1
-    //	    INC 0,S
+    //	    CMP<A/D> 0,S
+    //	    B<op> L1        comparison is rhs op lhs so branch if result is true
+    //	    CLRA
+    //      BRA L2
     // L1
-    //      PULS A
-    //      LEAS <2/4>,S
-    //      PSHS A
+    //      LDA #1
+    // L2
+    //      LEAS <1/2>,S
     //
-    uint16_t label = nextLabelId();
+    uint16_t labelA = nextLabelId();
+    uint16_t labelB = nextLabelId();
 
-    const char* relOp = relopToString(opNode->op(), true);
+    const char* relOp = relopToString(opNode->op(), false);
     
     if (relOp) {
-        uint8_t bytesToPop = 0;
-        
-        format("    CLR ,-S\n");
-
-        if (_lastRegState == RegState::A || _lastRegState == RegState::D) {
-            // Do the register case. We're comparing backwards so do the opposite (non-inverted) test
-            relOp = relopToString(opNode->op(), false);
-            
-            format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
-            bytesToPop = is16Bit ? 2 : 1;
-        } else {
-            assert(_lastRegState == RegState::StackI8 || _lastRegState == RegState::StackI16);
-
-            if (is16Bit) {
-                format("    LDD 2,S\n");
-                format("    CMPD 0,S\n");
-                bytesToPop = 4;
-            } else {
-                format("    LDA 1,S\n");
-                format("    CMPA 0,S\n");
-                bytesToPop = 2;
-            }
+        if (!isReg(is16Bit ? RegState::D : RegState::A)) {
+            format("    PULS %s\n", is16Bit ? "D" : "A");
         }
+        format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
         
-        format("    %s L%d\n", relOp, label);
-        format("    INC 0,S\n");
-        format("L%d\n", label);
-        format("    PULS A\n");
-        format("    LEAS %d,S\n", bytesToPop);
-        _lastRegState = RegState::A;
+        format("    %s L%d\n", relOp, labelA);
+        format("    CLRA\n");
+        format("    BRA L%d\n", labelB);
+        format("L%d\n", labelA);
+        format("    LDA #1\n");
+        format("L%d\n", labelB);
+        format("    LEAS %d,S\n", is16Bit ? 2 : 1);
+        setRegState(RegState::A);
         return;
     }
     
@@ -716,10 +662,8 @@ CodeGen6809::emitCodeInc(const ASTPtr& node, bool isLHS)
     
     int16_t inc = incNode->inc();
 
-    if (_lastRegState == RegState::StackPtr) {
+    if (!isReg(RegState::X) {
         format("    PULS X\n");
-    } else {
-        assert(_lastRegState == RegState::X);
     }
     
     bool is16Bit = typeToOpSize(node->type()) == OpSize::i16;
@@ -728,22 +672,22 @@ CodeGen6809::emitCodeInc(const ASTPtr& node, bool isLHS)
         format("    LDD 0,X\n");
         if (incNode->isPre()) {
             format("    ADDD #%d\n", inc);
-        _lastRegState = RegState::D;
+            setRegState(RegState::D);
         } else {
             format("    PSHS D\n");
             format("    ADDD #%d\n", inc);
-            _lastRegState = RegState::StackI16;
+            setRegState(RegState::StackI16);
         }
         format("    STD 0,X\n");
     } else {
         format("    LDA 0,X\n");
         if (incNode->isPre()) {
             format("    ADDA #%d\n", inc);
-            _lastRegState = RegState::A;
+            setRegState(RegState::A);
         } else {
             format("    PSHS A\n");
             format("    ADDA #%d\n", inc);
-            _lastRegState = RegState::StackI16;
+            setRegState(RegState::StackI16);
         }
         format("    STA 0,X\n");
     }
@@ -752,6 +696,8 @@ CodeGen6809::emitCodeInc(const ASTPtr& node, bool isLHS)
 void
 CodeGen6809::emitCodeAssignment(const ASTPtr& node, bool isLHS)
 {
+    expectRegState(RegState::None);
+
     // If op is not NOP this is operator assignment. Handle a += b like a = a + b
     //
     // 1) push lhs
@@ -798,29 +744,23 @@ CodeGen6809::emitCodeAssignment(const ASTPtr& node, bool isLHS)
         is16Bit = true;
     }
     
-    if (_lastPtrState == RegState::StackPtr) {
+    if (!isReg(RegState::X)) {
         format("    PULS X\n");
-    } else {
-        assert(_lastPtrState == RegState::X);
     }
     
     if (is16Bit) {
-        if (_lastRegState == RegState::StackI16) {
+        if (!isReg(RegState::D)) {
             format("    PULS D\n");
-        } else {
-            assert(_lastRegState == RegState::D);
         }
         format("    STD 0,X\n");
     } else {
-        if (_lastRegState == RegState::StackI8) {
+        if (!isReg(RegState::A)) {
             format("    PULS A\n");
-        } else {
-            assert(_lastRegState == RegState::A);
         }
         format("    STA 0,X\n");
     }
     
-    _lastRegState = RegState::None;
+   setRegState(RegState::None);
 }
 
 void

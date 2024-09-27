@@ -42,6 +42,8 @@ class CodeGen6809 : public CodeGen
     uint16_t nextLabelId() { return _labelId++; }
 
   private:
+    enum class RegState { None, A, D, X, StackI8, StackI16, StackPtr };
+
     void emitAddr(const SymbolPtr&, AddrNativeType offset);
 
     void stashRegIfNeeded()
@@ -62,6 +64,62 @@ class CodeGen6809 : public CodeGen
             _lastPtrState = RegState::StackPtr;
         }
     }
+
+    // This method returns true if the requested reg is active, false if it's on the stack and throws if neither.
+    bool isReg(RegState reg) const
+    {
+        // reg must be A or D or X
+        if (reg == RegState::A) {
+            if (_lastRegState == RegState::A) {
+                return true;
+            }
+            expectRegState(RegState::StackI8);
+            return false;
+        }
+
+        if (reg == RegState::D) {
+            if (_lastRegState == RegState::D) {
+                return true;
+            }
+            expectRegState(RegState::StackI16);
+            return false;
+        }
+        
+        if (reg == RegState::X) {
+            if (_lastPtrState == RegState::X) {
+                return true;
+            }
+            expectPtrState(RegState::StackPtr);
+            return false;
+        }
+        
+        throw true;
+    }
+    
+    void expectRegState(RegState state) const
+    {
+        if (_lastRegState != state) {
+            throw true;
+        }
+    }
+    
+    void expectPtrState(RegState state) const
+    {
+        if (_lastPtrState != state) {
+            throw true;
+        }
+    }
+    
+    void setRegState(RegState state)
+    {
+        if (state == RegState::X || state == RegState::StackPtr) {
+            _lastPtrState = state;
+        } else {
+            _lastRegState = state;
+        }
+    }
+    
+    void clearRegState() { _lastRegState = RegState::None; }
     
     // This assumes op is one of:
     //
@@ -114,8 +172,6 @@ class CodeGen6809 : public CodeGen
     uint16_t _labelId = 1; // Start at 1 so we can use 0 as a "NoId" indicator
     
     // Remember how the last emitNode left the regs
-    enum class RegState { None, A, D, X, StackI8, StackI16, StackPtr };
-    
     RegState _lastRegState = RegState::None;
     RegState _lastPtrState = RegState::None;
 };
