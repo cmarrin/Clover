@@ -10,10 +10,9 @@
     LEAS 2,S
     JMP exit
 
-Simple_main
+Simple_f
     PSHS U
     TFR S,U
-    LEAS -12,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -24,32 +23,48 @@ Simple_main
     ; struct Simple
     ; {
     ; 
-    ; struct A
+    ; function int8 f(int8 x, int8 y)
     ; {
-    ;     int16 b;
-    ;     int16 c;
-    ; };
+    ;     return x + y;
+    ; }
+    LDA 6,U
+    PSHS A
+    LDA 7,U
+    ADDA 0,S
+    LEAS 1,S
+    TFR U,S
+    PULS U
+    RTS
+
+Simple_main
+    PSHS U
+    TFR S,U
+    LEAS -3,S
     ; 
     ; function int16 main()
     ; {
-    ;     A a[3];
-    ;     a[1].b = a[2].c;
-    ;     return 0;
-    LEAX -12,U
-    LDA #$02
-    LDB #4
-    MUL
-    LEAX D,X
-    LEAX 2,X
-    LDD 0,X
-    LEAX -12,U
-    PSHS D
+    ;     int8 a = 5;
+    ;     int8 b = 6;
+    LDA #$05
+    STA -1,U
+    ;     int8 c = f(a, b + 1);
+    LDA #$06
+    STA -2,U
+    ;     
+    LDA -2,U
+    PSHS A
     LDA #$01
-    LDB #4
-    MUL
-    LEAX D,X
-    PULS D
-    STD 0,X
+    ADDA 0,S
+    LEAS 1,S
+    PSHS A
+    LDA -1,U
+    PSHS A
+    LEAS -2,S
+    JSR f
+    LEAS 2,S
+    LEAS 2,S
+    STA -3,U
+    ;     return 0;
     ; }
     LDD #$0000
     TFR U,S

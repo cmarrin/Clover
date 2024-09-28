@@ -8,16 +8,17 @@
 struct Simple
 {
 
-struct A
+function int8 f(int8 x, int8 y)
 {
-    int16 b;
-    int16 c;
-};
+    return x + y;
+}
 
 function int16 main()
 {
-    A a[3];
-    a[1].b = a[2].c;
+    int8 a = 5;
+    int8 b = 6;
+    int8 c = f(a, b + 1);
+    
     return 0;
 }
 

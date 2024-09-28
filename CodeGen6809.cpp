@@ -133,9 +133,6 @@ CodeGen6809::emitPostamble(const Compiler* compiler)
 void
 CodeGen6809::emitCodeStatements(const ASTPtr& node, bool isLHS)
 {
-    // There should never be any value left over at the start of a statement
-    expectRegState(RegState::None);
-    
     for (int i = 0; i < node->numChildren(); ++i) {
         emitCode(node->child(i), isLHS);
     }
@@ -215,9 +212,9 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
         // Generate POP optimization
         if (!isReg(is16Bit ? RegState::D : RegState::A)) {
             format("    PULS %s\n", is16Bit ? "D" : "A");
-            format("    ST%s ", is16Bit ? "D" : "A");
-            emitAddr(symbol, offset);
         }
+        format("    ST%s ", is16Bit ? "D" : "A");
+        emitAddr(symbol, offset);
         clearRegState();
     } else if (ref) {
         stashPtrIfNeeded();
@@ -694,8 +691,6 @@ CodeGen6809::emitCodeInc(const ASTPtr& node, bool isLHS)
 void
 CodeGen6809::emitCodeAssignment(const ASTPtr& node, bool isLHS)
 {
-    expectRegState(RegState::None);
-
     // If op is not NOP this is operator assignment. Handle a += b like a = a + b
     //
     // 1) push lhs
@@ -804,17 +799,6 @@ CodeGen6809::emitCodeDot(const ASTPtr& node, bool isLHS)
     }
 }
 
-
-
-
-
-        
-        // X now has the final addr
-
-
-
-
-
 void
 CodeGen6809::emitCodeModule(const ASTPtr& node, bool isLHS)
 {    
@@ -831,6 +815,12 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
     // order so the first arg is at the lowest address when pushed
     for (auto i = fNode->args().size() - 1; fNode->args().size() > i; --i) {
         emitCode(fNode->args()[i], isLHS);
+        if (isReg(RegState::A)) {
+            format("    PSHS A\n");
+        } else if (isReg(RegState::D)) {
+            format("    PSHS D\n");
+        }
+        clearRegState();
     }
     
     std::string callName = fNode->moduleName();
@@ -880,11 +870,15 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
         argSize += it->elementSizeInBytes();
     }
     
-    format("    LEAS %d,S\n", argSize);
-
-    // Push return value (in A/D) if needed
+    if (argSize > 0) {
+        format("    LEAS %d,S\n", argSize);
+    }
+    
+    // Return value (in A/D) if any
+    clearRegState();
+    
     if (fNode->pushReturn()) {
-        format("    PSHS %s\n", (typeToOpSize(fNode->function()->returnType()) == OpSize::i16) ? "D" : "A");
+        setRegState((typeToOpSize(fNode->function()->returnType()) == OpSize::i16) ? RegState::D : RegState::A);
     }
 }
 
@@ -1202,7 +1196,17 @@ CodeGen6809::emitCodeReturn(const ASTPtr& node, bool isLHS)
 
     if (rNode->arg() != nullptr) {
         emitCode(rNode->arg(), false);
+        
+        // If for some reason the return value is on the stack rather than in A or D, we need
+        // to get it into A or D. Then we want to clear the reg state because doing something
+        // with the return value will happen in the caller.
+        bool is16Bit = typeToOpSize(rNode->arg()->type()) == OpSize::i16;
+        if (!isReg(is16Bit ? RegState::D : RegState::A)) {
+            format("    PULS %s\n", is16Bit ? "D" : "A");
+        }
     }
+    
+    clearRegState();
     
     // restoreFrame
     format("    TFR U,S\n");
