@@ -447,12 +447,12 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
             if (is16Bit) {
                 format("    LDD 2,S\n");
                 format("    SUBD 0,S\n");
-                format("    LEAS 2,S\n");
+                format("    LEAS 4,S\n");
                 setRegState(RegState::D);
             } else {
                 format("    LDA 1,S\n");
                 format("    SUBA 0,S\n");
-                format("    LEAS 1,S\n");
+                format("    LEAS 2,S\n");
                 setRegState(RegState::A);
             }
             break;
@@ -554,7 +554,6 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     // to get that from the left or right operand
     auto opNode = std::static_pointer_cast<OpNode>(node);
     Type opType = Type::UInt8;
-    OpSize opSize = typeToOpSize(opType);
     
     bool isLogical = opNode->op() == Op::LNOT;
     bool isBinary = false;
@@ -580,7 +579,7 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         emitCode(opNode->right(), (opNode->left() == nullptr) ? opNode->isRef() : isLHS);
     }
     
-    bool is16Bit = opSize == OpSize::i16;
+    bool is16Bit = typeToOpSize(opType) == OpSize::i16;
     
     // Handle Op::LNOT as a special case. There's no logical not opcode
     // so we just test if TOS is zero. If so, put a 1 in A otherwise put a 0.
@@ -894,6 +893,7 @@ CodeGen6809::emitCodeEnter(const ASTPtr& node, bool isLHS)
     if (localSize) {
         format("    LEAS -%d,S\n", localSize);
     }
+    clearRegState();
 }
 
 void
@@ -910,17 +910,25 @@ CodeGen6809::emitCodeTypeCast(const ASTPtr& node, bool isLHS)
     Type toType = node->type();
     
     if (typeToBytes(fromType) != typeToBytes(toType)) {
-        format("    PULS %s\n", (typeToBytes(fromType) == 1) ? "B" : "D");
-            
         if (typeToBytes(toType) == 2) {
+            // going from 8 to 16 bits
+            if (isReg(RegState::A)) {
+                format("    TFR A,B\n");
+            } else {
+                format("    PULS B\n");
+            }
             if (node->isSigned()) {
                 // Sign extend
                 format("    SEX\n");
             } else {
                 format("    CLRA\n");
             }
+            setRegState(RegState::D);
+        } else {
+            // going from 16 to 8 bits
+            format("    TFR B,A\n");
+            setRegState(RegState::A);
         }
-        format("    PSHS %s\n", (typeToBytes(toType) == 1) ? "B" : "D");
     }
 }
 
