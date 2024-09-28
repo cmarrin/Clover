@@ -262,8 +262,8 @@ CodeGen6809::emitCodeString(const ASTPtr& node, bool isLHS)
     // stringSize includes null terminator
     _stringSize += uint32_t(s.size()) + 1;
     
-    format("    LDX #%s+$%x\n", StringLabel, addr);
-    setRegState(RegState::X);
+    format("    LDD #%s+$%x\n", StringLabel, addr);
+    setRegState(RegState::D);
 }
 
 static const char* relopToString(Op op, bool inv)
