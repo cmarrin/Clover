@@ -958,8 +958,12 @@ CodeGen6809::emitCodeBranch(const ASTPtr& node, bool isLHS)
     
     switch (bNode->kind()) {
         case BranchNode::Kind::IfStart:
-            format("    PULS A\n");
+            // test value is always 8 bit
+            if (!isReg(RegState::A)) {
+                format("    PULS A\n");
+            }
             format("    BEQ L%d\n", getLabelId(this, bNode));
+            clearRegState();
             break;
         case BranchNode::Kind::ElseStart:
             format("    BRA L%d\n", getLabelId(this, bNode));
