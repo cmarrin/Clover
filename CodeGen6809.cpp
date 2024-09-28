@@ -856,20 +856,22 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
     format("    JSR %s\n", callName.c_str());
 
     // Now we need to pop the previous Y or toss the dummy pointer
+    bool wantLEAS = false;
     if (fNode->instance()) {
         format("    PULS Y\n");
     } else {
-        format("    LEAS 2,S\n");
+        wantLEAS = true;
     }
     
     // Pop the args after the call returns. Args pushed is not necessarily the
     // same as the arg list in the function. More args might be passed with
     // VarArgs being used to access them.
-    uint16_t argSize = 0;
+    uint16_t argSize = wantLEAS ? 2 : 0;
     for (auto& it : fNode->args()) {
         argSize += it->elementSizeInBytes();
     }
     
+    // FIXME: If we do a LEAS above and we have one here, we can combine them and toss argSize + 2 bytes in one
     if (argSize > 0) {
         format("    LEAS %d,S\n", argSize);
     }
