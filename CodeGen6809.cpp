@@ -958,6 +958,9 @@ CodeGen6809::emitCodeBranch(const ASTPtr& node, bool isLHS)
     
     switch (bNode->kind()) {
         case BranchNode::Kind::IfStart:
+            // emit expression
+            emitCode(bNode->expr(), false);
+            
             // test value is always 8 bit
             if (!isReg(RegState::A)) {
                 format("    PULS A\n");
