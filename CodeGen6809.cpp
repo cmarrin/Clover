@@ -25,7 +25,9 @@ CodeGen6809::emitPreamble(const Compiler* compiler)
     // its ctor, then call main
     
     // Allocate memory for top-level struct
-    format("    LEAS -%d,S\n", compiler->topLevelStruct()->sizeInBytes());
+    if (compiler->topLevelStruct()->sizeInBytes()) {
+        format("    LEAS -%d,S\n", compiler->topLevelStruct()->sizeInBytes());
+    }
     
     // Set top-level self pointer
     format("    TFR S,Y\n");
@@ -270,8 +272,8 @@ static const char* relopToString(Op op, bool inv)
 {
     switch (op) {
         default: return nullptr;
-        case Op::EQ: return inv ? "BNE" : "BEQ";
-        case Op::NE: return inv ? "BEQ" : "BNE";
+        case Op::EQ: return inv ? "BNE" : "BNE";
+        case Op::NE: return inv ? "BEQ" : "BEQ";
         case Op::LT: return inv ? "BGE" : "BLT";
         case Op::LO: return inv ? "BHS" : "BLO";
         case Op::LE: return inv ? "BGT" : "BLE";
@@ -286,6 +288,7 @@ static const char* relopToString(Op op, bool inv)
 void
 CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
 {
+    // lhs is in A/D and rhs is on TOS
     switch (op) {
         default: break;
         case Op::UMUL:
@@ -305,21 +308,21 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
             if (is16Bit) {
                 if (isSigned) {
                     format("    TST 3,S\n");
-                    format("    BPL L1\n");
-                    format("L1\n");
+                    format("    BPL L%d\n", labelA);
                     format("    NEG 0,S\n");
                     format("    LDD #0\n");
                     format("    SUBD 3,S\n");
                     format("    STD 3,S\n");
+                    format("L%d\n", labelA);
                     format("    TST 1,S\n");
-                    format("    BPL L2\n");
+                    format("    BPL L%d\n", labelB);
                     format("    NEG 0,S\n");
                     format("    LDD #0\n");
                     format("    SUBD 1,S\n");
                     format("    STD 1,S\n");
-                    format("L2\n");
+                    format("L%d\n", labelB);
                 }
-                format("    LDD #0\n");      // TOS is the accumulator, TOS+2 is sign, TOS+3 is rhs, TOS+5 is lhs
+                format("    LDD #0\n");      // TOS is the accumulator, TOS+2 is sign, TOS+3 is lhs, TOS+5 is rhs
                 format("    PSHS D\n");
                 format("    LDA 6,S\n");
                 format("    LDB 4,S\n");
@@ -334,10 +337,10 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
                 format("    MUL\n");
                 format("    ADDB 1,S\n");    // Toss MSB of result
                 format("    TST 2,S\n");     // Do the sign
-                format("    BPL L3\n");
+                format("    BPL L%d\n", labelC);
                 format("    LDD #0\n");
                 format("    SUBD 0,S\n");
-                format("L3\n");
+                format("L%d\n", labelC);
                 format("    LEAS 7,S\n");
                 setRegState(RegState::D);
             } else {
@@ -416,8 +419,6 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
             }
             break;
         case Op::ADD:
-            // Add can be done in either order so we can do it efficiently 
-            // if the rhs is in a reg
             if (is16Bit) {
                 if (isReg(RegState::D)) {
                     format("    ADDD 0,S\n");
@@ -442,17 +443,25 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
             }
             break;
         case Op::SUB:
-            // SUB needs to do operation in the right order, so we need to do it on the stack
-            stashRegIfNeeded();
             if (is16Bit) {
-                format("    LDD 2,S\n");
-                format("    SUBD 0,S\n");
-                format("    LEAS 4,S\n");
+                if (isReg(RegState::D)) {
+                    format("    SUBD 0,S\n");
+                    format("    LEAS 2,S\n");
+                } else {
+                    format("    LDD 0,S\n");
+                    format("    SUBD 2,S\n");
+                    format("    LEAS 4,S\n");
+                }
                 setRegState(RegState::D);
             } else {
-                format("    LDA 1,S\n");
-                format("    SUBA 0,S\n");
-                format("    LEAS 2,S\n");
+                if (isReg(RegState::A)) {
+                    format("    SUBA 0,S\n");
+                    format("    LEAS 1,S\n");
+                } else {
+                    format("    LDA 0,S\n");
+                    format("    SUBA 1,S\n");
+                    format("    LEAS 2,S\n");
+                }
                 setRegState(RegState::A);
             }
             break;
@@ -461,8 +470,7 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
         case Op::XOR1: {
             const char* opStr = (op == Op::OR1) ? "OR" : ((op == Op::AND1) ? "AND" : "EOR");
 
-            // These ops can be done in either order so we can do it efficiently 
-            // if the rhs is in a reg
+            // we can do it efficiently if the rhs is in a reg
             if (is16Bit) {
                 if (isReg(RegState::D)) {
                     format("    %sA 0,S\n", opStr);
@@ -553,37 +561,15 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     // _type is the result type not the type used for operation. We need
     // to get that from the left or right operand
     auto opNode = std::static_pointer_cast<OpNode>(node);
-    Type opType = Type::UInt8;
-    
-    bool isLogical = opNode->op() == Op::LNOT;
-    bool isBinary = false;
-    
-    if (opNode->left()) {
-        opType = opNode->left()->type();
-        emitCode(opNode->left(), opNode->isRef());
-        
-        if (opNode->right()) {
-            // We have a binary op, so the left operand has to be on the stack
-            stashRegIfNeeded();
-        }
-    }
-    
-    if (opNode->right()) {
-        if (opNode->left() == nullptr) {
-            opType = opNode->right()->type();
-        } else {
-            isBinary = true;
-        }
-        
-        // If this is a unary operation (like INC) then _isAssignment is used
-        emitCode(opNode->right(), (opNode->left() == nullptr) ? opNode->isRef() : isLHS);
-    }
-    
+    Type opType = opNode->left() ? opNode->left()->type() : opNode->right()->type();
     bool is16Bit = typeToOpSize(opType) == OpSize::i16;
     
     // Handle Op::LNOT as a special case. There's no logical not opcode
     // so we just test if TOS is zero. If so, put a 1 in A otherwise put a 0.
-    if (isLogical) {
+    if (opNode->op() == Op::LNOT) {
+        // always rhs for LNOT
+        emitCode(opNode->right(), opNode->isRef());
+
         uint16_t labelA = nextLabelId();
         uint16_t labelB = nextLabelId();
         
@@ -608,26 +594,36 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         
         return;
     }
-
-    // If it's a relational operator, do the unoptimized case:
-    //
-    //	    PULS <A/D>      if rhs is on stack
-    //
-    //	    CMP<A/D> 0,S
-    //	    B<op> L1        comparison is rhs op lhs so branch if result is true
-    //	    CLRA
-    //      BRA L2
-    // L1
-    //      LDA #1
-    // L2
-    //      LEAS <1/2>,S
-    //
-    uint16_t labelA = nextLabelId();
-    uint16_t labelB = nextLabelId();
-
-    const char* relOp = relopToString(opNode->op(), false);
     
-    if (relOp) {
+    // For binary operations, emit the rhs then lhs. That way the rhs ends
+    // up on the stack and lhs is in a reg. So you can do a binary op between
+    // the reg and TOS and everything is in the right order
+    
+    // FIXME: I don't understand isRef(). Can a binary op ever be a ref? I don't think so.
+    assert(opNode->left() && opNode->right());
+    emitCode(opNode->right(), isLHS);
+    emitCode(opNode->left(), opNode->isRef());
+    
+    const char* relOp = relopToString(opNode->op(), true);
+    if (!relOp) {
+        emitBinaryOp(opNode->op(), is16Bit);
+    } else {
+        // If it's a relational operator, do the unoptimized case:
+        //
+        //	    PULS <A/D>      if lhs is on stack
+        //
+        //	    CMP<A/D> 0,S
+        //	    B<op> L1        compare lhs (in A or D) to rhs on TOS
+        //	    LDA #1
+        //      BRA L2
+        // L1
+        //      CLRA
+        // L2
+        //      LEAS <1/2>,S
+        //
+        uint16_t labelA = nextLabelId();
+        uint16_t labelB = nextLabelId();
+
         if (!isReg(is16Bit ? RegState::D : RegState::A)) {
             format("    PULS %s\n", is16Bit ? "D" : "A");
         }
@@ -641,10 +637,7 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         format("L%d\n", labelB);
         format("    LEAS %d,S\n", is16Bit ? 2 : 1);
         setRegState(RegState::A);
-        return;
     }
-    
-    emitBinaryOp(opNode->op(), is16Bit);
 }
 
 void
@@ -1099,15 +1092,21 @@ CodeGen6809::emitCodeConditional(const ASTPtr& node, bool isLHS)
     uint16_t elseLabel = nextLabelId();
     uint16_t endLabel = nextLabelId();
     
-    format("    PULS A\n");
+    if (!isReg(RegState::A)) {
+        format("    PULS A\n");
+    }
+    
+    // Make sure RegState is cleared so we don't try to push during the emitCodes
     format("    BEQ L%d\n", elseLabel);
 
     // Emit the first expr
+    clearRegState();
     emitCode(cNode->first(), false);
     format("    BRA L%d\n", endLabel);
     
     // Emit the second expr
     format("L%d\n", elseLabel);
+    clearRegState();
     emitCode(cNode->second(), false);
     format("L%d\n", endLabel);
 }
@@ -1120,26 +1119,31 @@ CodeGen6809::emitCodeLogical(const ASTPtr& node, bool isLHS)
     auto lNode = std::static_pointer_cast<LogicalNode>(node);
     
     // First emit lhs
+    clearRegState();
     emitCode(lNode->lhs(), false);
     
     // Now emit if. We use BEQ for LAnd and BNE for LOr
     uint16_t labelA = nextLabelId();
     uint16_t labelB = nextLabelId();
     
-    format("    PULS A\n");
-    
+    if (!isReg(RegState::A)) {
+        format("    PULS A\n");
+    }
+
+    // Make sure RegState is cleared so we don't try to push during the emitCodes
     const char* op = (lNode->kind() == LogicalNode::Kind::LAnd) ? "BEQ" : "BNE";
     format("    %s L%d\n", op, labelA);
     
     // Emit rhs
+    clearRegState();
     emitCode(lNode->rhs(), false);
     
     // emit the postamble
     format("    BRA L%d\n", labelB);
     format("L%d\n", labelA);
     format("    LDA #%d\n", (lNode->kind() == LogicalNode::Kind::LAnd) ? 0 : 1);
-    format("    PSHS A\n");
     format("L%d\n", labelB);
+    setRegState(RegState::A);
 }
 
 void
@@ -1269,10 +1273,14 @@ CodeGen6809::emitCodeDeref(const ASTPtr& node, bool isLHS)
     // If this is LHS then we are done. The ref is on TOS, ready to be assigned to.
     // Otherwise we need to get the refed value.
     if (!isLHS) {
-        format("    PULS X\n");
-        const char* reg = (typeToOpSize(node->type()) == OpSize::i16) ? "D" : "A";
+        if (!isReg(RegState::X)) {
+            format("    PULS X\n");
+        }
+        
+        bool is16Bit = typeToOpSize(node->type()) == OpSize::i16;
+        const char* reg = is16Bit ? "D" : "A";
         format("    LD%s 0,X\n", reg);
-        format("    PSHS %s\n", reg);
+        setRegState(is16Bit ? RegState::D : RegState::A);
     }
 }
 
