@@ -43,19 +43,26 @@ Simple_main
     LDA -2,U
     CMPA 0,S
     BLT L3
-    CLRA
+    LDA #1
     BRA L4
 L3
-    LDA #1
+    CLRA
 L4
     LEAS 1,S
     BEQ L5
-    ;         core.printf("Hello\n");
-    ;     }
+    ;         core.printf("Passed\n");
+    ;     } else {
     LDD #String+$0
     PSHS D
     JSR printf
+    BRA L6
 L5
+    ;         core.printf("Failed\n");
+    ;     }
+    LDD #String+$8
+    PSHS D
+    JSR printf
+L6
     ;     
     ;     return 0;
     ; }
@@ -67,7 +74,10 @@ L5
 Constants
 
 String
-    FCC "Hello"
+    FCC "Passed"
+    FCB $0a
+    FCB $00
+    FCC "Failed"
     FCB $0a
     FCB $00
 

@@ -634,10 +634,10 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
         
         format("    %s L%d\n", relOp, labelA);
-        format("    CLRA\n");
+        format("    LDA #1\n");
         format("    BRA L%d\n", labelB);
         format("L%d\n", labelA);
-        format("    LDA #1\n");
+        format("    CLRA\n");
         format("L%d\n", labelB);
         format("    LEAS %d,S\n", is16Bit ? 2 : 1);
         setRegState(RegState::A);
