@@ -1001,20 +1001,30 @@ CodeGen6809::emitCodeSwitch(const ASTPtr& node, bool isLHS)
     // First emit expression
     emitCode(sNode->expr(), false);
     
-    uint16_t n = uint16_t(sNode->clauses().size());
+    bool is16Bit = typeToOpSize(sNode->expr()->type()) == OpSize::i16;
+
+    // Value needs to be on stack for call
+    if (isReg(is16Bit ? RegState::D : RegState::A)) {
+        format("    PSHS %s\n", is16Bit ? "D" : "A");
+    }
+    
+    uint16_t nClauses = uint16_t(sNode->clauses().size());
     if (sNode->haveDefault()) {
-        n -= 1;
+        nClauses -= 1;
     }
 
-    bool is16Bit = typeToOpSize(sNode->expr()->type()) == OpSize::i16;
+    // On return from switch<1/2> X contains the value from the
+    // table if the value is found. If not X contains the address
+    // just past the table. Do an indexed jump to this addr
     uint16_t tableLabel = nextLabelId();
+    uint16_t switchSize = is16Bit ? 2 : 1;
 
-    format("    LEAX L%d\n", tableLabel);
-    format("    PSHS X\n");
-    format("    LDD #%d\n", n);
+    format("    LDD #L%d\n", tableLabel);
     format("    PSHS D\n");
-    format("    JSR switch%d\n", is16Bit ? 2 : 1);
-    format("    PULS X\n");
+    format("    LDD #%d\n", nClauses);
+    format("    PSHS D\n");
+    format("    JSR switch%d\n", switchSize);
+    format("    LEAS %d,S\n", switchSize + 4);
     format("    JMP 0,X\n");
     format("L%d\n", tableLabel);
     
@@ -1036,9 +1046,13 @@ CodeGen6809::emitCodeSwitch(const ASTPtr& node, bool isLHS)
     // Now emit the list
     for (auto& it : sNode->clauses()) {
         if (!it.isDefault()) {
-            format("    FCB %d\n", it.value());
+            if (is16Bit) {
+                format("    FDB %d\n", it.value());
+            } else {
+                format("    FCB %d\n", it.value());
+            }
             it.setFixupIndex(nextLabelId());
-            format("    LBRA L%d\n", it.fixupIndex());
+            format("    FDB L%d\n", it.fixupIndex());
         }
     }
     
@@ -1053,7 +1067,7 @@ CodeGen6809::emitCodeSwitch(const ASTPtr& node, bool isLHS)
     uint16_t endLabel = nextLabelId();
     
     if (!sNode->haveDefault()) {
-        format("    LBRA %d\n", endLabel);
+        format("    BRA %d\n", endLabel);
     }
     
     for (auto it = sNode->clauses().begin(); it != sNode->clauses().end(); ++it) {
