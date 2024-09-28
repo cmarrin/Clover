@@ -821,10 +821,9 @@ Compiler::ifStatement(const ASTPtr& parent)
     
     ASTPtr ast = expression();
     ast->setAnnotationIndex(annotationIndex());
-    parent->addNode(ast);
     expect(Token::CloseParen);
     
-    ASTPtr ifNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart);
+    ASTPtr ifNode = std::make_shared<BranchNode>(ast);
     parent->addNode(ifNode);
 
     statement(parent);
@@ -985,10 +984,10 @@ Compiler::loopStatement(const ASTPtr& parent)
     Token endToken = forLoop ? Token::Semicolon : Token::CloseParen;
         
     if (!match(endToken)) {
-        parent->addNode(expression());
+        ASTPtr expr = expression();
         expect(endToken);
 
-        ifStartNode = std::make_shared<BranchNode>(BranchNode::Kind::IfStart);
+        ifStartNode = std::make_shared<BranchNode>(expr);
         parent->addNode(ifStartNode);
     }
 

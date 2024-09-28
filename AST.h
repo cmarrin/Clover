@@ -550,6 +550,7 @@ class BranchNode : public ASTNode
     enum class Kind { IfStart, ElseStart, IfEnd, LoopStart, LoopNext, LoopEnd, Break, Continue };
     
     BranchNode(Kind k) : _kind(k) { }
+    BranchNode(const ASTPtr& expr) : _kind(Kind::IfStart), _expr(expr) { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Branch; }
 
@@ -565,12 +566,14 @@ class BranchNode : public ASTNode
     Kind kind() const { return _kind; }
     BranchSize branchSize() const { return _branchSize; }
     ASTPtr fixupNode() const { return _fixupNode; }
+    ASTPtr expr() const { return _expr; }
     
   private:
     Kind _kind;
     BranchSize _branchSize = BranchSize::Unknown;
     ASTPtr _fixupNode;
     AddrNativeType _fixupIndex = 0;
+    ASTPtr _expr;
 };
 
 class CaseClause

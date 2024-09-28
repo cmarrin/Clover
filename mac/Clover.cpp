@@ -86,6 +86,7 @@ static void showError(clvr::Error error, clvr::Token token, const std::string& s
         case clvr::Error::PtrAssignmentMustMatch: err = "pointer assignment must match"; break;
         case clvr::Error::PtrTypeNotAllowed: err = "pointer type not allowed"; break;
         case clvr::Error::WrongNumberOfInitializers: err = "wrong number of initializers"; break;
+        case clvr::Error::CodeGenFailed: err = "codegen failed"; break;
     }
     
     if (token == clvr::Token::EndOfFile) {

@@ -518,6 +518,9 @@ CodeGenStackVM::emitCodeBranch(const ASTPtr& node, bool isLHS)
     
     switch (bNode->kind()) {
         case BranchNode::Kind::IfStart:
+            // Emit the expression
+            emitCode(bNode->expr(), false);
+            
             // Emit the opcode with a 0 branch address and mark it
             
             // If this is the first pass, we don't know how long the

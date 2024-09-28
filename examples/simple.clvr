@@ -14,7 +14,9 @@ function int16 main()
     int8 b = a + 1;
     
     if (a < b) {
-        core.printf("Hello\n");
+        core.printf("Passed\n");
+    } else {
+        core.printf("Failed\n");
     }
     
     return 0;
