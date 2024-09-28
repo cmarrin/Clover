@@ -1,0 +1,23 @@
+//
+//  simple.Clover
+//  Clover
+//
+//  Created by Chris Marrin on 5/25/24.
+//
+
+struct Simple
+{
+
+function int16 main()
+{
+    int8 a = 5;
+    int8 b = a + 1;
+    
+    if (a < b) {
+        core.printf("Hello\n");
+    }
+    
+    return 0;
+}
+
+};

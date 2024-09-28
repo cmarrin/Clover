@@ -14,15 +14,25 @@
 #include <cmath>
 
 #include "AST.h"
+#include "CodeGen6809.h"
+#include "CodeGenStackVM.h"
 #include "NativeColor.h"
 #include "NativeCore.h"
 #include "OpInfo.h"
 
-using namespace lucid;
+using namespace clvr;
 
-bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
-                            const std::vector<Module*>& modules)
+Compiler::Compiler(OutputFormat fmt, std::istream* stream, Annotations* annotations) : _scanner(stream, annotations)
 {
+    if (fmt == OutputFormat::ASM6809) {
+        _codeGen = new CodeGen6809(annotations);
+    } else {
+        _codeGen = new CodeGenStackVM(annotations);
+    }
+}
+
+bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& modules)
+{    
     // Add built-in native modules
     ModulePtr coreModule = NativeCore::createModule();
     _modules.push_back(coreModule);
@@ -37,68 +47,38 @@ bool Compiler::compile(std::vector<uint8_t>& executable, uint32_t maxExecutableS
         return false;
     }
     
-    // Do 3 code generation:
-    //
-    //      1)  On the first pass we don't know how long most of the branch
-    //          instructions need to be so we make them long. But as we fill
-    //          in the jump addresses we remember which branches can be short
-    //
-    //      2)  Now go back for a second pass to shorten the ones that have
-    //          been marked as such.
-    //
-    //      3)  But we're not done. If we have forward function declarations
-    //          their addresses will have been set from the previous pass
-    //          and if we've shortened any branches they will be wrong so
-    //          we need a third pass to make them correct
-    
-    for (int i = 0; i < 3; i ++) {
-        executable.clear();
-        
-        // Write signature
-        executable.push_back('l');
-        executable.push_back('u');
-        executable.push_back('c');
-        executable.push_back('d');
-
-        // Write dummy entry point address for main, to be filled in later
-        appendValue(executable, 0, Type::UInt32);
-        
-        // Write dummy entry point address for top-level struct ctor, to be filled in later
-        appendValue(executable, 0, Type::UInt32);
-        
-        // Write top level struct size
-        int32_t topLevelSize = _topLevelStruct->sizeInBytes();
-        appendValue(executable, topLevelSize, Type::UInt32);
-        
-        // Write constant size and then constants
-        appendValue(executable, uint16_t(_constants.size()), Type::UInt16);
-        for (auto it : _constants) {
-            executable.push_back(it);
+    try {
+        // Do as many passes as are needed by the codegen
+        for (int i = 0; i < _codeGen->passesNeeded(); i ++) {
+            _codeGen->init();
+            _codeGen->emitPreamble(this);
+            emitStruct(_codeGen, _topLevelStruct);
+            _codeGen->emitPostamble(this);
         }
         
-        emitStruct(executable, _topLevelStruct);
+        // Add the annotation info
+        TraversalVisitor func = [this] (const ASTPtr& node) {
+            int32_t index;
+            int32_t addr;
+            node->annotation(index, addr);
+            if (index >= 0 && addr >= 0) {
+                setAnnotation(index, addr);
+            }
+        };
+        
+        traverseStruct(_topLevelStruct, func);
     }
-    
-    // Add the annotation info
-    TraversalVisitor func = [this] (const ASTPtr& node) {
-        int32_t index;
-        int32_t addr;
-        node->annotation(index, addr);
-        if (index >= 0 && addr >= 0) {
-            setAnnotation(index, addr);
-        }
-    };
-    
-    traverseStruct(_topLevelStruct, func);
-    
+    catch(...) {
+        _error = Error::CodeGenFailed;
+        return false;
+    }
+        
     return _error == Error::None;
 }
 
 void
 Compiler::traverseStruct(const StructPtr& struc, TraversalVisitor func) const
 {
-    traverseNode(struc->astNode(), func);
-
     //Emit child structs
     for (auto& itStruc : struc->structs()) {
         traverseStruct(itStruc, func);
@@ -125,34 +105,17 @@ Compiler::traverseNode(const ASTPtr& node,TraversalVisitor func) const
 }
 
 void
-Compiler::emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc)
+Compiler::emitStruct(CodeGen* codeGen, const StructPtr& struc)
 {
-    struc->astNode()->emitCode(executable, false);
-
     //Emit structs
     for (auto& itStruc : struc->structs()) {
-        emitStruct(executable, itStruc);
+        emitStruct(codeGen, itStruc);
     }
     
     // Emit functions
     for (auto& itFunc : struc->functions()) {
-        if (struc == _topLevelStruct) {
-            // If this is the main function of the top level
-            // struct, set the entry point
-            if (itFunc->name() == "main") {
-                setValue(executable, MainEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
-            }
-            
-            // If this is the ctor function of the top level
-            // struct, set the entry point
-            if (itFunc->name() == "") {
-                setValue(executable, TopLevelCtorEntryPointAddr, uint32_t(executable.size()), Type::UInt32);
-            }
-        }
-        
-        // Set addr of this function
-        itFunc->setAddr(AddrNativeType(executable.size()));
-        itFunc->astNode()->emitCode(executable, false);
+        _codeGen->handleFunction(this, itFunc, struc, struc == _topLevelStruct);
+        codeGen->emitCode(itFunc->astNode(), false);
     }
 }
 
@@ -191,8 +154,8 @@ Compiler::import()
     // FIXME: For now only support built-in imports and only built-ins
     // we already know about (like "System").
     //
-    // If and when we support Lucid imports, compile the import inline.
-    // An import is a regular Lucid program but only the first struct is
+    // If and when we support Clover imports, compile the import inline.
+    // An import is a regular Clover program but only the first struct is
     // used. What about imports in the imported file? Are there warnings
     // if there are more structs? What about an entry struct?
     // Need to rename struct if there is an idAs. How do we deal with
@@ -468,7 +431,7 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
     }
     
     // If this is a struct, we want to call its ctor
-    if (struc && struc->ctor()) {
+    if (struc && struc->ctor() && !isConstant) {
         // We need to pass a ref to the struct instance we are constructing
         ASTPtr self = std::make_shared<VarNode>(sym);
         ASTPtr ctor = std::make_shared<FunctionCallNode>(struc->ctor(), self);
@@ -548,14 +511,14 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
     if (!isArray && isScalar(type)) {
         expect(value(v, type), Error::ExpectedValue);
         nElements = 1;
-        addr = uint32_t(_scalarConstants.size());
+        addr = AddrNativeType(_scalarConstants.size());
         _scalarConstants.push_back(v);
         isScalarConstant = true;
         return;
     }
 
     isScalarConstant = false;
-    addr = uint32_t(_constants.size());
+    addr = AddrNativeType(_constants.size());
        
     // This is an array of scalars, a struct or an array of structs
     expect(Token::OpenBrace);
@@ -575,7 +538,7 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
     }
 
     expect(value(v, type), Error::ExpectedValue);
-    appendValue(_constants, v, underlyingType);
+    appendValue(_constants, v, typeToBytes(underlyingType));
 
     uint16_t nCollectedElements = 1;
     bool advanceNElements = false;
@@ -604,7 +567,7 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
             advanceNElements = false;
         }
         
-        appendValue(_constants, v, underlyingType);
+        appendValue(_constants, v, typeToBytes(underlyingType));
     }
     
     expect(Token::CloseBrace);
@@ -613,10 +576,12 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
 bool
 Compiler::type(Type& t)
 {
+#ifdef SUPPORT_FLOAT
     if (match(Reserved::Float)) {
         t = Type::Float;
         return true;
     }
+#endif
     if (match(Reserved::Int8)) {
         t = Type::Int8;
         return true;
@@ -634,6 +599,7 @@ Compiler::type(Type& t)
         t = Type::UInt16;
         return true;
     }
+#ifdef SUPPORT_INT32
     if (match(Reserved::Int32)) {
         t = Type::Int32;
         return true;
@@ -642,6 +608,7 @@ Compiler::type(Type& t)
         t = Type::UInt32;
         return true;
     }
+#endif
         
     // See if it's a struct or enum
     std::string id;
@@ -649,7 +616,7 @@ Compiler::type(Type& t)
         return false;
     }
     
-    // First look in the child structs then at the peers
+    // First look in the child structs
     StructPtr struc = currentStruct();
     expect(struc != nullptr, Error::InternalError);
     struc = struc->findStruct(id);
@@ -660,6 +627,19 @@ Compiler::type(Type& t)
         return true;
     }
     
+    // Now look at the peers, if any
+    if (_structStack.size() > 1) {
+        struc = _structStack[_structStack.size() - 2];
+        struc = struc->findStruct(id);
+        
+        if (struc) {
+            t = struc->type();
+            _scanner.retireToken();
+            return true;
+        }
+    }
+    
+    // Now see if it's an enum
     EnumPtr e = currentStruct()->findEnum(id);
     if (e) {
         t = e->type();
@@ -1079,10 +1059,12 @@ Compiler::returnStatement(const ASTPtr& parent)
     
     // If expr and return type are both scalar they can be cast,
     // otherwise it's a type mismatch
-    if (isScalar(ast->type()) && isScalar(neededType)) {
-        ast = TypeCastNode::castIfNeeded(ast, neededType);
-    } else {
-        expect(ast->type() == neededType, Error::MismatchedType);
+    if (ast) {
+        if (isScalar(ast->type()) && isScalar(neededType)) {
+            ast = TypeCastNode::castIfNeeded(ast, neededType);
+        } else {
+            expect(ast->type() == neededType, Error::MismatchedType);
+        }
     }
     
     ASTPtr returnNode = std::make_shared<ReturnNode>(ast);
@@ -1245,21 +1227,21 @@ Compiler::unaryExpression()
     Type resultType = Type::None;
     bool isRef = false;
     bool isSigned = false;
+    bool isInc = false;
     
     if (match(Token::Minus)) {
         opcode = Op::NEG;
         isSigned = true;
     } else if (match(Token::Twiddle)) {
-        opcode = Op::NOT;
+        opcode = Op::NOT1;
     } else if (match(Token::Bang)) {
         opcode = Op::LNOT;
         resultType = Type::UInt8;
     } else if (match(Token::Inc)) {
-        opcode = Op::PREINC;
-        isRef = true;
+        opcode = Op::PREINC1;
+        isInc = true;
     } else if (match(Token::Dec)) {
-        opcode = Op::PREDEC;
-        isRef = true;
+        opcode = Op::PREINC1;
     } else if (match(Token::And)) {
         // Ref (addressof)
         node = unaryExpression();
@@ -1276,6 +1258,11 @@ Compiler::unaryExpression()
     }
     
     node = unaryExpression();
+    
+    if (opcode == Op::PREINC1) {
+        // FIXME: Handle pointers (inc values other than 1)
+        return std::make_shared<IncNode>(node, true, isInc ? 1 : -1);
+    }
     
     // If result needs to be signed (for Op::NEG) do a cast here
     if (isSigned && !node->isSigned()) {
@@ -1335,7 +1322,7 @@ Compiler::postfixExpression()
                 expect(moduleId < _modules.size(), Error::InternalError);
                 FunctionPtr f = _modules[moduleId]->findFunction(id);
                 expect(f != nullptr, Error::UndefinedIdentifier);
-                lhs = std::make_shared<FunctionCallNode>(f, moduleId);
+                lhs = std::make_shared<FunctionCallNode>(f, moduleId, _modules[moduleId]->name());
                 continue;
             }
             
@@ -1361,9 +1348,9 @@ Compiler::postfixExpression()
                 lhs = std::make_shared<DotNode>(lhs, prop);
             }
         } else if (match(Token::Inc)) {
-            lhs = std::make_shared<OpNode>(lhs, Op::POSTINC, Type::None, true);
+            lhs = std::make_shared<IncNode>(lhs, false, 1);
         } else if (match(Token::Dec)) {
-            lhs = std::make_shared<OpNode>(lhs, Op::POSTDEC, Type::None, true);
+            lhs = std::make_shared<IncNode>(lhs, false, -1);
         } else {
             return lhs;
         }
@@ -1523,8 +1510,8 @@ Compiler::argumentList(const ASTPtr& fun)
             expect(sym != nullptr, Error::InternalError);
             neededType = sym->type();
             
-            // If the arg is a struct and we're expecting a pointer ref it
-            if (sym->isPointer() && isStruct(arg->type()) && !arg->isPointer()) {
+            // If the arg is a struct or an array and we're expecting a pointer ref it
+            if (sym->isPointer() && !arg->isPointer() && (isStruct(arg->type()) || arg->isIndexable())) {
                 arg = std::make_shared<RefNode>(arg);
             } else if (sym->isPointer() || arg->isPointer()) {
                 // If both the sym and arg are scalar then we can cast.
@@ -1541,18 +1528,15 @@ Compiler::argumentList(const ASTPtr& fun)
             }
         } else {
             // We are past the last arg. That makes this a vararg call. We upcast any integral
-            // types to 32 bits.
-            neededType = arg->type();
-            if (isEnum(neededType)) {
-                neededType = Type::UInt8;
+            // or pointer types to VarArgNativeType.
+            if (!arg->isPointer() && (isStruct(arg->type()) || arg->isIndexable())) {
+                arg = std::make_shared<RefNode>(arg);
             }
             
-            switch (neededType) {
-                case Type::Int8:
-                case Type::Int16: neededType = Type::Int32; break;
-                case Type::UInt8:
-                case Type::UInt16: neededType = Type::UInt32; break;
-                default: break;
+            neededType = arg->type();
+            
+            if (neededType != Type::Float) {
+                neededType = VarArgType;
             }
         }
 
@@ -1737,14 +1721,17 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "loop",       Reserved::Loop },
         { "true",       Reserved::True },
         { "false",      Reserved::False },
+#ifdef SUPPORT_FLOAT
         { "float",      Reserved::Float },
-        { "fixed",      Reserved::Fixed },
+#endif
         { "int8",       Reserved::Int8 },
         { "uint8",      Reserved::UInt8 },
         { "int16",      Reserved::Int16 },
         { "uint16",     Reserved::UInt16 },
+#ifdef SUPPORT_INT32
         { "int32",      Reserved::Int32 },
         { "uint32",     Reserved::UInt32 },
+#endif
         { "bool",       Reserved::Bool },
     };
 

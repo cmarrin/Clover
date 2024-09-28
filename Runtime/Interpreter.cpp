@@ -12,7 +12,7 @@
 #include "NativeColor.h"
 #include "NativeCore.h"
 
-using namespace lucid;
+using namespace clvr;
 
 InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
     : _memMgr(mem, memSize)
@@ -41,11 +41,22 @@ InterpreterBase::instantiate()
         _error = Error::InvalidSignature;
         return;
     }
+    
+    if (getROM(MajorVersionAddr, 2) != 1 || getROM(MinorVersionAddr, 1) != 0) {
+        _error = Error::InvalidVersion;
+        return;
+    }
 
-    _mainEntryPoint = getROM(MainEntryPointAddr, 4);
-    _topLevelCtorEntryPoint = getROM(TopLevelCtorEntryPointAddr, 4);
+    bool is32BitAddr = getROM(Is32BitAddrAddr, 1) != 0;
+    if (is32BitAddr != Is32BitAddr) {
+        _error = Error::WrongAddressSize;
+        return;
+    }
 
-    uint32_t topLevelStructSize = getROM(TopLevelStructSizeAddr, 4);
+    _mainEntryPoint = getROM(MainEntryPointAddr, AddrSize);
+    _topLevelCtorEntryPoint = getROM(TopLevelCtorEntryPointAddr, AddrSize);
+
+    AddrNativeType topLevelStructSize = getROM(TopLevelStructSizeAddr, AddrSize);
 
 
     // Instantiate the top-level struct, but don't call the ctor
@@ -162,6 +173,11 @@ InterpreterBase::typeCast(Type from, Type to)
     _memMgr.stack().push(v, typeToOpSize(to));
 }
 
+static inline OpSize op3ToOpSize(Op op, Op baseOp)
+{
+    return OpSize(uint8_t(op) - uint8_t(baseOp));
+}
+
 uint32_t
 InterpreterBase::execute(ExecMode mode)
 {
@@ -234,81 +250,59 @@ InterpreterBase::execute(ExecMode mode)
             case Op::PUSHREF:
                 _memMgr.stack().push(ea(), AddrOpSize);
                 break;
-            case Op::DEREF1:
-                left = _memMgr.stack().pop(AddrOpSize);
-                right = _memMgr.getAbs(left, OpSize::i8);
-                _memMgr.stack().push(right, OpSize::i8);
-                break;
-            case Op::DEREF2:
-                left = _memMgr.stack().pop(AddrOpSize);
-                right = _memMgr.getAbs(left, OpSize::i16);
-                _memMgr.stack().push(right, OpSize::i16);
-                break;
-            case Op::DEREF4:
-                left = _memMgr.stack().pop(AddrOpSize);
-                right = _memMgr.getAbs(left, OpSize::i32);
-                _memMgr.stack().push(right, OpSize::i32);
-                break;
-            case Op::RETR1:
-                _returnValue = _memMgr.stack().pop(OpSize::i8);
-                handleReturn();
-                break;
-            case Op::RETR2:
-                _returnValue = _memMgr.stack().pop(OpSize::i16);
-                handleReturn();
-                break;
-            case Op::RETR4:
-                _returnValue = _memMgr.stack().pop(OpSize::i32);
-                handleReturn();
-                break;
             case Op::RET:
                 handleReturn();
                 break;
+            case Op::DEREF1:
+            case Op::DEREF2:
+            case Op::DEREF4:
+                opSize = op3ToOpSize(opcode, Op::DEREF1);
+                left = _memMgr.stack().pop(AddrOpSize);
+                right = _memMgr.getAbs(left, opSizeToBytes(opSize));
+                _memMgr.stack().push(right, opSize);
+                break;
+            case Op::RETR1:
+            case Op::RETR2:
+            case Op::RETR4:
+                opSize = op3ToOpSize(opcode, Op::RETR1);
+                _returnValue = _memMgr.stack().pop(opSize);
+                handleReturn();
+                break;
             case Op::PUSHR1:
-                _memMgr.stack().push(_returnValue, OpSize::i8);
-                break;
             case Op::PUSHR2:
-                _memMgr.stack().push(_returnValue, OpSize::i16);
-                break;
             case Op::PUSHR4:
-                _memMgr.stack().push(_returnValue, OpSize::i32);
+                opSize = op3ToOpSize(opcode, Op::PUSHR1);
+                _memMgr.stack().push(_returnValue, opSize);
                 break;
-            case Op::POP1: {
-                uint32_t v = _memMgr.stack().pop(OpSize::i8);
-                _memMgr.setAbs(ea(), v, OpSize::i8);
-                break;
-            }
-            case Op::POP2: {
-                uint32_t v = _memMgr.stack().pop(OpSize::i16);
-                _memMgr.setAbs(ea(), v, OpSize::i16);
-                break;
-            }
+            case Op::POP1:
+            case Op::POP2:
             case Op::POP4: {
-                uint32_t v = _memMgr.stack().pop(OpSize::i32);
-                _memMgr.setAbs(ea(), v, OpSize::i32);
+                opSize = op3ToOpSize(opcode, Op::POP1);
+                uint32_t v = _memMgr.stack().pop(opSize);
+                _memMgr.setAbs(ea(), v, opSize);
                 break;
             }
-            case Op::POPDEREF1: {
-                uint32_t a = _memMgr.stack().pop(AddrOpSize);
-                uint32_t v = _memMgr.stack().pop(OpSize::i8);
-                _memMgr.setAbs(a, v, OpSize::i8);
-                break;
-            }
-            case Op::POPDEREF2: {
-                uint32_t a = _memMgr.stack().pop(AddrOpSize);
-                uint32_t v = _memMgr.stack().pop(OpSize::i16);
-                _memMgr.setAbs(a, v, OpSize::i16);
-                break;
-            }
+            case Op::POPDEREF1:
+            case Op::POPDEREF2:
             case Op::POPDEREF4: {
+                opSize = op3ToOpSize(opcode, Op::POPDEREF1);
                 uint32_t a = _memMgr.stack().pop(AddrOpSize);
-                uint32_t v = _memMgr.stack().pop(OpSize::i32);
-                _memMgr.setAbs(a, v, OpSize::i32);
+                uint32_t v = _memMgr.stack().pop(opSize);
+                _memMgr.setAbs(a, v, opSize);
                 break;
             }
-            case Op::PUSH1: _memMgr.stack().push(value(OpSize::i8), OpSize::i8); break;
-            case Op::PUSH2: _memMgr.stack().push(value(OpSize::i16), OpSize::i16); break;
-            case Op::PUSH4: _memMgr.stack().push(value(OpSize::i32), OpSize::i32); break;
+            case Op::PUSH1:
+            case Op::PUSH2:
+            case Op::PUSH4:
+                opSize = op3ToOpSize(opcode, Op::PUSH1);
+                _memMgr.stack().push(value(opSize), opSize);
+                break;
+            case Op::DUP1:
+            case Op::DUP2:
+            case Op::DUP4:
+                opSize = op3ToOpSize(opcode, Op::DUP1);
+                _memMgr.stack().dup(opSize);
+                break;
             case Op::INDEX1:
             case Op::INDEX2: {
                 uint8_t elementSize = getUOpnd(OpSize::i8);
@@ -326,28 +320,27 @@ InterpreterBase::execute(ExecMode mode)
                 _memMgr.stack().push(addr, AddrOpSize);
                 break;
             }
-            case Op::PREINC:
-            case Op::PREDEC:
-            case Op::POSTINC:
-            case Op::POSTDEC: {
+            case Op::PREINC1:
+            case Op::PREINC2:
+            case Op::POSTINC1:
+            case Op::POSTINC2: {
+                OpSize opndSize = (opcode == Op::PREINC1 || opcode == Op::POSTINC1) ? OpSize::i8 : OpSize::i16;
+                int16_t inc = getIOpnd(opndSize);
                 AddrNativeType addr = _memMgr.stack().pop(AddrOpSize);
-                uint32_t oldValue = _memMgr.getAbs(addr, opSize);
+                uint32_t oldValue = _memMgr.getAbs(addr, opSizeToBytes(opSize));
                 uint32_t newValue;
                 
                 if (opSize == OpSize::flt) {
                     float oldFloatValue = intToFloat(oldValue);
-                    float newFloatValue = oldFloatValue + ((opcode == Op::PREINC || opcode == Op::POSTINC) ? 1 : -1);
+                    float newFloatValue = oldFloatValue + inc;
                     newValue = floatToInt(newFloatValue);
                 } else {
-                    newValue = oldValue + ((opcode == Op::PREINC || opcode == Op::POSTINC) ? 1 : -1);
+                    newValue = oldValue + inc;
                 }
                 _memMgr.setAbs(addr, newValue, opSize);
-                _memMgr.stack().push((opcode == Op::PREINC || opcode == Op::PREDEC) ? newValue : oldValue, opSize);
+                _memMgr.stack().push((opcode == Op::PREINC1 || opcode == Op::PREINC2) ? newValue : oldValue, opSize);
                 break;
             }
-            case Op::DUP1    : _memMgr.stack().dup(OpSize::i8); break;
-            case Op::DUP2    : _memMgr.stack().dup(OpSize::i16); break;
-            case Op::DUP4    : _memMgr.stack().dup(OpSize::i32); break;
             case Op::ADD:
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
@@ -398,24 +391,60 @@ InterpreterBase::execute(ExecMode mode)
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(uint32_t(left) / uint32_t(right), opSize);
                 break;
-            case Op::AND:
+            case Op::AND1:
+            case Op::AND2:
+            case Op::AND4:
+                opSize = op3ToOpSize(opcode, Op::AND1);
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left & right, opSize);
                 break;
-            case Op::OR:
+            case Op::OR1:
+            case Op::OR2:
+            case Op::OR4:
+                opSize = op3ToOpSize(opcode, Op::OR1);
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left | right, opSize);
                 break;
-            case Op::XOR:
+            case Op::XOR1:
+            case Op::XOR2:
+            case Op::XOR4:
+                opSize = op3ToOpSize(opcode, Op::XOR1);
                 right = _memMgr.stack().pop(opSize);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(left ^ right, opSize);
                 break;
-            case Op::NOT:
+            case Op::NOT1:
+            case Op::NOT2:
+            case Op::NOT4:
+                opSize = op3ToOpSize(opcode, Op::NOT1);
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(~left, opSize);
+                break;
+            case Op::SHR1:
+            case Op::SHR2:
+            case Op::SHR4:
+                opSize = op3ToOpSize(opcode, Op::SHR1);
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+                _memMgr.stack().push(uint32_t(left) >> right, opSize);
+                break;
+            case Op::ASR1:
+            case Op::ASR2:
+            case Op::ASR4:
+                opSize = op3ToOpSize(opcode, Op::ASR1);
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+                _memMgr.stack().push(left >> right, opSize);
+                break;
+            case Op::SHL1:
+            case Op::SHL2:
+            case Op::SHL4:
+                opSize = op3ToOpSize(opcode, Op::SHL1);
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+                _memMgr.stack().push(left << right, opSize);
                 break;
             case Op::NEG:
                 left = _memMgr.stack().pop(opSize);
@@ -573,9 +602,9 @@ InterpreterBase::execute(ExecMode mode)
                 break;
             case Op::PUSHS: {
                 // String is in ROM memory. Push a pointer to it and
-                // set pc past it.
+                // set pc past it. ROM pointer is offset by stack size
                 uint8_t size = getUInt8ROM(_pc++);
-                _memMgr.stack().push(_pc, AddrOpSize);
+                _memMgr.stack().push(_pc + _memMgr.stack().size(), AddrOpSize);
                 _pc += size;
                 break;
             }

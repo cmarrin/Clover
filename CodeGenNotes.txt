@@ -2,108 +2,439 @@ Converting to 6809
 
 ex:
 
-A -> U
-L -> U
-
 [18] ENTERS 0
 [19] PUSH1 0,A
 [21] PUSH1 1,A
 [23] ADD<1>
-[24] RETR1
-[25] ENTERS 0
-[26] PUSHK11 #12
-[28] POP1 0,M
-[30] PUSHK12 #24
-[32] POP2 1,M
-[34] RET
-[35] ENTERS 7
-[36] PUSHREF  2,L
-[38] MCALL 25
-[41] PUSHKS1 #6
-[42] PUSHKS1 #5
-[43] PUSHREF  2,L
-[45] MCALL 18
-[48] DROPS 2
-[49] PUSHR4
-[50] POP4 6,L
-[52] PUSH4 6,L
-[54] PUSHREF  2,L
-[56] OFFSET1 1
-[58] DEREF2
-[59] CASTI1632
-[60] PUSHREF  2,L
-[62] DEREF1
-[63] CASTI832
-[64] PUSHS " a.b=%d, a.c=%d, result=%d\n"
-[94] NCALL 1
-[96] DROPS 16
-[97] PUSHKS1 #0
-[98] RETR1
+[24] CASTI816
+[25] RETR2
 
-***** Tests Complete: 0 errors - Passed
-Program ended with exit code: 1
+[26] ENTERS 0
+[27] PUSHK11 #12
+[29] POP1 0,M
+[31] PUSHK12 #24
+[33] POP2 1,M
+[35] RET
 
+[36] ENTERS 5
+[37] PUSHREF  2,L
+[39] MCALL 26
 
-	
+[42] PUSHKS1 #6
+[43] PUSHKS1 #5
+[44] PUSHREF  2,L
+[46] MCALL 18
+[49] DROPS 2
+[50] PUSHR2
+[51] POP2 4,L
+
+[53] PUSH2 4,L
+[55] CASTI1632
+[56] PUSH2 1,L
+[58] CASTI1632
+[59] PUSH1 2,L
+[61] CASTI832
+[62] PUSHS " a.b=%d, a.c=%d, result=%d\n"
+[92] NCALL 1
+[94] DROPS 16
+[95] PUSHKS2 #0
+                |    }
+[96] RETR2
+
 A_f:
-	PSHS	U
+	PSHS	U		; ENTERS 0
 	TFR		S, U
-	LEAS	-3, S
-	LDA		6, U
-	ADDA	7, U
-	TFR		U, S
+	LDA		6, U	; PUSH1 0,A
+	ADDA	7, U	; PUSH1 1,A / ADD<1>
+	SEX				; CASTI816	
+	TFR		U, S	; RETR2 (return value in D)
 	PULS	U
-	RTS				; return value is in A
+	PULS	X
+	PSHS	D
+	JMP		0,X
 
 A_ctor:
-	PSHS	U
+	PSHS	U		; ENTERS 0
 	TFR		S, U
-	LDA		#12
-	STA		0, Y
-	LDA		#24
-	STA		1, Y
-	TFR		U, S
+	LDA		#12		; PUSHK11 #12
+	STA		0, Y	; POP1 0,M
+	LDD		#24		; PUSHK12 #24
+	STD		1, Y	; POP2 1,M
+	TFR		U, S	; RET
 	PULS	U
 	RTS
 	
 ENTRY:	
-	PSHS	U
+	PSHS	U		; ENTERS 5
 	TFR		S, U
-	LEAS	-7, S
-	PSHS	Y
+	LEAS	-5, S
+	PSHS	Y		; PUSHREF  2,L (these 2 setup the self pointer)
 	LEAY	-3, U
-	JSR		A_ctor
+	JSR		A_ctor	; MCALL 25 (mext instruction restores self pointer)
 	PULS	Y
 	
-	LDA		#6
-	LDB		#5
-	PSHS	A, B
-	PSHS	Y
-	LEAY	-3, U
-	JSR		A_f
+	LDA		#6		; PUSHKS1 #6
+	PSHS	A
+	LDA		#5		; PUSHKS1 #5
+	PSHS	A
+	PSHS	Y		; PUSHREF  2,L (these 2 setup the self pointer)
+	LEAY	-3,U
+	JSR		A_f		; MCALL 18 (mext instruction restores self pointer)
 	PULS	Y
-	LEAS	2, S
-	STA		-7, U
+	LEAS	2, S	; DROPS 2
+	STD		-5, U	; PUSHR2 / POP2 4,L
 	
 	; How do we sign extend to 32 bits? Where do we put a 32 bit value? X:D?
 	; For now do 16 bit
 	
-	SEX
+	LDD		-5, U	; PUSH2 4,L
 	PSHS	D
-	LEAX	-2, U
-	LDD		0, X
+	LEAX	-3, U	; PUSHREF  2,L
+	LEAX	1, X	; OFFSET1 1 (this can be optimized out by doing LEAX, -2, U)
+	LDD		0, X	; DEREF2
 	PSHS	D
-	LEAX	-3, U
-	LDA		0, X
-	SEX
+	LEAX	-3, U	; PUSHREF  2,L
+	LDA		0, X	; DEREF1
+	SEX				; CASTI816
 	PSHS	D
-	LDX		STRING
-	LDD		#PRINTF
+	LDX		STRING	; PUSHS " a.b=%d, a.c=%d, result=%d\n"
+	LDD		#PRINTF	; NCALL 1
 	SWI1
-	LEAS	10, S
-	LDA		#0
-	RTS
+	LEAS	10, S	; DROPS 10
+	LDD		#0		; PUSHKS2 #0
+	RTS				; RETR2 (return value is in D)
+	
+	STRING   fcn " a.b=%d, a.c=%d, result=%d\n"
+	
+
+For comparison operators, currently they are binary ops, so:
+
+	if (a < b) c = d;
+	
+translates to:
+
+	PUSH a,L
+	PUSH b,L
+	LT
+	BRF L1
+	PUSH d,L
+	POP c,L
+L1:
+	
+On 6809 that is:
+
+    CLR ,-S     ; Push result boolean value
+	LDA a,U     ; Push lhs
+	PSHS A
+	LDA b,U     ; Load rhs in A
+	CMPA 0,s    ; Reverse test (true if GE, so jump if LT)
+	BLT L1
+	INC 1,S     ; Make result 1
+L1
+	LEA 1,S     ; Pop (TOS now has boolean result)
+	PULS A
+	TSTA
+	BEQ L2
+	
+	LDA d,U
+	STA c,U
+L2
+
+This shortens to:
+
+    LDA a,U
+    CMPA b,U
+    BGE L1
+    LDA d,U
+    STA c,U
+L1
+
 	
 	
 	
+                |        if (a < b && c > d) {
+                |            core.printf("Hello\n");
+[36] PUSH1 0,L
+[38] PUSH1 1,L
+[40] LT<1>
+[41] BRF 7
+[43] PUSH1 2,L
+[45] PUSH1 3,L
+[47] GT<1>
+[48] FBRA 1
+[50] PUSHKS1 #0
+[51] BRF 12
+[53] PUSHS "Hello\n"
+                |        }
+[62] NCALL 1
+[64] DROPS 4
+
+
+	LDA -1,U
+	CMPA -2,U
+	BHS L1
+	LDA -3,U
+	CMPA -4,U
+	BLS L1
+	LDX Hello
+	PSHS X
+	JSR printf
+	LEAS 2,S
+L1
+
+
+
+		x = a < b;
+		
+[36] PUSH1 0,L
+[38] PUSH1 1,L
+[40] LT<1>
+[41] POP1 4,L
+
+
+	LDA -1,U
+	CMPA -2,U
+	BHS L1
+	LDA #1
+	BRA L2
+L1:
+	CLRA
+L2:
+	STA -5,U
+
+
+
+
+Ops: Binary
+        Op::OR1               OR (only 8 bit)
+        Op::XOR1              EOR (only 8 bit)
+        Op::AND1              AND (only 8 bit)
+        Op::SHR1              ASR/LSR (only 8 bit)
+        Op::SHL1              ASL/LSL (only 8 bit)
+        Op::ADD               ADD (8 and 16 bit)
+        Op::SUB               SUB (8 and 16 bit)
+        Op::IMUL/Op::UMUL     MUL (8 bit unsigned only)
+        Op::IDIV/Op::UDIV     No opcode
+
+    Unary
+        Op::NEG               NEG (8 bit only)
+        Op::NOT1              COM (8 bit only)
+        Op::LNOT              If value is zero, result is 1, otherwise 0
+        Op::PREINC
+        Op::PREDEC
+        Op::POSTINC
+        Op::POSTDEC
+
+    Assignment
+        Op::ADD
+        Op::SUB
+        Op::IMUL/Op::UMUL
+        Op::IDIV/Op::UDIV
+        Op::AND1
+        Op::OR1
+        Op::XOR1
+
+Relational operators on 6809 translate to branch instructions:
+
+     BEQ, BNE            - Signed or unsigned equal or not
+     BLT, BLE, BGE, BGT  - Signed <, <=, >=, >
+     BLO, BLS, BHS, BHI  - Unsigned <, <=, >=, >
+
+The most fundamental operation is to compare top 2 values on the stack
+and place a 1 or 0 on the stack based on the result, e.g,:
+
+	 LDA 1,S
+	 CMPA 0,S
+     LEAS 2,S
+	 BLT L1
+	 CLRA
+	 BRA L2
+ L1: LDA #1
+ L2: PSHS A
+
+This would be very expensive if done during and if test just to turn around
+and branch on the result sitting on the stack. It would result in the this
+code for the following clover statement:
+
+ if (a < b) core.printf("Hello\n");
+
+     LDA -1,U
+     PSHS A
+     LDA -2,U
+     PSHS A
+     LDA 1,S
+     CMP 0,S
+     BHS L1
+     LDA #1
+     BRA L2
+ L1:
+     CLRA
+ L2:
+     LEAS 2,S
+     PSHS A
+     PULS A
+     TSTA
+     BEQ L3
+     LDX Hello
+     PSHS X
+     JSR printf
+     LEAS 2,S
+ L3:
+
+By knowing the operands are local vars, we can significantly optimize
+
+     LDA -1,U
+     CMPA -2,U
+     BGE L1
+     LDX Hello
+     PSHS X
+     JSR printf
+     LEAS 2,S
+ L1:
+
+Goes from 19 instructions to 7. But what about cases where the operands are not vars?
+
+ if (a + 1 < b + 2) core.printf("Hello\n");
+
+We will need to start with the values on TOS-1 and TOS. We can do:
+
+     LDA 1,S
+     CMPA 0,S
+     LEAS 2,S
+     BGE L1
+     LDX Hello
+     PSHS X
+     JSR printf
+     LEAS 2,S
+ L1:
+
+The only issue here is the extra LEAS to get the operands off the stack.
+Fortunately LEAS doesn't affect the CC register so we can still do the
+branch.
+
+We can have 2 levels of optimization. First is the last example where
+we make no assumptions about the values on the stack and just avoid
+pushing a bool result from the operation. Second is dealing directly
+with var operands.
+
+But we can only do this optimization if the next op is an if test.
+How do we know that? We can avoid generating the code for a relational
+opcode until the parent node is processed
+
+
+Pre/Post Inc/Dec on 6809
+
+TOS has address of variable to inc/dec
+
+	PULS X		; Byte post-inc example
+	LDA 0,X
+	PSH A
+	ADDA #<inc>
+	STA 0,X
 	
+	PULS X		; Word pre-inc example
+	LDD 0,X
+	ADDD #<inc>
+    PSHS D
+	STD 0,X
+	
+But if the value is a pointer we need to inc or dec by the size of the underlying array (this is a bug in the current VM implementation). Probably should just get rid of ops for VM and implement with primitives. Or maybe 2 instructions which together would do the work and would allow a value to be specified for inc or dec.
+
+	DUP
+	DEREF1
+	PUSHK <size of inc>
+	
+
+
+16 bit signed MUL on 6809
+
+    CLRA
+    PSHS A      ; TOS is sign, TOS+1 is rhs, TOS+3 is lhs
+    LDD 3,S     ; Skip if unsigned
+    BPL L1      ; Skip if unsigned
+L1              ; Skip if unsigned
+    NEG 0,S     ; Skip if unsigned
+    LDD 1,S     ; Skip if unsigned
+    BPL L2      ; Skip if unsigned
+    NEG 0,S     ; Skip if unsigned
+L2
+    LDD #0      ; TOS is the accumulator, TOS+2 is sign, TOS+3 is rhs, TOS+5 is lhs
+    PSHS D
+    LDA 6,S
+    LDB 4,S
+    MUL
+    STD 0,S
+    LDA 5,S
+    LDB 4,S
+    MUL
+    ADDB 1,S    ; Toss MSB of result
+    LDA 6,S
+    LDB 3,S
+    MUL
+    ADDB 1,S    ; Toss MSB of result
+    PULS D
+    TST S,2     ; Do the sign
+    BPL L3
+    NEG D
+L3
+    LEAS 5,S
+    PSHS D      ; TOS now has 16 bit result
+
+
+Switch on 6809
+
+We can use the same table driven technique on 6809. Put the binary search in BOSS9.
+
+Where to put the table? It can go inline, since we're branching from here anyway
+
+int8 b;
+switch (a) {
+    default: b = 0;
+    case 1: b = 1;
+    case 2: b = 2;
+    case 3" b = 3;
+}
+
+Table always has long branches. switch1 expects an 8 bit switch value on the stack and switch2
+expects 16 bits. Address of table is passed on the stack. Number of entries in the table is
+also on the stack.
+
+Stack:  value (8 or 16 bits)
+        Address of table
+        Number of entries in table
+        
+Return: Address of BRA for matched table entry, or address just past table if no match.
+
+    LDA a,U
+    PSHS A
+    LEAX L1
+    PSHS X
+    LDD #3
+    PSHS D
+    JSR switch1
+    PULS X
+    JMP 0,X
+L1
+    FCB 1
+    LBRA L3
+    FCB 2
+    LBRA L4
+    FCB 3
+    LBRA L5
+    
+L2  LDA #0
+    STA b,U
+    BRA L6
+    
+L3  LDA #1
+    STA b,U
+    BRA L6
+
+L4  LDA #2
+    STA b,U
+    BRA L6
+
+L5  LDA #2
+    STA b,U
+    BRA L6
+L6

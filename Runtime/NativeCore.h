@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-    This source file is a part of Lucid
-    For the latest info, see https://github.com/cmarrin/Lucid
+    This source file is a part of Clover
+    For the latest info, see https://github.com/cmarrin/Clover
     Copyright (c) 2021-2024, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
@@ -26,18 +26,20 @@
 
 #pragma once
 
-#ifndef ARDUINO
+#include "Defines.h"
+
+#if COMPILE == 1
 #include "Module.h"
 #endif
 
 #include <stdint.h>
 
-namespace lucid {
+namespace clvr {
 
 class InterpreterBase;
 
 class NativeCore
-#ifndef ARDUINO
+#if COMPILE == 1
     : public Module
 #endif
 {
@@ -45,35 +47,34 @@ class NativeCore
     enum class Id {
         None            = 0,
         PrintF          = 1,
-        MemSet          = 2,
-        RandomInt       = 3,
-        RandomFloat     = 4,
-        MinInt          = 5,
-        MaxInt          = 6,
-        MinFloat        = 7,
-        MaxFloat        = 8,
-        InitArgs        = 9,
-        ArgInt8         = 10,
-        ArgInt16        = 11,
-        ArgInt32        = 12,
-        ArgFloat        = 13,
-        Animate         = 14,
+        Format          = 2,
+        MemSet          = 3,
+        RandomInt       = 4,
+        RandomFloat     = 5,
+        MinInt          = 6,
+        MaxInt          = 7,
+        MinFloat        = 8,
+        MaxFloat        = 9,
+        InitArgs        = 10,
+        ArgInt8         = 11,
+        ArgInt16        = 12,
+        ArgInt32        = 13,
+        ArgFloat        = 14,
+        Animate         = 15,
     };
     
     NativeCore()
-#ifndef ARDUINO
+#if COMPILE == 1
         : Module("core")
 #endif
     { }
     
-#ifndef ARDUINO
+#if COMPILE == 1
     static ModulePtr createModule();
 #endif
-
+#if RUNTIME == 1
     static void callNative(uint16_t id, InterpreterBase* interp);
-
-
-  private:
+#endif
 };
 
 }

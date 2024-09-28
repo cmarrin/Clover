@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace lucid {
+namespace clvr {
 
 class OpInfo {
   public:
@@ -48,20 +48,22 @@ static std::vector<OpInfo> info {
     { Operator::SubSto, 1 , true  , Op::SUB  , Op::SUB  , Type::None    }, // Equal) just need the binary operation
     { Operator::MulSto, 1 , true  , Op::IMUL , Op::UMUL , Type::None    }, // they need to perform. For equal there
     { Operator::DivSto, 1 , true  , Op::IDIV , Op::UDIV , Type::None    }, // is no additional operation, so it is
-    { Operator::AndSto, 1 , true  , Op::AND  , Op::AND  , Type::None    }, //
-    { Operator::OrSto , 1 , true  , Op::OR   , Op::OR   , Type::None    }, //
-    { Operator::XorSto, 1 , true  , Op::XOR  , Op::XOR  , Type::None    }, //
+    { Operator::AndSto, 1 , true  , Op::AND1 , Op::AND1 , Type::None    }, //
+    { Operator::OrSto , 1 , true  , Op::OR1  , Op::OR1  , Type::None    }, //
+    { Operator::XorSto, 1 , true  , Op::XOR1 , Op::XOR1 , Type::None    }, //
     { Operator::LOr   , 2 , false , Op::NOP  , Op::NOP  , Type::UInt8   }, // Logical AND, and OR don't have opcodes.
     { Operator::LAnd  , 3 , false , Op::NOP  , Op::NOP  , Type::UInt8   }, // They are short-circuited at compile time.
-    { Operator::Or    , 4 , false , Op::OR   , Op::OR   , Type::None    },
-    { Operator::Xor   , 5 , false , Op::XOR  , Op::XOR  , Type::None    },
-    { Operator::And   , 6 , false , Op::AND  , Op::AND  , Type::None    },
+    { Operator::Or    , 4 , false , Op::OR1  , Op::OR1  , Type::None    },
+    { Operator::Xor   , 5 , false , Op::XOR1 , Op::XOR1 , Type::None    },
+    { Operator::And   , 6 , false , Op::AND1 , Op::AND1 , Type::None    },
     { Operator::EQ    , 7 , false , Op::EQ   , Op::EQ   , Type::UInt8   }, // FIXME: How do the branch opcodes relate to these operators?
     { Operator::NE    , 7 , false , Op::NE   , Op::NE   , Type::UInt8   },
     { Operator::LT    , 8 , false , Op::LT   , Op::LO   , Type::UInt8   },
     { Operator::GT    , 8 , false , Op::GT   , Op::HI   , Type::UInt8   },
     { Operator::GE    , 8 , false , Op::GE   , Op::HS   , Type::UInt8   },
     { Operator::LE    , 8 , false , Op::LE   , Op::LS   , Type::UInt8   },
+    { Operator::SHR   , 9 , false , Op::ASR1 , Op::SHR1 , Type::None    },
+    { Operator::SHL   , 9 , false , Op::SHL1 , Op::SHL1 , Type::None    },
     { Operator::Plus  , 10, false , Op::ADD  , Op::ADD  , Type::None    },
     { Operator::Minus , 10, false , Op::SUB  , Op::SUB  , Type::None    },
     { Operator::Mul   , 11, false , Op::IMUL , Op::UMUL , Type::None    },

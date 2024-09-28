@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-    This source file is a part of Lucid
-    For the latest info, see https://github.com/cmarrin/LucidVM
+    This source file is a part of Clover
+    For the latest info, see https://github.com/cmarrin/Clover
     Copyright (c) 2021-20224, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
@@ -16,7 +16,7 @@
 #include "Module.h"
 #include "Symbol.h"
 
-namespace lucid {
+namespace clvr {
 
 class Struct : public Module
 {
@@ -136,12 +136,9 @@ public:
         return nullptr;
     }
 
-    const ASTPtr& astNode() const { return _astNode; }
     const ASTPtr& initASTNode() const { return _initASTNode; }
 
-    void addASTNode(const ASTPtr& node) { _astNode->addNode(node); }
-    
-    bool haveCtor() const { return _ctor != nullptr; }
+    bool hasCtor() const { return _ctor != nullptr; }
 
 private:
     std::vector<StructPtr> _structs;
@@ -149,7 +146,6 @@ private:
     std::vector<SymbolPtr> _locals;
     uint8_t _localSize = 0;
     Type _type = Type::None;
-    ASTPtr _astNode = std::make_shared<StatementsNode>();
     ASTPtr _initASTNode = std::make_shared<StatementsNode>();
     FunctionPtr _ctor;
 };

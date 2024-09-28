@@ -13,18 +13,20 @@
 
 #pragma once
 
-#ifndef ARDUINO
+#include "Defines.h"
+
+#if COMPILE == 1
 #include "Module.h"
 #endif
 
 #include <stdint.h>
 
-namespace lucid {
+namespace clvr {
 
 class InterpreterBase;
 
 class NativeColor
-#ifndef ARDUINO
+#if COMPILE == 1
     : public Module
 #endif
 {
@@ -35,20 +37,18 @@ public:
     };
     
     NativeColor()
-#ifndef ARDUINO
+#if COMPILE == 1
         : Module("clr")
 #endif
     { }
 
-#ifndef ARDUINO
+#if COMPILE == 1
     static ModulePtr createModule();
 #endif
-
+#if RUNTIME == 1
     static void callNative(uint16_t id, InterpreterBase* interp);
-    
     static uint32_t hsvToRGB(float h, float s, float v);
-
-  private:
+#endif
 };
 
 }

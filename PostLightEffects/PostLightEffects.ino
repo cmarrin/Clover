@@ -7,7 +7,7 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include <Lucid.h>
+#include <Clover.h>
 
 #include <Adafruit_NeoPixel.h>
 #include <EEPROM.h>
@@ -28,7 +28,7 @@ constexpr int NumPixels = 8;
 
 static constexpr uint32_t StackSize = 1024;
 
-class PostLightEffects : public lucid::Interpreter<StackSize>
+class PostLightEffects : public clvr::Interpreter<StackSize>
 {
 public:
     PostLightEffects() : _pixels(NumPixels, LEDPin, NEO_GRB + NEO_KHZ800) { }
@@ -148,11 +148,11 @@ public:
         if (error() == PostLightEffects::Error::None) {
             // Pass in 5 args, a uint8 command, speed, value, saturation and hue.
             // Push them backwards
-            addArg(3, lucid::Type::UInt8); // speed (0-7)
-            addArg(150, lucid::Type::UInt8); // value
-            addArg(200, lucid::Type::UInt8); // saturation
-            addArg(128, lucid::Type::UInt8); // hue
-            addArg('f', lucid::Type::UInt8); // cmd
+            addArg(3, clvr::Type::UInt8); // speed (0-7)
+            addArg(150, clvr::Type::UInt8); // value
+            addArg(200, clvr::Type::UInt8); // saturation
+            addArg(128, clvr::Type::UInt8); // hue
+            addArg('f', clvr::Type::UInt8); // cmd
             
             interp(PostLightEffects::ExecMode::Start);
             dropArgs(5);
@@ -174,7 +174,7 @@ int iii = 0;
         
         ++iii;
         
-        addArg('*', lucid::Type::UInt8);
+        addArg('*', clvr::Type::UInt8);
         uint32_t result = interp(PostLightEffects::ExecMode::Start);
         if (error() != PostLightEffects::Error::None) {
             showError(error());

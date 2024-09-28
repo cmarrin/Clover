@@ -1,13 +1,13 @@
 /*-------------------------------------------------------------------------
     This source file is a part of Clover
-    For the latest info, see https://github.com/cmarrin/Lucid
+    For the latest info, see https://github.com/cmarrin/Clover
     Copyright (c) 2021-2024, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-// Lucid compiler
+// Clover compiler
 //
 // A simple imperative language which generates code that can be 
 // executed by the Interpreter
@@ -21,6 +21,7 @@
 #include <variant>
 
 #include "AST.h"
+#include "CodeGen.h"
 #include "Enum.h"
 #include "Function.h"
 #include "Defines.h"
@@ -28,7 +29,7 @@
 #include "Scanner.h"
 #include "Struct.h"
 
-namespace lucid {
+namespace clvr {
 
 //*********************************
 //
@@ -268,17 +269,21 @@ enum class Error {
     PtrAssignmentMustMatch,
     PtrTypeNotAllowed,
     WrongNumberOfInitializers,
+    CodeGenFailed,
 };
 
 class Compiler {
 public:
-  	Compiler(std::istream* stream, Annotations* annotations)
-        : _scanner(stream, annotations)
-    { }
+    enum class OutputFormat { StackVM, ASM6809 };
+    
+  	Compiler(OutputFormat, std::istream* stream, Annotations* annotations);
 
-    bool compile(std::vector<uint8_t>& executable, uint32_t maxExecutableSize,
-                 const std::vector<Module*>&);
+    bool compile(uint32_t maxExecutableSize, const std::vector<Module*>&);
 
+    std::vector<uint8_t>& code() { return _codeGen->code(); }
+    const std::vector<uint8_t>& constants() const { return _constants; }
+    const StructPtr& topLevelStruct() const { return _topLevelStruct; }
+    
     bool program();
 
     Error error() const { return _error; }
@@ -390,28 +395,6 @@ private:
     
     uint16_t sizeInBytes(Type type) const;
     
-    void appendValue(std::vector<uint8_t>& container, uint32_t v, Type t)
-    {
-        switch (typeToOpSize(t)) {
-            case OpSize::i32:
-            case OpSize::flt: container.push_back(v >> 24);
-                              container.push_back(v >> 16);
-            case OpSize::i16: container.push_back(v >> 8);
-            case OpSize::i8 : container.push_back(v);
-        }
-    }
-    
-    void setValue(std::vector<uint8_t>& container, AddrNativeType addr, uint32_t v, Type t)
-    {
-        switch (typeToOpSize(t)) {
-            case OpSize::i32:
-            case OpSize::flt: container[addr] = v >> 24;
-                              container[addr + 1] = v >> 16;
-            case OpSize::i16: container[addr + 2] = v >> 8;
-            case OpSize::i8 : container[addr + 3] = v;
-        }
-    }
-    
     FunctionPtr currentFunction()
     {
         expect(_inFunction && _currentFunction, Error::InternalError);
@@ -436,7 +419,7 @@ private:
     
     void addJumpFixupNodes(const ASTPtr& parent, BranchNode::Kind jumpKind, const BranchNode::Kind targetKind);
 
-    void emitStruct(std::vector<uint8_t>& executable, const StructPtr& struc);
+    void emitStruct(CodeGen*, const StructPtr&);
 
     using TraversalVisitor = std::function<void(const ASTPtr&)>;
     void traverseStruct(const StructPtr& struc, TraversalVisitor func) const;
@@ -467,6 +450,8 @@ private:
 
     uint16_t _nextMem = 0; // next available location in mem
     uint16_t _localHighWaterMark = 0;
+    
+    CodeGen* _codeGen = nullptr;
 };
 
 }

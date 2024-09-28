@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-    This source file is a part of Lucid
-    For the latest info, see https://github.com/cmarrin/LucidVM
+    This source file is a part of Clover
+    For the latest info, see https://github.com/cmarrin/Clover
     Copyright (c) 2021-2022, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
@@ -20,28 +20,24 @@
 #include <memory>
 #endif
 
-namespace lucid {
+
+#define ADDR32 1          // Uncomment for 32 bit addr, leave commented out for 16 bit
+#define SUPPORT_FLOAT 1   // Uncomment for float support, leave commented out for no floats
+#define SUPPORT_INT32 1   // Uncomment for int32/uint32 support, leave commented out for no support
+
+namespace clvr {
 
 #ifdef ARDUINO
+    #define RUNTIME 1
     static inline uint8_t rom(uint16_t addr) { return EEPROM.read(addr); }
     
     static inline void putChar(uint8_t c) { Serial.print(char(c)); }
-
-    static inline void toString(char* s, float val, int8_t width = 0, uint8_t precision = 0)
-    {
-        dtostrf(val, width, precision, s);
-    }
 #else
     extern uint8_t* ROMBase;
 
     static inline uint8_t rom(uint16_t addr) { return ROMBase[addr]; }
 
     static inline void putChar(uint8_t c) { ::putchar(c); }
-    
-    static inline void toString(char* s, float val, int8_t width = 0, uint8_t precision = 0)
-    {
-        snprintf(s, 20, "%*.*g", width, precision, val);
-    }
 
     static inline void randomSeed(uint32_t s) { srand(s); }
     static inline int32_t random(int32_t min, int32_t max)
@@ -94,25 +90,63 @@ static constexpr bool isInteger(Type t) { return t >= Type::Int8 && t <= Type::U
 static constexpr bool isEnum(Type t) { return uint8_t(t) >= EnumTypeStart && uint8_t(t) < StructTypeStart; }
 static constexpr bool isStruct(Type t) { return uint8_t(t) >= StructTypeStart; }
 
+// Defines for size of addresses
+#ifdef ADDR32
+using AddrNativeType = uint32_t;
+using RelAddrNativeType = uint32_t;
+constexpr Type AddrType = Type::UInt32;
+constexpr Type RelAddrType = Type::Int32;
+constexpr bool Is32BitAddr = true;
+constexpr OpSize AddrOpSize = OpSize::i32;
+constexpr uint8_t AddrSize = sizeof(AddrNativeType);
+#else
+using AddrNativeType = uint16_t;
+using RelAddrNativeType = int16_t;
+constexpr Type AddrType = Type::UInt16;
+constexpr Type RelAddrType = Type::Int16;
+constexpr bool Is32BitAddr = false;
+constexpr OpSize AddrOpSize = OpSize::i16;
+constexpr uint8_t AddrSize = sizeof(AddrNativeType);
+#endif
+
+#ifdef SUPPORT_INT32
+using ArgUNativeType = uint32_t;
+using ArgINativeType = int32_t;
+constexpr Type ArgUType = Type::UInt32;
+constexpr Type ArgIType = Type::Int32;
+#else
+using ArgUNativeType = uint16_t;
+using ArgINativeType = int16_t;
+constexpr Type ArgUType = Type::UInt16;
+constexpr Type ArgIType = Type::Int16;
+#endif
+
+#if SUPPORT32 || SUPPORT_FLOAT || ADDR32
+using VarArgNativeType = uint32_t;
+constexpr Type VarArgType = Type::UInt32;
+#else
+using VarArgNativeType = uint16_t;
+constexpr Type VarArgType = Type::UInt16;
+#endif
+
+constexpr uint8_t VarArgSize = sizeof(VarArgNativeType);
+
 static constexpr uint8_t opSizeToBytes(OpSize opSize)
 {
     return (opSize == OpSize::i8) ? 1 : ((opSize == OpSize::i16) ? 2 : 4);
 }
 
-static constexpr OpSize typeToOpSize(Type type)
+static inline OpSize typeToOpSize(Type type)
 {
     if (isEnum(type)) {
         // FIXME: For now Enums are always 1 byte
         return OpSize::i8;
     }
+    if (type == Type::String) {
+        return AddrOpSize;
+    }
     return (type == Type::Int8 || type == Type::UInt8) ? OpSize::i8 : ((type == Type::Int16 || type == Type::UInt16) ? OpSize::i16 : OpSize::i32);
 };
-
-// Defines for size of addresses
-using AddrNativeType = uint32_t;
-constexpr Type AddrType = Type::UInt32;
-constexpr OpSize AddrOpSize = typeToOpSize(AddrType);
-constexpr uint8_t AddrSize = opSizeToBytes(AddrOpSize);
 
 static inline uint8_t typeToBytes(Type type)
 {
@@ -151,29 +185,19 @@ static inline uint8_t typeToSizeBits(Type type)
     }
 };
 
-/*
-    Executable file format
-    
-        Bytes       Description
-        
-        0-3     : Signature - 'lucd'
-        4-7     : Entry point of 'main' function, if any (0 if not)
-        8-11    : Location of constructor function of top level struct
-        12-15   : Bytes of storage needed for top-level struct
-        16-17   : Size of constants in bytes
-        18-n    : Bytes of constant structs and arrays
-        n-<end> : Executable code
- */
- 
-constexpr AddrNativeType MainEntryPointAddr = 4;
-constexpr AddrNativeType TopLevelCtorEntryPointAddr = 8;
+#ifdef ADDR32
+constexpr AddrNativeType TopLevelCtorEntryPointAddr = 12;
+constexpr AddrNativeType TopLevelStructSizeAddr = 16;
+constexpr uint16_t ConstStart = 22;
+#else
+constexpr AddrNativeType TopLevelCtorEntryPointAddr = 10;
 constexpr AddrNativeType TopLevelStructSizeAddr = 12;
-constexpr uint16_t ConstStart = 18; // Past signature, entry point and top level size
-
+constexpr uint16_t ConstStart = 16;
+#endif
 
 /*
 
-Machine Code for LucidVM
+Machine Code for Clover
 
 See README.md for details.
 
@@ -196,36 +220,19 @@ Opcodes:
     int16 c = 20;
     int16 a = (b + 5) * (c + 6);
     
-    6809:
+    PUSHK<2>    #10
+    POP<2>      b,L
+    PUSHK<2>    #20
+    POP<2>      c,L
+    PUSH<2>     b,L
+    PUSHK<2>    #5
+    ADD<2>
+    PUSH<2>     c,L
+    PUSHK<2>    #6
+    ADD<2>
+    MUL<2>
+    POP         a,L
     
-    LDD     #10
-    STD     b,U
-    LDD     #20
-    STD     c,U
-    LDD     b,U
-    ADDD    #5
-    PSHS    D
-    LDD     c,U
-    ADDD    #6
-    PSHS    D
-    JSR     [$IMUL16]   // pass 16 bit args on stack, return value on stack but leave args on stack.
-    PULS    D
-    STD     a,U
-    LEAS    4,S
-    
-    Generic register based (8 regs)
-    
-    LDK21   r0, #10
-    ST2     r0, b,U
-    LDK21   r1, #20
-    ST2     r1, c,U
-    LDK2    r2, #5
-    ADD2    r0, r2
-    LDK21   r2, #6
-    ADD2    r1, r2
-    IMUL2   r0, r1
-    ST2     r0, a,U
-
     All addresses can be 2 bytes for a 64KB range or 4 bytes for a 2^32 byte range.
     This is determined at compile time. Also at compile time you can specify
     float support (16 or 32 bit) or not and max integer width (16 or 32 bits).
@@ -245,7 +252,7 @@ Opcodes:
         is an unsigned address. If bit 4 is 1 then the next 4 bytes is an unsigned address.
 
     - Immediate value
-        LDK<width><size> loads an immediate operand. <width> indicates the number
+        PUSHK<width><size> pushes an immediate operand. <width> indicates the number
         of bytes to push (1, 2, or 4) and <size> indicates the number of bytes
         following the opcode (1, 2, 3, or 4). Operand is signed and is sign extended
         to fit in the desired number of bytes to push.
@@ -266,91 +273,176 @@ Opcodes:
     return operation. The caller then adds the number of bytes of args to SP.
 */
 
+// 0 bit opcodes start at 0x00
+static constexpr uint8_t OneBitOperandStart  = 0x50;
+static constexpr uint8_t TwoBitOperandStart  = 0x5c;
+static constexpr uint8_t FoutBitOperandStart = 0xb0;
+
 enum class Op: uint8_t {
     NOP     = 0x00,
-
-    // Load/store - bits 1:0 of opcode are Opsize of operation.
-    // Next byte: 7:5 - offset mode, 4:3 - index reg, 2:0 - load/store reg
-    // Following byte(s) - offset
-    //
-    // offset mode: 0 - 6   : byte offset
-    //              7       : see next byte, if bit 7 = 0, byte is offset (0 - 127)
-    //                      : if bit 7 = 1, append next byte to bits 6:0 for a 15 bit offset (0 - 32768)
-    LD      = 0x04, // Load value from addr mode address
-    ST      = 0x08, // Store value at addr mode address
-    LEA     = 0x0c, // Load addr mode address (ignore bits 1:0 of opcode)
-    LDX     = 0x10, // Load value at address in reg
-    STX     = 0x14, // Store value at address in reg
-    LDK     = 0x18, // Load constant - bits 1:0 of opcode are opsize of bytes to load.
-                    // Next byte, bits 4:3 number of bytes following with signed value, bits 2:0 are destination reg
-    LDSK    = 0x1c, // Load constant - bits 1:0 of opcode are opsize of bytes to load.
-                    // Next byte, bits 7:3 signed value (-16 to 15), bits 2:0 are destination reg
-                    
-    PUSH    = 0x20, // Push value onto stack - bits 1:0 of opcode are opsize of bytes to load.
-                    // Next byte bits 2:0 are source reg
-    POP     = 0x24, // Pop value from stack - bits 1:0 of opcode are opsize of bytes to load.
-                    // Next byte bits 2:0 are destination reg
-
-    // Binary ops - bits 1:0 of opcode are Opsize of operation.
-    // Next byte: 5:3 - register a, 2:0 - register b. Result is in register a
-    ADD     = 0x28,
-    SUB     = 0x2c,
-    IMUL    = 0x30,
-    UMUL    = 0x34,
-    IDIV    = 0x38,
-    UDIV    = 0x3c,
+    PUSHS   = 0x01,
+    PUSHK11 = 0x02, // 1 byte operand, push 1 byte
+    PUSHK12 = 0x03, // 1 byte operand, push 2 bytes
+    PUSHK14 = 0x04, // 1 byte operand, push 4 bytes
+    PUSHK22 = 0x05, // 2 byte operand, push 2 bytes
+    PUSHK24 = 0x06, // 2 byte operand, push 4 bytes
+    PUSHK44 = 0x07, // 4 byte operand, push 4 bytes
     
-    AND     = 0x40,
-    OR      = 0x44,
-    XOR     = 0x48,
+    DROP1   = 0x08, // Next byte is count (1 - 256)
+    DROP2   = 0x09, // Next 2 bytes are count (1 - 65536)
+    
+    LNOT    = 0x0a,
+    
+    CALL    = 0x0b, // Absolute address of callee (16 bit)
+    MCALL   = 0x0c, // Call a member function. TOS has struct instance address that must be put in the Y register
+    INDEX1  = 0x0d, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    INDEX2  = 0x0e, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    PUSHREF = 0x0f, // Next byte is addr mode. Data width is used when computing negative offsets from U
+    
+    // These must have their '1', '2, '4' forms sequential in that order.
+    // When generating code, the '1' form is passed in and we add one to
+    // the opcode if we need the '2' form and add two if we need the '4'
+    // form
+    DEREF1  = 0x10, // TOS has ref, pop it, load the value at that address and push it
+    DEREF2  = 0x11,
+    DEREF4  = 0x12,
+    POP1    = 0x13, // Next byte is addr mode, pop TOS and store at address
+    POP2    = 0x14,
+    POP4    = 0x15,
+    POPDEREF1=0x16, // a = popaddr, v = pop1, mem1[a] = v
+    POPDEREF2=0x17, // a = popaddr, v = pop2, mem2[a] = v
+    POPDEREF4=0x18, // a = popaddr, v = pop4, mem4[a] = v
+    PUSH1   = 0x19, // Next byte is addr mode, push value at addr
+    PUSH2   = 0x1a,
+    PUSH4   = 0x1b,
 
-    // Unary ops - bits 1:0 of opcode are Opsize of operation.
-    // Next byte: 2:0 - register a. Result is in register a
-    NOT     = 0x4c,
-    NEG     = 0x50,
+    DUP1    = 0x1c,
+    DUP2    = 0x1d,
+    DUP4    = 0x1e,
+    
+    PUSHR1  = 0x1f, // Push _returnValue (1 byte)
+    PUSHR2  = 0x20, // Push _returnValue (2 bytes)
+    PUSHR4  = 0x21, // Push _returnValue (4 bytes)
 
-    // Conditional branches. Bit 0 of opcode indicates that the next
-    // byte (bit 0 = 0) or 2 bytes (bit 0 = 1) contain a signed
-    // relative offset from the start of the next instruction.
-    BLE     = 0x54,
-    BLS     = 0x58,
-    BLT     = 0x5c,
-    BLO     = 0x60,
-    BGE     = 0x64,
-    BHS     = 0x68,
-    BGT     = 0x6c,
-    BHI     = 0x70,
-    BEQ     = 0x74,
-    BNE     = 0x78,
-    BRA     = 0x7c,
+    SWITCH  = 0x22, // Following opcode is a 16 bit operand. Then there is a list of pairs: <value> (1-4 bytes) and <addr>
+                    // (1 or 2 bytes). Bits 1:0 are value width (0 = 1 byte, 1 = 2 bytes, 2 = 4 bytes). This matches the 
+                    // OpSize format. Bit 2 is addr size (0 = 1 byte, 1 = 2 bytes). Bits 15:3 is number of enties in list
+                    // (0 - 8191 entries). Immediately following the entries is the code for the default clause. If
+                    // there is none then this is a BRA to the end of the clauses.
 
-    SWITCH  = 0x80, // Following opcode is an 8 or 16 bit operand followed by a table.
-                    // Bits 1:0 of opcode is OpSize of values in table. Bit 7 of first
-                    // operand byte is addr size in table, 0 - 1 byte, 1 - 2 bytes. If
-                    // Bit 6 of the operand is 0 then bits 5:0 are the number of entries
-                    // in the table (0 - 63 entries). If bit 6 is 1 then there is a second
-                    // operand byte bits 5:0 are prepended to this byte to give a 14 bit
-                    // number of entried (0 - 16383). Immediately following the table is
-                    // the code for the default clause. If there is none then this is a
-                    // BRA to the end of the clauses.
+    // Cast operators are sparse. For narrowing cast you don't
+    // need to worry about sign.
+    CASTF8  = 0x23,
+    CASTF16 = 0x24,
+    CASTF32 = 0x25,
+    
+    CAST32F = 0x26,
+    CAST3216= 0x27,
+    CAST328 = 0x28,
+    
+    CAST168 = 0x29,
+    
+    // For widening casts you need signed and unsigned
+    // versions so you know when to sign extend
+    CASTU16F= 0x2a,
+    CASTU1632=0x2b,
+    
+    CASTI16F= 0x2c,
+    CASTI1632=0x2d,
 
-    ENTER   = 0x84, // Enter function (adjust BP). Bit 0 is 0 for 1 byte operand, 1 for 2 byte
-    CALL    = 0x88, // Call function. Bits 1:0 ignored, always 16 bit absolute operand
-    NCALL   = 0x8c, // Call native function. Bit 0 is 0 for 1 byte operand, 1 for 2 byte
-    RET     = 0x90, // Return from function (adjust BP).
-// 5
+    CASTU8F = 0x2e,
+    CASTU832= 0x2f,
+    CASTU816= 0x30,
 
-    // Bits 1:0 are concatenated with 5:3 bits from next byte to give 32 type conversions
-    // Bits 2:0 from next byte is register
-    // Conversions:
-    //
-    //      FI32,  FI16,  FI8,  FU32, FU16, FU8 (negative float to unsigned return 0)
-    //      I32F,  U32F,  I16F, U16F, I8F,  U8F (widening cast need signed/unsigned versions for sign ext.
-    //      I1632, U1632, I832, U832, I816, U816
-    CAST    = 0x94,
+    CASTI8F = 0x31,
+    CASTI832= 0x32,
+    CASTI816= 0x33,
+    
+    RET     = 0x34, // Return without popping anything from the stack
+    RETR1   = 0x35, // Return after popping TOS into _returnValue
+    RETR2   = 0x36, // Return after popping TOS into _returnValue
+    RETR4   = 0x37, // Return after popping TOS into _returnValue
 
+    OFFSET1 = 0x38, // 8 bit ubnsigned offset added to ref on TOS
+    OFFSET2 = 0x39, // 16 bit ubnsigned offset added to ref on TOS
+
+    // These must have their '1', '2, '4' forms sequential in that order.
+    // When generating code, the '1' form is passed in and we add one to
+    // the opcode if we need the '2' form and add two if we need the '4'
+    // form
+    AND1    = 0x3a,
+    AND2    = 0x3b,
+    AND4    = 0x3c,
+    OR1     = 0x3d,
+    OR2     = 0x3e,
+    OR4     = 0x3f,
+    XOR1    = 0x40,
+    XOR2    = 0x41,
+    XOR4    = 0x42,
+    NOT1    = 0x43,
+    NOT2    = 0x44,
+    NOT4    = 0x45,
+    SHR1    = 0x46,
+    SHR2    = 0x47,
+    SHR4    = 0x48,
+    ASR1    = 0x49,
+    ASR2    = 0x4a,
+    ASR4    = 0x4b,
+    SHL1    = 0x4c,
+    SHL2    = 0x4d,
+    SHL4    = 0x4e,
+    
 //
-// available opcodes 98 - ff
+//
+// Available opcodes 4f
+//
+//
+
+// Bit 0 is 0 if the operand is a 8 bits and 1 if 16 bits.
+// Operand is sign extended
+// This limits branches to the range -32768 to 32767.
+// What happens if we go over that? do we fail or have some
+// kind of trampoline support?
+    BRF     = 0x50, // Branch if TOS is false, branch is always forward
+    BRT     = 0x52, // Branch if TOS is true, branch is always forward
+    FBRA    = 0x54, // Branch is always forward
+    RBRA    = 0x56, // Branch is always reverse
+    NCALL   = 0x58,
+    ENTER   = 0x5a,
+
+// Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
+
+    ADD     = 0x5c,
+    SUB     = 0x60,
+    IMUL    = 0x64,
+    UMUL    = 0x68,
+    IDIV    = 0x6c,
+    UDIV    = 0x70,
+    
+    NEG     = 0x74,
+
+    PREINC1 = 0x78, // Next byte is signed bytes to inc/dec
+    PREINC2 = 0x7c, // Next 2 bytes is signed bytes to inc/dec
+    POSTINC1= 0x80, // Next byte is signed bytes to inc/dec
+    POSTINC2= 0x84, // Next 2 bytes is signed bytes to inc/dec
+    
+    LE      = 0x88,
+    LS      = 0x8c,
+    LT      = 0x90,
+    LO      = 0x94,
+    GE      = 0x98,
+    HS      = 0x9c,
+    GT      = 0xa0,
+    HI      = 0xa4,
+    EQ      = 0xa8,
+    NE      = 0xac,
+
+// These versions use the lower 4 bits of the opcode as a param (0-15)
+    PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
+    PUSHKS2 = 0xc0, // lower 4 bits is value from -8 to 7, push 2 bytes
+    PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
+    DROPS   = 0xe0, // lower 4 bits is bytes to drop from 1 to 16
+    ENTERS  = 0xf0,
 };
 
 static inline Op castOp(Type from, Type to)
@@ -426,6 +518,14 @@ static inline Op castOp(Type from, Type to)
             case Type::Int16:
             case Type::UInt16: return Op::CASTI816;
             default: return Op::NOP;
+        }
+    }
+    
+    if (from == Type::String) {
+        // A string will only ever be cast if it's a vararg in which
+        // case it's being cast to VarArgType
+        if (AddrSize != VarArgSize) {
+            return (AddrSize == 2) ? Op::CASTU1632 : Op::CAST3216;
         }
     }
     
@@ -518,6 +618,8 @@ enum class Operator : uint8_t {
     LNot    = '!',
     ArrIdx  = '[',
     Dot     = '.',
+    SHR     = 0xb0,
+    SHL     = 0xb1,
     
     // '&', '*' and '-' are used as unary operators. Represent those here.
     AddrOf  = 0xe0,
@@ -526,10 +628,6 @@ enum class Operator : uint8_t {
 };
 
 class VarArg;
-
-int32_t printf(AddrNativeType fmt, VarArg&);    
-int32_t printf(const char* fmt, ...);
-int32_t vprintf(const char* fmt, va_list args);
 
 // Native Modules contain native functions that can be called
 // by the interpreter. Modules are numbered starting at 0. There

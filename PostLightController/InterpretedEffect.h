@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include <Lucid.h>
+#include <Clover.h>
 
 #include "NativeColor.h"
 
@@ -21,7 +21,7 @@
 
 static constexpr uint32_t StackSize = 1024;
 
-class MyInterpreter : public lucid::Interpreter<StackSize>
+class MyInterpreter : public clvr::Interpreter<StackSize>
 {
 public:
 	MyInterpreter(Adafruit_NeoPixel* pixels)

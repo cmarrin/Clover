@@ -1,4 +1,4 @@
-// Flicker Lucid example
+// Flicker Clover example
 
 // The native code gets the Command object from the Flicker prototype. If the
 // cmd matches the requested command and nparams matches the passed param

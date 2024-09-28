@@ -7,7 +7,7 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include <Lucid.h>
+#include <Clover.h>
 #include <EEPROM.h>
 #include "TestCore.h"
 #include "TestExpr.h"
@@ -32,7 +32,7 @@ uploaded to EEPROM and then the test is run. All tests are named simply
 static constexpr uint32_t MaxExecutableSize = 65536;
 static constexpr uint32_t StackSize = 1024;
 
-class MyInterpreter : public lucid::Interpreter<StackSize>
+class MyInterpreter : public clvr::Interpreter<StackSize>
 {
     virtual void setLight(uint8_t i, uint32_t rgb) override
     {
@@ -143,8 +143,8 @@ public:
         if (interp.error() == MyInterpreter::Error::None) {
             // Pass in 2 args, a uint8 command and a uint16 number.
             // Push them backwards
-            interp.addArg(2, lucid::Type::UInt16);
-            interp.addArg('f', lucid::Type::UInt8);
+            interp.addArg(2, clvr::Type::UInt16);
+            interp.addArg('f', clvr::Type::UInt8);
             int32_t result = interp.interp(MyInterpreter::ExecMode::Start);
             if (result == 0) {
                 Serial.println(F("...Finished running test"));

@@ -17,7 +17,7 @@
 #include "Scanner.h"
 #include "Struct.h"
 
-namespace lucid {
+namespace clvr {
 
 class Compiler;
 
@@ -27,6 +27,7 @@ public:
     enum class Error {
         None,
         InvalidSignature,
+        WrongAddressSize,
         InvalidOp,
         PrematureEOF,
     };
@@ -52,18 +53,17 @@ private:
     void statement();
     
     void emitOp(const char* opString);
-    void emitSizeValue(uint8_t size);
     void emitRelAddr(uint8_t size, bool isSigned = true);
     void emitNumber(int32_t number);
     void emitConstant(uint8_t bytes, bool isSigned = true);
     void emitShortConstant(uint8_t value);
     
-    void emitSize(uint8_t size) { emitSizeValue(size); }
+    void emitSize(uint8_t size);
     void emitIndex();
     
     bool atEnd() { return (_in->end() - _it) <= 0; }
 
-    uint32_t addrMode(Index& index);
+    AddrNativeType addrMode(Index& index);
 
     int32_t getInt32()
     {

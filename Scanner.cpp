@@ -11,7 +11,7 @@
 
 #include <map>
 
-using namespace lucid;
+using namespace clvr;
 
 Token Scanner::scanString(TokenType& tokenValue, char terminal)
 {    
@@ -332,6 +332,8 @@ Token Scanner::scanSpecial()
         { "!=",         Token::NE },
         { "<=",         Token::LE },
         { ">=",         Token::GE },
+        { ">>",         Token::SHR },
+        { "<<",         Token::SHL },
     };
 
     char buf[3];

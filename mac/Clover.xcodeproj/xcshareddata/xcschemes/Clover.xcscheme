@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1540"
-   version = "1.8">
+   LastUpgradeVersion = "1340"
+   version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4941A0EE2BB6F59900CE3C9E"
-               BuildableName = "compile"
-               BlueprintName = "compile"
-               ReferencedContainer = "container:LucidVM.xcodeproj">
+               BlueprintIdentifier = "49C9E7E12C95129300E58516"
+               BuildableName = "Clover"
+               BlueprintName = "Clover"
+               ReferencedContainer = "container:Clover.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -26,8 +26,7 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      shouldAutocreateTestPlan = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
    </TestAction>
@@ -37,73 +36,76 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/cmarrin/Projects/git/LucidVM"
+      customWorkingDirectory = "/Users/cmarrin/Projects/git/Clover"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      allowLocationSimulation = "YES"
-      viewDebuggingEnabled = "No">
+      allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4941A0EE2BB6F59900CE3C9E"
-            BuildableName = "compile"
-            BlueprintName = "compile"
-            ReferencedContainer = "container:LucidVM.xcodeproj">
+            BlueprintIdentifier = "49C9E7E12C95129300E58516"
+            BuildableName = "Clover"
+            BlueprintName = "Clover"
+            ReferencedContainer = "container:Clover.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-d -t -h examples/simple.lucid"
+            argument = "-d -t examples/simple.clvr"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -a -l -h PostLightEffects/PostLightEffects.lucid"
+            argument = "-d -t -h modules/Float16.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -a -l PostLightEffects/PostLightEffects.lucid"
+            argument = "-d -a -h -l PostLightController/PostLightEffects.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestCore.lucid"
+            argument = "-d -a -l PostLightController/PostLightEffects.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestIntExpr.lucid"
+            argument = "-d -t -h Test/TestCore.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestFloatExpr.lucid"
+            argument = "-d -t -h Test/TestIntExpr.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestIf.lucid"
+            argument = "-d -t -h Test/TestFloatExpr.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestFunction.lucid"
+            argument = "-d -t -h Test/TestIf.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestFor.lucid"
+            argument = "-d -t -h Test/TestFunction.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestWhile.lucid"
+            argument = "-d -t -h Test/TestFor.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestPtrStruct.lucid"
+            argument = "-d -t -h Test/TestWhile.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-d -t -h Test/TestSwitchEnum.lucid"
+            argument = "-d -t -h Test/TestPtrStruct.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-h -t Test/TestCore.lucid Test/TestIntExpr.lucid Test/TestFloatExpr.lucid Test/TestIf.lucid Test/TestFunction.lucid Test/TestFor.lucid Test/TestWhile.lucid Test/TestPtrStruct.lucid Test/TestSwitchEnum.lucid"
+            argument = "-d -t -h Test/TestSwitchEnum.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-h -t Test/TestCore.clvr Test/TestIntExpr.clvr Test/TestFloatExpr.clvr Test/TestIf.clvr Test/TestFunction.clvr Test/TestFor.clvr Test/TestWhile.clvr Test/TestPtrStruct.clvr Test/TestSwitchEnum.clvr"
             isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -118,10 +120,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4941A0EE2BB6F59900CE3C9E"
-            BuildableName = "compile"
-            BlueprintName = "compile"
-            ReferencedContainer = "container:LucidVM.xcodeproj">
+            BlueprintIdentifier = "49C9E7E12C95129300E58516"
+            BuildableName = "Clover"
+            BlueprintName = "Clover"
+            ReferencedContainer = "container:Clover.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-    This source file is a part of Lucid
-    For the latest info, see https://github.com/cmarrin/Lucid
+    This source file is a part of Clover
+    For the latest info, see https://github.com/cmarrin/Clover
     Copyright (c) 2021-2024, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
@@ -13,7 +13,7 @@
 
 #include "Defines.h"
 
-namespace lucid {
+namespace clvr {
 
 // Stack grows down from the top. Heap grows up from the bottom
 class Memory
@@ -145,36 +145,34 @@ class Memory
         }
     }
     
-    uint32_t getAbs(uint32_t addr, OpSize opSize)
+    uint32_t getAbs(uint32_t addr, uint8_t size)
     {
         uint32_t v = 0;
         
         if (addr >= stack().size()) {
             // This is a constant
             addr -= stack().size();
-            switch (opSize) {
-                case OpSize::flt:
-                case OpSize::i32: v |= uint32_t(rom(addr++)) << 24;
+            switch (size) {
+                case 4: v |= uint32_t(rom(addr++)) << 24;
                                   v |= uint32_t(rom(addr++)) << 16;
-                case OpSize::i16: v |= uint32_t(rom(addr++)) << 8;
-                case OpSize::i8 : v |= uint32_t(rom(addr++));
+                case 2: v |= uint32_t(rom(addr++)) << 8;
+                case 1: v |= uint32_t(rom(addr++));
             }
         } else {
-            switch (opSize) {
-                case OpSize::flt:
-                case OpSize::i32: v |= uint32_t(_stack.getAbs(addr++)) << 24;
+            switch (size) {
+                case 4: v |= uint32_t(_stack.getAbs(addr++)) << 24;
                                   v |= uint32_t(_stack.getAbs(addr++)) << 16;
-                case OpSize::i16: v |= uint32_t(_stack.getAbs(addr++)) << 8;
-                case OpSize::i8 : v |= uint32_t(_stack.getAbs(addr++));
+                case 2: v |= uint32_t(_stack.getAbs(addr++)) << 8;
+                case 1: v |= uint32_t(_stack.getAbs(addr++));
             }
         }
         
         return v;
     }
     
-    uint32_t getArg(int32_t offset, Type type)
+    uint32_t getArg(int32_t offset, uint8_t size)
     {
-        return getAbs(index(offset, Index::A), typeToOpSize(type));
+        return getAbs(index(offset, Index::A), size);
     }
     
     // On entry args are pushed on stack followed by retAddr.
@@ -242,12 +240,12 @@ class VarArg
         _nextAddr = memMgr->index(0, Index::A);
     }
     
-    // Type returned is always uint32_t. Use reinterpret_cast to convert to the proper type
-    uint32_t arg(Type type)
+    // Type returned is always ArgUNativeType. Use reinterpret_cast to convert to the proper type
+    ArgUNativeType arg(uint8_t bytes)
     {
         AddrNativeType argAddr = _nextAddr;
-        _nextAddr += typeToBytes(type);
-        return _memMgr->getAbs(argAddr, typeToOpSize(type));
+        _nextAddr += bytes;
+        return _memMgr->getAbs(argAddr, bytes);
     }
     
     
@@ -260,6 +258,10 @@ class VarArg
     }
     
     void reset() { _nextAddr = _initialAddr; }
+    
+    void putChar(AddrNativeType addr, uint8_t c) { _memMgr->setAbs(addr, c, OpSize::i8); }
+    
+    Memory* memMgr() const { return _memMgr; }
 
   private:
     AddrNativeType _nextAddr;

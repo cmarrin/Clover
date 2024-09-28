@@ -14,7 +14,7 @@
 #include <istream>
 #include <vector>
 
-namespace lucid {
+namespace clvr {
 
 static constexpr uint8_t MAX_ID_LENGTH = 32;
 
@@ -123,6 +123,8 @@ enum class Token : uint8_t {
     GE          = 0xad,
     Inc         = 0xae,
     Dec         = 0xaf,
+    SHR         = 0xb0,
+    SHL         = 0xb1,
     
     EndOfFile   = 0xff,
 };
@@ -200,7 +202,7 @@ public:
     
     void retireToken() { _currentToken = Token::None; }
     
-    int32_t annotationIndex() const { return _lineno; }
+    int32_t annotationIndex() const { return _lineno - 1; }
     
     void setAnnotation(int32_t index, int32_t addr) { if (_annotations) _annotations->setAnnotation(index, addr); }
     

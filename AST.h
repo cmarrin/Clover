@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
     This source file is a part of Clover
-    For the latest info, see https://github.com/cmarrin/Lucid
+    For the latest info, see https://github.com/cmarrin/Clover
     Copyright (c) 2021-2024, Chris Marrin
     All rights reserved.
     Use of this source code is governed by the MIT license that can be
@@ -18,18 +18,18 @@
 #include "Module.h"
 #include "Symbol.h"
 
-namespace lucid {
+namespace clvr {
 
 // Classes to represent AST
 
 enum class ASTNodeType {
     Statements,
     Op,
+    Inc,
     Var,
     Constant,
     String,
     Dot,
-    Value,
     Module,
     FunctionCall,
     Enter,
@@ -50,16 +50,6 @@ enum class ASTNodeType {
 class ASTNode;
 class Compiler;
 class Symbol;
-
-static inline void appendValue(std::vector<uint8_t>& container, uint32_t v, uint8_t bytes)
-{
-    switch (bytes) {
-        case 4: container.push_back(v >> 24);
-                container.push_back(v >> 16);
-        case 2: container.push_back(v >> 8);
-        case 1: container.push_back(v);
-    }
-}
 
 class ASTNode
 {
@@ -84,8 +74,6 @@ class ASTNode
     virtual const ASTPtr child(uint32_t i) const { return nullptr; }
     virtual const uint32_t numChildren() const { return 0; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) { }
-    
     int32_t annotationIndex() const { return _annotationIndex; }
     
     // Return true if this is an signed integer or float
@@ -131,8 +119,6 @@ class StatementsNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return uint32_t(_statements.size()); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-
   private:
     ASTNodeList _statements;
 };
@@ -151,32 +137,17 @@ class VarNode : public ASTNode
 
     virtual bool isPointer() const override { return _symbol->isPointer(); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override
-    {
-        emitCode(code, Type::None, isLHS, false);
-    }
-    
-    void emitCode(std::vector<uint8_t>& code, Type type, bool isLHS)
-    {
-        emitCode(code, type, isLHS, false);
-    }
-    
-    void emitPopCode(std::vector<uint8_t>& code)
-    {
-        emitCode(code, Type::None, false, true);
-    }
-
     virtual bool valueLeftOnStack() const override { return true; }
     
     // In cases where we have a constant offset to a member of a struct
     // we can skip the OFFSET op and just offset the address here
-    void setOffset(uint32_t offset) { _offset = offset; }
+    void setOffset(AddrNativeType offset) { _offset = offset; }
+    AddrNativeType offset() const { return _offset; }
+    SymbolPtr symbol() const { return _symbol; }
 
-  private:
-    void emitCode(std::vector<uint8_t>& code, Type type, bool ref, bool pop);
-    
+  private:    
     SymbolPtr _symbol = nullptr;
-    uint32_t _offset = 0;
+    AddrNativeType _offset = 0;
 };
 
 // This can hold a numeric float, int or a constant. Constants are
@@ -196,8 +167,6 @@ class ConstantNode : public ASTNode
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Constant; }
     virtual Type type() const override { return _type; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
     void toFloat() { _f = float(_i); }
     void toUInt() { _i = uint32_t(_f); }
     void setType(Type type) { _type = type; }
@@ -214,6 +183,8 @@ class ConstantNode : public ASTNode
         }
         return -1; // Don't return 0. Some callers want to know if value is 0 or not.
     }
+    
+    int32_t rawInteger() const { return _i; }
     
   private:
     Type _type = Type::None;
@@ -232,13 +203,13 @@ class StringNode : public ASTNode
     StringNode(const std::string& s) : _string(s) { }
     StringNode(char c) { _string = c; }
 
-    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Constant; }
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::String; }
     virtual Type type() const override { return Type::String; }
     virtual bool isPointer() const override { return true; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-
     virtual bool valueLeftOnStack() const override { return true; }
+    
+    const std::string& string() const { return _string; }
 
   private:
     std::string _string;
@@ -263,55 +234,15 @@ class TypeCastNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return 1; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
     static ASTPtr castIfNeeded(ASTPtr& node, Type neededType);
     
     virtual bool valueLeftOnStack() const override { return true; }
 
+    ASTPtr arg() const { return _arg; }
+    
   private:
     Type _type;
     ASTPtr _arg;
-};
-
-class AssignmentNode : public ASTNode
-{
-  public:
-    // op is passed for operator assignment (like +=), NOP if simple assignment
-    AssignmentNode(const ASTPtr& left, Op op, const ASTPtr& right)
-        : _left(left)
-        , _op(op)
-        , _right(right)
-    {
-        // If _left is a pointer don't try to cast. We've already verified that
-        // both are pointers if one is.
-        if (!_left->isPointer()) {
-            _right = TypeCastNode::castIfNeeded(_right, _left->type());
-        }
-    }
-
-    virtual Type type() const override { return _left->type(); }
-    
-    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Assignment; }
-
-    virtual const ASTPtr child(uint32_t i) const override
-    {
-        if (i == 0) {
-            return _left;
-        }
-        if (i == 1) {
-            return _right;
-        }
-        return nullptr;
-    }
-
-    virtual const uint32_t numChildren() const override { return 2; }
-
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-
-  private:
-    Op _op;
-    ASTPtr _left, _right;
 };
 
 class OpNode : public ASTNode
@@ -385,9 +316,10 @@ class OpNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return 2; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
     Op op() const { return _op; }
+    const ASTPtr& left() const { return _left; }
+    const ASTPtr& right() const { return _right; }
+    bool isRef() const { return _isRef; }
 
     virtual bool valueLeftOnStack() const override
     {
@@ -399,6 +331,86 @@ class OpNode : public ASTNode
     bool _isRef = false;
     Op _op;
     Type _type;
+    ASTPtr _left, _right;
+};
+
+class IncNode : public ASTNode
+{
+  public:
+    IncNode(const ASTPtr& node, bool isPre, int16_t inc)
+        :_node(node)
+        , _isPre(isPre)
+        , _inc(inc)
+    {
+        // If node is a pointer, multiply size by inc
+        if (node->isPointer()) {
+            _inc *= node->elementSizeInBytes();
+        }
+    }
+    
+    virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Inc; }
+
+    virtual Type type() const override { return _node->type(); }
+
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (i == 0) {
+            return _node;
+        }
+        return nullptr;
+    }
+
+    virtual const uint32_t numChildren() const override { return 1; }
+
+    const ASTPtr& node() const { return _node; }
+    bool isPre() const { return _isPre; }
+    int16_t inc() const { return _inc; }
+
+  private:
+    ASTPtr _node;
+    bool _isPre = false;
+    int16_t _inc = 1;
+};
+
+class AssignmentNode : public ASTNode
+{
+  public:
+    // op is passed for operator assignment (like +=), NOP if simple assignment
+    AssignmentNode(const ASTPtr& left, Op op, const ASTPtr& right)
+        : _left(left)
+        , _op(op)
+        , _right(right)
+    {
+        // If _left is a pointer don't try to cast. We've already verified that
+        // both are pointers if one is.
+        if (!_left->isPointer()) {
+            _right = TypeCastNode::castIfNeeded(_right, _left->type());
+        }
+    }
+
+    virtual Type type() const override { return _left->type(); }
+    
+    virtual ASTNodeType astNodeType() const override { return ASTNodeType::Assignment; }
+
+    virtual const ASTPtr child(uint32_t i) const override
+    {
+        if (i == 0) {
+            return _left;
+        }
+        if (i == 1) {
+            return _right;
+        }
+        return nullptr;
+    }
+
+    virtual const uint32_t numChildren() const override { return 2; }
+
+    Op op() const { return _op; }
+    const ASTPtr& left() const { return _left; }
+    const ASTPtr& right() const { return _right; }
+
+  private:
+    Op _op;
     ASTPtr _left, _right;
 };
 
@@ -432,10 +444,9 @@ class DotNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return 1; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-
     virtual bool valueLeftOnStack() const override { return true; }
     
+    ASTPtr operand() const { return _operand; }
     SymbolPtr property() const { return _property; }
 
   private:
@@ -453,8 +464,6 @@ class ModuleNode : public ASTNode
     
     uint8_t id() const { return _id; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-
   private:
     uint8_t _id;
 };
@@ -467,17 +476,18 @@ class FunctionCallNode : public ASTNode
         : _function(func)
     { }
     
-    // Call a raw function with no instance value
+    // Call a function with an instance value
     FunctionCallNode(FunctionPtr func, const ASTPtr& instance)
         : _function(func)
         , _instance(instance)
     { }
     
     // Call function in the passed module
-    FunctionCallNode(FunctionPtr func, uint8_t moduleId)
-        : _moduleId(moduleId)
-        , _function(func)
-    { }
+    FunctionCallNode(FunctionPtr func, uint8_t moduleId, const std::string& moduleName)
+        : _function(func)
+        , _moduleId(moduleId)
+        , _moduleName(moduleName)
+        { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::FunctionCall; }
     
@@ -502,18 +512,22 @@ class FunctionCallNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return uint32_t(_args.size()); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-
     FunctionPtr function() const { return _function; }
+    const ASTNodeList& args() const { return _args; }
+    uint8_t moduleId() const { return _moduleId; }
+    const std::string& moduleName() const { return _moduleName; }
+    ASTPtr instance() const { return _instance; }
+    bool pushReturn() const { return _pushReturn; }
+    
     void setPushReturn(bool r) { _pushReturn = r; }
     
   private:
     FunctionPtr _function;
     uint8_t _moduleId = 0;
+    std::string _moduleName;
     ASTNodeList _args;
     bool _pushReturn = true;
     ASTPtr _instance;
-
 };
 
 class EnterNode : public ASTNode
@@ -523,8 +537,7 @@ class EnterNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Enter; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
+    uint16_t localSize() const { return _function->localSize(); }
   private:
     FunctionPtr _function;
 };
@@ -540,16 +553,18 @@ class BranchNode : public ASTNode
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Branch; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
+    static void fixup(std::vector<uint8_t>& code, AddrNativeType fixupIndex, AddrNativeType addr, BranchSize& branchSize);
+
     void setFixupNode(const ASTPtr& f) { _fixupNode = f; }
     
     // Address of where this node should branch to
     void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
     
+    void setFixupIndex(AddrNativeType index) { _fixupIndex = index; }
     AddrNativeType fixupIndex() const { return _fixupIndex; }
-    
     Kind kind() const { return _kind; }
+    BranchSize branchSize() const { return _branchSize; }
+    ASTPtr fixupNode() const { return _fixupNode; }
     
   private:
     Kind _kind;
@@ -599,10 +614,17 @@ class SwitchNode : public ASTNode
 
     virtual const uint32_t numChildren() const override { return uint32_t(_clauses.size()); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-
     void addCaseClause(const ASTPtr& stmt) { _clauses.emplace_back(stmt); _haveDefault = true; }
     void addCaseClause(int32_t value, const ASTPtr& stmt) { _clauses.emplace_back(value, stmt); }
+
+    //void fixupDefault(std::vector<uint8_t>& code, AddrNativeType index, AddrNativeType addr);
+
+    ASTPtr expr() const { return _expr; }
+    std::vector<CaseClause>& clauses() { return _clauses; }
+    bool haveDefault() const { return _haveDefault; }
+    void setBranchSize(BranchSize s) { _branchSize = s; }
+    BranchSize branchSize() const { return _branchSize; }
+    BranchSize& defaultBranchSize() { return _defaultBranchSize; }
     
   private:
     ASTPtr _expr;
@@ -627,7 +649,15 @@ class ConditionalNode : public ASTNode
     // first and second have to be the same type. That should have been validated by the caller
     virtual Type type() const override { return _first->type(); }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
+    virtual bool isIndexable() const override { return _first->isIndexable(); }
+    virtual bool isAssignable() const override { return _first->isAssignable(); }
+    virtual bool isPointer() const override { return _first->isPointer(); }
+
+    ASTPtr expr() const { return _expr; }
+    ASTPtr first() const { return _first; }
+    ASTPtr second() const { return _second; }
+    BranchSize& ifBranchSize() { return _ifBranchSize; }
+    BranchSize& elseBranchSize() { return _elseBranchSize; }
 
   private:
     ASTPtr _expr;
@@ -655,7 +685,10 @@ class LogicalNode : public ASTNode
     // first and second have to be the same type. That should have been validated by the caller
     virtual Type type() const override { return Type::UInt8; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
+    Kind kind() const { return _kind; }
+    ASTPtr lhs() const { return _lhs; }
+    ASTPtr rhs() const { return _rhs; }
+    BranchSize& branchSize() { return _branchSize; }
 
   private:
     Kind _kind;
@@ -686,9 +719,10 @@ class IndexNode : public ASTNode
         return _lhs->isPointer();
     }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
     virtual bool valueLeftOnStack() const override { return true; }
+
+    ASTPtr lhs() const { return _lhs; }
+    ASTPtr rhs() const { return _rhs; }
 
   private:
     ASTPtr _lhs, _rhs;
@@ -702,10 +736,10 @@ class ReturnNode : public ASTNode
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Return; }
-    virtual Type type() const override { return _arg->type(); }
+    virtual Type type() const override { return _arg ? _arg->type() : Type::None; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
+    ASTPtr arg() const { return _arg; }
+
   private:
     ASTPtr _arg;
 };
@@ -718,9 +752,9 @@ class DropNode : public ASTNode
     { }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Drop; }
-
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
     
+    uint16_t bytesToDrop() const { return _bytesToDrop; }
+
   private:
     uint16_t _bytesToDrop;
 };
@@ -737,8 +771,8 @@ class RefNode : public ASTNode
     virtual Type type() const override { return _operand->type(); }
     virtual bool isPointer() const override { return true; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
+    ASTPtr operand() const { return _operand; }
+
   private:
     ASTPtr _operand;
 };
@@ -754,11 +788,15 @@ class DerefNode : public ASTNode
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Deref; }
     virtual Type type() const override { return _operand->type(); }
     virtual bool isAssignable() const override { return true; }
+    
+    // The operand is obviously a pointer because it has to be to be deref'ed. But once deref'ed
+    // it's no longer a pointer
     //virtual bool isPointer() const override { return _operand->isPointer(); }
+    
     virtual bool isIndexable() const override { return true; }
 
-    virtual void emitCode(std::vector<uint8_t>& code, bool isLHS) override;
-    
+    ASTPtr operand() const { return _operand; }
+
   private:
     ASTPtr _operand;
 };
