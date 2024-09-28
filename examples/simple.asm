@@ -37,29 +37,36 @@ Simple_main
     ADDA 0,S
     LEAS 1,S
     STA -2,U
-    ;     if (a < b) {
-    LDA -1,U
-    PSHS A
+    ;     switch (b) {
+    ;         case 4: core.printf("Failed\n");
     LDA -2,U
-    CMPA 0,S
-    BLT L3
-    LDA #1
-    BRA L4
+    PSHS A
+    LDD #L3
+    PSHS D
+    LDD #2
+    PSHS D
+    JSR switch1
+    LEAS 5,S
+    JMP 0,X
 L3
-    CLRA
-L4
-    LEAS 1,S
-    BEQ L5
-    ;         core.printf("Passed\n");
-    ;     } else {
+    FCB 4
+    FDB L4
+    FCB 6
+    FDB L5
+    ;         case 6: core.printf("Passed\n");
+    ;         default: core.printf("Huh?\n");
+    ;     }
     LDD #String+$0
     PSHS D
     JSR printf
-    BRA L6
+    LBRA L6
+L4
+    LDD #String+$6
+    PSHS D
+    JSR printf
+    LBRA L6
 L5
-    ;         core.printf("Failed\n");
-    ;     }
-    LDD #String+$8
+    LDD #String+$e
     PSHS D
     JSR printf
 L6
@@ -74,10 +81,13 @@ L6
 Constants
 
 String
-    FCC "Passed"
+    FCC "Huh?"
     FCB $0a
     FCB $00
     FCC "Failed"
+    FCB $0a
+    FCB $00
+    FCC "Passed"
     FCB $0a
     FCB $00
 

@@ -13,10 +13,10 @@ function int16 main()
     int8 a = 5;
     int8 b = a + 1;
     
-    if (a < b) {
-        core.printf("Passed\n");
-    } else {
-        core.printf("Failed\n");
+    switch (b) {
+        case 4: core.printf("Failed\n");
+        case 6: core.printf("Passed\n");
+        default: core.printf("Huh?\n");
     }
     
     return 0;
