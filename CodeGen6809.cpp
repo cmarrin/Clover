@@ -814,11 +814,9 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
     // order so the first arg is at the lowest address when pushed
     for (auto i = fNode->args().size() - 1; fNode->args().size() > i; --i) {
         emitCode(fNode->args()[i], isLHS);
-        if (isReg(RegState::A)) {
-            format("    PSHS A\n");
-        } else if (isReg(RegState::D)) {
-            format("    PSHS D\n");
-        }
+        
+        // Values need to be on the stack
+        stashRegIfNeeded();
         clearRegState();
     }
     
