@@ -1103,20 +1103,25 @@ CodeGen6809::emitCodeConditional(const ASTPtr& node, bool isLHS)
 {
     auto cNode = std::static_pointer_cast<ConditionalNode>(node);
 
-    // First emit expression
-    emitCode(cNode->expr(), false);
-    
-    // Now emit if. If expr is false, jump to second expression, otherwise fall through to first
     uint16_t elseLabel = nextLabelId();
     uint16_t endLabel = nextLabelId();
+
+    // First emit expression, send in else label
+    setBranchLabel(elseLabel);
+    emitCode(cNode->expr(), false);
     
-    if (!isReg(RegState::A)) {
-        format("    PULS A\n");
+    // If the branch label comes back -1, it was used and the expr did the branch to elseLabel
+    
+    if (branchLabel() != -1) {
+        // Now emit if. If expr is false, jump to second expression, otherwise fall through to first
+        if (!isReg(RegState::A)) {
+            format("    PULS A\n");
+        }
+    
+        // Make sure RegState is cleared so we don't try to push during the emitCodes
+        format("    BEQ L%d\n", elseLabel);
     }
     
-    // Make sure RegState is cleared so we don't try to push during the emitCodes
-    format("    BEQ L%d\n", elseLabel);
-
     // Emit the first expr
     clearRegState();
     emitCode(cNode->first(), false);
