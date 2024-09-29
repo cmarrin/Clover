@@ -438,3 +438,116 @@ L5  LDA #2
     STA b,U
     BRA L6
 L6
+
+
+Combining relational branch optimization with logical branch optimization
+
+If we have:
+
+    if (a < b && c > d)
+        e = f;
+        
+The optimizaed way to do this is:
+
+    PSHS b,U
+    LDA a,U
+    CMPA 0,S
+    LEAS 1,S
+    BGE LABELX
+    PSHS d,U
+    LDA c,U
+    CMPA 0,S
+    LEAS 1,S
+    BLE LABELX
+========= done by the caller ========
+    LDA f,U
+    STA e,U
+LABELX
+
+LABELX is the label passed in to the Logical emitCode.
+
+If we can optimize the first but not the second test we get:
+
+    PSHS b,U
+    LDA a,U
+    CMPA 0,S
+    LEAS 1,S
+    BGE LABELX
+    PSHS d,U
+    LDA c,U
+    CMPA 0,S
+    LEAS 1,S
+    BLE LABELA
+    LDA #1
+    BRA LABELB
+LABELA
+    CLRA
+LABELB
+    BEQ LABELX
+========= done by the caller ========
+    LDA f,U
+    STA e,U
+LABELX
+
+If we can't optimize the first but can optimize the second we have:
+
+    PSHS b,U
+    LDA a,U
+    CMPA 0,S
+    LEAS 1,S
+    BGE LABELA
+    PSHS d,U
+    LDA c,U
+    CMPA 0,S
+    LEAS 1,S
+    BLE LABELX
+LABELA
+    CLRA
+    BRA LABELB
+    LDA #1
+LABELB
+    BEQ LABELX
+========= done by the caller ========
+    LDA f,U
+    STA e,U
+LABELX
+
+If neither side can be optimized then we don't clear LABELX and the caller does it
+the slow way. This is the case where only one can be optimized.
+
+If LABELX isn't passed in we make LABELX the same as LABELA. This works in all
+cases except the first, where both sides are optimized. In that case we need to do:
+
+    PSHS b,U
+    LDA a,U
+    CMPA 0,S
+    LEAS 1,S
+    BGE LABELA
+    PSHS d,U
+    LDA c,U
+    CMPA 0,S
+    LEAS 1,S
+    BLE LABELA
+    LDA #1
+    BRA LABELB
+LABELA
+    CLRA
+LABELB
+========= done by the caller ========
+    BEQ LABELX
+    LDA f,U
+    STA e,U
+LABELX
+
+Here are all the cases:
+
+    caller passed in label  lhs optimized   rhs optimized
+    
+            no                  no              no                  Fully slow case
+            no                  no              yes                 Fully slow case
+            no                  yes             no                  Fully slow case
+            no                  yes             yes                 Fully slow case
+            yes                 no              no
+            yes                 no              yes                 rhs optimized, jumps to fail label which sets A to 0 or 1
+            yes                 yes             no
+            yes                 yes             yes                 Fully optimized case, on passed in label used
