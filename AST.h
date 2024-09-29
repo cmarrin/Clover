@@ -550,7 +550,11 @@ class BranchNode : public ASTNode
     enum class Kind { IfStart, ElseStart, IfEnd, LoopStart, LoopNext, LoopEnd, Break, Continue };
     
     BranchNode(Kind k) : _kind(k) { }
-    BranchNode(const ASTPtr& expr) : _kind(Kind::IfStart), _expr(expr) { }
+    BranchNode(const ASTPtr& expr) : _kind(Kind::IfStart), _expr(expr)
+    {
+        // expr needs to be uint8
+        _expr = TypeCastNode::castIfNeeded(_expr, Type::UInt8);
+    }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::Branch; }
 
