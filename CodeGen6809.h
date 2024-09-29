@@ -40,6 +40,8 @@ class CodeGen6809 : public CodeGen
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
     
     uint16_t nextLabelId() { return _labelId++; }
+    int16_t branchLabel() const { return _branchLabel; }
+    void setBranchLabel(int16_t label) { _branchLabel = label; }
 
   private:
     enum class RegState { None, A, D, X, StackI8, StackI16, StackPtr };
@@ -174,6 +176,11 @@ class CodeGen6809 : public CodeGen
     // Remember how the last emitNode left the regs
     RegState _lastRegState = RegState::None;
     RegState _lastPtrState = RegState::None;
+    
+    // Pass a label around for optimizing relational, logical and conditional operations
+    // When not -1 a target for a branch (like if or a conditional op) will add the passed
+    // label to use when the relational operation is false.
+    int16_t _branchLabel = -1;
 };
 
 }

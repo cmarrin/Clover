@@ -608,35 +608,47 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     if (!relOp) {
         emitBinaryOp(opNode->op(), is16Bit);
     } else {
-        // If it's a relational operator, do the unoptimized case:
-        //
-        //	    PULS <A/D>      if lhs is on stack
-        //
-        //	    CMP<A/D> 0,S
-        //	    B<op> L1        compare lhs (in A or D) to rhs on TOS
-        //	    LDA #1
-        //      BRA L2
-        // L1
-        //      CLRA
-        // L2
-        //      LEAS <1/2>,S
-        //
-        uint16_t labelA = nextLabelId();
-        uint16_t labelB = nextLabelId();
+        // If we have a branchLabel we can do the optimized case
+        if (branchLabel() != -1) {
+            // Branch label is expecting us to branch when the test is false
+            if (!isReg(is16Bit ? RegState::D : RegState::A)) {
+                format("    PULS %s\n", is16Bit ? "D" : "A");
+            }
+            format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
+            format("    LEAS %d,S\n", is16Bit ? 2 : 1);
+            format("    %s L%d\n", relOp, branchLabel());
+            setBranchLabel(-1);
+        } else {
+            // If it's a relational operator, do the unoptimized case:
+            //
+            //	    PULS <A/D>      if lhs is on stack
+            //
+            //	    CMP<A/D> 0,S
+            //	    B<op> L1        compare lhs (in A or D) to rhs on TOS
+            //	    LDA #1
+            //      BRA L2
+            // L1
+            //      CLRA
+            // L2
+            //      LEAS <1/2>,S
+            //
+            uint16_t labelA = nextLabelId();
+            uint16_t labelB = nextLabelId();
 
-        if (!isReg(is16Bit ? RegState::D : RegState::A)) {
-            format("    PULS %s\n", is16Bit ? "D" : "A");
+            if (!isReg(is16Bit ? RegState::D : RegState::A)) {
+                format("    PULS %s\n", is16Bit ? "D" : "A");
+            }
+            format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
+            
+            format("    %s L%d\n", relOp, labelA);
+            format("    LDA #1\n");
+            format("    BRA L%d\n", labelB);
+            format("L%d\n", labelA);
+            format("    CLRA\n");
+            format("L%d\n", labelB);
+            format("    LEAS %d,S\n", is16Bit ? 2 : 1);
+            setRegState(RegState::A);
         }
-        format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
-        
-        format("    %s L%d\n", relOp, labelA);
-        format("    LDA #1\n");
-        format("    BRA L%d\n", labelB);
-        format("L%d\n", labelA);
-        format("    CLRA\n");
-        format("L%d\n", labelB);
-        format("    LEAS %d,S\n", is16Bit ? 2 : 1);
-        setRegState(RegState::A);
     }
 }
 
@@ -952,13 +964,19 @@ CodeGen6809::emitCodeBranch(const ASTPtr& node, bool isLHS)
     switch (bNode->kind()) {
         case BranchNode::Kind::IfStart:
             // emit expression
+            // Branch optimization.
+            setBranchLabel(getLabelId(this, bNode));
             emitCode(bNode->expr(), false);
             
-            // test value is always 8 bit
-            if (!isReg(RegState::A)) {
-                format("    PULS A\n");
+            if (branchLabel() != -1) {
+                // branchLabel was not used, do it here
+                
+                // test value is always 8 bit
+                if (!isReg(RegState::A)) {
+                    format("    PULS A\n");
+                }
+                format("    BEQ L%d\n", branchLabel());
             }
-            format("    BEQ L%d\n", getLabelId(this, bNode));
             clearRegState();
             break;
         case BranchNode::Kind::ElseStart:
