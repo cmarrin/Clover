@@ -577,10 +577,15 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         if (is16Bit) {
             if (!isReg(RegState::D)) {
                 format("    PULS D\n");
+                
+                // PULS doesn't set CC, set them now
+                format("    LDD 0,S\n");
+                format("    LEAS 2,S\n");
             }
         } else {
             if (!isReg(RegState::A)) {
-                format("    PULS D\n");
+                format("    PULS A\n");
+                format("    TSTA\n");
             }
         }
         
@@ -930,11 +935,17 @@ CodeGen6809::emitCodeTypeCast(const ASTPtr& node, bool isLHS)
                 format("    SEX\n");
             } else {
                 format("    CLRA\n");
+                
+                // Set the CC properly
+                format("    ADDD #0\n");
             }
             setRegState(RegState::D);
         } else {
             // going from 16 to 8 bits
             format("    TFR B,A\n");
+            
+            // TFR doesn't set CC. Do it now
+            format("    TSTA\n");
             setRegState(RegState::A);
         }
     }
@@ -970,6 +981,7 @@ CodeGen6809::emitCodeBranch(const ASTPtr& node, bool isLHS)
                 // test value is always 8 bit
                 if (!isReg(RegState::A)) {
                     format("    PULS A\n");
+                    format("    TSTA\n");
                 }
                 format("    BEQ L%d\n", branchLabel());
             }
@@ -1112,6 +1124,7 @@ CodeGen6809::emitCodeConditional(const ASTPtr& node, bool isLHS)
         // Now emit if. If expr is false, jump to second expression, otherwise fall through to first
         if (!isReg(RegState::A)) {
             format("    PULS A\n");
+            format("    TSTA\n");
         }
     
         // Make sure RegState is cleared so we don't try to push during the emitCodes
@@ -1167,6 +1180,7 @@ CodeGen6809::emitCodeLogical(const ASTPtr& node, bool isLHS)
         // BNE past the rhs.
         if (!isReg(RegState::A)) {
             format("    PULS A\n");
+            format("    TSTA\n");
         }
 
         // Make sure RegState is cleared so we don't try to push during the emitCodes
