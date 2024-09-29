@@ -614,6 +614,11 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
             if (!isReg(is16Bit ? RegState::D : RegState::A)) {
                 format("    PULS %s\n", is16Bit ? "D" : "A");
             }
+            
+            // Invert test if needed
+            if (branchTestInverted()) {
+                relOp = relopToString(opNode->op(), false);
+            }
             format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
             format("    LEAS %d,S\n", is16Bit ? 2 : 1);
             format("    %s L%d\n", relOp, branchLabel());
@@ -935,15 +940,6 @@ CodeGen6809::emitCodeTypeCast(const ASTPtr& node, bool isLHS)
     }
 }
 
-static uint16_t getLabelId(CodeGen6809* codeGen, const ASTPtr& node)
-{
-    auto bNode = std::static_pointer_cast<BranchNode>(node);
-    if (bNode->fixupIndex() == 0) {
-        bNode->setFixupIndex(codeGen->nextLabelId());
-    }
-    return bNode->fixupIndex();
-}
-
 void
 CodeGen6809::emitCodeBranch(const ASTPtr& node, bool isLHS)
 {
@@ -965,7 +961,7 @@ CodeGen6809::emitCodeBranch(const ASTPtr& node, bool isLHS)
         case BranchNode::Kind::IfStart:
             // emit expression
             // Branch optimization.
-            setBranchLabel(getLabelId(this, bNode));
+            setBranchLabel(getLabelId(bNode));
             emitCode(bNode->expr(), false);
             
             if (branchLabel() != -1) {
@@ -980,24 +976,24 @@ CodeGen6809::emitCodeBranch(const ASTPtr& node, bool isLHS)
             clearRegState();
             break;
         case BranchNode::Kind::ElseStart:
-            format("    BRA L%d\n", getLabelId(this, bNode));
-            format("L%d\n", getLabelId(this, bNode->fixupNode()));
+            format("    BRA L%d\n", getLabelId(bNode));
+            format("L%d\n", getLabelId(bNode->fixupNode()));
             break;
         case BranchNode::Kind::IfEnd:
-            format("L%d\n", getLabelId(this, bNode->fixupNode()));
+            format("L%d\n", getLabelId(bNode->fixupNode()));
             break;
         case BranchNode::Kind::LoopStart:
-            format("L%d\n", getLabelId(this, bNode));
+            format("L%d\n", getLabelId(bNode));
             break;
         case BranchNode::Kind::LoopNext:
-            format("L%d\n", getLabelId(this, bNode));
+            format("L%d\n", getLabelId(bNode));
             break;
         case BranchNode::Kind::LoopEnd:
-            format("    BRA L%d\n", getLabelId(this, bNode->fixupNode()));
+            format("    BRA L%d\n", getLabelId(bNode->fixupNode()));
             break;
         case BranchNode::Kind::Break:
         case BranchNode::Kind::Continue:
-            format("    BRA L%d\n", getLabelId(this, bNode->fixupNode()));
+            format("    BRA L%d\n", getLabelId(bNode->fixupNode()));
             break;
         default:
             break;
@@ -1141,32 +1137,64 @@ CodeGen6809::emitCodeLogical(const ASTPtr& node, bool isLHS)
     // false and LAnd, skip rhs and push false
     auto lNode = std::static_pointer_cast<LogicalNode>(node);
     
+    int16_t labelA = nextLabelId();
+    int16_t labelB = nextLabelId();
+    int16_t labelPass = -1;
+    int16_t labelFail = -1;
+    
+    if (branchLabel() != -1) {
+        labelFail = branchLabel();
+        setBranchLabel(-1);
+    }
+    
+    // If no label was passed in we always do slow case
+    
     // First emit lhs
+    if (lNode->kind() == LogicalNode::Kind::LOr) {
+        labelPass = nextLabelId();
+        setBranchLabel(labelPass, true);
+    } else {
+        setBranchLabel(labelFail, false);
+    }
+    
     clearRegState();
     emitCode(lNode->lhs(), false);
     
-    // Now emit if. We use BEQ for LAnd and BNE for LOr
-    uint16_t labelA = nextLabelId();
-    uint16_t labelB = nextLabelId();
-    
-    if (!isReg(RegState::A)) {
-        format("    PULS A\n");
-    }
+    // If branchLabel was not cleared, do it the slow way
+    if (branchLabel() != -1) {
+        // If the test couldn't use the branch it has returned
+        // a 0 or 1 in A (or on the stack). We need to BEQ or
+        // BNE past the rhs.
+        if (!isReg(RegState::A)) {
+            format("    PULS A\n");
+        }
 
-    // Make sure RegState is cleared so we don't try to push during the emitCodes
-    const char* op = (lNode->kind() == LogicalNode::Kind::LAnd) ? "BEQ" : "BNE";
-    format("    %s L%d\n", op, labelA);
+        // Make sure RegState is cleared so we don't try to push during the emitCodes
+        const char* op = (lNode->kind() == LogicalNode::Kind::LAnd) ? "BEQ" : "BNE";
+        format("    %s L%d\n", op, labelA);
+    }
     
     // Emit rhs
+    setBranchLabel(labelFail, false);
+
     clearRegState();
     emitCode(lNode->rhs(), false);
     
-    // emit the postamble
-    format("    BRA L%d\n", labelB);
-    format("L%d\n", labelA);
-    format("    LDA #%d\n", (lNode->kind() == LogicalNode::Kind::LAnd) ? 0 : 1);
-    format("L%d\n", labelB);
-    setRegState(RegState::A);
+    if (branchLabel() != -1) {
+        // If the lhs used the branch label then on a fail it branched to
+        // labelX, which is the fail label. Otherwise it did the rhs test
+        // and A has the result (0 or 1).
+        // emit the postamble
+        format("    BRA L%d\n", labelB);
+        format("L%d\n", labelA);
+        format("    LDA #%d\n", (lNode->kind() == LogicalNode::Kind::LAnd) ? 0 : 1);
+        format("L%d\n", labelB);
+        setRegState(RegState::A);
+    }
+    
+    if (labelPass != -1) {
+        format("L%d\n", labelPass);
+    }
 }
 
 void

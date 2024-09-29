@@ -39,10 +39,6 @@ class CodeGen6809 : public CodeGen
 
     virtual void emitCode(const ASTPtr& node, bool isLHS) override;
     
-    uint16_t nextLabelId() { return _labelId++; }
-    int16_t branchLabel() const { return _branchLabel; }
-    void setBranchLabel(int16_t label) { _branchLabel = label; }
-
   private:
     enum class RegState { None, A, D, X, StackI8, StackI16, StackPtr };
 
@@ -123,6 +119,20 @@ class CodeGen6809 : public CodeGen
     
     void clearRegState() { _lastRegState = RegState::None; _lastPtrState = RegState::None; }
     
+    uint16_t nextLabelId() { return _labelId++; }
+    int16_t branchLabel() const { return _branchLabel; }
+    bool branchTestInverted() const { return _branchTestInverted; }
+    void setBranchLabel(int16_t label, bool invert = false) { _branchLabel = label; _branchTestInverted = invert; }
+
+    uint16_t getLabelId(const ASTPtr& node)
+    {
+        auto bNode = std::static_pointer_cast<BranchNode>(node);
+        if (bNode->fixupIndex() == 0) {
+            bNode->setFixupIndex(nextLabelId());
+        }
+        return bNode->fixupIndex();
+    }
+
     // This assumes op is one of:
     //
     //      Op::ADD
@@ -181,6 +191,10 @@ class CodeGen6809 : public CodeGen
     // When not -1 a target for a branch (like if or a conditional op) will add the passed
     // label to use when the relational operation is false.
     int16_t _branchLabel = -1;
+    
+    // Normally the branch optimization branches to branchLabel when the test
+    // fails. When _invertBranchTest is true we branch if true instead.
+    bool _branchTestInverted = false;
 };
 
 }
