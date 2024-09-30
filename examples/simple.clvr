@@ -11,9 +11,9 @@ struct Simple
 function int16 main()
 {
     int8 a = 5;
-    int8 b = (a == 5) ? 6 : 3;
+    int8 b = 6;
     
-    if (b == 6)
+    if (!(a == 5) && !(b == 6))
         core.printf("Passed\n");
     else
         core.printf("Failed\n");

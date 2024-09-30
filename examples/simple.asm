@@ -26,36 +26,32 @@ Simple_main
     ; function int16 main()
     ; {
     ;     int8 a = 5;
-    ;     int8 b = (a == 5) ? 6 : 3;
+    ;     int8 b = 6;
     LDA #$05
     STA -1,U
     ;     
+    LDA #$06
+    STA -2,U
+    ;     if (!(a == 5) && !(b == 6))
+    ;         core.printf("Passed\n");
     LDA #$05
     PSHS A
     LDA -1,U
     CMPA 0,S
     LEAS 1,S
-    BNE L1
-    LDA #$06
-    BRA L2
-L1
-    LDA #$03
-L2
-    STA -2,U
-    ;     if (b == 6)
-    ;         core.printf("Passed\n");
+    BEQ L1
     LDA #$06
     PSHS A
     LDA -2,U
     CMPA 0,S
     LEAS 1,S
-    BNE L3
+    BEQ L1
     ;     else
     LDD #String+$0
     PSHS D
     JSR printf
     BRA L4
-L3
+L1
     ;         core.printf("Failed\n");
     ;     
     LDD #String+$8
