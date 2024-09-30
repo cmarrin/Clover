@@ -304,6 +304,12 @@ static const char* relopToString(Op op, bool inv)
     }
 }
 
+static bool canDoBinaryOptimization(const ASTPtr& left, const ASTPtr& right)
+{
+    return  (left->astNodeType() == ASTNodeType::Var || left->astNodeType() == ASTNodeType::Constant) &&
+            (right->astNodeType() == ASTNodeType::Var || right->astNodeType() == ASTNodeType::Constant);
+}
+
 void
 CodeGen6809::emitMulOp(const ASTPtr& node)
 {
@@ -311,10 +317,53 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
     Type opType = opNode->left() ? opNode->left()->type() : opNode->right()->type();
     bool is16Bit = typeToOpSize(opType) == OpSize::i16;
     bool isSigned = opNode->op() == Op::IMUL;
+    bool optimize = canDoBinaryOptimization(opNode->left(), opNode->right());
 
     uint16_t labelA = nextLabelId();
     uint16_t labelB = nextLabelId();
     uint16_t labelC = nextLabelId();
+    
+    // The binary optimization is only really useful for 8x8 multiply
+    if (optimize && !is16Bit) {
+        if (isSigned) {
+            format("    CLR ,-S\n");
+        }
+        emitCode(opNode->left(), false);
+        clearRegState();
+
+        // assume value is in A
+        
+        if (isSigned) {
+            format("    BPL L%d\n", labelA);
+            format("    NEG 0,S\n");
+            format("    NEG A\n");
+            format("L%d\n", labelA);
+            format("    TFR A,B\n");
+        }
+        
+        emitCode(opNode->right(), false);
+        clearRegState();
+        
+        if (isSigned) {
+            format("    BPL L%d\n", labelB);
+            format("    NEG 0,S\n");
+            format("    NEG A\n");
+            format("L%d\n", labelB);
+        }
+        
+        format("    MUL\n");
+
+        if (isSigned) {
+            format("    TST 0,S\n");
+            format("    BPL L%d\n", labelC);
+            format("    NEGB\n");
+            format("L%d\n", labelC);
+            format("    LEAS 3,S\n");
+        }
+        format("    TFR B,A\n");
+        setRegState(RegState::A);
+        return;
+    }
     
     emitCode(opNode->right(), false);
     emitCode(opNode->left(), false);
@@ -395,12 +444,6 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
         format("    TFR B, A\n");
         setRegState(RegState::A);
     }
-}
-
-static bool canDoBinaryOptimization(const ASTPtr& left, const ASTPtr& right)
-{
-    return  (left->astNodeType() == ASTNodeType::Var || left->astNodeType() == ASTNodeType::Constant) &&
-            (right->astNodeType() == ASTNodeType::Var || right->astNodeType() == ASTNodeType::Constant);
 }
 
 void

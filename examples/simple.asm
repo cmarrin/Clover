@@ -25,29 +25,41 @@ Simple_main
     ; 
     ; function int16 main()
     ; {
-    ;     uint8 a = 5;
+    ;     int8 a = 5;
     ;     uint8 b = 6;
     LDA #5
     STA -1,U
-    ;     uint8 c = a * 10;
+    ;     int8 c = a * 10;
     LDA #6
     STA -2,U
     ;     
-    LDA #10
-    PSHS A
-    LDA -1,U
-    PSHS A
     CLR ,-S
-    LDB 1,S
-    LDA 2,S
+    LDA -1,U
+    BPL L1
+    NEG 0,S
+    NEG A
+L1
+    TFR A,B
+    LDA #10
+    BPL L2
+    NEG 0,S
+    NEG A
+L2
     MUL
+    TST 0,S
+    BPL L3
+    NEGB
+L3
     LEAS 3,S
-    TFR B, A
+    TFR B,A
     STA -3,U
     ;     if (a == b)
     ;         core.printf("Passed\n");
+    LDA -2,U
+    PSHS A
     LDA -1,U
-    CMPA -2,U
+    CMPA 0,S
+    LEAS 1,S
     BNE L4
     ;     else
     LDD #String+$0
