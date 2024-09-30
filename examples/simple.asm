@@ -12,7 +12,7 @@
 Simple_main
     PSHS U
     TFR S,U
-    LEAS -2,S
+    LEAS -3,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -25,30 +25,42 @@ Simple_main
     ; 
     ; function int16 main()
     ; {
-    ;     int8 a = 5;
-    ;     int8 b = 6;
+    ;     uint8 a = 5;
+    ;     uint8 b = 6;
     LDA #5
     STA -1,U
-    ;     
+    ;     uint8 c = a * 10;
     LDA #6
     STA -2,U
+    ;     
+    LDA #10
+    PSHS A
+    LDA -1,U
+    PSHS A
+    CLR ,-S
+    LDB 1,S
+    LDA 2,S
+    MUL
+    LEAS 3,S
+    TFR B, A
+    STA -3,U
     ;     if (a == b)
     ;         core.printf("Passed\n");
     LDA -1,U
     CMPA -2,U
-    BNE L1
+    BNE L4
     ;     else
     LDD #String+$0
     PSHS D
     JSR printf
-    BRA L2
-L1
+    BRA L5
+L4
     ;         core.printf("Failed\n");
     ;     
     LDD #String+$8
     PSHS D
     JSR printf
-L2
+L5
     ;     return 0;
     ; }
     LDD #0

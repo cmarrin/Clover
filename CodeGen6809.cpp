@@ -323,9 +323,9 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
     stashRegIfNeeded();
 
     // Push storage for sign byte
-    format("    CLR ,-S\n");
-    
     if (is16Bit) {
+        format("    CLR ,-S\n");
+    
         if (isSigned) {
             format("    TST 3,S\n");
             format("    BPL L%d\n", labelA);
@@ -356,11 +356,14 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
         format("    LDB 3,S\n");
         format("    MUL\n");
         format("    ADDB 1,S\n");    // Toss MSB of result
-        format("    TST 2,S\n");     // Do the sign
-        format("    BPL L%d\n", labelC);
-        format("    LDD #0\n");
-        format("    SUBD 0,S\n");
-        format("L%d\n", labelC);
+
+        if (isSigned) {
+            format("    TST 2,S\n");     // Do the sign
+            format("    BPL L%d\n", labelC);
+            format("    LDD #0\n");
+            format("    SUBD 0,S\n");
+            format("L%d\n", labelC);
+        }
         format("    LEAS 7,S\n");
         setRegState(RegState::D);
     } else {
@@ -381,10 +384,13 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
         format("    LDB 1,S\n");
         format("    LDA 2,S\n");
         format("    MUL\n");
-        format("    TST 0,S\n");
-        format("    BPL L%d\n", labelC);
-        format("    NEGB\n");
-        format("L%d\n", labelC);
+
+        if (isSigned) {
+            format("    TST 0,S\n");
+            format("    BPL L%d\n", labelC);
+            format("    NEGB\n");
+            format("L%d\n", labelC);
+        }
         format("    LEAS 3,S\n");
         format("    TFR B, A\n");
         setRegState(RegState::A);
