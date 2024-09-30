@@ -551,3 +551,26 @@ Here are all the cases:
             yes                 no              yes                 rhs optimized, jumps to fail label which sets A to 0 or 1
             yes                 yes             no
             yes                 yes             yes                 Fully optimized case, on passed in label used
+
+
+
+Dealing with logical not and branch optimization
+
+    if (!(a == 5) && !(b == 6))
+        c = 1;
+        
+    LDA #5
+    PSHS A
+    CMPA a,U
+    LEAS 1,S
+    BEQ L1
+    LDA #6
+    PSHS A
+    LDA b,U
+    CMPA 0,S
+    BEQ L1
+
+    LDA #1
+    STA c,U
+L1
+
