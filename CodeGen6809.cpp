@@ -272,8 +272,8 @@ static const char* relopToString(Op op, bool inv)
 {
     switch (op) {
         default: return nullptr;
-        case Op::EQ: return inv ? "BNE" : "BNE";
-        case Op::NE: return inv ? "BEQ" : "BEQ";
+        case Op::EQ: return inv ? "BNE" : "BEQ";
+        case Op::NE: return inv ? "BEQ" : "BNE";
         case Op::LT: return inv ? "BGE" : "BLT";
         case Op::LO: return inv ? "BHS" : "BLO";
         case Op::LE: return inv ? "BGT" : "BLE";
@@ -568,19 +568,17 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     // so we just test if TOS is zero. If so, put a 1 in A otherwise put a 0.
     if (opNode->op() == Op::LNOT) {
         // always rhs for LNOT
-        emitCode(opNode->right(), opNode->isRef());
         
+        // If we're trying to do the optimized branch case then we want to invert the sense
+        // of the test to account for the LNOT
         if (branchLabel() != -1) {
-            if (!isReg(RegState::A)) {
-                format("    PULS A\n");
-                format("    TSTA\n");
-            }
-            format("    BEQ L%d\n", branchLabel());
-            setBranchLabel(-1);
-            clearRegState();
+            setBranchLabel(branchLabel(), !branchTestInverted());
+            emitCode(opNode->right(), opNode->isRef());
             return;
         }
-
+        
+        emitCode(opNode->right(), opNode->isRef());
+        
         uint16_t labelA = nextLabelId();
         uint16_t labelB = nextLabelId();
         
