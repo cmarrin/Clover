@@ -915,13 +915,24 @@ CodeGen6809::emitCodeTypeCast(const ASTPtr& node, bool isLHS)
     ASTPtr arg = std::static_pointer_cast<TypeCastNode>(node)->arg();
     emitCode(arg, isLHS);
     
+    Type fromType = arg->type();
+    Type toType = node->type();
+    
+    // If we're type casting from 16 to 8 bits for an if test we don't need
+    // to bother. We can just set the CC correctly
+    if (typeToOpSize(fromType) == OpSize::i16 && typeToOpSize(toType) == OpSize::i8 && branchLabel() != -1) {
+        if (!isReg(RegState::D)) {
+            format("    LDD 0,S\n");
+            format("    LEAS 2,S\n");
+        }
+        setRegState(RegState::A);
+        return;
+    }
+
     // We're casting from 8 to 16 or from 16 to 8
     // If going from 8 to 16, we sign extend if neededType is signed.
     // If we're casting to the same size (e.g., going from signed to unsigned)
     // just skip it
-    Type fromType = arg->type();
-    Type toType = node->type();
-    
     if (typeToBytes(fromType) != typeToBytes(toType)) {
         if (typeToBytes(toType) == 2) {
             // going from 8 to 16 bits
