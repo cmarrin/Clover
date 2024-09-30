@@ -137,14 +137,13 @@ class CodeGen6809 : public CodeGen
     //
     //      Op::ADD
     //      Op::SUB
-    //      Op::IMUL/Op::UMUL
-    //      Op::IDIV/Op::UDIV
     //      Op::AND1
     //      Op::OR1
     //      Op::XOR1
     //
     // and that the lhs and rhs are pushed. Leave result on TOS
-    void emitBinaryOp(Op op, bool is16Bit);
+    void emitBinaryOp(const ASTPtr& node);
+    void emitMulOp(const ASTPtr& node);
 
     void emitCodeStatements(const ASTPtr& node, bool isLHS);
     void emitCodeVar(const ASTPtr& node, bool isLHS);
