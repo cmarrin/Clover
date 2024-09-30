@@ -611,17 +611,7 @@ CodeGenStackVM::emitCodeSwitch(const ASTPtr& node, bool isLHS)
     
     // Now we need to sort the clauses, so we can binary search at runtime.
     std::sort(sNode->clauses().begin(), sNode->clauses().end(),
-                [](const CaseClause &a, const CaseClause &b)
-                {
-                    // default clause is always lowest
-                    if (a.isDefault()) {
-                        return true;
-                    }
-                    if (b.isDefault()) {
-                        return false;
-                    }
-                    return a.value() < b.value();
-                });
+                [](const CaseClause &a, const CaseClause &b) { return a.value() < b.value(); });
 
     // Default clause should be first if there is one
     // Now emit the list

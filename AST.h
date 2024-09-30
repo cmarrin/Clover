@@ -586,14 +586,15 @@ class CaseClause
     CaseClause(const ASTPtr& stmt) : _stmt(stmt), _isDefault(true) { }
     CaseClause(int32_t value, const ASTPtr& stmt) : _value(value), _stmt(stmt) { }
     
-    int32_t value() const { return _value; }
+    // When default return the most negative value, so default alway is the first value in a sorted list
+    int32_t value() const { return _isDefault ? std::numeric_limits<int32_t>::min() : _value; }
     const ASTPtr& stmt() const { return _stmt; }
     void setFixupIndex(AddrNativeType addr) { _fixupIndex = addr; }
     AddrNativeType fixupIndex() const { return _fixupIndex; }
     void fixup(std::vector<uint8_t>& code, AddrNativeType addr);
     bool isDefault() const { return _isDefault; }
     BranchSize branchSize() const { return _branchSize; }
-    
+
   private:
     int32_t _value = 0;
     ASTPtr _stmt;
