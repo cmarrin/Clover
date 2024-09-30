@@ -12,7 +12,7 @@
 Simple_main
     PSHS U
     TFR S,U
-    LEAS -2,S
+    LEAS -3,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -29,35 +29,41 @@ Simple_main
     ;     int8 b = 6;
     LDA #$05
     STA -1,U
-    ;     
+    ;     int8 c = ~a;
     LDA #$06
     STA -2,U
-    ;     if (!(a == 5) && !(b == 6))
-    ;         core.printf("Passed\n");
-    LDA #$05
-    PSHS A
+    ;     
     LDA -1,U
-    CMPA 0,S
-    LEAS 1,S
-    BEQ L1
-    LDA #$06
+    COMA
+    STA -3,U
+    ;     if (a + 2 == b + 3)
+    ;         core.printf("Passed\n");
+    LDA #$03
     PSHS A
     LDA -2,U
+    ADDA 0,S
+    LEAS 1,S
+    PSHS A
+    LDA #$02
+    PSHS A
+    LDA -1,U
+    ADDA 0,S
+    LEAS 1,S
     CMPA 0,S
     LEAS 1,S
-    BEQ L1
+    BNE L1
     ;     else
     LDD #String+$0
     PSHS D
     JSR printf
-    BRA L4
+    BRA L2
 L1
     ;         core.printf("Failed\n");
     ;     
     LDD #String+$8
     PSHS D
     JSR printf
-L4
+L2
     ;     return 0;
     ; }
     LDD #$0000

@@ -574,3 +574,60 @@ Dealing with logical not and branch optimization
     STA c,U
 L1
 
+Binary Op optimization
+
+Today this code:
+
+    if (a < 5) ...
+    
+produces:
+
+    LDA #5
+    PSHS A
+    LDA a,U
+    CMPA 0,S
+    LEAS 1,S
+    BGE L1
+    
+That can be optimized to:
+
+    LDA a,U
+    CMPA #5
+    BGE L1
+    
+This can be done if the lhs and rhs are either var or constant. Furthermore this:
+
+    if (a + 2 == b + 3) ...
+    
+produces:
+
+    LDA #$03
+    PSHS A
+    LDA -2,U
+    ADDA 0,S
+    LEAS 1,S
+    PSHS A
+    LDA #$02
+    PSHS A
+    LDA -1,U
+    ADDA 0,S
+    LEAS 1,S
+    CMPA 0,S
+    LEAS 1,S
+    BNE L1
+
+this can be optimized to:
+
+    LDA b,U
+    ADDA #3
+    PSHS A
+    LDA a,U
+    ADDA #2
+    CMPA 0,S
+    LEAS 1,S
+    BNE L1
+    
+The relational operator sees that the lhs and rhs are neither var nor constant, 
+so it does the same as always. But the two adds do have var and constant operands
+so they can be optimized.
+
