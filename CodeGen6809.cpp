@@ -159,15 +159,19 @@ CodeGen6809::emitPopCodeVar(const ASTPtr& node)
 }
 
 void
-CodeGen6809::emitAddr(const SymbolPtr& symbol, AddrNativeType offset)
+CodeGen6809::emitAddr(const ASTPtr& node, EmitAddrType emitAddrType)
 {
+    SymbolPtr symbol = std::static_pointer_cast<VarNode>(node)->symbol();
+    AddrNativeType offset = (emitAddrType != EmitAddrType::LSB) ? 0 : 1;
+    offset += std::static_pointer_cast<VarNode>(node)->offset();
+    
     // Determine the addr mode. Addr is unsigned. See Defines.h (Address Mode)
     // for details
     Index index;
     int16_t relAddr = symbol->addr(index);
     relAddr += (index == Index::L) ? -offset : offset;
     if (index == Index::C) {
-        format("Constants+%d\n", relAddr); // FIXME: Need to emit Constants
+        format("Constants+%d\n", relAddr);
     } else {
         const char* indexReg;
         
@@ -190,14 +194,29 @@ CodeGen6809::emitAddr(const SymbolPtr& symbol, AddrNativeType offset)
 }
 
 void
+CodeGen6809::emitAddrOrConst(const ASTPtr& node, EmitAddrType emitAddrType)
+{
+    // If emitLSB is false we emit the entire number
+    if (node->astNodeType() == ASTNodeType::Var) {
+        emitAddr(node, emitAddrType);
+    } else {
+        assert(node->astNodeType() == ASTNodeType::Constant);
+        int32_t i = std::static_pointer_cast<ConstantNode>(node)->rawInteger();
+        if (emitAddrType == EmitAddrType::MSB) {
+            i = int8_t(i >> 8);
+        } else if (emitAddrType == EmitAddrType::LSB) {
+            i = int8_t(i);
+        }
+        format("#%d\n", i);
+    }
+}
+
+void
 CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
 {
-    SymbolPtr symbol = std::static_pointer_cast<VarNode>(node)->symbol();
-    AddrNativeType offset = std::static_pointer_cast<VarNode>(node)->offset();
-    
     // If this is a pointer then we push it as a AddrType not the underlying type
     if (type == Type::None) {
-        type = node->isPointer() ? AddrType : symbol->type();
+        type = node->isPointer() ? AddrType : node->type();
     }
 
     bool is16Bit = typeToOpSize(type) == OpSize::i16;
@@ -216,19 +235,19 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
             format("    PULS %s\n", is16Bit ? "D" : "A");
         }
         format("    ST%s ", is16Bit ? "D" : "A");
-        emitAddr(symbol, offset);
+        emitAddr(node);
         clearRegState();
     } else if (ref) {
         stashPtrIfNeeded();
 
         format("    LEAX ");
-        emitAddr(symbol, offset);
+        emitAddr(node);
         setRegState(RegState::X);
     } else {
         stashRegIfNeeded();
         
         format("    LD%s ", is16Bit ? "D" : "A");
-        emitAddr(symbol, offset);
+        emitAddr(node);
         setRegState(is16Bit ? RegState::D : RegState::A);
     }
 }
@@ -243,10 +262,10 @@ CodeGen6809::emitCodeConstant(const ASTPtr& node, bool isLHS)
     int32_t i = std::static_pointer_cast<ConstantNode>(node)->rawInteger();
     
     if (typeToOpSize(node->type()) == OpSize::i16) {
-        format("    LDD #$%04x\n", uint16_t(i));
+        format("    LDD #%d\n", uint16_t(i));
         setRegState(RegState::D);
     } else {
-        format("    LDA #$%02x\n", uint8_t(i));
+        format("    LDA #%d\n", uint8_t(i));
         setRegState(RegState::A);
     }
 }
@@ -372,6 +391,12 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
     }
 }
 
+static bool canDoBinaryOptimization(const ASTPtr& left, const ASTPtr& right)
+{
+    return  (left->astNodeType() == ASTNodeType::Var || left->astNodeType() == ASTNodeType::Constant) &&
+            (right->astNodeType() == ASTNodeType::Var || right->astNodeType() == ASTNodeType::Constant);
+}
+
 void
 CodeGen6809::emitBinaryOp(const ASTPtr& node)
 {
@@ -379,60 +404,59 @@ CodeGen6809::emitBinaryOp(const ASTPtr& node)
     Type opType = opNode->left() ? opNode->left()->type() : opNode->right()->type();
     bool is16Bit = typeToOpSize(opType) == OpSize::i16;
     Op op = opNode->op();
+    
+    // See if we can do the binary op optimization
+    bool optimize = canDoBinaryOptimization(opNode->left(), opNode->right());
+    
+    if (optimize) {
+        emitCode(opNode->left(), false);
+        if (!isReg(is16Bit ? RegState::D : RegState::A)) {
+            format("    PULS %s\n", is16Bit ? "D" : "A");
+        }
+    } else {
+        emitCode(opNode->right(), false);
+        emitCode(opNode->left(), false);
+    }
 
-    emitCode(opNode->right(), false);
-    emitCode(opNode->left(), false);
-
-    // lhs is in A/D and rhs is on TOS
     switch (op) {
         default: break;
         case Op::ADD:
+        case Op::SUB: {
+            const char* opStr = (op == Op::ADD) ? "ADD" : "SUB";
+            
             if (is16Bit) {
-                if (isReg(RegState::D)) {
-                    format("    ADDD 0,S\n");
-                    format("    LEAS 2,S\n");
+                if (optimize) {
+                    format("    %sD ", opStr);
+                    emitAddrOrConst(opNode->right());
                 } else {
-                    format("    LDD 0,S\n");
-                    format("    ADDD 2,S\n");
-                    format("    LEAS 4,S\n");
+                    if (isReg(RegState::D)) {
+                        format("    %sD 0,S\n", opStr);
+                        format("    LEAS 2,S\n");
+                    } else {
+                        format("    LDD 0,S\n");
+                        format("    %sD 2,S\n", opStr);
+                        format("    LEAS 4,S\n");
+                    }
                 }
                 setRegState(RegState::D);
             } else {
-                if (isReg(RegState::A)) {
-                    format("    ADDA 0,S\n");
-                    format("    LEAS 1,S\n");
+                if (optimize) {
+                    format("    %sA ", opStr);
+                    emitAddrOrConst(opNode->right());
                 } else {
-                    format("    LDA 0,S\n");
-                    format("    ADDA 1,S\n");
-                    format("    LEAS 2,S\n");
-                }
-
-                setRegState(RegState::A);
-            }
-            break;
-        case Op::SUB:
-            if (is16Bit) {
-                if (isReg(RegState::D)) {
-                    format("    SUBD 0,S\n");
-                    format("    LEAS 2,S\n");
-                } else {
-                    format("    LDD 0,S\n");
-                    format("    SUBD 2,S\n");
-                    format("    LEAS 4,S\n");
-                }
-                setRegState(RegState::D);
-            } else {
-                if (isReg(RegState::A)) {
-                    format("    SUBA 0,S\n");
-                    format("    LEAS 1,S\n");
-                } else {
-                    format("    LDA 0,S\n");
-                    format("    SUBA 1,S\n");
-                    format("    LEAS 2,S\n");
+                    if (isReg(RegState::A)) {
+                        format("    %sA 0,S\n", opStr);
+                        format("    LEAS 1,S\n");
+                    } else {
+                        format("    LDA 0,S\n");
+                        format("    %sA 1,S\n", opStr);
+                        format("    LEAS 2,S\n");
+                    }
                 }
                 setRegState(RegState::A);
             }
             break;
+        }
         case Op::OR1:
         case Op::AND1:
         case Op::XOR1: {
@@ -440,25 +464,37 @@ CodeGen6809::emitBinaryOp(const ASTPtr& node)
 
             // we can do it efficiently if the rhs is in a reg
             if (is16Bit) {
-                if (isReg(RegState::D)) {
-                    format("    %sA 0,S\n", opStr);
-                    format("    %sB 1,S\n", opStr);
-                    format("    LEAS 2,S\n");
+                if (optimize) {
+                    format("    %sD ", opStr);
+                    emitAddrOrConst(opNode->right(), EmitAddrType::MSB);
+                    format("    %sD ", opStr);
+                    emitAddrOrConst(opNode->right(), EmitAddrType::LSB);
                 } else {
-                    format("    LDD 2,S\n");
-                    format("    %sA 0,S\n", opStr);
-                    format("    %sB 1,S\n", opStr);
-                    format("    LEAS 4,S\n");
+                    if (isReg(RegState::D)) {
+                        format("    %sA 0,S\n", opStr);
+                        format("    %sB 1,S\n", opStr);
+                        format("    LEAS 2,S\n");
+                    } else {
+                        format("    LDD 2,S\n");
+                        format("    %sA 0,S\n", opStr);
+                        format("    %sB 1,S\n", opStr);
+                        format("    LEAS 4,S\n");
+                    }
                 }
                 setRegState(RegState::D);
             } else {
-                if (isReg(RegState::A)) {
-                    format("    %sA 0,S\n", opStr);
-                    format("    LEAS 1,S\n");
+                if (optimize) {
+                    format("    %sA ", opStr);
+                    emitAddrOrConst(opNode->right());
                 } else {
-                    format("    LDA 0,S\n");
-                    format("    %sA 1,S\n", opStr);
-                    format("    LEAS 2,S\n");
+                    if (isReg(RegState::A)) {
+                        format("    %sA 0,S\n", opStr);
+                        format("    LEAS 1,S\n");
+                    } else {
+                        format("    LDA 0,S\n");
+                        format("    %sA 1,S\n", opStr);
+                        format("    LEAS 2,S\n");
+                    }
                 }
                 setRegState(RegState::A);
             }
@@ -662,8 +698,14 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     if (!relOp) {
         emitBinaryOp(node);
     } else {
-        emitCode(opNode->right(), isLHS);
-        emitCode(opNode->left(), opNode->isRef());
+        bool optimize = canDoBinaryOptimization(opNode->left(), opNode->right());
+        
+        if (optimize) {
+            emitCode(opNode->left(), false);
+        } else {
+            emitCode(opNode->right(), false);
+            emitCode(opNode->left(), false);
+        }
         
         // If we have a branchLabel we can do the optimized case
         if (branchLabel() != -1) {
@@ -676,8 +718,14 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
             if (branchTestInverted()) {
                 relOp = relopToString(op, false);
             }
-            format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
-            format("    LEAS %d,S\n", is16Bit ? 2 : 1);
+            
+            if (optimize) {
+                format("    CMP%s ", is16Bit ? "D" : "A");
+                emitAddrOrConst(opNode->right());
+            } else {
+                format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
+                format("    LEAS %d,S\n", is16Bit ? 2 : 1);
+            }
             format("    %s L%d\n", relOp, branchLabel());
             setBranchLabel(-1);
         } else {

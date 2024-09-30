@@ -41,8 +41,10 @@ class CodeGen6809 : public CodeGen
     
   private:
     enum class RegState { None, A, D, X, StackI8, StackI16, StackPtr };
-
-    void emitAddr(const SymbolPtr&, AddrNativeType offset);
+    enum class EmitAddrType { Full, MSB, LSB };
+    
+    void emitAddr(const ASTPtr& node, EmitAddrType = EmitAddrType::Full);
+    void emitAddrOrConst(const ASTPtr& node, EmitAddrType = EmitAddrType::Full);
 
     void stashRegIfNeeded()
     {

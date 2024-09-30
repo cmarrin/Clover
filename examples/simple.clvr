@@ -12,9 +12,8 @@ function int16 main()
 {
     int8 a = 5;
     int8 b = 6;
-    int8 c = ~a;
     
-    if (a + 2 == b + 3)
+    if (a == b)
         core.printf("Passed\n");
     else
         core.printf("Failed\n");
