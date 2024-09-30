@@ -569,6 +569,17 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     if (opNode->op() == Op::LNOT) {
         // always rhs for LNOT
         emitCode(opNode->right(), opNode->isRef());
+        
+        if (branchLabel() != -1) {
+            if (!isReg(RegState::A)) {
+                format("    PULS A\n");
+                format("    TSTA\n");
+            }
+            format("    BEQ L%d\n", branchLabel());
+            setBranchLabel(-1);
+            clearRegState();
+            return;
+        }
 
         uint16_t labelA = nextLabelId();
         uint16_t labelB = nextLabelId();
