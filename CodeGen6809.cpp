@@ -384,40 +384,6 @@ CodeGen6809::emitBinaryOp(Op op, bool is16Bit)
             setRegState(is16Bit ? RegState::StackI16 : RegState::StackI8);
             break;
         }
-        case Op::NEG:
-            if (is16Bit) {
-                // Make sure the value is on the stack
-                stashRegIfNeeded();
-                assert(_lastRegState == RegState::StackI16);
-                
-                format("    LDD #0\n");
-                format("    SUBD 0,S\n");
-            } else {
-                // Handle stack and non-stack case
-                if (isReg(RegState::A)) {
-                    format("    NEGA\n");
-                } else {
-                    format("    NEG 0,S\n");
-                }
-            }
-            break;
-        case Op::NOT1:
-            if (is16Bit) {
-                if (isReg(RegState::D)) {
-                    format("    COMA\n");
-                    format("    COMB\n");
-                } else {
-                    format("    COM 0,S\n");
-                    format("    COM 1,S\n");
-                }
-            } else {
-                if (isReg(RegState::A)) {
-                    format("    COMA\n");
-                } else {
-                    format("    COM 0,S\n");
-                }
-            }
-            break;
         case Op::ADD:
             if (is16Bit) {
                 if (isReg(RegState::D)) {
@@ -606,6 +572,52 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         format("L%d\n", labelB);
         setRegState(RegState::A);
         
+        return;
+    }
+    
+    if (opNode->op() == Op::NEG) {
+        emitCode(opNode->right(), false);
+        
+        if (is16Bit) {
+            // Make sure the value is on the stack
+            stashRegIfNeeded();
+            assert(_lastRegState == RegState::StackI16);
+            
+            format("    LDD #0\n");
+            format("    SUBD 0,S\n");
+            format("    LEAS 2,S\n");
+            setRegState(RegState::D);
+        } else {
+            // Handle stack and non-stack case
+            if (isReg(RegState::A)) {
+                format("    NEGA\n");
+            } else {
+                format("    NEG 0,S\n");
+            }
+            // RegState already has the right value
+        }
+        return;
+    }
+    
+    if (opNode->op() == Op::NOT1) {
+        emitCode(opNode->right(), false);
+
+        if (is16Bit) {
+            if (isReg(RegState::D)) {
+                format("    COMA\n");
+                format("    COMB\n");
+            } else {
+                format("    COM 0,S\n");
+                format("    COM 1,S\n");
+            }
+        } else {
+            if (isReg(RegState::A)) {
+                format("    COMA\n");
+            } else {
+                format("    COM 0,S\n");
+            }
+        }
+        // RegState already has the right value
         return;
     }
     
