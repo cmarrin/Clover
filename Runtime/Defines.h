@@ -21,9 +21,9 @@
 #endif
 
 
-#define ADDR32 1          // Uncomment for 32 bit addr, leave commented out for 16 bit
-#define SUPPORT_FLOAT 1   // Uncomment for float support, leave commented out for no floats
-#define SUPPORT_INT32 1   // Uncomment for int32/uint32 support, leave commented out for no support
+//#define ADDR32 1          // Uncomment for 32 bit addr, leave commented out for 16 bit
+//#define SUPPORT_FLOAT 1   // Uncomment for float support, leave commented out for no floats
+//#define SUPPORT_INT32 1   // Uncomment for int32_t/uint32_t support, leave commented out for no support
 
 namespace clvr {
 
@@ -216,9 +216,9 @@ Opcodes:
     
     Example:
     
-    int16 b = 10;
-    int16 c = 20;
-    int16 a = (b + 5) * (c + 6);
+    int16_t b = 10;
+    int16_t c = 20;
+    int16_t a = (b + 5) * (c + 6);
     
     PUSHK<2>    #10
     POP<2>      b,L
