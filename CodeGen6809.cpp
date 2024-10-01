@@ -850,7 +850,7 @@ CodeGen6809::emitCodeInc(const ASTPtr& node, bool isLHS)
         } else {
             format("    PSHS A\n");
             format("    ADDA #%d\n", inc);
-            setRegState(RegState::StackI16);
+            setRegState(RegState::StackI8);
         }
         format("    STA 0,X\n");
     }
