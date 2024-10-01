@@ -22,7 +22,7 @@
 // Functions:
 //
 //      void    print(string)       - prints the passed string to the console
-//      string  int8ToString(int8)  - return passed int8 value converted to string
+//      string  int8ToString(int8_t)  - return passed int8_t value converted to string
 
 #pragma once
 

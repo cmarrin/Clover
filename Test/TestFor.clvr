@@ -12,9 +12,9 @@
 struct Test
 {
 
-uint8 errors;
+uint8_t errors;
 
-function showIntResults(uint8 testNo, int32 exp, int32 act)
+function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -25,18 +25,18 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
-function int32 main()
+function int32_t main()
 {    
     errors = 0;
     
-    int8 i = 0;
-    int8 j = 0;
+    int8_t i = 0;
+    int8_t j = 0;
 
     core.printf("\nTest for, break, continue\n");
 
     core.printf("\nbasic test\n");
     i = 1;
-    for (int8 x = 0; x < 5; ++x) {
+    for (int8_t x = 0; x < 5; ++x) {
         i *= 2;
     }
 
@@ -101,7 +101,7 @@ function int32 main()
 
     j = 0;
 
-    for (int8 ii = 0; ii < 10; ii++) {
+    for (int8_t ii = 0; ii < 10; ii++) {
         j += ii;
     }
     showIntResults(9, 45, j);

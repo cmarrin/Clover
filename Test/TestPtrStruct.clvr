@@ -12,26 +12,26 @@
 struct Test
 {
 
-uint8 errors = 0;
+uint8_t errors = 0;
 
 struct A
 {
-    int8 b = 12;
-    int16 c = 24;
-    int32 d;
+    int8_t b = 12;
+    int16_t c = 24;
+    int32_t d;
     
-    A(int32 q)
+    A(int32_t q)
     {
         d = q;
     }
     
-    function int32 f(int8 x, int8 y)
+    function int32_t f(int8_t x, int8_t y)
     {
         return x + y;
     }
 };
 
-function showIntResults(uint8 testNo, int32 exp, int32 act)
+function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -42,7 +42,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
-function showFloatResults(uint8 testNo, float exp, float act)
+function showFloatResults(uint8_t testNo, float exp, float act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -55,19 +55,19 @@ function showFloatResults(uint8 testNo, float exp, float act)
 
 struct TestStruct
 {
-    int16 a;
+    int16_t a;
     float b;
-    int8 c;
+    int8_t c;
 };
 
 TestStruct globalTestStruct = { 10, 20.5, 30 };
 
-function int8 testFunction(int8* p, float f)
+function int8_t testFunction(int8_t* p, float f)
 {
-    return *p + int8(f);
+    return *p + int8_t(f);
 }
 
-function int32 main()
+function int32_t main()
 {
     errors = 0;
     
@@ -75,7 +75,7 @@ function int32 main()
     
     core.printf("\nStruct\n");
     TestStruct s;
-    int8 i = 22;
+    int8_t i = 22;
     float f = 3.5;
     s.a = i;
     s.b = f;
@@ -86,8 +86,8 @@ function int32 main()
     showIntResults(3, 5, s.c);
 
     core.printf("\nTest Ptr\n");
-    int8 c;
-    int8* x;
+    int8_t c;
+    int8_t* x;
     x = &c;
     *x = 22;
 
@@ -109,8 +109,8 @@ function int32 main()
     
     core.printf("\nArray/Ptr\n");
     
-    int32 arr[10];
-    int32* arrp = &arr;
+    int32_t arr[10];
+    int32_t* arrp = &arr;
     arrp[5] = 100;
     showIntResults(9, 100, arrp[5]);
     
@@ -139,7 +139,7 @@ function int32 main()
     A a;
     A b(48);
     
-    int32 result = a.f(5, 6);
+    int32_t result = a.f(5, 6);
     
     showIntResults(19, 12, a.b);
     showIntResults(20, 24, a.c);

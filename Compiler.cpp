@@ -586,7 +586,7 @@ Compiler::type(Type& t)
         t = Type::Int8;
         return true;
     }
-    // 'bool' is just an alias for 'uint8'
+    // 'bool' is just an alias for 'uint8_t'
     if (match(Reserved::UInt8) || match(Reserved::Bool)) {
         t = Type::UInt8;
         return true;
@@ -1723,13 +1723,13 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
 #ifdef SUPPORT_FLOAT
         { "float",      Reserved::Float },
 #endif
-        { "int8",       Reserved::Int8 },
-        { "uint8",      Reserved::UInt8 },
-        { "int16",      Reserved::Int16 },
-        { "uint16",     Reserved::UInt16 },
+        { "int8_t",     Reserved::Int8 },
+        { "uint8_t",    Reserved::UInt8 },
+        { "int16_t",    Reserved::Int16 },
+        { "uint16_t",   Reserved::UInt16 },
 #ifdef SUPPORT_INT32
-        { "int32",      Reserved::Int32 },
-        { "uint32",     Reserved::UInt32 },
+        { "int32_t",    Reserved::Int32 },
+        { "uint32_t",   Reserved::UInt32 },
 #endif
         { "bool",       Reserved::Bool },
     };

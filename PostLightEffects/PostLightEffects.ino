@@ -146,7 +146,7 @@ public:
         init();
         
         if (error() == PostLightEffects::Error::None) {
-            // Pass in 5 args, a uint8 command, speed, value, saturation and hue.
+            // Pass in 5 args, a uint8_t command, speed, value, saturation and hue.
             // Push them backwards
             addArg(3, clvr::Type::UInt8); // speed (0-7)
             addArg(150, clvr::Type::UInt8); // value

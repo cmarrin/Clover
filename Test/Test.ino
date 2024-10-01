@@ -141,7 +141,7 @@ public:
         interp.init();
         
         if (interp.error() == MyInterpreter::Error::None) {
-            // Pass in 2 args, a uint8 command and a uint16 number.
+            // Pass in 2 args, a uint8_t command and a uint16_t number.
             // Push them backwards
             interp.addArg(2, clvr::Type::UInt16);
             interp.addArg('f', clvr::Type::UInt8);

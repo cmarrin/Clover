@@ -12,17 +12,17 @@
 struct Test
 {
 
-const uint8 TestSizeDef = 12;
-const int16 TestIntConst = 0xfc;
+const uint8_t TestSizeDef = 12;
+const int16_t TestIntConst = 0xfc;
 const float TestFloatConst = 3.5;
 
 const float testFloatTable [ ] = { 1.5, 2.5, 3.5, 7.5, };
 
-int16 testIntGlobal;
+int16_t testIntGlobal;
 
-uint8 errors;
+uint8_t errors;
 
-function showIntResults(uint8 testNo, int32 exp, int32 act)
+function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -33,7 +33,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
-function showFloatResults(uint8 testNo, float exp, float act)
+function showFloatResults(uint8_t testNo, float exp, float act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -46,7 +46,7 @@ function showFloatResults(uint8 testNo, float exp, float act)
 
 float testFloatGlobal;
 
-function int32 main()
+function int32_t main()
 {
     errors = 0;
     
@@ -74,7 +74,7 @@ function int32 main()
     showFloatResults(12, -43.5, (testFloatTable[1] + float(TestSizeDef)) * (TestFloatConst - testFloatGlobal));
 
     core.printf("\n  Flt cast\n");
-    uint8 a = 2;
+    uint8_t a = 2;
     showFloatResults(13, 2.5, float(a) + 0.5);
     showFloatResults(14, 12.5, float(TestSizeDef) + 0.5);
     showFloatResults(15, 252.5, float(TestIntConst) + 0.5);

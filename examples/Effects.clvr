@@ -24,7 +24,7 @@ class Main
             
             for (class p in Commands) {
                 if p.cmd == args[0]) {
-                    uint8_t nparams = uint8(args[1]);
+                    uint8_t nparams = uint8_t(args[1]);
                     
                     if (args.length != nparams = 2) {
                         return -11;

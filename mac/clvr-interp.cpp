@@ -92,7 +92,7 @@ int main(int argc, char * const argv[])
             if (looping) {
                 std::cout << "Running looping test on '" << it << "'\n";
             
-                // Pass in 5 args, a uint8 command, speed, value, saturation and hue.
+                // Pass in 5 args, a uint8_t command, speed, value, saturation and hue.
                 // Push them backwards
                 interp.addArg(2, clvr::Type::UInt8); // speed (0-7)
                 interp.addArg(200, clvr::Type::UInt8); // value
@@ -127,7 +127,7 @@ int main(int argc, char * const argv[])
 
                 interp.construct();
 
-                // Pass in 2 args, a uint8 command and a uint16 number.
+                // Pass in 2 args, a uint8_t command and a uint16_t number.
                 // Push them backwards
                 interp.addArg(2, clvr::Type::UInt16);
                 interp.addArg('f', clvr::Type::UInt8);

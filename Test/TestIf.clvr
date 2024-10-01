@@ -12,9 +12,9 @@
 struct Test
 {
 
-uint8 errors;
+uint8_t errors;
 
-function showIntResults(uint8 testNo, int32 exp, int32 act)
+function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -33,7 +33,7 @@ function bool elide()
     return false;
 }
 
-function int32 main()
+function int32_t main()
 {    
     errors = 0;
     

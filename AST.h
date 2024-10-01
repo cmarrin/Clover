@@ -257,12 +257,12 @@ class OpNode : public ASTNode
         _type = (resultType == Type::None) ? _left->type() : resultType;
 
         if (_op == Op::LNOT && _left->type() != Type::UInt8) {
-            // Cast to uint8 (boolean)
+            // Cast to uint8_t (boolean)
             _left = TypeCastNode::castIfNeeded(_left, Type::UInt8);
         }
 
         if (_op == Op::LNOT && _right->type() != Type::UInt8) {
-            // Cast to uint8 (boolean)
+            // Cast to uint8_t (boolean)
             _right = TypeCastNode::castIfNeeded(_right, Type::UInt8);
         } else {
             _right = TypeCastNode::castIfNeeded(_right, _left->type());
@@ -278,7 +278,7 @@ class OpNode : public ASTNode
         _type = (resultType == Type::None) ? _left->type() : resultType;
 
         if (_op == Op::LNOT && _left->type() != Type::UInt8) {
-            // Cast to uint8 (boolean)
+            // Cast to uint8_t (boolean)
             _left = TypeCastNode::castIfNeeded(_right, Type::UInt8);
         }
     }
@@ -292,7 +292,7 @@ class OpNode : public ASTNode
         _type = (resultType == Type::None) ? _right->type() : resultType;
 
         if (_op == Op::LNOT && _right->type() != Type::UInt8) {
-            // Cast to uint8 (boolean)
+            // Cast to uint8_t (boolean)
             _right = TypeCastNode::castIfNeeded(_right, Type::UInt8);
         }
     }
@@ -552,7 +552,7 @@ class BranchNode : public ASTNode
     BranchNode(Kind k) : _kind(k) { }
     BranchNode(const ASTPtr& expr) : _kind(Kind::IfStart), _expr(expr)
     {
-        // expr needs to be uint8
+        // expr needs to be uint8_t
         _expr = TypeCastNode::castIfNeeded(_expr, Type::UInt8);
     }
 

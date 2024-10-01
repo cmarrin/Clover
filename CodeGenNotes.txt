@@ -387,7 +387,7 @@ We can use the same table driven technique on 6809. Put the binary search in BOS
 
 Where to put the table? It can go inline, since we're branching from here anyway
 
-int8 b;
+int8_t b;
 switch (a) {
     default: b = 0;
     case 1: b = 1;

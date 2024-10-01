@@ -82,8 +82,8 @@ Function::addLocal(const SymbolPtr& sym, AddrNativeType addr, uint16_t nElements
     // Locals are negative offsets from the U register. But here they
     // are positive. But they still point at locations going down
     // in memory. So the addr point at the "highest" location of the
-    // var. So if the first var is an int8 it is at addr 0, int16 is at
-    // addr is 1, and int32 is at 3. When accessing at runtime addrs
+    // var. So if the first var is an int8_t it is at addr 0, int16_t is at
+    // addr is 1, and int32_t is at 3. When accessing at runtime addrs
     // are translated with 'U - addr - 1'. So the values would be -1,
     // -2 and -4.
     uint8_t bytes = sym->sizeInBytes();

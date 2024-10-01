@@ -12,16 +12,16 @@
 struct Test
 {
 
-const int16 TestSizeDef = 12;
-const int16 testIntConst = 10;
+const int16_t TestSizeDef = 12;
+const int16_t testIntConst = 10;
 const float testFloatConst = 3.5;
 
-int16 testIntGlobal;
+int16_t testIntGlobal;
 float testFloatGlobal;
 
-uint8 errors;
+uint8_t errors;
 
-function showIntResults(uint8 testNo, int32 exp, int32 act)
+function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -32,7 +32,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
-function showFloatResults(uint8 testNo, float exp, float act)
+function showFloatResults(uint8_t testNo, float exp, float act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -49,9 +49,9 @@ function function1()
     showIntResults(1, 0, 0);
 }
 
-function int16 function2(int16 a, int16 b)
+function int16_t function2(int16_t a, int16_t b)
 {
-    int16 c = 7;
+    int16_t c = 7;
     return a + b + c + TestSizeDef + testIntConst + testIntGlobal;
 }
 
@@ -61,12 +61,12 @@ function float function3(float a, float b)
     return a + b + c + TestSizeDef + testFloatConst + testFloatGlobal;
 }
 
-function int16 function4(int16 a, float b)
+function int16_t function4(int16_t a, float b)
 {
-    return a + int16(b);
+    return a + int16_t(b);
 }
 
-function int32 main()
+function int32_t main()
 {
     errors = 0;
     

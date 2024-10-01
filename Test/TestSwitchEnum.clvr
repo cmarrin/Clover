@@ -12,9 +12,9 @@
 struct Test
 {
 
-uint8 errors;
+uint8_t errors;
 
-function showIntResults(uint8 testNo, int32 exp, int32 act)
+function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -25,7 +25,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
-function showFloatResults(uint8 testNo, float exp, float act)
+function showFloatResults(uint8_t testNo, float exp, float act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -38,9 +38,9 @@ function showFloatResults(uint8 testNo, float exp, float act)
 
 enum Items { First, Second, Third };
 
-function int32 enumFunc(Items i) { return int32(i); }
+function int32_t enumFunc(Items i) { return int32_t(i); }
 
-function int32 main()
+function int32_t main()
 {
     errors = 0;
     
@@ -48,16 +48,16 @@ function int32 main()
 
     core.printf("\n    Enum\n");
 
-    showIntResults(1, 0, int32(Items.First));
-    showIntResults(2, 1, int32(Items.Second));
-    showIntResults(3, 2, int32(Items.Third));
+    showIntResults(1, 0, int32_t(Items.First));
+    showIntResults(2, 1, int32_t(Items.Second));
+    showIntResults(3, 2, int32_t(Items.Third));
 
     showIntResults(4, 2, enumFunc(Items.Third));
     
     core.printf("\n    Switch\n");
 
-    int8 a = 1;
-    int8 b = -1;
+    int8_t a = 1;
+    int8_t b = -1;
     
     switch (a) {
         case 0: b = 10;

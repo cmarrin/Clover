@@ -23,13 +23,13 @@ Simple_main
     ; struct Simple
     ; {
     ; 
-    ; function int16 main()
+    ; function int16_t main()
     ; {
-    ;     int8 a = 5;
-    ;     uint8 b = 6;
+    ;     int8_t a = 5;
+    ;     uint8_t b = 6;
     LDA #5
     STA -1,U
-    ;     int8 c = a * 10;
+    ;     int8_t c = a * 10;
     LDA #6
     STA -2,U
     ;     

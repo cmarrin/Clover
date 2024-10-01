@@ -11,7 +11,7 @@ import LedUtils;
 
 class Effect
 {
-    struct Command { string cmd, uint8 nparams };
+    struct Command { string cmd, uint8_t nparams };
     
     const int NumPixels         8;
     const float BrightestMin    0.6;
@@ -59,7 +59,7 @@ class Flicker : LedEntry
     float brightnessMod;
 
   public:
-    Flicker(uint8 h, uint8 s, uint8 v, uint8 speed)
+    Flicker(uint8_t h, uint8_t s, uint8_t v, uint8_t speed)
     {
         LEDUtils::SetColor(0, h, s, v);
         LEDUtils::InitArray(&leds, 0, NumPixels * 4);

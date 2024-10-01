@@ -41,7 +41,7 @@ NativeColor::callNative(uint16_t id, InterpreterBase* interp)
     switch (Id(id)) {
         case Id::LoadColorArg: {
             // Arg is a pointer to a Color struct, which holds h, s and v floats.
-            // Next incoming args are uint8 h, s, v values. Convert to 0-1 floats
+            // Next incoming args are uint8_t h, s, v values. Convert to 0-1 floats
             // and store in struct
             AddrNativeType addr = interp->memMgr()->getArg(0, AddrSize);
             float fh = float(interp->topLevelArgs()->arg(1)) / 255;

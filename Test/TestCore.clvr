@@ -20,11 +20,11 @@ struct AnimEntry
     float max;
 };
     
-uint16 globalArray[20];
+uint16_t globalArray[20];
 
-uint8 errors;
+uint8_t errors;
 
-function showIntResults(uint8 testNo, int32 exp, int32 act)
+function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -35,7 +35,7 @@ function showIntResults(uint8 testNo, int32 exp, int32 act)
     }
 }
 
-function showFloatResults(uint8 testNo, float exp, float act)
+function showFloatResults(uint8_t testNo, float exp, float act)
 {
     core.printf("%10s-> %2hhi: ", " ", testNo);
     if (exp != act) {
@@ -46,23 +46,23 @@ function showFloatResults(uint8 testNo, float exp, float act)
     }
 }
 
-function int32 main()
+function int32_t main()
 {
     errors = 0;
     
     core.printf("\nTest Core Module\n");
 
     float f;
-    int32 i;
-    uint8 u;
+    int32_t i;
+    uint8_t u;
 
     core.printf("\nType Conversion\n");
 
     f = 5.3;
     u = 200;
 
-    showIntResults(1, 5, int32(f));
-    showIntResults(2, 200, int32(u));
+    showIntResults(1, 5, int32_t(f));
+    showIntResults(2, 200, int32_t(u));
     showFloatResults(3, 7.5, float(7) + 0.5);
 
     core.printf("\nRandom\n");
@@ -75,7 +75,7 @@ function int32 main()
 
     core.printf("\nmemset\n");
 
-    uint8 localArray[10];
+    uint8_t localArray[10];
 
     core.memset(&localArray, 200, 10);
     showIntResults(6, 200, localArray[5]);
@@ -94,7 +94,7 @@ function int32 main()
 
     core.printf("\nArgs\n");
 
-    // incoming args are an uint8 ('f') and uint16 (2)
+    // incoming args are an uint8_t ('f') and uint16_t (2)
     core.initArgs();
     showIntResults(16, 'f', core.argint8());
     showIntResults(17, 2, core.argint16());
