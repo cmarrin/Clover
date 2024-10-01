@@ -723,7 +723,7 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
 
         // Handle Div (done with a call to BOSS9)
         bool isSigned = op == Op::IDIV;
-        format("JSR %Sdiv%s\n", isSigned ? "i" : "u", is16Bit ? "16" : "8");
+        format("    JSR %sdiv%s\n", isSigned ? "i" : "u", is16Bit ? "16" : "8");
 
         // Result is left on the stack
         setRegState(is16Bit ? RegState::StackI16 : RegState::StackI8);
