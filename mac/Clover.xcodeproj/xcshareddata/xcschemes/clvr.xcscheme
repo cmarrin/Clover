@@ -54,6 +54,10 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-9 examples/simple.clvr"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-9 Test/TestIntExpr09.clvr"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

@@ -101,6 +101,7 @@
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Scanner.h; sourceTree = "<group>"; };
 		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
 		4941A1172BBB0B1200CE3C9E /* Effects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.clvr; path = ../examples/Effects.clvr; sourceTree = "<group>"; };
+		4993A6F32CAB6DA90060CCD4 /* TestIntExpr09.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr09.clvr; path = ../Test/TestIntExpr09.clvr; sourceTree = "<group>"; };
 		499B10C62C9B0B9D0060AF63 /* CodeGenNotes.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CodeGenNotes.txt; path = ../CodeGenNotes.txt; sourceTree = "<group>"; };
 		499B10C72C9B9A0B0060AF63 /* simple.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; name = simple.asm; path = ../examples/simple.asm; sourceTree = "<group>"; };
 		499B10CC2CA333C80060AF63 /* Format.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Format.cpp; path = ../Format/Format.cpp; sourceTree = "<group>"; };
@@ -172,6 +173,7 @@
 				4914A4912C4DD665003DDADA /* TestCore.clvr */,
 				4914A48D2C4DD665003DDADA /* TestCore.h */,
 				49A85D852C7A220500E8F5F3 /* TestIntExpr.clvr */,
+				4993A6F32CAB6DA90060CCD4 /* TestIntExpr09.clvr */,
 				49A85D842C7A220500E8F5F3 /* TestFloatExpr.clvr */,
 				4914A48F2C4DD665003DDADA /* TestIf.clvr */,
 				4914A4992C4DD665003DDADA /* TestIf.h */,
