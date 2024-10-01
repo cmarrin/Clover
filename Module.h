@@ -27,9 +27,9 @@ class Module
     const std::string& name() const { return _name; }
     const FunctionList& functions() const { return _functions; }
     
-    FunctionPtr addFunction(const std::string& name, Type returnType)
+    FunctionPtr addFunction(const std::string& structName, const std::string& name, Type returnType)
     {
-        _functions.push_back(std::make_shared<Function>(name, returnType));
+        _functions.push_back(std::make_shared<Function>(structName, name, returnType));
         return _functions.back();
     }
 

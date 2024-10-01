@@ -115,7 +115,7 @@ Test_main
     LDA #1
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(3, 7, testIntTable[3]);
     LDD #252
@@ -125,7 +125,7 @@ Test_main
     LDA #2
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     
     LDX Constants+0
@@ -142,7 +142,7 @@ Test_main
     LDA #3
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     core.printf("\n  Int ops\n");
     ;     showIntResults(4, 294, TestIntConst + testIntGlobal);
@@ -158,7 +158,7 @@ Test_main
     LDA #4
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(6, 10584, TestIntConst * testIntGlobal);
     LDD #252
@@ -169,7 +169,7 @@ Test_main
     LDA #5
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(7, 6, TestIntConst / testIntGlobal);
     LDD 0,Y
@@ -217,7 +217,7 @@ L5
     LDA #6
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     
     LDD 0,Y
@@ -230,7 +230,7 @@ L5
     LDA #7
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(8, -42, -testIntGlobal);
     ;     showIntResults(9, 0, !TestIntConst);
@@ -248,7 +248,7 @@ L5
     LDA #8
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(10, 0xffffff03, ~TestIntConst);
     LDA #252
@@ -266,7 +266,7 @@ L7
     LDA #9
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     
     LDD #252
@@ -278,7 +278,7 @@ L7
     LDA #10
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(11, 0, TestIntConst < testIntGlobal);
     ;     showIntResults(12, 0, TestIntConst <= testIntGlobal);
@@ -299,7 +299,7 @@ L9
     LDA #11
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(13, 0, TestIntConst == testIntGlobal);
     LDD #252
@@ -319,7 +319,7 @@ L11
     LDA #12
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(14, 1, TestIntConst != testIntGlobal);
     LDD #252
@@ -339,7 +339,7 @@ L13
     LDA #13
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(15, 1, TestIntConst >= testIntGlobal);
     LDD #252
@@ -359,7 +359,7 @@ L15
     LDA #14
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(16, 1, TestIntConst > testIntGlobal);
     LDD #252
@@ -379,7 +379,7 @@ L17
     LDA #15
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     
     LDD #252
@@ -399,7 +399,7 @@ L19
     LDA #16
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     int8_t i = 20;
     ;     int8_t j = i++;
@@ -430,7 +430,7 @@ L19
     LDA #17
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     j = --i;
     LEAX -1,U
@@ -456,7 +456,7 @@ L19
     LDA #18
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ; 
     LDA -2,U
@@ -468,7 +468,7 @@ L19
     LDA #19
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     core.printf("\n  op assign\n");
     ;     i += 1;
@@ -492,7 +492,7 @@ L19
     LDA #20
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(21, 20, i);
     LDA -1,U
@@ -511,7 +511,7 @@ L19
     LDA #21
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(22, 100, i);
     LDA -1,U
@@ -530,7 +530,7 @@ L19
     LDA #22
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     showIntResults(23, 20, i);
     LDA -1,U
@@ -549,7 +549,7 @@ L19
     LDA #23
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     core.printf("\n  Int exprs\n");
     ;     showIntResults(24, 2984, int16_t(testIntTable[1]) + int16_t(TestSizeDef) * TestIntConst - testIntGlobal);
@@ -619,7 +619,7 @@ L22
     LDA #24
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ; 
     LDD #252
@@ -679,7 +679,7 @@ L25
     LDA #25
     PSHS A
     LEAS -2,S
-    JSR showIntResults
+    JSR Test_showIntResults
     LEAS 7,S
     ;     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
     ;     return errors;

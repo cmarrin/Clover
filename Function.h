@@ -35,8 +35,9 @@ public:
     // Default ctor is used for initialize method. If the name is empty and type is None, it's initialize
     Function() { }
     
-    Function(const std::string& name, Type returnType = Type::None)
-        : _name(name)
+    Function(const std::string& structName, const std::string& name, Type returnType = Type::None)
+        : _structName(structName)
+        , _name(name)
         , _returnType(returnType)
         , _native(false)
     { }
@@ -44,6 +45,7 @@ public:
     // Used to create built-in native functions
     Function(const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals);
 
+    const std::string& structName() const { return _structName; }
     const std::string& name() const { return _name; }
     Type returnType() const { return _returnType; }
     uint16_t argSize() const { return _argSize; }
@@ -69,6 +71,7 @@ public:
     uint32_t argCount() const { return _argCount; }
     
 private:
+    std::string _structName;
     std::string _name;
     ASTPtr _astNode;
     std::vector<SymbolPtr> _locals;

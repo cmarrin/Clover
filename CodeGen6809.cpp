@@ -63,14 +63,14 @@ CodeGen6809::emitPreamble(const Compiler* compiler)
 }
 
 void
-CodeGen6809::handleFunction(const Compiler* compiler, const FunctionPtr& function, const StructPtr& struc, bool isTopLevel)
+CodeGen6809::handleFunction(const Compiler* compiler, const FunctionPtr& function, bool isTopLevel)
 {
     // emit function name
     std::string funcName = function->name();
     if (funcName.empty()) {
         funcName = "ctor";
     }
-    format("\n%s_%s\n", struc->name().c_str(), funcName.c_str());
+    format("\n%s_%s\n",function->structName().c_str(), funcName.c_str());
 }
 
 void
@@ -1006,8 +1006,6 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
         return;
     }
     
-    callName = fNode->function()->name();
-
     // If this is a member call, save the old Y and put the instance
     // pointer in Y. On return pop TOS back to Y. If there's no instance
     // we need to push a dummy pointer so all the arg offsets work
@@ -1019,7 +1017,7 @@ CodeGen6809::emitCodeFunctionCall(const ASTPtr& node, bool isLHS)
         format("    LEAS -2,S\n");
     }
 
-    format("    JSR %s\n", callName.c_str());
+    format("    JSR %s_%s\n", fNode->function()->structName().c_str(), fNode->function()->name().c_str());
 
     // Now we need to pop the previous Y or toss the dummy pointer
     bool wantLEAS = false;

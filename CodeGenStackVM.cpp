@@ -46,7 +46,7 @@ CodeGenStackVM::emitPreamble(const Compiler* compiler)
 }
 
 void
-CodeGenStackVM::handleFunction(const Compiler* compiler, const FunctionPtr& function, const StructPtr& struc, bool isTopLevel)
+CodeGenStackVM::handleFunction(const Compiler* compiler, const FunctionPtr& function, bool isTopLevel)
 {
     if (isTopLevel) {
         // If this is the main function of the top level

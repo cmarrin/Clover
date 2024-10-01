@@ -51,7 +51,7 @@ public:
             return nullptr;
         }
         
-        FunctionPtr function = Module::addFunction(name, returnType);
+        FunctionPtr function = Module::addFunction(Module::name(), name, returnType);
         _locals.push_back(std::make_shared<Symbol>(function));
 
         if (name.empty()) {

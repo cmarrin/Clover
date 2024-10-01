@@ -136,6 +136,7 @@
 		49E9ACCF2C715F990074BD25 /* InterpretedEffect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = InterpretedEffect.h; path = ../PostLightController/InterpretedEffect.h; sourceTree = "<group>"; };
 		49E9ACD02C715F990074BD25 /* Flash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Flash.h; path = ../PostLightController/Flash.h; sourceTree = "<group>"; };
 		49E9ACD12C715F990074BD25 /* InterpretedEffect.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InterpretedEffect.cpp; path = ../PostLightController/InterpretedEffect.cpp; sourceTree = "<group>"; };
+		49F0B2522CAC406D009991A8 /* TestIntExpr09.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; name = TestIntExpr09.asm; path = ../Test/TestIntExpr09.asm; sourceTree = "<group>"; };
 		49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CodeGenStackVM.cpp; path = ../CodeGenStackVM.cpp; sourceTree = "<group>"; };
 		49FAA0812C8BCF550060F8AA /* CodeGen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGen.h; path = ../CodeGen.h; sourceTree = "<group>"; };
 		49FAA0822C8BCF550060F8AA /* CodeGenStackVM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGenStackVM.h; path = ../CodeGenStackVM.h; sourceTree = "<group>"; };
@@ -174,6 +175,7 @@
 				4914A48D2C4DD665003DDADA /* TestCore.h */,
 				49A85D852C7A220500E8F5F3 /* TestIntExpr.clvr */,
 				4993A6F32CAB6DA90060CCD4 /* TestIntExpr09.clvr */,
+				49F0B2522CAC406D009991A8 /* TestIntExpr09.asm */,
 				49A85D842C7A220500E8F5F3 /* TestFloatExpr.clvr */,
 				4914A48F2C4DD665003DDADA /* TestIf.clvr */,
 				4914A4992C4DD665003DDADA /* TestIf.h */,
