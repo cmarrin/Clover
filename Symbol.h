@@ -55,6 +55,7 @@ public:
     
     void setAddr(uint32_t addr, Index index) { _addr = addr; _index = index; }
     AddrNativeType addr(Index& index) const { index = _index; return _addr; }
+    Index index() const { return _index; }
     
     void setNElements(uint16_t n) { _nElements = n; }
     uint16_t nElements() const { return _nElements; }
