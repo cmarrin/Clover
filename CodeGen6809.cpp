@@ -240,7 +240,12 @@ CodeGen6809::emitCodeVar(const ASTPtr& node, Type type, bool ref, bool pop)
     } else if (ref) {
         stashPtrIfNeeded();
 
-        format("    LEAX ");
+        // If the addr is constant memory, then use LDX rather than LEAX
+        if (std::static_pointer_cast<VarNode>(node)->symbol()->index() == Index::C) {
+            format("    LDX ");
+        } else {
+            format("    LEAX ");
+        }
         emitAddr(node);
         setRegState(RegState::X);
     } else {
