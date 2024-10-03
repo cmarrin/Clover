@@ -144,8 +144,8 @@ class CodeGen6809 : public CodeGen
     //      Op::XOR1
     //
     // and that the lhs and rhs are pushed. Leave result on TOS
-    void emitBinaryOp(const ASTPtr& node);
-    void emitMulOp(const ASTPtr& node);
+    void emitBinaryOp(const ASTPtr& left, Op op, const ASTPtr& right);
+    void emitMulOp(const ASTPtr& left, Op op, const ASTPtr& right);
 
     void emitCodeStatements(const ASTPtr& node, bool isLHS);
     void emitCodeVar(const ASTPtr& node, bool isLHS);

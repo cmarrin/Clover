@@ -316,13 +316,12 @@ static bool canDoBinaryOptimization(const ASTPtr& left, const ASTPtr& right)
 }
 
 void
-CodeGen6809::emitMulOp(const ASTPtr& node)
+CodeGen6809::emitMulOp(const ASTPtr& left, Op op, const ASTPtr& right)
 {
-    auto opNode = std::static_pointer_cast<OpNode>(node);
-    Type opType = opNode->left() ? opNode->left()->type() : opNode->right()->type();
+    Type opType = left->type();
     bool is16Bit = typeToOpSize(opType) == OpSize::i16;
-    bool isSigned = opNode->op() == Op::IMUL;
-    bool optimize = canDoBinaryOptimization(opNode->left(), opNode->right());
+    bool isSigned = op == Op::IMUL;
+    bool optimize = canDoBinaryOptimization(left, right);
 
     uint16_t labelA = nextLabelId();
     uint16_t labelB = nextLabelId();
@@ -333,7 +332,7 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
         if (isSigned) {
             format("    CLR ,-S\n");
         }
-        emitCode(opNode->left(), false);
+        emitCode(left, false);
         clearRegState();
 
         // assume value is in A
@@ -341,18 +340,18 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
         if (isSigned) {
             format("    BPL L%d\n", labelA);
             format("    NEG 0,S\n");
-            format("    NEG A\n");
+            format("    NEGA\n");
             format("L%d\n", labelA);
             format("    TFR A,B\n");
         }
         
-        emitCode(opNode->right(), false);
+        emitCode(right, false);
         clearRegState();
         
         if (isSigned) {
             format("    BPL L%d\n", labelB);
             format("    NEG 0,S\n");
-            format("    NEG A\n");
+            format("    NEGA\n");
             format("L%d\n", labelB);
         }
         
@@ -363,15 +362,15 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
             format("    BPL L%d\n", labelC);
             format("    NEGB\n");
             format("L%d\n", labelC);
-            format("    LEAS 3,S\n");
+            format("    LEAS 1,S\n");
         }
         format("    TFR B,A\n");
         setRegState(RegState::A);
         return;
     }
     
-    emitCode(opNode->right(), false);
-    emitCode(opNode->left(), false);
+    emitCode(right, false);
+    emitCode(left, false);
 
     // operands need to be on the stack
     stashRegIfNeeded();
@@ -396,20 +395,22 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
             format("    STD 1,S\n");
             format("L%d\n", labelB);
         }
-        format("    LDD #0\n");      // TOS is the accumulator, TOS+2 is sign, TOS+3 is lhs, TOS+5 is rhs
-        format("    PSHS D\n");
-        format("    LDA 6,S\n");
-        format("    LDB 4,S\n");
+        
+        // TOS is the accumulator, TOS+2 is sign, TOS+3 is lhs, TOS+5 is rhs
+        format("    LDA 4,S\n");    // Don't push the accumulator until after the first multiply
+        format("    LDB 2,S\n");
         format("    MUL\n");
-        format("    STD 0,S\n");
+        format("    PSHS D\n");     // Now TOS is the 16 bit accumulator
         format("    LDA 5,S\n");
         format("    LDB 4,S\n");
         format("    MUL\n");
         format("    ADDB 1,S\n");    // Toss MSB of result
+        format("    STB 1,S\n");
         format("    LDA 6,S\n");
         format("    LDB 3,S\n");
         format("    MUL\n");
         format("    ADDB 1,S\n");    // Toss MSB of result
+        format("    STB 1,S\n");
 
         if (isSigned) {
             format("    TST 2,S\n");     // Do the sign
@@ -418,7 +419,8 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
             format("    SUBD 0,S\n");
             format("L%d\n", labelC);
         }
-        format("    LEAS 7,S\n");
+        format("    PULS D\n");
+        format("    LEAS 5,S\n");
         setRegState(RegState::D);
     } else {
         if (isSigned) {
@@ -452,24 +454,44 @@ CodeGen6809::emitMulOp(const ASTPtr& node)
 }
 
 void
-CodeGen6809::emitBinaryOp(const ASTPtr& node)
+CodeGen6809::emitBinaryOp(const ASTPtr& left, Op op, const ASTPtr& right)
 {
-    auto opNode = std::static_pointer_cast<OpNode>(node);
-    Type opType = opNode->left() ? opNode->left()->type() : opNode->right()->type();
+    Type opType = left->type();
     bool is16Bit = typeToOpSize(opType) == OpSize::i16;
-    Op op = opNode->op();
+    
+    if (op == Op::UDIV || op == Op::IDIV) {
+        emitCode(right, false);
+        emitCode(left, false);
+        
+        // operands need to be on the stack
+        stashRegIfNeeded();
+
+        // Handle Div (done with a call to BOSS9)
+        bool isSigned = op == Op::IDIV;
+        format("    JSR %sdiv%s\n", isSigned ? "i" : "u", is16Bit ? "16" : "8");
+        format("    LEAS 4,S\n");
+
+        // Result is in A/D
+        setRegState(is16Bit ? RegState::D : RegState::A);
+        return;
+    }
+    
+    if (op == Op::UMUL || op == Op::IMUL) {
+        emitMulOp(left, op, right);
+        return;
+    }
     
     // See if we can do the binary op optimization
-    bool optimize = canDoBinaryOptimization(opNode->left(), opNode->right());
+    bool optimize = canDoBinaryOptimization(left, right);
     
     if (optimize) {
-        emitCode(opNode->left(), false);
+        emitCode(left, false);
         if (!isReg(is16Bit ? RegState::D : RegState::A)) {
             format("    PULS %s\n", is16Bit ? "D" : "A");
         }
     } else {
-        emitCode(opNode->right(), false);
-        emitCode(opNode->left(), false);
+        emitCode(right, false);
+        emitCode(left, false);
     }
 
     switch (op) {
@@ -481,7 +503,7 @@ CodeGen6809::emitBinaryOp(const ASTPtr& node)
             if (is16Bit) {
                 if (optimize) {
                     format("    %sD ", opStr);
-                    emitAddrOrConst(opNode->right());
+                    emitAddrOrConst(right);
                 } else {
                     if (isReg(RegState::D)) {
                         format("    %sD 0,S\n", opStr);
@@ -496,7 +518,7 @@ CodeGen6809::emitBinaryOp(const ASTPtr& node)
             } else {
                 if (optimize) {
                     format("    %sA ", opStr);
-                    emitAddrOrConst(opNode->right());
+                    emitAddrOrConst(right);
                 } else {
                     if (isReg(RegState::A)) {
                         format("    %sA 0,S\n", opStr);
@@ -520,9 +542,9 @@ CodeGen6809::emitBinaryOp(const ASTPtr& node)
             if (is16Bit) {
                 if (optimize) {
                     format("    %sD ", opStr);
-                    emitAddrOrConst(opNode->right(), EmitAddrType::MSB);
+                    emitAddrOrConst(right, EmitAddrType::MSB);
                     format("    %sD ", opStr);
-                    emitAddrOrConst(opNode->right(), EmitAddrType::LSB);
+                    emitAddrOrConst(right, EmitAddrType::LSB);
                 } else {
                     if (isReg(RegState::D)) {
                         format("    %sA 0,S\n", opStr);
@@ -539,7 +561,7 @@ CodeGen6809::emitBinaryOp(const ASTPtr& node)
             } else {
                 if (optimize) {
                     format("    %sA ", opStr);
-                    emitAddrOrConst(opNode->right());
+                    emitAddrOrConst(right);
                 } else {
                     if (isReg(RegState::A)) {
                         format("    %sA 0,S\n", opStr);
@@ -714,27 +736,6 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
         return;
     }
 
-    if (op == Op::UDIV || op == Op::IDIV) {
-        emitCode(opNode->right(), isLHS);
-        emitCode(opNode->left(), opNode->isRef());
-        
-        // operands need to be on the stack
-        stashRegIfNeeded();
-
-        // Handle Div (done with a call to BOSS9)
-        bool isSigned = op == Op::IDIV;
-        format("    JSR %sdiv%s\n", isSigned ? "i" : "u", is16Bit ? "16" : "8");
-
-        // Result is left on the stack
-        setRegState(is16Bit ? RegState::StackI16 : RegState::StackI8);
-        return;
-    }
-    
-    if (op == Op::UMUL || op == Op::IMUL) {
-        emitMulOp(node);
-        return;
-    }
-
     // For binary operations, emit the rhs then lhs. That way the rhs ends
     // up on the stack and lhs is in a reg. So you can do a binary op between
     // the reg and TOS and everything is in the right order.
@@ -750,7 +751,7 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
     
     const char* relOp = relopToString(op, true);
     if (!relOp) {
-        emitBinaryOp(node);
+        emitBinaryOp(opNode->left(), op, opNode->right());
     } else {
         bool optimize = canDoBinaryOptimization(opNode->left(), opNode->right());
         
@@ -873,9 +874,7 @@ CodeGen6809::emitCodeAssignment(const ASTPtr& node, bool isLHS)
     bool is16Bit = typeToOpSize(node->type()) == OpSize::i16;
 
     if (assignmentNode->op() != Op::NOP) {
-        emitCode(assignmentNode->left(), false);
-        emitCode(assignmentNode->right(), false);
-        emitBinaryOp(node);
+        emitBinaryOp(assignmentNode->left(), assignmentNode->op(), assignmentNode->right());
     } else {
         emitCode(assignmentNode->right(), false);
     }
