@@ -17,6 +17,7 @@ void
 CodeGen6809::emitPreamble(const Compiler* compiler)
 {
     format("* 6809 assembly generated from Clover source\n\n");
+    format("    pragma autobranchlength\n");
     format("    include BOSS9.inc\n");
     format("    org $200\n\n");
 
