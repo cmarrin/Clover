@@ -12,7 +12,7 @@
 Simple_main
     PSHS U
     TFR S,U
-    LEAS -3,S
+    LEAS -1,S
     ; //
     ; //  simple.Clover
     ; //  Clover
@@ -26,54 +26,39 @@ Simple_main
     ; function int16_t main()
     ; {
     ;     int8_t a = 5;
-    ;     uint8_t b = 6;
+    ;     a *= 1;
     LDA #5
     STA -1,U
-    ;     int8_t c = a * 10;
-    LDA #6
-    STA -2,U
-    ;     
+    ;     core.printf("a=%d\n", a);
     CLR ,-S
     LDA -1,U
     BPL L1
     NEG 0,S
-    NEG A
+    NEGA
 L1
     TFR A,B
-    LDA #10
+    LDA #1
     BPL L2
     NEG 0,S
-    NEG A
+    NEGA
 L2
     MUL
     TST 0,S
     BPL L3
     NEGB
 L3
-    LEAS 3,S
-    TFR B,A
-    STA -3,U
-    ;     if (a == b)
-    ;         core.printf("Passed\n");
-    LDA -2,U
-    PSHS A
-    LDA -1,U
-    CMPA 0,S
     LEAS 1,S
-    BNE L4
-    ;     else
+    TFR B,A
+    STA -1,U
+    ;     return 0;
+    LDA -1,U
+    TFR A,B
+    CLRA
+    ADDD #0
+    PSHS D
     LDD #String+$0
     PSHS D
     JSR printf
-    BRA L5
-L4
-    ;         core.printf("Failed\n");
-    ;     
-    LDD #String+$8
-    PSHS D
-    JSR printf
-L5
-    ;     return 0;
     ; }
     LDD #0
     TFR U,S
@@ -83,10 +68,7 @@ L5
 Constants
 
 String
-    FCC "Passed"
-    FCB $0a
-    FCB $00
-    FCC "Failed"
+    FCC "a=%d"
     FCB $0a
     FCB $00
 

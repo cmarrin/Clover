@@ -11,14 +11,8 @@ struct Simple
 function int16_t main()
 {
     int8_t a = 5;
-    uint8_t b = 6;
-    int8_t c = a * 10;
-    
-    if (a == b)
-        core.printf("Passed\n");
-    else
-        core.printf("Failed\n");
-    
+    a *= 1;
+    core.printf("a=%d\n", a);
     return 0;
 }
 
