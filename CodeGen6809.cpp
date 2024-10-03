@@ -800,10 +800,15 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
             uint16_t labelA = nextLabelId();
             uint16_t labelB = nextLabelId();
 
-            if (!isReg(is16Bit ? RegState::D : RegState::A)) {
-                format("    PULS %s\n", is16Bit ? "D" : "A");
+            if (optimize) {
+                format("    CMP%s ", is16Bit ? "D" : "A");
+                emitAddrOrConst(opNode->right());
+            } else {
+                if (!isReg(is16Bit ? RegState::D : RegState::A)) {
+                    format("    PULS %s\n", is16Bit ? "D" : "A");
+                }
+                format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
             }
-            format("    CMP%s 0,S\n", is16Bit ? "D" : "A");
             
             format("    %s L%d\n", relOp, labelA);
             format("    LDA #1\n");
@@ -811,7 +816,10 @@ CodeGen6809::emitCodeOp(const ASTPtr& node, bool isLHS)
             format("L%d\n", labelA);
             format("    CLRA\n");
             format("L%d\n", labelB);
-            format("    LEAS %d,S\n", is16Bit ? 2 : 1);
+            
+            if (!optimize) {
+                format("    LEAS %d,S\n", is16Bit ? 2 : 1);
+            }
             setRegState(RegState::A);
         }
     }
