@@ -90,7 +90,6 @@
 		491886F42C5EDAE70053F2C0 /* Clover.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Clover.h; path = ../Runtime/Clover.h; sourceTree = "<group>"; };
 		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* clvr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = clvr; sourceTree = BUILT_PRODUCTS_DIR; };
-		4941A1012BBA1D2800CE3C9E /* Flicker.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Flicker.clvr; path = ../examples/Flicker.clvr; sourceTree = "<group>"; };
 		4941A1042BBA28F000CE3C9E /* Defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Defines.h; path = ../Runtime/Defines.h; sourceTree = "<group>"; };
 		4941A1052BBA28F000CE3C9E /* Interpreter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Interpreter.cpp; path = ../Runtime/Interpreter.cpp; sourceTree = "<group>"; };
 		4941A1062BBA28F000CE3C9E /* Interpreter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Interpreter.h; path = ../Runtime/Interpreter.h; sourceTree = "<group>"; };
@@ -100,7 +99,6 @@
 		4941A10E2BBA290B00CE3C9E /* Decompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Decompiler.h; path = ../Decompiler.h; sourceTree = "<group>"; };
 		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Scanner.h; sourceTree = "<group>"; };
 		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
-		4941A1172BBB0B1200CE3C9E /* Effects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = Effects.clvr; path = ../examples/Effects.clvr; sourceTree = "<group>"; };
 		4993A6F32CAB6DA90060CCD4 /* TestIntExpr09.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr09.clvr; path = ../Test/TestIntExpr09.clvr; sourceTree = "<group>"; };
 		499B10C62C9B0B9D0060AF63 /* CodeGenNotes.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CodeGenNotes.txt; path = ../CodeGenNotes.txt; sourceTree = "<group>"; };
 		499B10C72C9B9A0B0060AF63 /* simple.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; name = simple.asm; path = ../examples/simple.asm; sourceTree = "<group>"; };
@@ -260,8 +258,6 @@
 			children = (
 				499B10C72C9B9A0B0060AF63 /* simple.asm */,
 				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
-				4941A1012BBA1D2800CE3C9E /* Flicker.clvr */,
-				4941A1172BBB0B1200CE3C9E /* Effects.clvr */,
 				49C164A42C025CD500981AD1 /* simple.clvr */,
 			);
 			name = examples;
