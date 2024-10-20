@@ -1,5 +1,6 @@
 * 6809 assembly generated from Clover source
 
+    pragma autobranchlength
     include BOSS9.inc
     org $200
 
