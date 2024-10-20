@@ -1189,7 +1189,42 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
                 LogicalNode::Kind kind = (opInfo.oper() == Operator::LOr) ? LogicalNode::Kind::LOr : LogicalNode::Kind::LAnd;
                 lhs = std::make_shared<LogicalNode>(kind, lhs, rhs);
             } else {
-                lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false);
+                // If left and right are both constants, we can just do the op at compile time
+                bool haveResult = false;
+                
+                if (lhs->astNodeType() == ASTNodeType::Constant && rhs->astNodeType() == ASTNodeType::Constant) {
+                    // Only do integers for now
+                    if (isInteger(lhs->type())) {
+                        int32_t leftInt = std::static_pointer_cast<ConstantNode>(lhs)->rawInteger();
+                        int32_t rightInt = std::static_pointer_cast<ConstantNode>(rhs)->rawInteger();
+                        int32_t result;
+                        haveResult = true;
+
+                        switch (opcode) {
+                            case Op::OR1 : result = leftInt | rightInt; break;
+                            case Op::XOR1: result = leftInt ^ rightInt; break;
+                            case Op::AND1: result = leftInt & rightInt; break;
+                            case Op::ASR1: result = leftInt >> rightInt; break;
+                            case Op::SHR1: result = uint32_t(leftInt) >> rightInt; break;
+                            case Op::SHL1: result = leftInt << rightInt; break;
+                            case Op::ADD : result = leftInt + rightInt; break;
+                            case Op::SUB : result = leftInt - rightInt; break;
+                            case Op::IMUL: result = leftInt * rightInt; break;
+                            case Op::IDIV: result = leftInt / rightInt; break;
+                            case Op::UMUL: result = uint32_t(leftInt) * uint32_t(rightInt); break;
+                            case Op::UDIV: result = uint32_t(leftInt) / uint32_t(rightInt); break;
+                            default: haveResult = false; break;
+                        }
+                        
+                        if (haveResult) {
+                            lhs = std::make_shared<ConstantNode>(lhs->type(), result);
+                        }
+                    }
+                }
+
+                if (!haveResult) {
+                    lhs = std::make_shared<OpNode>(lhs, opcode, rhs, opInfo.resultType(), false);
+                }
             }
         }
     }
