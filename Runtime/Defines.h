@@ -42,9 +42,14 @@ namespace clvr {
     static inline void randomSeed(uint32_t s) { srand(s); }
     static inline int32_t random(int32_t min, int32_t max)
     {
+        // min and max are misnomers. We're really just returning a random
+        // value between the two passed value. They can be in any order.
         if (min >= max) {
-            return max;
+            int32_t t = min;
+            min = max;
+            max = t;
         }
+        
         int r = rand() % (max - min);
         return r + min;
     }
