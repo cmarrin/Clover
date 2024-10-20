@@ -15,6 +15,8 @@
 #include "Defines.h"
 #include "Interpreter.h"
 
+static constexpr uint32_t NumPasses = 10;
+
 // Base pointer of executable code (see Defines.h)
 uint8_t* clvr::ROMBase = nullptr;
 
@@ -301,7 +303,7 @@ int main(int argc, char * const argv[])
                     interp.dropArgs(14);
             
                     if (interp.error() == MyInterpreter::Error::None) {
-                        for (int i = 0; i < 100; ++i) {
+                        for (int i = 0; i < NumPasses; ++i) {
                             std::cout << "Pass " << i << "\n";
                             result = interp.interp(MyInterpreter::ExecMode::Start);
                             if (interp.error() != MyInterpreter::Error::None) {
