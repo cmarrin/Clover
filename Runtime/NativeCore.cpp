@@ -28,8 +28,6 @@ NativeCore::createModule()
     coreModule->addNativeFunction("irand", uint16_t(Id::RandomInt), Type::Int32, {{ "min", Type::Int32, false, 1, 1 }, { "max", Type::Int32, false, 1, 1 }});
     coreModule->addNativeFunction("imin", uint16_t(Id::MinInt), Type::Int32, {{ "a", Type::Int32, false, 1, 1 }, { "b", Type::Int32, false, 1, 1 }});
     coreModule->addNativeFunction("imax", uint16_t(Id::MaxInt), Type::Int32, {{ "a", Type::Int32, false, 1, 1 }, { "b", Type::Int32, false, 1, 1 }});
-    coreModule->addNativeFunction("fmin", uint16_t(Id::MinFloat), Type::Float, {{ "a", Type::Float, false, 1, 1 }, { "b", Type::Float, false, 1, 1 }});
-    coreModule->addNativeFunction("fmax", uint16_t(Id::MaxFloat), Type::Float, {{ "a", Type::Float, false, 1, 1 }, { "b", Type::Float, false, 1, 1 }});
     coreModule->addNativeFunction("initArgs", uint16_t(Id::InitArgs), Type::None, { });
     coreModule->addNativeFunction("argint8", uint16_t(Id::ArgInt8), Type::Int8, { });
     coreModule->addNativeFunction("argint16", uint16_t(Id::ArgInt16), Type::Int16, { });
@@ -88,18 +86,6 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
             int32_t b = interp->memMgr()->getArg(4, 4);
             
             interp->setReturnValue((a > b) ? a : b);
-            break;
-        }
-        case Id::MinFloat: {
-            float a = intToFloat(interp->memMgr()->getArg(0, 4));
-            float b = intToFloat(interp->memMgr()->getArg(4, 4));
-            interp->setReturnValue(floatToInt((a < b) ? a : b));
-            break;
-        }
-        case Id::MaxFloat: {
-            float a = intToFloat(interp->memMgr()->getArg(0, 4));
-            float b = intToFloat(interp->memMgr()->getArg(4, 4));
-            interp->setReturnValue(floatToInt((a > b) ? a : b));
             break;
         }
         case Id::InitArgs:
