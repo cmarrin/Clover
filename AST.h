@@ -161,7 +161,7 @@ class VarNode : public ASTNode
 class ConstantNode : public ASTNode
 {
   public:
-    ConstantNode(Type t, uint32_t v) : _type(t), _i(v) { }
+    ConstantNode(Type t, int32_t v) : _type(t), _i(v) { }
     ConstantNode(float v)  : _type(Type::Float), _numeric(true), _f(v) { }
 
     virtual ASTNodeType astNodeType() const override{ return ASTNodeType::Constant; }
