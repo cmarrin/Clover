@@ -52,13 +52,11 @@ class NativeCore
         RandomInt       = 4,
         MinInt          = 5,
         MaxInt          = 6,
-        MinFloat        = 7,
-        MaxFloat        = 8,
-        InitArgs        = 9,
-        ArgInt8         = 10,
-        ArgInt16        = 11,
-        ArgInt32        = 12,
-        ArgFloat        = 13,
+        InitArgs        = 7,
+        ArgInt8         = 8,
+        ArgInt16        = 9,
+        ArgInt32        = 10,
+        ArgFloat        = 11,
     };
     
     NativeCore()
