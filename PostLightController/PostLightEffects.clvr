@@ -196,6 +196,7 @@ function init(uint8_t cmd)
         // min is from PulseMin which is the level at which the light is dim
         // but not off and doesn't flicker from being too dim.
         led.min = int16_t(PulseMin) * 128;
+        led.max = int16_t(colors[0].v) * 128;
         
         // max is based on the color brightness, but it can't be dimmer than
         // the min value. If it is, brighten it up a bit
@@ -247,9 +248,6 @@ function init(uint8_t cmd)
         // Start with a random value for cur
         led.cur = core.irand(led.min, led.max);
 
-core.printf("led.min=%d, led.max=%d, led.inc=%d, led.cur=%d\n", led.min, led.max, led.inc, led.cur);
-core.printf("color.h=%d, color.s=%d, color.v=%d\n", colors[0].h, colors[0].s, colors[0].v);
-        
         return;
     }
 }
@@ -315,10 +313,9 @@ function int16_t multicolorLoop()
 //
 function int16_t pulseLoop()
 {
-    animate(&leds[0]);
+    animate(led);
 
-    led = &leds[0];
-    colors[0].v = led.cur;
+    colors[0].v = led.cur / 128;
     setAllLights(0);
     return Delay;
 }
