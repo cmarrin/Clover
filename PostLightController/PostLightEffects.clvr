@@ -63,7 +63,7 @@ struct Color
     uint8_t v;
 };
 
-const int16_t MaxColorComp    = 65535; // This is the component value that equals 1.0
+const int16_t MaxColorComp    = 32768; // This is the component value that equals 1.0
 const int16_t FadeInc         = 5;
 const int8_t PulseMin         = 38;
 const int16_t FlickerMin      = 26;
@@ -71,7 +71,7 @@ const uint8_t NumLights       = 8;
 const int16_t NumLevels       = 8;
 const int16_t Delay           = 25; // in ms
 const int16_t PulseSpeedMult  = 35;
-const int16_t RainbowSpeedMult= 300;
+const int16_t RainbowSpeedMult= 15;
 
 // This is range of max values for flicker.
 const int8_t FlickerBrightestMin = 77;
@@ -211,7 +211,7 @@ function init(uint8_t cmd)
 
         // Start with a random value for cur
         led.cur = core.irand(led.min, led.max);
-        
+
         return;
     }
     
@@ -236,15 +236,19 @@ function init(uint8_t cmd)
         // range from 0 to 1.
         if (range < 7) {
             led.min = int16_t(colors[0].h) * 128;
-            led.max = (MaxColorComp - led.min) / (8 - range);
-        } else {led.min = 0;
+            led.max = led.min + (MaxColorComp - led.min) / (8 - range);
+        } else {
+            led.min = 0;
             led.max = MaxColorComp;
         }
         
-        led.inc = int16_t(16 - speed) * RainbowSpeedMult;
+        led.inc = int16_t(speed + 1) * RainbowSpeedMult;
 
         // Start with a random value for cur
         led.cur = core.irand(led.min, led.max);
+
+core.printf("led.min=%d, led.max=%d, led.inc=%d, led.cur=%d\n", led.min, led.max, led.inc, led.cur);
+core.printf("color.h=%d, color.s=%d, color.v=%d\n", colors[0].h, colors[0].s, colors[0].v);
         
         return;
     }
@@ -362,8 +366,9 @@ function int16_t flickerLoop()
 function int16_t rainbowLoop()
 {
     animate(led);
+core.printf("led.min=%d, led.max=%d, led.inc=%d, led.cur=%d\n", led.min, led.max, led.inc, led.cur);
 
-    colors[0].h = led.cur;
+    colors[0].h = led.cur / 128;
     setAllLights(0);
     return Delay;
 }
