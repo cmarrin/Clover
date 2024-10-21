@@ -36,10 +36,11 @@ class InterpPrintArgs : public fmt::FormatterArgs
     virtual ~InterpPrintArgs() { }
     virtual uint8_t getChar(uint32_t i) const override { return getStringChar(uintptr_t(_fmt + i)); }
     virtual void putChar(uint8_t c) override { clvr::putChar(c); }
-    virtual uintptr_t getArg(fmt::Type type) override
+    virtual intptr_t getArg(fmt::Type type) override
     {
-        // varargs are always the same size
-        return _args->arg(VarArgSize);
+        // varargs are always the same size, but we need to sign extend as needed
+        VarArgNativeType v = _args->arg(VarArgSize);
+        return (type == fmt::Type::i) ? ArgINativeType(v) : v;
     }
 
     // The interpreter keeps strings in ROM. The p pointer is actually an offset in the rom
