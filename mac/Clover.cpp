@@ -215,16 +215,16 @@ int main(int argc, char * const argv[])
         std::string name = path + ".h";
         remove(name.c_str());
 
-        name = path + ".lcdx";
+        name = path + ".clvx";
         remove(name.c_str());
 
-        std::cout << "\nEmitting executable to '" << path << "'\n";
+        std::cout << "\nEmitting executable to '" << name << "'\n";
         std::fstream outStream;
 
         if (headerFile) {
             name = path + ".h";
         } else {
-            name = path + ".lcdx";
+            name = path + ".clvx";
         }
 
         std::ios_base::openmode mode = std::fstream::out;
