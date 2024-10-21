@@ -28,8 +28,9 @@ public:
         : _pixels(pixels)
     { }
 
-    virtual void setLight(uint8_t i, uint32_t rgb) override
+    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
     {
+        hsvToRGB(h, s, v);
         _pixels->setPixelColor(i, rgb);
 		_pixels->show();
     }

@@ -23,9 +23,9 @@ static constexpr uint32_t StackSize = 2048;
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
   public:
-    virtual void setLight(uint8_t i, uint32_t rgb) override
+    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
     {
-        clvr::printf("setLight(%hhd, 0x%08x)\n", i, rgb);
+        clvr::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
     }
 };
 
