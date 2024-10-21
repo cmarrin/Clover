@@ -16,6 +16,7 @@
 #include "Interpreter.h"
 
 static constexpr uint32_t NumPasses = 10;
+static constexpr uint8_t Command = 'r';
 
 // Base pointer of executable code (see Defines.h)
 uint8_t* clvr::ROMBase = nullptr;
@@ -26,9 +27,9 @@ static constexpr uint32_t StackSize = 2048;
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
   public:
-    virtual void setLight(uint8_t i, uint32_t rgb) override
+    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
     {
-        fmt::printf("setLight(%hhd, 0x%08x)\n", i, rgb);
+        fmt::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
     }
 };
 
@@ -279,28 +280,51 @@ int main(int argc, char * const argv[])
                 uint32_t result = 0;
                 
                 if (looping) {
-                    std::cout << "Running looping test on '" << path << "'\n";
+                    std::cout << "Running looping test with command '" << Command << "' on '" << path << "'\n";
+                    uint8_t argCount = 0;
                 
-                    // Pass in 5 args, a uint8_t command, speed, value, saturation and hue.
-                    // Push them backwards
-                    interp.addArg(2, clvr::Type::UInt8); // speed (0-7)
-                    interp.addArg(200, clvr::Type::UInt8); // value
-                    interp.addArg(224, clvr::Type::UInt8); // saturation
-                    interp.addArg(200, clvr::Type::UInt8); // hue
-                    interp.addArg(200, clvr::Type::UInt8); // value
-                    interp.addArg(224, clvr::Type::UInt8); // saturation
-                    interp.addArg(150, clvr::Type::UInt8); // hue
-                    interp.addArg(200, clvr::Type::UInt8); // value
-                    interp.addArg(224, clvr::Type::UInt8); // saturation
-                    interp.addArg(100, clvr::Type::UInt8); // hue
-                    interp.addArg(200, clvr::Type::UInt8); // value
-                    interp.addArg(224, clvr::Type::UInt8); // saturation
-                    interp.addArg(50, clvr::Type::UInt8); // hue
-                    interp.addArg('m', clvr::Type::UInt8); // cmd
+                    if (Command == 'm') {
+                        // Pass in a uint8_t command, 4 x (value, saturation, hue) and speed.
+                        // Push them backwards
+                        interp.addArg(2, clvr::Type::UInt8); // speed (0-7)
+                        interp.addArg(200, clvr::Type::UInt8); // value
+                        interp.addArg(224, clvr::Type::UInt8); // saturation
+                        interp.addArg(200, clvr::Type::UInt8); // hue
+                        interp.addArg(200, clvr::Type::UInt8); // value
+                        interp.addArg(224, clvr::Type::UInt8); // saturation
+                        interp.addArg(150, clvr::Type::UInt8); // hue
+                        interp.addArg(200, clvr::Type::UInt8); // value
+                        interp.addArg(224, clvr::Type::UInt8); // saturation
+                        interp.addArg(100, clvr::Type::UInt8); // hue
+                        interp.addArg(200, clvr::Type::UInt8); // value
+                        interp.addArg(224, clvr::Type::UInt8); // saturation
+                        interp.addArg(50, clvr::Type::UInt8); // hue
+                        interp.addArg('m', clvr::Type::UInt8); // cmd
+                        argCount = 14;
+                    } else if (Command == 'f' || Command == 'p') {
+                        // Pass in a uint8_t command, value, saturation, hue and speed.
+                        // Push them backwards
+                        interp.addArg(2, clvr::Type::UInt8); // speed (0-7)
+                        interp.addArg(200, clvr::Type::UInt8); // value
+                        interp.addArg(224, clvr::Type::UInt8); // saturation
+                        interp.addArg(50, clvr::Type::UInt8); // hue
+                        interp.addArg(Command, clvr::Type::UInt8); // cmd
+                        argCount = 5;
+                    } else if (Command == 'r') {
+                        // Pass in a uint8_t command, value, saturation, hue, speed and range.
+                        // Push them backwards
+                        interp.addArg(4, clvr::Type::UInt8); // range (0-7)
+                        interp.addArg(15, clvr::Type::UInt8); // speed (0-15)
+                        interp.addArg(200, clvr::Type::UInt8); // value
+                        interp.addArg(224, clvr::Type::UInt8); // saturation
+                        interp.addArg(50, clvr::Type::UInt8); // hue
+                        interp.addArg('r', clvr::Type::UInt8); // cmd
+                        argCount = 6;
+                    }
                     
                     std::cout << "\nInit\n";
                     interp.construct();
-                    interp.dropArgs(14);
+                    interp.dropArgs(argCount);
             
                     if (interp.error() == MyInterpreter::Error::None) {
                         for (int i = 0; i < NumPasses; ++i) {
