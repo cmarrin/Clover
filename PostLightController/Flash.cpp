@@ -19,7 +19,7 @@ Flash::init(Adafruit_NeoPixel* pixels, uint8_t h, uint8_t s, uint8_t v, uint8_t 
 {
 	_countCompleted = 0;
 	
-    _color = clvr::NativeColor::hsvToRGB(float(h) / 255, float(s) / 255, float(v) / 255);
+    _color = clvr::NativeColor::hsvToRGB(h, s, v);
     _count = count;
     _duration = uint16_t(duration) * 100;
     _lastFlash = millis();
