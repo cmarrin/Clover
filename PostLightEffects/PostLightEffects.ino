@@ -35,8 +35,7 @@ public:
 
     virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
     {
-        hsvToRGB(h, s, v);
-        _pixels.setPixelColor(i, rgb);
+        _pixels.setPixelColor(i, clvr::NativeColor::hsvToRGB(h, s, v));
 		_pixels.show();
     }
 
