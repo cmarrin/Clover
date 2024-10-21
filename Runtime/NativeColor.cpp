@@ -40,37 +40,41 @@ NativeColor::callNative(uint16_t id, InterpreterBase* interp)
 {
     switch (Id(id)) {
         case Id::LoadColorArg: {
-            // Arg is a pointer to a Color struct, which holds h, s and v floats.
+            // Arg is a pointer to a Color struct, which holds h, s and v uint8_t (0-255).
             // Next incoming args are uint8_t h, s, v values. Convert to 0-1 floats
             // and store in struct
             AddrNativeType addr = interp->memMgr()->getArg(0, AddrSize);
-            float fh = float(interp->topLevelArgs()->arg(1)) / 255;
-            float fs = float(interp->topLevelArgs()->arg(1)) / 255;
-            float fv = float(interp->topLevelArgs()->arg(1)) / 255;
-            interp->memMgr()->setAbs(addr, floatToInt(fh), OpSize::flt);
-            interp->memMgr()->setAbs(addr + 4, floatToInt(fs), OpSize::flt);
-            interp->memMgr()->setAbs(addr + 8, floatToInt(fv), OpSize::flt);
+            interp->memMgr()->setAbs(addr,     interp->topLevelArgs()->arg(1), OpSize::i8);
+            interp->memMgr()->setAbs(addr + 1, interp->topLevelArgs()->arg(1), OpSize::i8);
+            interp->memMgr()->setAbs(addr + 2, interp->topLevelArgs()->arg(1), OpSize::i8);
             break;
         }
         case Id::SetLight: {
+            // First arg is byte index of light to set. Next is a ptr to a struct of
+            // h, s, v byte values (0-255)
             uint8_t i = interp->memMgr()->getArg(0, 1);
             AddrNativeType addr = interp->memMgr()->getArg(1, AddrSize);
-            float fh = intToFloat(interp->memMgr()->getAbs(addr, 4));
-            float fs = intToFloat(interp->memMgr()->getAbs(addr + 4, 4));
-            float fv = intToFloat(interp->memMgr()->getAbs(addr + 8, 4));
+            uint8_t h = interp->memMgr()->getAbs(addr, 1);
+            uint8_t s = interp->memMgr()->getAbs(addr + 1, 1);
+            uint8_t v = interp->memMgr()->getAbs(addr + 2, 1);
             
-            interp->setLight(i, hsvToRGB(fh, fs, fv));
+            interp->setLight(i, h, s, v);
             break;
         }
     }
 }
 
 uint32_t
-NativeColor::hsvToRGB(float h, float s, float v)
+NativeColor::hsvToRGB(uint8_t h, uint8_t s, uint8_t v)
 {
-    uint16_t hue = fmin(fmax(h * 65535.0f, 0.0f), 65535.0f);
-    uint8_t sat = fmin(fmax(s * 255.0f, 0.0f), 255.0f);
-    uint8_t val = fmin(fmax(v * 255.0f, 0.0f), 255.0f);
+    // Convert to 0-1 floats
+    float fh = float(h) / 255;
+    float fs = float(s) / 255;
+    float fv = float(v) / 255;
+
+    uint16_t hue = fmin(fmax(fh * 65535.0f, 0.0f), 65535.0f);
+    uint8_t sat = fmin(fmax(fs * 255.0f, 0.0f), 255.0f);
+    uint8_t val = fmin(fmax(fv * 255.0f, 0.0f), 255.0f);
 
     uint8_t r, g, b;
     
