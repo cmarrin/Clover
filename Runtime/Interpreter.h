@@ -126,7 +126,7 @@ class InterpreterBase
     
     virtual ~InterpreterBase() { }
     
-    virtual void setLight(uint8_t i, uint32_t rgb) = 0;
+    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) = 0;
 
     // This method is the first called. It sets up the stack and registers
     // then loads the executable and finally allocates the top level struct

@@ -47,7 +47,7 @@ public:
 #endif
 #if RUNTIME == 1
     static void callNative(uint16_t id, InterpreterBase* interp);
-    static uint32_t hsvToRGB(float h, float s, float v);
+    static uint32_t hsvToRGB(uint8_t h, uint8_t s, uint8_t v);
 #endif
 };
 
