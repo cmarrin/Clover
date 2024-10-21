@@ -66,7 +66,7 @@ struct Color
 const int16_t MaxColorComp    = 32768; // This is the component value that equals 1.0
 const int16_t FadeInc         = 5;
 const int8_t PulseMin         = 38;
-const int16_t FlickerMin      = 26;
+const int8_t FlickerMin       = 38;
 const uint8_t NumLights       = 8;
 const int16_t NumLevels       = 8;
 const int16_t Delay           = 25; // in ms
@@ -78,11 +78,14 @@ const int8_t FlickerBrightestMin = 77;
 const int8_t FlickerBrightestMax = 255;
 
 // Flicker inc value. This is a random value based on speed.
-// Speed goes from 0-7 for flicker. If min was 128 and max was 255
-// then An inc value of 1 would take 3.2 seconds to go from min
-// to max. An inc value of 16 would take 0.2 seconds, about as fast
-// as we would want to go. We need a range of inc values for each
-// speed values.
+// Speed goes from 0-7 for flicker. Min and max values are
+// from 0 to 255 multiplied by 128. so a typical range is
+// 15000. If we want to animate 15000 values in 1 second
+// at 25ms per cycle, the inc value would be 375. A slow
+// animation would be around 5 seconds (inc = 2000). A fast
+// animation would be around 1/2 second (inc = 200).
+// These table entries are /128 (so they fit in a byte)
+// so they should go from a slow of 1 to a fast of 16
 const FlickerSpeedEntry FlickerSpeedTable[ ] =
 {
     1, 2,
@@ -221,7 +224,8 @@ function init(uint8_t cmd)
             speed = 7;
         }
         
-        core.memset(&leds, 0, NumLights * 4 * 4);
+        core.memset(&leds, 0, NumLights * 4 * 2);
+//core.printf("led.min=%d, led.max=%d, led.inc=%d, led.cur=%d\n", led.min, led.max, led.inc, led.cur);
         return;
     }
     
@@ -334,17 +338,18 @@ function int16_t flickerLoop()
             // We are done with the throb. We always start at BrightnessMin.
             // Select a new inc (how fast it pulses), and  max (how bright it
             // gets) based on the speed value.
-            led.cur = FlickerMin;
-            led.min = FlickerMin;
+            led.cur = int16_t(FlickerMin) * 128;
+            led.min = led.cur;
             
             // Set the inc to a random value from the table
-            led.inc = core.irand(FlickerSpeedTable[speed].min, FlickerSpeedTable[speed].max);
+            led.inc = int16_t(core.irand(FlickerSpeedTable[speed].min, FlickerSpeedTable[speed].max)) * 128;
             
             // set the max brightness for flicker
             led.max = core.irand(FlickerBrightestMin, FlickerBrightestMax) * 128;
         }
 
-        colors[0].v = led.cur;
+//core.printf("[%d] led.min=%d, led.max=%d, led.inc=%d, led.cur=%d\n", i, led.min, led.max, led.inc, led.cur);
+        colors[0].v = led.cur / 128;
         clr.setLight(i, colors[0]);
     }
     
@@ -363,7 +368,6 @@ function int16_t flickerLoop()
 function int16_t rainbowLoop()
 {
     animate(led);
-core.printf("led.min=%d, led.max=%d, led.inc=%d, led.cur=%d\n", led.min, led.max, led.inc, led.cur);
 
     colors[0].h = led.cur / 128;
     setAllLights(0);
