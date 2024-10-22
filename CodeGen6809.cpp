@@ -1101,7 +1101,7 @@ CodeGen6809::emitCodeTypeCast(const ASTPtr& node, bool isLHS)
             } else {
                 format("    PULS B\n");
             }
-            if (node->isSigned()) {
+            if (arg->isSigned()) {
                 // Sign extend
                 format("    SEX\n");
             } else {
