@@ -455,6 +455,52 @@ CodeGen6809::emitMulOp(const ASTPtr& left, Op op, const ASTPtr& right)
 }
 
 void
+CodeGen6809::emitShiftOp(const ASTPtr& left, Op op, const ASTPtr& right)
+{
+    // We can do 8 or 16 bit shifts, right or left, signed or unsigned.
+    // 6809 can only do 8 bit shifts and rotate of 1 bit. For now we will
+    // do simple (and very inefficient) shift loops. Next we'll do some
+    // basic optimizations
+    Type opType = left->type();
+    bool is16Bit = typeToOpSize(opType) == OpSize::i16;
+    bool isSigned = op == Op::ASR1;
+    
+    // If shifting a 16 bit value right do ASR Or LSR of msb followed by ROR of lsb
+    // If shifting a 16 bit value left do LSL of lsb followed by ROL of msb
+    bool isLeft = (op == Op::SHL1);
+    const char* opStr = isLeft ? "LSL" : (isSigned ? "ASR" : "LSR");
+    uint16_t label = nextLabelId();
+
+    emitCode(left, false);
+    stashRegIfNeeded();
+    emitCode(right, false);
+    
+    // Now lhs should be on TOS (1 or 2 bytes) and rhs is in D or A
+    if (is16Bit) {
+        format("    TFR B,A\n"); // Put count in A
+        format("L%d\n", label);
+        if (isLeft) {
+            format("    %s 1,S\n", opStr);
+            format("    ROL 0,S\n");
+        } else {
+            format("    %s 0,S\n", opStr);
+            format("    ROR 1,S\n");
+        }
+        format("    DECA\n");
+        format("    BNE L%d\n", label);
+        format("    PULS D\n");
+        setRegState(RegState::D);
+    } else {
+        format("L%d\n", label);
+        format("    %s 0,S\n", opStr);
+        format("    DECA\n");
+        format("    BNE L%d\n", label);
+        format("    PULS A\n");
+        setRegState(RegState::A);
+    }
+}
+
+void
 CodeGen6809::emitBinaryOp(const ASTPtr& left, Op op, const ASTPtr& right)
 {
     Type opType = left->type();
@@ -479,6 +525,11 @@ CodeGen6809::emitBinaryOp(const ASTPtr& left, Op op, const ASTPtr& right)
     
     if (op == Op::UMUL || op == Op::IMUL) {
         emitMulOp(left, op, right);
+        return;
+    }
+    
+    if (op == Op::SHR1 || op == Op::ASR1 || op == Op::SHL1) {
+        emitShiftOp(left, op, right);
         return;
     }
     
@@ -577,60 +628,6 @@ CodeGen6809::emitBinaryOp(const ASTPtr& left, Op op, const ASTPtr& right)
             }
             break;
         }
-        
-#if 0
-
-// FIXME: This is all wrong. It is treating shifts like unary operators, shifting
-// one position to the left or right. The lhs needs to be shifted the number of
-// places in the rhs. We need to do this in a loop.
-
-        case Op::SHR1:
-        case Op::ASR1:
-            // For 16 bit ASR/LSR shift a sign or 0 into MSB and shift LSB into C
-            // ROR shifts C into the MSB of the lower byte
-            if (is16Bit) {
-                if (_lastRegState == RegState::D) {
-                    format("    %sA\n", (op == Op::SHR1) ? "LSR" : "ASR");
-                    format("    RORB\n");
-                    format("    LEAS 2,S\n");
-                } else {
-                    assert(_lastRegState == RegState::StackI16);
-                    format("    %s 0,S\n", (op == Op::SHR1) ? "LSR" : "ASR");
-                    format("    ROR 1,S\n");
-                    format("    LEAS 4,S\n");
-                }
-                
-                _lastRegState = RegState::D;
-            } else {
-                if (_lastRegState == RegState::A) {
-                    format("    %sA\n", (op == Op::SHR1) ? "LSR" : "ASR");
-                    format("    LEAS 1,S\n");
-                } else {
-                    assert(_lastRegState == RegState::StackI8);
-                    format("    LDA 0,S\n");
-                    format("    %s 0,S\n", (op == Op::SHR1) ? "LSR" : "ASR");
-                    format("    LEAS 2,S\n");
-                }
-
-                _lastRegState = RegState::A;
-            }
-            
-            format("    %s 0,S\n", (op == Op::SHR1) ? "LSR" : "ASR");
-            if (is16Bit) {
-                format("    ROR 1,S\n");
-            }
-            break;
-        case Op::SHL1:
-            // For 16 bit LSL shifts 0 into LSB and shift MSB into C
-            // ROL shifts C into the MSB of the higher byte
-            if (is16Bit) {
-                format("    LSL 1,S\n");
-                format("    ROL 0,S\n");
-            } else {
-                format("    LSL 0,S\n");
-            }
-            break;
-#endif
     }
 }
 
