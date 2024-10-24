@@ -300,8 +300,8 @@ enum class Op: uint8_t {
     
     CALL    = 0x0b, // Absolute address of callee (16 bit)
     MCALL   = 0x0c, // Call a member function. TOS has struct instance address that must be put in the Y register
-    INDEX1  = 0x0d, // Stack has a ref and 8 bit index. Operand is element size in bytes, push new ref offset by index * operand
-    INDEX2  = 0x0e, // Stack has a ref and 16 bit index. Operand is element size in bytes, push new ref offset by index * operand
+    INDEX1  = 0x0d, // Next byte is element size. Stack has a ref and 8 bit index. Push new ref offset by index * operand
+    INDEX2  = 0x0e, // Next byte is element size. Stack has a ref and 16 bit index. Push new ref offset by index * operand
     PUSHREF = 0x0f, // Next byte is addr mode. Data width is used when computing negative offsets from U
     
     // These must have their '1', '2, '4' forms sequential in that order.
