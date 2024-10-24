@@ -774,18 +774,23 @@ CodeGenStackVM::emitCodeIndex(const ASTPtr& node, bool isLHS)
     emitCode(iNode->lhs(), true);
     
     // Optimization. If rhs is a constant 0, we can skip the index. Just emit the lhs.
+    bool isZeroIndex = false;
     if (iNode->rhs()->astNodeType() == ASTNodeType::Constant) {
         if (std::reinterpret_pointer_cast<ConstantNode>(iNode->rhs())->integerValue() == 0) {
-            return;
+            isZeroIndex = true;
         }
     }
 
-    // index can be 8 or 16 bit. We know its a valid type because the caller checked it
-    emitCode(iNode->rhs(), false);
+    if (!isZeroIndex) {
+        // index can be 8 or 16 bit. We know its a valid type because the caller checked it
+        emitCode(iNode->rhs(), false);
 
-    uint16_t size = node->elementSizeInBytes();
-    code().push_back(uint8_t((size <= 255) ? Op::INDEX1 : Op::INDEX2));
-    appendValue(code(), size, (size <= 255) ? 1 : 2);
+        uint16_t elementSize = node->elementSizeInBytes();
+        
+        assert(elementSize <=255);
+        code().push_back(uint8_t((typeToBytes(iNode->rhs()->type(), false) == 1) ? Op::INDEX1 : Op::INDEX2));
+        appendValue(code(), elementSize, 1);
+    }
     
     // if isLHS is true then we're done, we have a ref on TOS. If not we need to DEREF
     if (!isLHS) {
