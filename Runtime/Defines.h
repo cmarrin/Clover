@@ -147,14 +147,15 @@ static inline OpSize typeToOpSize(Type type)
         // FIXME: For now Enums are always 1 byte
         return OpSize::i8;
     }
-    if (type == Type::String) {
-        return AddrOpSize;
-    }
     return (type == Type::Int8 || type == Type::UInt8) ? OpSize::i8 : ((type == Type::Int16 || type == Type::UInt16) ? OpSize::i16 : OpSize::i32);
 };
 
-static inline uint8_t typeToBytes(Type type)
+static inline uint8_t typeToBytes(Type type, bool isPtr)
 {
+    if (isPtr) {
+        return AddrSize;
+    }
+    
     switch (type) {
         case Type::Int8     : return 1;
         case Type::UInt8    : return 1;
@@ -163,7 +164,6 @@ static inline uint8_t typeToBytes(Type type)
         case Type::Int32    : return 4;
         case Type::UInt32   : return 4;
         case Type::Float    : return 4;
-        case Type::String   : return AddrSize;
         default:
             if (isStruct(type)) {
                 return AddrSize;
@@ -523,14 +523,6 @@ static inline Op castOp(Type from, Type to)
             case Type::Int16:
             case Type::UInt16: return Op::CASTI816;
             default: return Op::NOP;
-        }
-    }
-    
-    if (from == Type::String) {
-        // A string will only ever be cast if it's a vararg in which
-        // case it's being cast to VarArgType
-        if (AddrSize != VarArgSize) {
-            return (AddrSize == 2) ? Op::CASTU1632 : Op::CAST3216;
         }
     }
     

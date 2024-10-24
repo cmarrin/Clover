@@ -38,7 +38,10 @@ TypeCastNode::castIfNeeded(ASTPtr& node, Type neededType)
             constNode->setType(neededType);
 
         } else {
-            node = std::make_shared<TypeCastNode>(neededType, node);
+            // If we're casting a pointer into a AddrType, there's nothing to do.
+            if (neededType != AddrType || !node->isPointer()) {
+                node = std::make_shared<TypeCastNode>(neededType, node);
+            }
         }
     }
     

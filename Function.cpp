@@ -46,7 +46,7 @@ Function::pruneLocals(uint32_t n)
 {
     // remove the last n locals and reduce _localSize
     while (n-- > 0) {
-        _localSize -= typeToBytes(_locals.back()->type());
+        _localSize -= typeToBytes(_locals.back()->type(), _locals.back()->isPointer());
         _locals.pop_back();
     }
 }

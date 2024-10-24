@@ -69,7 +69,7 @@ class ASTNode
     
     // sizeInBytes is usually the same as typeToBytes(type). But if the
     // node is a ptr to the type then it will be different.
-    virtual uint16_t elementSizeInBytes() const { return typeToBytes(type()); }
+    virtual uint16_t elementSizeInBytes() const { return typeToBytes(type(), isPointer()); }
     
     virtual const ASTPtr child(uint32_t i) const { return nullptr; }
     virtual const uint32_t numChildren() const { return 0; }
@@ -204,7 +204,7 @@ class StringNode : public ASTNode
     StringNode(char c) { _string = c; }
 
     virtual ASTNodeType astNodeType() const override { return ASTNodeType::String; }
-    virtual Type type() const override { return Type::String; }
+    virtual Type type() const override { return Type::UInt8; }
     virtual bool isPointer() const override { return true; }
 
     virtual bool valueLeftOnStack() const override { return true; }

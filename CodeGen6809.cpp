@@ -1090,8 +1090,8 @@ CodeGen6809::emitCodeTypeCast(const ASTPtr& node, bool isLHS)
     // If going from 8 to 16, we sign extend if neededType is signed.
     // If we're casting to the same size (e.g., going from signed to unsigned)
     // just skip it
-    if (typeToBytes(fromType) != typeToBytes(toType)) {
-        if (typeToBytes(toType) == 2) {
+    if (typeToBytes(fromType, false) != typeToBytes(toType, false)) {
+        if (typeToBytes(toType, false) == 2) {
             // going from 8 to 16 bits
             if (isReg(RegState::A)) {
                 format("    TFR A,B\n");

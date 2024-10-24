@@ -156,7 +156,7 @@ InterpreterBase::typeCast(Type from, Type to)
     } else if (from == Type::UInt8) {
         // v is signed. Clear upper 24 bits
         v &= 0xff;
-    } else if (typeToBytes(from) < typeToBytes(to)) {
+    } else if (typeToBytes(from, false) < typeToBytes(to, false)) {
         // Handle widening
         if (from == Type::Int16 || from == Type::Int8) {
             sex(v, typeToOpSize(from));

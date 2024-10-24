@@ -228,10 +228,10 @@ class Memory
 class VarArg
 {
   public:
-    VarArg(Memory* memMgr, uint32_t lastArgOffset, Type lastArgType)
+    VarArg(Memory* memMgr, uint32_t lastArgOffset, Type lastArgType, bool isLastArgPtr)
         : _memMgr(memMgr)
     {
-        _nextAddr = memMgr->index(lastArgOffset, Index::A) + typeToBytes(lastArgType);
+        _nextAddr = memMgr->index(lastArgOffset, Index::A) + typeToBytes(lastArgType, isLastArgPtr);
     }
     
     VarArg(Memory* memMgr)
@@ -251,9 +251,9 @@ class VarArg
     
     void initialize() { _nextAddr = _memMgr->stack().sp(); _initialAddr = _nextAddr; }
 
-    void initialize(uint32_t lastArgOffset, Type lastArgType)
+    void initialize(uint32_t lastArgOffset, Type lastArgType, bool isLastArgPtr)
     {
-        _nextAddr = _memMgr->index(lastArgOffset, Index::A) + typeToBytes(lastArgType);
+        _nextAddr = _memMgr->index(lastArgOffset, Index::A) + typeToBytes(lastArgType, isLastArgPtr);
         _initialAddr = _nextAddr;
     }
     

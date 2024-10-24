@@ -179,6 +179,8 @@ CodeGenStackVM::emitCodeConstant(const ASTPtr& node, bool isLHS)
     // push them as small integers and cast, that's only 2 bytes.
     bool isSmallFloat = false;
     Type t = node->type();
+    bool isPtr = node->isPointer();
+    
     int32_t i = std::static_pointer_cast<ConstantNode>(node)->rawInteger();
     float f = intToFloat(i);
     
@@ -194,7 +196,7 @@ CodeGenStackVM::emitCodeConstant(const ASTPtr& node, bool isLHS)
     }
     
     uint8_t bytesInOperand;
-    uint8_t bytesPushed = typeToBytes(t);
+    uint8_t bytesPushed = typeToBytes(t, isPtr);
     
     if (t == Type::Float) {
         bytesInOperand = 4;
@@ -272,11 +274,13 @@ CodeGenStackVM::emitCodeOp(const ASTPtr& node, bool isLHS)
     // to get that from the left or right operand
     auto opNode = std::static_pointer_cast<OpNode>(node);
     Type opType = Type::UInt8;
+    bool isPtr = false;
     bool isLogical = opNode->op() == Op::LNOT;
     
     if (opNode->left()) {
         if (!isLogical) {
             opType = opNode->left()->type();
+            isPtr = opNode->left()->isPointer();
         }
         emitCode(opNode->left(), opNode->isRef());
     }
@@ -284,6 +288,7 @@ CodeGenStackVM::emitCodeOp(const ASTPtr& node, bool isLHS)
     if (opNode->right()) {
         if (!isLogical && opNode->left() == nullptr) {
             opType = opNode->right()->type();
+            isPtr = opNode->right()->isPointer();
         }
         
         // If this is a unary operation (like INC) then _isAssignment is used
@@ -292,7 +297,7 @@ CodeGenStackVM::emitCodeOp(const ASTPtr& node, bool isLHS)
     
     // Adjust the op according to the type (for operators that don't have type in the lower 2 bits
     Op op = opNode->op();
-    if (adjustType(op, typeToBytes(opType))) {
+    if (adjustType(op, typeToBytes(opType, isPtr))) {
         code().push_back(uint8_t(op));
     } else {
         code().push_back(uint8_t(op) | typeToSizeBits(opType));
@@ -403,7 +408,7 @@ CodeGenStackVM::emitCodeDot(const ASTPtr& node, bool isLHS)
     }
     
     if (!isLHS) {
-        uint8_t bytes = typeToBytes(node->type());
+        uint8_t bytes = typeToBytes(node->type(), node->isPointer());
         code().push_back(uint8_t((bytes == 1) ? Op::DEREF1 : ((bytes == 2) ? Op::DEREF2 : Op::DEREF4)));
     }
 }
@@ -805,7 +810,7 @@ CodeGenStackVM::emitCodeReturn(const ASTPtr& node, bool isLHS)
         code().push_back(uint8_t(Op::RET));
     } else {
         emitCode(rNode->arg(), false);
-        uint8_t size = typeToBytes(rNode->arg()->type());
+        uint8_t size = typeToBytes(rNode->arg()->type(), rNode->arg()->isPointer());
         Op op = (size == 1) ? Op::RETR1 : ((size == 2) ? Op::RETR2 : Op::RETR4);
         code().push_back(uint8_t(op));
     }
@@ -836,7 +841,7 @@ CodeGenStackVM::emitCodeDeref(const ASTPtr& node, bool isLHS)
     // If this is LHS then we are done. The ref is on TOS, ready to be assigned to.
     // Otherwise we need to get the refed value.
     if (!isLHS) {
-        uint8_t bytes = typeToBytes(node->type());
+        uint8_t bytes = typeToBytes(node->type(), node->isPointer());
         code().push_back(uint8_t((bytes == 1) ? Op::DEREF1 : ((bytes == 2) ? Op::DEREF2 : Op::DEREF4)));
     }
 }

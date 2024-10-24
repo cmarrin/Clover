@@ -84,7 +84,7 @@ public:
             return _structSize;
         }
         
-        return typeToBytes(_type);
+        return typeToBytes(_type, _ptr);
     }
     
 private:

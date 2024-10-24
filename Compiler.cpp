@@ -370,7 +370,7 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
         expect(Token::CloseBracket);
     }
     
-    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->sizeInBytes() : typeToBytes(type), nElements);
+    sym = std::make_shared<Symbol>(id, type, isPointer, struc ? struc->sizeInBytes() : typeToBytes(type, isPointer), nElements);
     expect(sym != nullptr, Error::DuplicateIdentifier);
     
     // Check for an initializer.
@@ -538,7 +538,7 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
     }
 
     expect(value(v, type), Error::ExpectedValue);
-    appendValue(_constants, v, typeToBytes(underlyingType));
+    appendValue(_constants, v, typeToBytes(underlyingType, false));
 
     uint16_t nCollectedElements = 1;
     bool advanceNElements = false;
@@ -567,7 +567,7 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
             advanceNElements = false;
         }
         
-        appendValue(_constants, v, typeToBytes(underlyingType));
+        appendValue(_constants, v, typeToBytes(underlyingType, false));
     }
     
     expect(Token::CloseBrace);
@@ -946,7 +946,7 @@ Compiler::loopStatement(const ASTPtr& parent)
             if (t != Type::None) {
                 expect(isScalar(t), Error::WrongType);
 
-                sym = std::make_shared<Symbol>(id, t, false, typeToBytes(t), 1);
+                sym = std::make_shared<Symbol>(id, t, false, typeToBytes(t, false), 1);
                 expect(sym != nullptr, Error::DuplicateIdentifier);
         
                 currentFunction()->addLocal(sym);
@@ -1014,7 +1014,7 @@ Compiler::loopStatement(const ASTPtr& parent)
     
         // If the iterNode leaves something on the stack get rid of it
         if (iterNode->valueLeftOnStack()) {
-            parent->addNode(std::make_shared<DropNode>(typeToBytes(iterNode->type())));
+            parent->addNode(std::make_shared<DropNode>(typeToBytes(iterNode->type(), false)));
         }
     }
     
@@ -1132,7 +1132,7 @@ Compiler::expressionStatement(const ASTPtr& parent)
         std::static_pointer_cast<FunctionCallNode>(node)->setPushReturn(false);
     } else if (node->valueLeftOnStack()) {
         // We don't need the value, toss it
-        parent->addNode(std::make_shared<DropNode>(typeToBytes(node->type())));
+        parent->addNode(std::make_shared<DropNode>(typeToBytes(node->type(), false)));
     }
     return true;
 }
@@ -1507,7 +1507,7 @@ Compiler::formalParameterList()
             isPointer = true;
         }
 
-        SymbolPtr sym = std::make_shared<Symbol>(id, t, isPointer, struc ? struc->sizeInBytes() : typeToBytes(t), 1);
+        SymbolPtr sym = std::make_shared<Symbol>(id, t, isPointer, struc ? struc->sizeInBytes() : typeToBytes(t, isPointer), 1);
         expect(currentFunction()->addArg(sym), Error::DuplicateIdentifier);
         
         if (!match(Token::Comma)) {
