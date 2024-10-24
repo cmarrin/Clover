@@ -8,10 +8,43 @@
 struct Simple
 {
 
+function uint8_t tolower(uint8_t c)
+{
+    return (c >= 'A' && c <= 'Z') ? (c + 0x20) : c;
+}
+    
+function int16_t stringToNum(uint8_t* s, uint16_t size)
+{
+    bool ishex = false;
+    uint16_t i = 0;
+    if (s[0] == '$') {
+        ishex = true;
+        i = 1;
+    }
+    
+    uint16_t num = 0;
+    
+    while (i < size) {
+        uint8_t n = s[i++];
+        if (n >= '0' && n <= '9') {
+            n -= '0';
+        } else if (ishex) {
+            n = tolower(n);
+            if (n >= 'a' && n <= 'f') {
+                n -= 'a' - 10;
+            }
+        } else {
+            return -1;
+        }
+        
+        num = num * (ishex ? 16 : 10) + n;
+    }
+    return num;
+}
+
 function int16_t main()
 {
-    int8_t a = 5;
-    a *= 1;
+    int16_t a = stringToNum("$abc", 4);
     core.printf("a=%d\n", a);
     return 0;
 }
