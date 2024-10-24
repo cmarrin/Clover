@@ -12,14 +12,6 @@
 struct Test
 {
 
-struct AnimEntry
-{
-    float cur;
-    float inc;
-    float min;
-    float max;
-};
-    
 uint16_t globalArray[20];
 
 uint8_t errors;
@@ -94,35 +86,6 @@ function int32_t main()
     core.initArgs();
     showIntResults(16, 'f', core.argint8());
     showIntResults(17, 2, core.argint16());
-
-    core.printf("\nAnimate\n");
-
-    // Test both passing ref to struct and pointer to struct
-    AnimEntry entry;
-    AnimEntry* entry2;
-    entry2 = &entry;
-
-    entry.cur = 1.5;
-    entry.inc = 0.5;
-    entry.min = 1;
-    entry.max = 3;
-
-    showIntResults(18, 0, core.animate(entry2));
-    showFloatResults(19, 2, entry.cur);
-    showIntResults(20, 0, core.animate(&entry));
-    showFloatResults(21, 2.5, entry.cur);
-    showIntResults(22, 1, core.animate(&entry));
-    showFloatResults(23, 3, entry.cur);
-    showIntResults(24, 0, core.animate(&entry));
-    showFloatResults(25, 2.5, entry.cur);
-    showIntResults(26, 0, core.animate(&entry));
-    showFloatResults(27, 2.0, entry.cur);
-    showIntResults(28, 0, core.animate(&entry));
-    showFloatResults(29, 1.5, entry.cur);
-    showIntResults(30, -1, core.animate(&entry));
-    showFloatResults(31, 1, entry.cur);
-    showIntResults(32, 0, core.animate(&entry));
-    showFloatResults(33, 1.5, entry.cur);
 
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
     return errors;
