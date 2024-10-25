@@ -20,7 +20,6 @@ ModulePtr
 NativeColor::createModule()
 {
     ModulePtr module = std::make_shared<NativeColor>();
-    module->addNativeFunction("loadColorArg", uint16_t(Id::LoadColorArg), Type::None, {{ "c", Type::None, true, 1, 1 }});
     module->addNativeFunction("setLight", uint16_t(Id::SetLight), Type::None, {{ "i", Type::UInt8, false, 1, 1 }, { "c", Type::None, true, 1, 1 }});
     return module;
 }
@@ -30,16 +29,6 @@ void
 NativeColor::callNative(uint16_t id, InterpreterBase* interp)
 {
     switch (Id(id)) {
-        case Id::LoadColorArg: {
-            // Arg is a pointer to a Color struct, which holds h, s and v uint8_t (0-255).
-            // Next incoming args are uint8_t h, s, v values. Convert to 0-1 floats
-            // and store in struct
-            AddrNativeType addr = interp->memMgr()->getArg(0, AddrSize);
-            interp->memMgr()->setAbs(addr,     interp->topLevelArgs()->arg(1), OpSize::i8);
-            interp->memMgr()->setAbs(addr + 1, interp->topLevelArgs()->arg(1), OpSize::i8);
-            interp->memMgr()->setAbs(addr + 2, interp->topLevelArgs()->arg(1), OpSize::i8);
-            break;
-        }
         case Id::SetLight: {
             // First arg is byte index of light to set. Next is a ptr to a struct of
             // h, s, v byte values (0-255)

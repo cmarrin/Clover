@@ -32,8 +32,7 @@ class NativeColor
 {
 public:
     enum class Id {
-        LoadColorArg  = 0,
-        SetLight      = 1,
+        SetLight      = 0,
     };
     
     NativeColor()

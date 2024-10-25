@@ -153,14 +153,21 @@ function setAllLights(uint8_t colorIndex)
     }
 }
 
+function loadColorArg(Color color)
+{
+    color.h = core.argint8();
+    color.s = core.argint8();
+    color.v = core.argint8();
+}
+
 function init(uint8_t cmd)
 {
-	clr.loadColorArg(colors[0]);
+	loadColorArg(colors[0]);
  
     if (cmd == 'm') {
-        clr.loadColorArg(colors[1]);
-        clr.loadColorArg(colors[2]);
-        clr.loadColorArg(colors[3]);
+        loadColorArg(colors[1]);
+        loadColorArg(colors[2]);
+        loadColorArg(colors[3]);
     }
     
     speed = core.argint8();
@@ -210,9 +217,6 @@ function init(uint8_t cmd)
         // set the duration
         led.inc = (led.max - led.min) / ((NumLevels - speed) * PulseSpeedMult);
         
-        // add some randomization
-        led.inc += core.irand(-1, 1);
-
         // Start with a random value for cur
         led.cur = core.irand(led.min, led.max);
 
