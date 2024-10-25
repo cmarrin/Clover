@@ -10,7 +10,6 @@
 #include "Flash.h"
 
 #include "Defines.h"
-#include "NativeColor.h"
 
 #include <Adafruit_NeoPixel.h>
 
@@ -19,7 +18,7 @@ Flash::init(Adafruit_NeoPixel* pixels, uint8_t h, uint8_t s, uint8_t v, uint8_t 
 {
 	_countCompleted = 0;
 	
-    _color = clvr::NativeColor::hsvToRGB(h, s, v);
+    _color = Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(uint16_t(h) * 256, s, v));
     _count = count;
     _duration = uint16_t(duration) * 100;
     _lastFlash = millis();

@@ -35,7 +35,7 @@ public:
 
     virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
     {
-        _pixels.setPixelColor(i, clvr::NativeColor::hsvToRGB(h, s, v));
+        _pixels.setPixelColor(i, Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(uint16_t(h) * 256, s, v)));
 		_pixels.show();
     }
 

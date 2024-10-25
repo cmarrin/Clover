@@ -15,8 +15,6 @@
 
 #include <Clover.h>
 
-#include "NativeColor.h"
-
 #include <Adafruit_NeoPixel.h>
 
 static constexpr uint32_t StackSize = 1024;
@@ -30,7 +28,8 @@ public:
 
     virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
     {
-        _pixels->setPixelColor(i, clvr::NativeColor::hsvToRGB(h, s, v));
+        uint32_t adargb = Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(uint16_t(h) * 256, s, v));
+        _pixels->setPixelColor(i, adargb);
 		_pixels->show();
     }
 

@@ -70,7 +70,6 @@ Hue is an angle on the color wheel. A 0-360 degree value is obtained with hue / 
 
 #include "Flash.h"
 #include "InterpretedEffect.h"
-#include "NativeColor.h"
 
 constexpr int LEDPin = 6;
 constexpr int NumPixels = 8;
