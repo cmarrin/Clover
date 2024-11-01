@@ -1200,9 +1200,17 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
             }
             lhs = std::make_shared<AssignmentNode>(lhs, opcode, rhs);
         } else {
-            // Validate types. Only scalars allowed for binary ops
+            // Validate types. Only scalars and matching enums allowed for binary ops
             expect(!lhs->isPointer() && !rhs->isPointer(), Error::PtrTypeNotAllowed);
-            expect(isScalar(lhs->type()) && isScalar(rhs->type()), Error::MismatchedType);
+            
+            bool typesMatch = isScalar(lhs->type()) && isScalar(rhs->type());
+            if (!typesMatch) {
+                typesMatch = isEnum(lhs->type()) && isEnum(rhs->type());
+                if (typesMatch) {
+                    typesMatch = lhs->type() == rhs->type();
+                }
+            }
+            expect(typesMatch, Error::MismatchedType);
             
             // If this is Operator::LAnd or Operator::Lor generate a Logical AST
             if (opInfo.oper() == Operator::LOr || opInfo.oper() == Operator::LAnd) {
