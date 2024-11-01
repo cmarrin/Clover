@@ -250,9 +250,6 @@ InterpreterBase::execute(ExecMode mode)
             case Op::PUSHREF:
                 _memMgr.stack().push(ea(), AddrOpSize);
                 break;
-            case Op::RET:
-                handleReturn();
-                break;
             case Op::DEREF1:
             case Op::DEREF2:
             case Op::DEREF4:
@@ -260,6 +257,9 @@ InterpreterBase::execute(ExecMode mode)
                 left = _memMgr.stack().pop(AddrOpSize);
                 right = _memMgr.getAbs(left, opSizeToBytes(opSize));
                 _memMgr.stack().push(right, opSize);
+                break;
+            case Op::RET:
+                handleReturn();
                 break;
             case Op::RETR1:
             case Op::RETR2:
