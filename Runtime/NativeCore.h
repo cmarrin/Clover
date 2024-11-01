@@ -45,7 +45,7 @@ class NativeCore
 {
   public:
     enum class Id {
-        None            = 0,
+        Monitor         = 0,
         PrintF          = 1,
         Format          = 2,
         MemSet          = 3,

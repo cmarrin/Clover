@@ -18,6 +18,9 @@ ModulePtr
 NativeCore::createModule()
 {
     ModulePtr coreModule = std::make_shared<NativeCore>();
+    coreModule->addNativeFunction("monitor", uint16_t(Id::Monitor), Type::UInt16, {{ "cmd", Type::UInt8, false, 1, 1 },
+                                                                                   { "param0", Type::UInt16, false, 2, 1 },
+                                                                                   { "param1", Type::UInt16, false, 2, 1 }});
     coreModule->addNativeFunction("printf", uint16_t(Id::PrintF), Type::None, {{ "fmt", Type::UInt8, true, AddrSize, 1 }});
     coreModule->addNativeFunction("format", uint16_t(Id::Format), Type::None, {{ "s", Type::UInt8, true, AddrSize, 1 },
                                                                            { "n", Type::UInt16, false, 2, 1 },
@@ -42,6 +45,20 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
 {
     switch (Id(id)) {
         default: break;
+        case Id::Monitor: {
+            // General Monitor access
+            uint16_t cmd = interp->memMgr()->getArg(0, 2);
+            uint16_t param0 = interp->memMgr()->getArg(VarArgSize, 2);
+            uint16_t param1 = interp->memMgr()->getArg(VarArgSize * 2, 2);
+            (void) param0;
+            (void) param1;
+            switch (cmd) {
+                default: break;
+                case 0:
+                    break;
+            }
+            break;
+        }
         case Id::PrintF: {
             VarArg va(interp->memMgr(), 0, Type::UInt8, true);
             AddrNativeType fmt = interp->memMgr()->getArg(0, AddrSize);
