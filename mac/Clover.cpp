@@ -58,6 +58,7 @@ static void showError(clvr::Error error, clvr::Token token, const std::string& s
         case clvr::Error::ExpectedFunction: err = "expected function name"; break;
         case clvr::Error::ExpectedStructType: err = "expected Struct type"; break;
         case clvr::Error::ExpectedVar: err = "expected var"; break;
+        case clvr::Error::ExpectedConstExpr: err = "expected constant expr"; break;
         case clvr::Error::AssignmentNotAllowedHere: err = "assignment not allowed here"; break;
         case clvr::Error::InvalidParamCount: err = "invalid param count"; break;
         case clvr::Error::UndefinedIdentifier: err = "undefined identifier"; break;

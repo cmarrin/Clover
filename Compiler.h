@@ -237,6 +237,7 @@ enum class Error {
     ExpectedFunction,
     ExpectedLHSExpr,
     ExpectedStructType,
+    ExpectedConstExpr,
     ExpectedVar,
     AssignmentNotAllowedHere,
     InvalidParamCount,

@@ -364,7 +364,12 @@ Compiler::var(const ASTPtr& parent, Type type, bool isPointer, bool isConstant)
     uint32_t nElements = 1;
 
     if (match(Token::OpenBracket)) {
-        if (!integerValue(nElements)) {
+        // Value can be an expression as long as it returns a constant value
+        ASTPtr nElts = expression();
+        if (nElts != nullptr) {
+            expect(nElts->astNodeType() == ASTNodeType::Constant, Error::ExpectedConstExpr);
+            nElements = std::static_pointer_cast<ConstantNode>(nElts)->integerValue();
+        } else {
             nElements = 0;
         }
         expect(Token::CloseBracket);
@@ -1229,7 +1234,8 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
                         }
                         
                         if (haveResult) {
-                            lhs = std::make_shared<ConstantNode>(lhs->type(), result);
+                            // Use the biggest signed integer type we support
+                            lhs = std::make_shared<ConstantNode>(ArgIType, result);
                         }
                     }
                 }
