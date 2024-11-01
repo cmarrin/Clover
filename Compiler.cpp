@@ -715,10 +715,13 @@ Compiler::function()
     
     // If there's not a return at the end of the function, add one if
     // no return value is expected, or emit an error if one is.
+    // We may never get here, if, for instance, all statements end with
+    // a return. So allow this case. If the function expects a return
+    // value we can still just do a RET and the interpreter will use
+    // a return value of 0.
     ASTPtr nodes = _currentFunction->astNode();
     ASTPtr lastNode = nodes->child(nodes->numChildren() - 1);
     if (lastNode->astNodeType() != ASTNodeType::Return) {
-        expect(_currentFunction->returnType() == Type::None, Error::ExpectedReturnValue);
         _currentFunction->addASTNode(std::make_shared<ReturnNode>(nullptr));
     }
         
