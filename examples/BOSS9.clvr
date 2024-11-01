@@ -1,0 +1,86 @@
+//
+//  BOSS9.clvr
+//  Clover
+//
+//  Created by Chris Marrin on 10/25/24.
+//
+// This program controls execution of the code loaded into the engine. Since
+// the engine is running both this monitor and the loaded code, running monitor
+// code or program code is simply a matter of which address is being executed.
+//
+// This monitor is loaded into the emulator (VM or 6809 emulator) or the 6809
+// hardware. Since Clover runs on a variety of hardware and memory configurations
+// this monitor considers the stack to be separate from program code, which is 
+// read-only. The 6809 has a unified memory architecture but it splits this into
+// RAM and ROM areas. So BOSS9 does the same. Stack and read/write data are contained
+// in the lower 32K of memory and the Monitor (and other pre-loaded code) resides
+// in the upper 32KB. When needed, I/O sits between.
+//
+// ROM is as big as is needed to hold the monitor and any other pre-loaded code. RAM
+// contains the stack for BOSS9 starting at the top of the address space and
+// growing down. The BOSS9 stack is a pre-defined size and the stack for the loaded
+// program starts below it and also grows down.
+//
+// Execution begins in the monitor, which manages all memory allocation, I/O and
+// switching execution between the monitor and loaded program. Accessing memory and
+// registers is done with a single core.monitor call. This function is passed 
+// an 8 bit command and two 16 bit params and optionally returns a 16 bit value.
+//
+
+struct BOSS9
+{
+
+enum RunState {
+    Loading,
+    Cmd,
+    Running,
+    Continuing,
+    StepIn,
+    StepOut,
+    StepOver,
+};
+
+RunState _runState = RunState.Cmd;
+bool _needPrompt = true;
+bool _needInstPrint = true;
+
+function enterMonitor()
+{
+    _runState = RunState::Cmd;
+    _needPrompt = true;
+    _needInstPrint = true;
+}
+
+function bool continueExecution()
+{
+    if (_runState == RunState.Cmd || _runState == RunState.Loading) {
+        getCommand();
+        return true;
+    }
+    
+    // At this point the RunState is anything but Cmd. if its Running
+    // it either means we executed the Run command from the monitor
+    // or we're looping from main. If it's Continuing it means we
+    // just executed the Continue command from the monitor and we
+    // need to avoid taking a breakpoint at the current PC (or we'd
+    // never execute any instructions). If this is the case we need
+    // to change the state to Running after execute() so we run normally
+    // the next time through. The other states are for stepping through
+    // the code which execute() will deal with.
+    
+    bool retval = core.monitor(Mon.run(_runState));
+    
+    if (_runState == RunState::Continuing) {
+        _runState = RunState::Running;
+    }
+    return retval;
+}
+function uint16_t main()
+{
+    // Start in monitor
+    enterMonitor();
+    return 0;
+}
+
+};
+

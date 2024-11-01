@@ -121,6 +121,7 @@
 		49C469C62C6A769E00588838 /* NativeColor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeColor.h; path = ../Runtime/NativeColor.h; sourceTree = "<group>"; };
 		49C469C72C6A83B100588838 /* NativeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeCore.h; path = ../Runtime/NativeCore.h; sourceTree = "<group>"; };
 		49C469C82C6A83B100588838 /* NativeCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCore.cpp; path = ../Runtime/NativeCore.cpp; sourceTree = "<group>"; };
+		49C5B3292CCBF4D900B6911E /* BOSS9.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = BOSS9.clvr; path = ../examples/BOSS9.clvr; sourceTree = "<group>"; };
 		49C9E7B22C94F87500E58516 /* clvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clvr.cpp; sourceTree = "<group>"; };
 		49C9E7B32C94F87500E58516 /* clvr-interp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "clvr-interp.cpp"; sourceTree = "<group>"; };
 		49C9E7E22C95129300E58516 /* Clover */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Clover; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -256,6 +257,7 @@
 		4941A1002BBA1CF300CE3C9E /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				49C5B3292CCBF4D900B6911E /* BOSS9.clvr */,
 				499B10C72C9B9A0B0060AF63 /* simple.asm */,
 				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
 				49C164A42C025CD500981AD1 /* simple.clvr */,
