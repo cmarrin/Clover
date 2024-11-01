@@ -56,12 +56,12 @@ function Direction nextDirection(Direction dir)
 
 function int8_t headingX(Direction dir)
 {
-    return (dir == Direction.Left) ? -1 : ((dir == Direction.Right) : 1 : 0);
+    return (dir == Direction.Left) ? -1 : ((dir == Direction.Right) ? 1 : 0);
 }
 
 function int8_t headingY(Direction dir)
 {
-    return (dir == Direction.Up) ? -1 : ((dir == Direction.Down) : 1 : 0);
+    return (dir == Direction.Up) ? -1 : ((dir == Direction.Down) ? 1 : 0);
 }
 
 function bool isDirValid(Direction dir)
@@ -77,10 +77,10 @@ function bool isDirValid(Direction dir)
         return false;
     }
 
-	return !_maze[cellIndex(newX, newY];
+	return !_maze[cellIndex(newX, newY)];
 }
 
-Direction getDirection()
+function Direction getDirection()
 {
 	Direction dir = randomDirection();
 
@@ -102,11 +102,10 @@ Direction getDirection()
 
 		_curX += headingX(dir);
 		_curY += headingY(dir);
-		g_PtY += Heading_Y[ Dir ];
 	}
 }
 
-void GenerateMaze()
+function generateMaze()
 {
 	while (true) {
         Direction dir = getDirection();
@@ -119,27 +118,8 @@ void GenerateMaze()
 		_curX += headingX(dir);
 		_curY += headingY(dir);
 
-		_maze[curIndex].InitialDir = dir;
+		_maze[curIndex].initialDir = dir;
 		_maze[curIndex].visitedDirs = uint8_t(dir);
-	}
-}
-
-void RenderMaze( unsigned char* img )
-{
-	for ( int y = 0; y < NumCells; y++ )
-	{
-		for ( int x = 0; x < NumCells; x++ )
-		{
-			char v = g_Maze[ y * NumCells + x ];
-
-			int nx = x * CellSize;
-			int ny = y * CellSize;
-
-			if ( !( v & eDirection_Up    ) ) Line( img, nx,            ny,            nx + CellSize + 1, ny                );
-			if ( !( v & eDirection_Right ) ) Line( img, nx + CellSize, ny,            nx + CellSize,     ny + CellSize + 1 );
-			if ( !( v & eDirection_Down  ) ) Line( img, nx,            ny + CellSize, nx + CellSize + 1, ny + CellSize     );
-			if ( !( v & eDirection_Left  ) ) Line( img, nx,            ny,            nx,                ny + CellSize + 1 );
-		}
 	}
 }
 
@@ -151,11 +131,11 @@ function int16_t main()
 	core.memset(_maze, 0, Width * Height);
 
 	// setup initial point
-	_curX = core.irand(0, Width - 1;
-	_curY = core.irand(0, Height - 1;
+	_curX = core.irand(0, Width - 1);
+	_curY = core.irand(0, Height - 1);
 
 	// traverse
-	GenerateMaze();
+	generateMaze();
 
     // Need to emit maze (ascii text?)
     
