@@ -647,6 +647,18 @@ Compiler::type(Type& t)
         return true;
     }        
     
+    // Now look at the peers, if any
+    if (_structStack.size() > 1) {
+        struc = _structStack[_structStack.size() - 2];
+        e = struc->findEnum(id);
+        
+        if (e) {
+            t = e->type();
+            _scanner.retireToken();
+            return true;
+        }
+    }
+    
     if (_topLevelStruct->name() == id) {
         t = _topLevelStruct->type();
         _scanner.retireToken();
