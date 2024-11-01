@@ -1,0 +1,165 @@
+// Maze generator
+
+struct Maze
+{
+
+// Max width and height 255
+const uint8_t Width = 10;
+const uint8_t Height = 10;
+
+// current traversing position
+uint8_t _curX;
+uint8_t _curY;
+
+enum Direction
+{
+    Invalid = 0,
+    Up      = 1,
+    Right   = 2,
+    Down    = 4,
+    Left    = 8
+};
+
+struct Cell
+{
+    Direction initialDir;
+    uint8_t visitedDirs;
+};
+
+Cell _maze[Width * Height];
+
+function uint16_t cellIndex(uint8_t x, uint8_t y)
+{
+	return (y * Width) + x;
+}
+
+function uint16_t curIndex()
+{
+	return cellIndex(_curX, _curY);
+}
+
+function Direction randomDirection()
+{
+	return Direction(1 << core.irand(0, 3));
+}
+
+function Direction nextDirection(Direction dir)
+{
+    switch (dir) {
+        default: return Direction.Invalid;
+        case Direction.Up: return Direction.Right;
+        case Direction.Right: return Direction.Down;
+        case Direction.Down: return Direction.Left;
+        case Direction.Left: return Direction.Up;
+    }
+}
+
+function int8_t headingX(Direction dir)
+{
+    return (dir == Direction.Left) ? -1 : ((dir == Direction.Right) : 1 : 0);
+}
+
+function int8_t headingY(Direction dir)
+{
+    return (dir == Direction.Up) ? -1 : ((dir == Direction.Down) : 1 : 0);
+}
+
+function bool isDirValid(Direction dir)
+{
+    if (dir == Direction.Invalid) {
+        return false;
+    }
+    
+	int8_t newX = _curX + headingX(dir);
+	int8_t newY = _curY + headingY(dir);
+
+	if (newX < 0 || newY < 0 || newX >= Width || newY >= Height) {
+        return false;
+    }
+
+	return !_maze[cellIndex(newX, newY];
+}
+
+Direction getDirection()
+{
+	Direction dir = randomDirection();
+
+	while (true) {
+		for (uint8_t i = 0; i < 4; i++) {
+            if ( isDirValid(dir)) {
+                return dir;
+            }
+
+            dir = nextDirection(dir);
+		}
+
+        dir = _maze[curIndex()].initialDir;
+
+		// nowhere to go
+		if (dir == Direction.Invalid) {
+            return dir;
+        }
+
+		_curX += headingX(dir);
+		_curY += headingY(dir);
+		g_PtY += Heading_Y[ Dir ];
+	}
+}
+
+void GenerateMaze()
+{
+	while (true) {
+        Direction dir = getDirection();
+        if (dir == Direction.Invalid) {
+            break;
+        }
+        
+		_maze[curIndex].visitedDirs |= uint8_t(dir);
+
+		_curX += headingX(dir);
+		_curY += headingY(dir);
+
+		_maze[curIndex].InitialDir = dir;
+		_maze[curIndex].visitedDirs = uint8_t(dir);
+	}
+}
+
+void RenderMaze( unsigned char* img )
+{
+	for ( int y = 0; y < NumCells; y++ )
+	{
+		for ( int x = 0; x < NumCells; x++ )
+		{
+			char v = g_Maze[ y * NumCells + x ];
+
+			int nx = x * CellSize;
+			int ny = y * CellSize;
+
+			if ( !( v & eDirection_Up    ) ) Line( img, nx,            ny,            nx + CellSize + 1, ny                );
+			if ( !( v & eDirection_Right ) ) Line( img, nx + CellSize, ny,            nx + CellSize,     ny + CellSize + 1 );
+			if ( !( v & eDirection_Down  ) ) Line( img, nx,            ny + CellSize, nx + CellSize + 1, ny + CellSize     );
+			if ( !( v & eDirection_Left  ) ) Line( img, nx,            ny,            nx,                ny + CellSize + 1 );
+		}
+	}
+}
+
+function int16_t main()
+{
+    core.printf("Generating %d x %d maze\n", Width, Height);
+
+	// clear maze
+	core.memset(_maze, 0, Width * Height);
+
+	// setup initial point
+	_curX = core.irand(0, Width - 1;
+	_curY = core.irand(0, Height - 1;
+
+	// traverse
+	GenerateMaze();
+
+    // Need to emit maze (ascii text?)
+    
+	return 0;
+}
+
+};

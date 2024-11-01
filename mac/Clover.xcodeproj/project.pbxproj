@@ -128,6 +128,7 @@
 		49C9E7EC2C9714CA00E58516 /* CodeGen6809.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGen6809.h; path = ../CodeGen6809.h; sourceTree = "<group>"; };
 		49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CodeGen6809.cpp; path = ../CodeGen6809.cpp; sourceTree = "<group>"; };
 		49D70D292C95E855000A325C /* Clover.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Clover.cpp; sourceTree = "<group>"; };
+		49D77B6A2CD44EDE00F5273B /* maze.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = maze.clvr; path = ../examples/maze.clvr; sourceTree = SOURCE_ROOT; };
 		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
 		49E2F2982C8F4652007E0F0A /* Float16.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = Float16.clvr; path = ../modules/Float16.clvr; sourceTree = "<group>"; };
 		49E9ACCB2C715C580074BD25 /* PostLightController.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostLightController.ino; path = ../PostLightController/PostLightController.ino; sourceTree = "<group>"; };
@@ -257,6 +258,7 @@
 		4941A1002BBA1CF300CE3C9E /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				49D77B6A2CD44EDE00F5273B /* maze.clvr */,
 				49C5B3292CCBF4D900B6911E /* BOSS9.clvr */,
 				499B10C72C9B9A0B0060AF63 /* simple.asm */,
 				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
