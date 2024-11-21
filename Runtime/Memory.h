@@ -111,30 +111,36 @@ class Memory
         
         int32_t size() const { return _size; }
                 
-        void ensurePush(uint8_t n = 1) const
+        bool ensurePush(uint8_t n = 1) const
         {
             if (_sp >= _size || _sp < 0) {
                 _error = Error::InternalError;
+                return false;
             }
             if (_sp - n < _heapEnd) {
                 _error = Error::StackOverrun;
+                return false;
             }
+            return true;
         }
         
       private:
-        void push(uint8_t v) { ensurePush(1); _mem[--_sp] = v; }
-        uint8_t pop() { ensureCount(1); return _mem[_sp++]; }
+        void push(uint8_t v) { if (!ensurePush(1)) return; _mem[--_sp] = v; }
+        uint8_t pop() { if (!ensureCount(1)) return 0; return _mem[_sp++]; }
 
         static uint32_t floatToInt(float f) { return *(reinterpret_cast<uint32_t*>(&f)); }
         
-        void ensureCount(uint8_t n) const
+        bool ensureCount(uint8_t n) const
         {
             if (_sp < 0) {
                 _error = Error::InternalError;
+                return false;
             }
             if (_sp + n > _size) {
                 _error = Error::StackUnderrun;
+                return false;
             }
+            return true;
         }
         
         uint8_t* _mem = nullptr;
