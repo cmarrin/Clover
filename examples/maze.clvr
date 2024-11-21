@@ -6,47 +6,66 @@ struct Maze
 // Max width and height 255
 const uint8_t Width = 10;
 const uint8_t Height = 10;
+const uint16_t StackSize = 200;
 
-// current traversing position
-uint8_t _curX;
-uint8_t _curY;
-
-enum Direction
+struct Pos
 {
-    Invalid = 0,
-    Up      = 1,
-    Right   = 2,
-    Down    = 4,
-    Left    = 8
+    uint8_t x;
+    uint8_t y;
 };
 
+Pos _currentPos;
+
+Pos _stack[StackSize];
+uint16_t _stackIndex = 0;
+
+enum Direction { Up, Right, Down, Left, Invalid };
+
 struct Cell
-{
-    Direction initialDir;
-    uint8_t visitedDirs;
+{    
+    // _walls is a bit array. Bits 0-3 are walls in each direction (0 == wall)
+    // Bit 4 is the visited bit. Cell is cleared at the start, which means it has all 4 walls and
+    // has not been visited
+    uint8_t _walls;
+
+    function bool hasWall(Direction dir)
+    {
+        if (dir == Direction.Invalid) {
+            return false;
+        }
+        
+        // Have a wall if that bit is zero
+        return ((1 << uint8_t(dir)) & _walls) == 0;
+    }
+    
+    function removeWall(Direction dir)
+    {
+        if (dir != Direction.Invalid) {
+            _walls |= 1 << uint8_t(dir);
+        }
+    }
+    
+    function bool hasAllWalls() { return (_walls & 0x0f) == 0; }
+    function bool visited() { return (_walls & 0x10) != 0; }
+    function visit() { _walls |= 0x10; }
 };
 
 Cell _maze[Width * Height];
 
-function uint16_t cellIndex(uint8_t x, uint8_t y)
+function uint16_t cellIndex(Pos p)
 {
-	return (y * Width) + x;
-}
-
-function uint16_t curIndex()
-{
-	return cellIndex(_curX, _curY);
+	return (p.y * Width) + p.x;
 }
 
 function Direction randomDirection()
 {
-	return Direction(1 << core.irand(0, 3));
+	return Direction(core.irand(0, 3));
 }
 
 function Direction nextDirection(Direction dir)
 {
     switch (dir) {
-        default: return Direction.Invalid;
+        case Direction.Invalid: return Direction.Invalid;
         case Direction.Up: return Direction.Right;
         case Direction.Right: return Direction.Down;
         case Direction.Down: return Direction.Left;
@@ -70,56 +89,84 @@ function bool isDirValid(Direction dir)
         return false;
     }
     
-	int8_t newX = _curX + headingX(dir);
-	int8_t newY = _curY + headingY(dir);
+    Pos newPos;
+	newPos.x = _currentPos.x + headingX(dir);
+	newPos.y = _currentPos.y + headingY(dir);
 
-	if (newX < 0 || newY < 0 || newX >= Width || newY >= Height) {
+	if (newPos.x < 0 || newPos.y < 0 || newPos.x >= Width || newPos.y >= Height) {
         return false;
     }
 
-	return !_maze[cellIndex(newX, newY)];
+	return !_maze[cellIndex(newPos)].visited();
+}
+
+function Direction reverseDirection(Direction dir)
+{
+    switch (dir) {
+        case Direction.Invalid: return Direction.Invalid;
+        case Direction.Up: return Direction.Down;
+        case Direction.Right: return Direction.Left;
+        case Direction.Down: return Direction.Up;
+        case Direction.Left: return Direction.Left;
+    }
 }
 
 function Direction getDirection()
 {
 	Direction dir = randomDirection();
+ core.printf("***** randomDirection=%d\n", dir);
 
 	while (true) {
 		for (uint8_t i = 0; i < 4; i++) {
-            if ( isDirValid(dir)) {
+            if (isDirValid(dir)) {
                 return dir;
             }
 
             dir = nextDirection(dir);
 		}
+    }
+}
 
-        dir = _maze[curIndex()].initialDir;
-
-		// nowhere to go
-		if (dir == Direction.Invalid) {
-            return dir;
-        }
-
-		_curX += headingX(dir);
-		_curY += headingY(dir);
-	}
+function removeWalls(Pos a, Pos b)
+{
+    int8_t dx = a.x - b.x;
+    if (dx == 1) {
+        _maze[cellIndex(a)].removeWall(Direction.Left);
+        _maze[cellIndex(b)].removeWall(Direction.Right);
+    } else if (dx == -1) {
+        _maze[cellIndex(a)].removeWall(Direction.Right);
+        _maze[cellIndex(b)].removeWall(Direction.Left);
+    }
+    
+    int8_t dy = a.y - b.y;
+    if (dy == 1) {
+        _maze[cellIndex(a)].removeWall(Direction.Up);
+        _maze[cellIndex(b)].removeWall(Direction.Down);
+    } else if (dy == -1) {
+        _maze[cellIndex(a)].removeWall(Direction.Down);
+        _maze[cellIndex(b)].removeWall(Direction.Up);
+    }
 }
 
 function generateMaze()
 {
-	while (true) {
+	for (uint16_t iter = 0; iter < 10000; ++iter) {
         Direction dir = getDirection();
-        if (dir == Direction.Invalid) {
+core.printf("generateMaze:dir=%d, pos=(%d,%d)\n", dir, _currentPos.x, _currentPos.y);
+        if (dir != Direction.Invalid) {
+            Pos nextPos;
+            nextPos.x = _currentPos.x + headingX(dir);
+            nextPos.y = _currentPos.y + headingY(dir);
+core.printf("generateMaze:nextpos=(%d,%d)\n", nextPos.x, nextPos.y);
+            _maze[cellIndex(nextPos)].visit();
+            _stack[_stackIndex++] = _currentPos;
+            removeWalls(_currentPos, nextPos);
+            _currentPos = nextPos;
+        } else if (_stackIndex > 0) {
+            _currentPos = _stack[--_stackIndex];
+        } else {
             break;
         }
-        
-		_maze[curIndex].visitedDirs |= uint8_t(dir);
-
-		_curX += headingX(dir);
-		_curY += headingY(dir);
-
-		_maze[curIndex].initialDir = dir;
-		_maze[curIndex].visitedDirs = uint8_t(dir);
 	}
 }
 
@@ -131,8 +178,8 @@ function int16_t main()
 	core.memset(_maze, 0, Width * Height);
 
 	// setup initial point
-	_curX = core.irand(0, Width - 1);
-	_curY = core.irand(0, Height - 1);
+	_currentPos.x = core.irand(0, Width - 1);
+	_currentPos.y = core.irand(0, Height - 1);
 
 	// traverse
 	generateMaze();
