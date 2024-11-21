@@ -100,29 +100,6 @@ format(AddrNativeType s, uint16_t n, clvr::AddrNativeType fmt, clvr::VarArg& arg
 class InterpreterBase
 {
   public:
-    enum class Error {
-        None,
-        InvalidSignature,
-        InvalidVersion,
-        WrongAddressSize,
-        NoEntryPoint,
-        NotInstantiated,
-        UnexpectedOpInIf,
-		InvalidOp,
-        OnlyMemAddressesAllowed,
-        AddressOutOfRange,
-        ExpectedSetFrame,
-        InvalidModuleOp,
-        InvalidNativeFunction,
-        NotEnoughArgs,
-        WrongNumberOfArgs,
-        StackOverrun,
-        StackUnderrun,
-        StackOutOfRange,
-        ImmedNotAllowedHere,
-        InternalError,
-    };
-
     InterpreterBase(uint8_t* mem, uint32_t memSize);
     
     virtual ~InterpreterBase() { }
@@ -272,7 +249,7 @@ class InterpreterBase
 
     uint16_t _pc = 0;
 
-    Error _error = Error::None;
+    Memory::Error _error = Memory::Error::None;
     int16_t _errorAddr = -1;
 
     Memory _memMgr;
@@ -298,7 +275,7 @@ public:
         return execute(mode);
     }
 
-    Error error() const { return _error; }
+    Memory::Error error() const { return _error; }
     
     // Returns -1 if error was not at any pc addr
     int16_t errorAddr() const { return _errorAddr; }
@@ -318,7 +295,7 @@ public:
 //		return r;
 //	}
 
-    void setError(Error error) { _error = error; }
+    void setError(Memory::Error error) { _error = error; }
 
 private:
     uint16_t getId(uint8_t i)

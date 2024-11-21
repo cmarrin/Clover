@@ -21,12 +21,27 @@ class Memory
   public:
     enum class Error {
         None,
-        InternalError,
+        InvalidSignature,
+        InvalidVersion,
+        WrongAddressSize,
+        NoEntryPoint,
+        NotInstantiated,
+        UnexpectedOpInIf,
+		InvalidOp,
+        OnlyMemAddressesAllowed,
+        AddressOutOfRange,
+        ExpectedSetFrame,
+        InvalidModuleOp,
+        InvalidNativeFunction,
+        NotEnoughArgs,
+        WrongNumberOfArgs,
         StackOverrun,
         StackUnderrun,
         StackOutOfRange,
+        ImmedNotAllowedHere,
+        InternalError,
     };
-    
+
     class Stack
     {
       public:

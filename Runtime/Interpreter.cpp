@@ -22,7 +22,7 @@ InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
 void
 InterpreterBase::instantiate()
 {
-    _error = Error::None;
+    _error = Memory::Error::None;
     _state = State::BeforeInstantiate;
     
     // Reset everything
@@ -38,18 +38,18 @@ InterpreterBase::instantiate()
     
     // Check signature
     if (getUInt8ROM(0) != 'l' || getUInt8ROM(1) != 'u' || getUInt8ROM(2) != 'c' || getUInt8ROM(3) != 'd') {
-        _error = Error::InvalidSignature;
+        _error = Memory::Error::InvalidSignature;
         return;
     }
     
     if (getROM(MajorVersionAddr, 2) != 1 || getROM(MinorVersionAddr, 1) != 0) {
-        _error = Error::InvalidVersion;
+        _error = Memory::Error::InvalidVersion;
         return;
     }
 
     bool is32BitAddr = getROM(Is32BitAddrAddr, 1) != 0;
     if (is32BitAddr != Is32BitAddr) {
-        _error = Error::WrongAddressSize;
+        _error = Memory::Error::WrongAddressSize;
         return;
     }
 
@@ -75,7 +75,7 @@ void
 InterpreterBase::construct()
 {
     if (_state != State::Instantiated) {
-        _error = Error::NotInstantiated;
+        _error = Memory::Error::NotInstantiated;
         return;
     }
     
@@ -182,14 +182,14 @@ uint32_t
 InterpreterBase::execute(ExecMode mode)
 {
     if (_state != State::Constructed) {
-        _error = Error::NotInstantiated;
+        _error = Memory::Error::NotInstantiated;
         return 0;
     }
     
     if (mode == ExecMode::Start) {
         _pc = _mainEntryPoint;
         if (!isNextOpcodeSetFrame()) {
-            _error = Error::NoEntryPoint;
+            _error = Memory::Error::NoEntryPoint;
             return 0;
         }
     }
@@ -209,10 +209,11 @@ InterpreterBase::execute(ExecMode mode)
     
     while(1) {
         if (_memMgr.error() != Memory::Error::None) {
-            // FIXME: Deal with errors
-            // _error = _memMgr.error();
+            _error = _memMgr.error();
+            _errorAddr = _pc - 1;
+            return 0;
         }
-        if (_error != Error::None) {
+        if (_error != Memory::Error::None) {
             _errorAddr = _pc - 1;
             return 0;
         }
@@ -475,13 +476,13 @@ InterpreterBase::execute(ExecMode mode)
                     float r = intToFloat(right);
                     switch(opcode) {
                         case Op::LE: left = l <= r; break;
-                        case Op::LS: _error = Error::InternalError; break;
+                        case Op::LS: _error = Memory::Error::InternalError; break;
                         case Op::LT: left = l < r; break;
-                        case Op::LO: _error = Error::InternalError; break;
+                        case Op::LO: _error = Memory::Error::InternalError; break;
                         case Op::GE: left = l >= r; break;
-                        case Op::HS: _error = Error::InternalError; break;
+                        case Op::HS: _error = Memory::Error::InternalError; break;
                         case Op::GT: left = l > r; break;
-                        case Op::HI: _error = Error::InternalError; break;
+                        case Op::HI: _error = Memory::Error::InternalError; break;
                         case Op::EQ: left = l == r; break;
                         case Op::NE: left = l != r; break;
                         default: break;
