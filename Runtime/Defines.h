@@ -50,7 +50,7 @@ namespace clvr {
             max = t;
         }
         
-        int r = rand() % (max - min);
+        int r = rand() % (max - min + 1);
         return r + min;
     }
 #endif
