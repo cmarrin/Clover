@@ -457,6 +457,10 @@ static inline Op castOp(Type from, Type to)
         from = Type::UInt8;
     }
     
+    if (isEnum(to)) {
+        to = Type::UInt8;
+    }
+    
     // Cast opcode are sparse, only the ones needed exist
     // return NOP for all the rest.
     if (from == Type::Float) {
