@@ -228,11 +228,14 @@ class InterpreterBase
     AddrNativeType switchSearch(int32_t v, AddrNativeType addr, uint16_t n)
     {
         static constexpr uint8_t entrySize = valueSize + addrSize;
-        uint16_t low = 0;
-        uint16_t high = n - 1;
+        int16_t low = 0;
+        int16_t high = n - 1;
         
         while (low <= high) {
             uint16_t mid = low + (high - low) / 2;
+            if (mid >= n) {
+                return 0;
+            }
             int32_t testValue = getROM(addr + mid * entrySize, valueSize);
             if (testValue == v) {
                 return getROM(addr + mid * entrySize + valueSize, addrSize);
