@@ -30,7 +30,7 @@ public:
     uint16_t numLocals() const { return _locals.size(); }
     
     Type type() const { return _type; }
-    uint8_t sizeInBytes() const { return _localSize; }
+    uint16_t sizeInBytes() const { return _localSize; }
     
     FunctionPtr ctor() const { return _ctor; }
     
@@ -83,6 +83,11 @@ public:
         // Locals start at 0 and go positive. Their addresses are relative
         // to the structure's self pointer, stored in the Y register.
         sym->setAddr(_localSize, Index::M);
+        
+        // Make sure we have room
+        if (uint32_t(_localSize) + sym->sizeInBytes() > 65535) {
+            return false;
+        }
         _localSize += sym->sizeInBytes();
         return true;
     }
@@ -144,7 +149,7 @@ private:
     std::vector<StructPtr> _structs;
     std::vector<EnumPtr> _enums;
     std::vector<SymbolPtr> _locals;
-    uint8_t _localSize = 0;
+    uint16_t _localSize = 0;
     Type _type = Type::None;
     ASTPtr _initASTNode = std::make_shared<StatementsNode>();
     FunctionPtr _ctor;
