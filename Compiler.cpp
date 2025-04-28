@@ -1176,7 +1176,7 @@ Compiler::arithmeticExpression(const ASTPtr& node, uint8_t minPrec)
         
         _scanner.retireToken();
         
-        ASTPtr rhs = unaryExpression();
+        ASTPtr rhs = conditionalExpression();
         
         while (true) {
             OpInfo nextOpInfo;
