@@ -3,58 +3,211 @@
 struct Maze
 {
 
+
+
+
+
+
+
+/* Maze generator in C.
+ * Joe Wingbermuehle
+ * 19990805
+ */
+
+/* Display the maze. */
+function ShowMaze(uint8_t* maze, uint16_t width, uint16_t height)
+{
+   int16_t x;
+   int16_t y;
+   
+   for (y = 0; y < height; y++) {
+      for(x = 0; x < width; x++) {
+         switch(maze[y * width + x]) {
+         case 1:  core.printf("[]");
+         case 2:  core.printf("<>");
+         default: core.printf("  ");
+         }
+      }
+      core.printf("\n");
+   }
+}
+
+/*  Carve the maze starting at x, y. */
+function CarveMaze(uint8_t* maze, uint16_t width, uint16_t height, int16_t x, int16_t y) {
+
+   int16_t x1;
+   int16_t y1;
+   int16_t x2;
+   int16_t y2;
+   int16_t dx;
+   int16_t dy;
+   int16_t dir;
+   int16_t count;
+
+   dir = core.irand(0, 3);
+   count = 0;
+   while(count < 4) {
+      dx = 0; dy = 0;
+      switch(dir) {
+      case 0:  dx = 1;
+      case 1:  dy = 1;
+      case 2:  dx = -1;
+      default: dy = -1;
+      }
+      x1 = x + dx;
+      y1 = y + dy;
+      x2 = x1 + dx;
+      y2 = y1 + dy;
+      if(   x2 > 0 && x2 < width && y2 > 0 && y2 < height
+         && maze[y1 * width + x1] == 1 && maze[y2 * width + x2] == 1) {
+         maze[y1 * width + x1] = 0;
+         maze[y2 * width + x2] = 0;
+         x = x2; y = y2;
+         dir = core.irand(0, 3);
+         count = 0;
+      } else {
+         dir = (dir + 1);
+         if (dir > 3) {
+            dir = 0;
+         }
+         count += 1;
+      }
+   }
+
+}
+
+/* Generate maze in matrix maze with size width, height. */
+function GenerateMaze(uint8_t* maze, uint16_t width, uint16_t height) {
+
+   uint16_t x;
+   uint16_t y;
+
+   /* Initialize the maze. */
+   for(x = 0; x < width * height; x++) {
+      maze[x] = 1;
+   }
+   maze[1 * width + 1] = 0;
+
+   /* Carve the maze. */
+   for(y = 1; y < height; y += 2) {
+      for(x = 1; x < width; x += 2) {
+         CarveMaze(maze, width, height, x, y);
+      }
+   }
+
+   /* Set up the entry and exit. */
+   maze[0 * width + 1] = 0;
+   maze[(height - 1) * width + (width - 2)] = 0;
+
+}
+
+/* Solve the maze. */
+function SolveMaze(uint8_t* maze, uint16_t width, uint16_t height) {
+
+   int16_t dir;
+   int16_t count;
+   int16_t x;
+   int16_t y;
+   int16_t dx;
+   int16_t dy;
+   bool forward;
+
+   /* Remove the entry and exit. */
+   maze[0 * width + 1] = 1;
+   maze[(height - 1) * width + (width - 2)] = 1;
+
+   forward = true;
+   dir = 0;
+   count = 0;
+   x = 1;
+   y = 1;
+   while(x != width - 2 || y != height - 2) {
+      dx = 0; dy = 0;
+      switch(dir) {
+      case 0:  dx = 1;
+      case 1:  dy = 1;
+      case 2:  dx = -1;
+      default: dy = -1;
+      }
+      if(   (forward  && maze[(y + dy) * width + (x + dx)] == 0)
+         || (!forward && maze[(y + dy) * width + (x + dx)] == 2)) {
+         maze[y * width + x] = forward ? 2 : 3;
+         x += dx;
+         y += dy;
+         forward = true;
+         count = 0;
+         dir = 0;
+      } else {
+         dir = (dir + 1);
+         if (dir > 3) {
+            dir = 0;
+         }
+         count += 1;
+         if(count > 3) {
+            forward = false;
+            count = 0;
+         }
+      }
+   }
+
+   /* Replace the entry and exit. */
+   maze[(height - 2) * width + (width - 2)] = 2;
+   maze[(height - 1) * width + (width - 2)] = 2;
+}
+
+const int16_t width = 23;
+const int16_t height = 23;
+
+uint8_t maze[width * height];
+
+function int16_t main()
+{
+   core.printf("Maze by Joe Wingbermuehle 19990805\n");
+
+   /* Generate and display the maze. */
+   GenerateMaze(maze, width, height);
+   ShowMaze(maze, width, height);
+
+   SolveMaze(maze, width, height);
+   ShowMaze(maze, width, height);
+}
+
+
+
+/*
+
 // Max width and height 255
-const uint8_t Width = 10;
-const uint8_t Height = 10;
-const uint16_t StackSize = 200;
+const int16_t Width = 23;
+const int16_t Height = 23;
 
-struct Pos
+enum Direction { Right, Down, Left, Up, Invalid };
+
+uint8_t _maze[Width * Height];
+
+function showMaze()
 {
-    uint8_t x;
-    uint8_t y;
-};
-
-Pos _currentPos;
-
-Pos _stack[StackSize];
-uint16_t _stackIndex = 0;
-
-enum Direction { Up, Right, Down, Left, Invalid };
-
-struct Cell
-{    
-    // _walls is a bit array. Bits 0-3 are walls in each direction (0 == wall)
-    // Bit 4 is the visited bit. Cell is cleared at the start, which means it has all 4 walls and
-    // has not been visited
-    uint8_t _walls;
-
-    function bool hasWall(Direction dir)
-    {
-        if (dir == Direction.Invalid) {
-            return false;
-        }
-        
-        // Have a wall if that bit is zero
-        return ((1 << uint8_t(dir)) & _walls) == 0;
+    for (int8_t i = 0; i < Width * 2 + 2; ++i) {
+        core.printf("-");
     }
+    core.printf("\n");
     
-    function removeWall(Direction dir)
-    {
-        if (dir != Direction.Invalid) {
-            _walls |= 1 << uint8_t(dir);
+    for (int16_t y = 0; y < Height; y++) {
+        core.printf("|");
+
+        for (int16_t x = 0; x < Width; x++) {
+            switch (_maze[y * Width + x]) {
+                case 1:  core.printf("[]");
+                case 2:  core.printf("<>");
+                default: core.printf("  ");
+            }
         }
+        core.printf("|\n");
     }
-    
-    function bool hasAllWalls() { return (_walls & 0x0f) == 0; }
-    function bool visited() { return (_walls & 0x10) != 0; }
-    function visit() { _walls |= 0x10; }
-};
 
-Cell _maze[Width * Height];
-
-function uint16_t cellIndex(Pos p)
-{
-	return (p.y * Width) + p.x;
+    for (int8_t i = 0; i < Width * 2 + 2; ++i) {
+        core.printf("-");
+    }
+    core.printf("\n");
 }
 
 function Direction randomDirection()
@@ -64,129 +217,129 @@ function Direction randomDirection()
 
 function Direction nextDirection(Direction dir)
 {
-    switch (dir) {
-        case Direction.Invalid: return Direction.Invalid;
-        case Direction.Up: return Direction.Right;
-        case Direction.Right: return Direction.Down;
-        case Direction.Down: return Direction.Left;
-        case Direction.Left: return Direction.Up;
+    uint8_t d = uint8_t(dir) + 1;
+    if (d > 3) {
+        d = 0;
     }
+    return Direction(d);
 }
 
-function int8_t headingX(Direction dir)
+function carveMaze(int16_t x, int16_t y)
 {
-    return (dir == Direction.Left) ? -1 : ((dir == Direction.Right) ? 1 : 0);
-}
+    Direction dir = randomDirection();
 
-function int8_t headingY(Direction dir)
-{
-    return (dir == Direction.Up) ? -1 : ((dir == Direction.Down) ? 1 : 0);
-}
-
-function bool isDirValid(Direction dir)
-{
-    if (dir == Direction.Invalid) {
-        return false;
-    }
-    
-    Pos newPos;
-	newPos.x = _currentPos.x + headingX(dir);
-	newPos.y = _currentPos.y + headingY(dir);
-
-	if (newPos.x < 0 || newPos.y < 0 || newPos.x >= Width || newPos.y >= Height) {
-        return false;
-    }
-
-	return !_maze[cellIndex(newPos)].visited();
-}
-
-function Direction reverseDirection(Direction dir)
-{
-    switch (dir) {
-        case Direction.Invalid: return Direction.Invalid;
-        case Direction.Up: return Direction.Down;
-        case Direction.Right: return Direction.Left;
-        case Direction.Down: return Direction.Up;
-        case Direction.Left: return Direction.Left;
-    }
-}
-
-function Direction getDirection()
-{
-	Direction dir = randomDirection();
- core.printf("***** randomDirection=%d\n", dir);
-
-	while (true) {
-		for (uint8_t i = 0; i < 4; i++) {
-            if (isDirValid(dir)) {
-                return dir;
-            }
-
+    for (int16_t count = 0; count < 4; ) {
+        int16_t dx = 0;
+        int16_t dy = 0;
+        
+        switch (dir) {
+            case Direction.Right:  dx = 1;
+            case Direction.Up:     dy = 1;
+            case Direction.Left:   dx = -1;
+            case Direction.Down:   dy = -1;
+            default: break;
+        }
+        
+        int16_t x1 = x + dx;
+        int16_t y1 = y + dy;
+        int16_t x2 = x1 + dx;
+        int16_t y2 = y1 + dy;
+        
+        if (x2 > 0 && x2 < Width && y2 > 0 && y2 < Height && _maze[y1 * Width + x1] == 1 && _maze[y2 * Width + x2] == 1) {
+            _maze[y1 * Width + x1] = 0;
+            _maze[y2 * Width + x2] = 0;
+            
+            x = x2;
+            y = y2;
+            dir = randomDirection();
+            count = 0;
+        } else {
             dir = nextDirection(dir);
-		}
-    }
-}
-
-function removeWalls(Pos a, Pos b)
-{
-    int8_t dx = a.x - b.x;
-    if (dx == 1) {
-        _maze[cellIndex(a)].removeWall(Direction.Left);
-        _maze[cellIndex(b)].removeWall(Direction.Right);
-    } else if (dx == -1) {
-        _maze[cellIndex(a)].removeWall(Direction.Right);
-        _maze[cellIndex(b)].removeWall(Direction.Left);
-    }
-    
-    int8_t dy = a.y - b.y;
-    if (dy == 1) {
-        _maze[cellIndex(a)].removeWall(Direction.Up);
-        _maze[cellIndex(b)].removeWall(Direction.Down);
-    } else if (dy == -1) {
-        _maze[cellIndex(a)].removeWall(Direction.Down);
-        _maze[cellIndex(b)].removeWall(Direction.Up);
+            count += 1;
+        }
     }
 }
 
 function generateMaze()
 {
-	for (uint16_t iter = 0; iter < 10000; ++iter) {
-        Direction dir = getDirection();
-core.printf("generateMaze:dir=%d, pos=(%d,%d)\n", dir, _currentPos.x, _currentPos.y);
-        if (dir != Direction.Invalid) {
-            Pos nextPos;
-            nextPos.x = _currentPos.x + headingX(dir);
-            nextPos.y = _currentPos.y + headingY(dir);
-core.printf("generateMaze:nextpos=(%d,%d)\n", nextPos.x, nextPos.y);
-            _maze[cellIndex(nextPos)].visit();
-            _stack[_stackIndex++] = _currentPos;
-            removeWalls(_currentPos, nextPos);
-            _currentPos = nextPos;
-        } else if (_stackIndex > 0) {
-            _currentPos = _stack[--_stackIndex];
-        } else {
-            break;
+    // clear maze
+	core.memset(_maze, 1, Width * Height);
+
+    _maze[1 * Width + 1] = 0;
+
+    for (int16_t y = 1; y < Height; y += 2) {
+        for (int16_t x = 1; x < Width; x += 2) {
+            carveMaze(x, y);
         }
-	}
+    }
+
+    _maze[0 * Width + 1] = 0;
+    _maze[(Height - 1) * Width + (Width - 2)] = 0;
 }
+
+function solveMaze()
+{
+    // Remove the entry and exit
+    _maze[0 * Width + 1] = 1;
+    _maze[(Height - 1) * Width + (Width - 2)] = 1;
+
+    bool forward = true;
+    Direction dir = Direction.Up;
+    uint16_t count = 0;
+    int16_t x = 1;
+    int16_t y = 1;
+   
+    while (x != Width - 2 || y != Height - 2) {
+        int16_t dx = 0;
+        int16_t dy = 0;
+        
+        switch (dir) {
+            case Direction.Right:  dx = 1;
+            case Direction.Up:     dy = 1;
+            case Direction.Left:   dx = -1;
+            case Direction.Down:   dy = -1;
+            default: break;
+        }
+        
+        if ((forward  && _maze[(y + dy) * Width + (x + dx)] == 0) || (!forward && _maze[(y + dy) * Width + (x + dx)] == 2)) {
+            _maze[y * Width + x] = forward ? 2 : 3;
+            x += dx;
+            y += dy;
+            forward = true;
+            count = 0;
+            dir = Direction.Up;
+        } else {
+            dir = nextDirection(dir);
+            count += 1;
+            
+            if(count > 3) {
+                forward = false;
+                count = 0;
+            }
+        }
+    }
+
+    // Replace the entry and exit
+    _maze[(Height - 2) * Width + (Width - 2)] = 2;
+    _maze[(Height - 1) * Width + (Width - 2)] = 2;
+}
+
 
 function int16_t main()
 {
     core.printf("Generating %d x %d maze\n", Width, Height);
 
-	// clear maze
-	core.memset(_maze, 0, Width * Height);
-
-	// setup initial point
-	_currentPos.x = core.irand(0, Width - 1);
-	_currentPos.y = core.irand(0, Height - 1);
-
-	// traverse
 	generateMaze();
-
-    // Need to emit maze (ascii text?)
+ 
+    core.printf("\nUnsolved Maze:\n");
+    showMaze();
+    solveMaze();
+    core.printf("\nSolved Maze:\n");
+    showMaze();
     
 	return 0;
 }
+
+*/
 
 };

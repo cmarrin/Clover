@@ -107,6 +107,7 @@
 		49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestSwitchEnum.clvr; path = ../Test/TestSwitchEnum.clvr; sourceTree = "<group>"; };
 		49A85D842C7A220500E8F5F3 /* TestFloatExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestFloatExpr.clvr; path = ../Test/TestFloatExpr.clvr; sourceTree = "<group>"; };
 		49A85D852C7A220500E8F5F3 /* TestIntExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr.clvr; path = ../Test/TestIntExpr.clvr; sourceTree = "<group>"; };
+		49AC18C72DBFF3E40089658D /* maze.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = maze.c; path = ../examples/maze.c; sourceTree = SOURCE_ROOT; };
 		49AD783D2C77D53500ABC078 /* Enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Enum.h; path = ../Enum.h; sourceTree = "<group>"; };
 		49C164A42C025CD500981AD1 /* simple.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = simple.clvr; path = ../examples/simple.clvr; sourceTree = "<group>"; };
 		49C164A92C0297FB00981AD1 /* clvr-interp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "clvr-interp"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -258,6 +259,7 @@
 		4941A1002BBA1CF300CE3C9E /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				49AC18C72DBFF3E40089658D /* maze.c */,
 				49D77B6A2CD44EDE00F5273B /* maze.clvr */,
 				49C5B3292CCBF4D900B6911E /* BOSS9.clvr */,
 				499B10C72C9B9A0B0060AF63 /* simple.asm */,
