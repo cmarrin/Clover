@@ -18,6 +18,7 @@
 #else
 #include <cstdio>
 #include <memory>
+#include <vector>
 #endif
 
 
