@@ -113,7 +113,7 @@ class Memory
                 
         bool ensurePush(uint8_t n = 1) const
         {
-            if (_sp >= _size || _sp < 0) {
+            if (_sp > _size || _sp < 0) {
                 _error = Error::InternalError;
                 return false;
             }
