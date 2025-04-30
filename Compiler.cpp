@@ -581,7 +581,7 @@ Compiler::collectConstants(Type type, bool isArray, AddrNativeType& addr, uint16
 bool
 Compiler::type(Type& t)
 {
-#ifdef SUPPORT_FLOAT
+#if SUPPORT_FLOAT
     if (match(Reserved::Float)) {
         t = Type::Float;
         return true;
@@ -604,7 +604,7 @@ Compiler::type(Type& t)
         t = Type::UInt16;
         return true;
     }
-#ifdef SUPPORT_INT32
+#if SUPPORT_INT32
     if (match(Reserved::Int32)) {
         t = Type::Int32;
         return true;
@@ -1784,14 +1784,14 @@ Compiler::isReserved(Token token, const std::string str, Reserved& r)
         { "loop",       Reserved::Loop },
         { "true",       Reserved::True },
         { "false",      Reserved::False },
-#ifdef SUPPORT_FLOAT
+#if SUPPORT_FLOAT
         { "float",      Reserved::Float },
 #endif
         { "int8_t",     Reserved::Int8 },
         { "uint8_t",    Reserved::UInt8 },
         { "int16_t",    Reserved::Int16 },
         { "uint16_t",   Reserved::UInt16 },
-#ifdef SUPPORT_INT32
+#if SUPPORT_INT32
         { "int32_t",    Reserved::Int32 },
         { "uint32_t",   Reserved::UInt32 },
 #endif

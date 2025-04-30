@@ -21,10 +21,31 @@
 #include <vector>
 #endif
 
+// There are 3 profile levels:
+//
+//      0 - 16 bit addresses and integers, no float support
+//      1 - 32 bit addresses and integers, no float support
+//      2 - 32 bit addresses and integers, 32 bit float support
 
-//#define ADDR32 1          // Uncomment for 32 bit addr, leave commented out for 16 bit
-//#define SUPPORT_FLOAT 1   // Uncomment for float support, leave commented out for no floats
-//#define SUPPORT_INT32 1   // Uncomment for int32_t/uint32_t support, leave commented out for no support
+#define PROFILE_LEVEL 2
+
+#if PROFILE_LEVEL == 0
+#define ADDR32 0
+#define SUPPORT_FLOAT 0
+#define SUPPORT_INT32 0
+#endif
+
+#if PROFILE_LEVEL == 1
+#define ADDR32 1
+#define SUPPORT_FLOAT 0
+#define SUPPORT_INT32 1
+#endif
+
+#if PROFILE_LEVEL == 2
+#define ADDR32 1
+#define SUPPORT_FLOAT 1
+#define SUPPORT_INT32 1
+#endif
 
 namespace clvr {
 
@@ -97,7 +118,7 @@ static constexpr bool isEnum(Type t) { return uint8_t(t) >= EnumTypeStart && uin
 static constexpr bool isStruct(Type t) { return uint8_t(t) >= StructTypeStart; }
 
 // Defines for size of addresses
-#ifdef ADDR32
+#if ADDR32
 using AddrNativeType = uint32_t;
 using RelAddrNativeType = uint32_t;
 constexpr Type AddrType = Type::UInt32;
@@ -191,7 +212,7 @@ static inline uint8_t typeToSizeBits(Type type)
     }
 };
 
-#ifdef ADDR32
+#if ADDR32
 constexpr AddrNativeType TopLevelCtorEntryPointAddr = 12;
 constexpr AddrNativeType TopLevelStructSizeAddr = 16;
 constexpr uint16_t ConstStart = 22;
