@@ -1598,7 +1598,7 @@ Compiler::argumentList(const ASTPtr& fun)
             
             neededType = arg->type();
             
-            if (neededType != Type::Float) {
+            if (neededType != Type::Float && !arg->isPointer()) {
                 neededType = VarArgType;
             }
         }
