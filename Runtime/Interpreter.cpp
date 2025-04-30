@@ -396,6 +396,23 @@ InterpreterBase::execute(ExecMode mode)
                 left = _memMgr.stack().pop(opSize);
                 _memMgr.stack().push(uint32_t(left) / uint32_t(right), opSize);
                 break;
+            case Op::IMOD:
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+                
+                // Compute mod using trunc function. This is how C/C++ does it.
+                // It gives the result of -7 % 5 as -2.
+                _memMgr.stack().push(left - right * (left / right), opSize);
+                break;
+            case Op::UMOD: {
+                right = _memMgr.stack().pop(opSize);
+                left = _memMgr.stack().pop(opSize);
+
+                uint32_t l = left;
+                uint32_t r = right;
+                _memMgr.stack().push(l - r * (l / r), opSize);
+                break;
+            }
             case Op::AND1:
             case Op::AND2:
             case Op::AND4:

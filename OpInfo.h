@@ -48,6 +48,7 @@ static std::vector<OpInfo> info {
     { Operator::SubSto, 1 , true  , Op::SUB  , Op::SUB  , Type::None    }, // Equal) just need the binary operation
     { Operator::MulSto, 1 , true  , Op::IMUL , Op::UMUL , Type::None    }, // they need to perform. For equal there
     { Operator::DivSto, 1 , true  , Op::IDIV , Op::UDIV , Type::None    }, // is no additional operation, so it is
+    { Operator::ModSto, 1 , true  , Op::IMOD , Op::UMOD , Type::None    }, //
     { Operator::AndSto, 1 , true  , Op::AND1 , Op::AND1 , Type::None    }, //
     { Operator::OrSto , 1 , true  , Op::OR1  , Op::OR1  , Type::None    }, //
     { Operator::XorSto, 1 , true  , Op::XOR1 , Op::XOR1 , Type::None    }, //
@@ -68,6 +69,7 @@ static std::vector<OpInfo> info {
     { Operator::Minus , 10, false , Op::SUB  , Op::SUB  , Type::None    },
     { Operator::Mul   , 11, false , Op::IMUL , Op::UMUL , Type::None    },
     { Operator::Div   , 11, false , Op::IDIV , Op::UDIV , Type::None    },
+    { Operator::Mod   , 11, false , Op::IMOD , Op::UMOD , Type::None    },
 };
 
 inline bool findOpInfo(Operator oper, OpInfo& opInfo)

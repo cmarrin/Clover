@@ -35,7 +35,7 @@ function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
 
 float testFloatGlobal;
 
-function int32_t main()
+function int16_t main()
 {
     errors = 0;
     
@@ -54,47 +54,55 @@ function int32_t main()
     showIntResults(5, 210, TestIntConst - testIntGlobal);
     showIntResults(6, 10584, TestIntConst * testIntGlobal);
     showIntResults(7, 6, TestIntConst / testIntGlobal);
+
+    int8_t ma = -7;
+    int8_t mb = 5;
+    showIntResults(8, -2, ma % mb);
     
-    showIntResults(8, -42, -testIntGlobal);
-    showIntResults(9, 0, !TestIntConst);
-    showIntResults(10, 0xffffff03, ~TestIntConst);
+    uint16_t mc = 7;
+    uint16_t md = 5;
+    showIntResults(9, 2, mc % md);
     
-    showIntResults(11, 0, TestIntConst < testIntGlobal);
-    showIntResults(12, 0, TestIntConst <= testIntGlobal);
-    showIntResults(13, 0, TestIntConst == testIntGlobal);
-    showIntResults(14, 1, TestIntConst != testIntGlobal);
-    showIntResults(15, 1, TestIntConst >= testIntGlobal);
-    showIntResults(16, 1, TestIntConst > testIntGlobal);
+    showIntResults(10, -42, -testIntGlobal);
+    showIntResults(11, 0, !TestIntConst);
+    showIntResults(12, 0xffffff03, ~TestIntConst);
+    
+    showIntResults(13, 0, TestIntConst < testIntGlobal);
+    showIntResults(14, 0, TestIntConst <= testIntGlobal);
+    showIntResults(15, 0, TestIntConst == testIntGlobal);
+    showIntResults(16, 1, TestIntConst != testIntGlobal);
+    showIntResults(17, 1, TestIntConst >= testIntGlobal);
+    showIntResults(18, 1, TestIntConst > testIntGlobal);
     
     int8_t i = 20;
     int8_t j = i++;
     j = ++i;
 
-    showIntResults(17, 22, i);
+    showIntResults(19, 22, i);
     j = i--;
     j = --i;
-    showIntResults(18, 20, i);
-    showIntResults(19, 20, j);
+    showIntResults(20, 20, i);
+    showIntResults(21, 20, j);
 
     core.printf("\n  op assign\n");
     i += 1;
-    showIntResults(20, 21, i);
+    showIntResults(22, 21, i);
     i -= 1;
-    showIntResults(21, 20, i);
-    i *= 5;
-    showIntResults(22, 100, i);
-    i /= 5;
     showIntResults(23, 20, i);
+    i *= 5;
+    showIntResults(24, 100, i);
+    i /= 5;
+    showIntResults(25, 20, i);
     
     core.printf("\n  Int exprs\n");
-    showIntResults(24, 2984, int16_t(testIntTable[1]) + int16_t(TestSizeDef) * TestIntConst - testIntGlobal);
-    showIntResults(25, 2940, int16_t(testIntTable[1] + TestSizeDef) * (TestIntConst - testIntGlobal));
+    showIntResults(26, 2984, int16_t(testIntTable[1]) + int16_t(TestSizeDef) * TestIntConst - testIntGlobal);
+    showIntResults(27, 2940, int16_t(testIntTable[1] + TestSizeDef) * (TestIntConst - testIntGlobal));
 
     core.printf("\n  Int cast\n");
     float a = -2.5;
-    showIntResults(26, -2, int32_t(a));
-    showIntResults(27, 3, uint8_t(TestFloatConst));
-    showIntResults(28, 6, uint16_t(testFloatGlobal));
+    showIntResults(28, -2, int32_t(a));
+    showIntResults(29, 3, uint8_t(TestFloatConst));
+    showIntResults(30, 6, uint16_t(testFloatGlobal));
 
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
     return errors;

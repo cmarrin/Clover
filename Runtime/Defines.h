@@ -303,7 +303,7 @@ Opcodes:
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart  = 0x50;
 static constexpr uint8_t TwoBitOperandStart  = 0x5c;
-static constexpr uint8_t FourBitOperandStart = 0xb0;
+static constexpr uint8_t FourBitOperandStart = 0xc0;
 static constexpr uint8_t ThreeBitOperandStart = 0xf0;
 
 enum class Op: uint8_t {
@@ -446,6 +446,8 @@ enum class Op: uint8_t {
     UMUL    = 0x68,
     IDIV    = 0x6c,
     UDIV    = 0x70,
+    IMOD    = 0x74,
+    UMOD    = 0x78,
     
     NEG     = 0x7c,
 

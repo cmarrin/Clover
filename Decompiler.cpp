@@ -214,6 +214,8 @@ Decompiler::statement()
         case Op::UMUL    : emitOp("UMUL"); emitSize(size); break;
         case Op::IDIV    : emitOp("IDIV"); emitSize(size); break;
         case Op::UDIV    : emitOp("UDIV"); emitSize(size); break;
+        case Op::IMOD     : emitOp("IMOD"); emitSize(size); break;
+        case Op::UMOD     : emitOp("UMOD"); emitSize(size); break;
         case Op::AND1    : emitOp("AND1"); break;
         case Op::AND2    : emitOp("AND2"); break;
         case Op::AND4    : emitOp("AND4"); break;

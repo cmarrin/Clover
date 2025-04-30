@@ -323,6 +323,7 @@ Token Scanner::scanSpecial()
         { "-=",         Token::SubSto },
         { "*=",         Token::MulSto },
         { "/=",         Token::DivSto },
+        { "%=",         Token::ModSto },
         { "&=",         Token::AndSto },
         { "|=",         Token::OrSto },
         { "^=",         Token::XorSto },
