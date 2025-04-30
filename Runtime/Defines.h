@@ -303,7 +303,8 @@ Opcodes:
 // 0 bit opcodes start at 0x00
 static constexpr uint8_t OneBitOperandStart  = 0x50;
 static constexpr uint8_t TwoBitOperandStart  = 0x5c;
-static constexpr uint8_t FoutBitOperandStart = 0xb0;
+static constexpr uint8_t FourBitOperandStart = 0xb0;
+static constexpr uint8_t ThreeBitOperandStart = 0xf0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
@@ -446,30 +447,34 @@ enum class Op: uint8_t {
     IDIV    = 0x6c,
     UDIV    = 0x70,
     
-    NEG     = 0x74,
+    NEG     = 0x7c,
 
-    PREINC1 = 0x78, // Next byte is signed bytes to inc/dec
-    PREINC2 = 0x7c, // Next 2 bytes is signed bytes to inc/dec
-    POSTINC1= 0x80, // Next byte is signed bytes to inc/dec
-    POSTINC2= 0x84, // Next 2 bytes is signed bytes to inc/dec
+    PREINC1 = 0x80, // Next byte is signed bytes to inc/dec
+    PREINC2 = 0x84, // Next 2 bytes is signed bytes to inc/dec
+    POSTINC1= 0x88, // Next byte is signed bytes to inc/dec
+    POSTINC2= 0x8c, // Next 2 bytes is signed bytes to inc/dec
     
-    LE      = 0x88,
-    LS      = 0x8c,
-    LT      = 0x90,
-    LO      = 0x94,
-    GE      = 0x98,
-    HS      = 0x9c,
-    GT      = 0xa0,
-    HI      = 0xa4,
-    EQ      = 0xa8,
-    NE      = 0xac,
+    LE      = 0x90,
+    LS      = 0x94,
+    LT      = 0x98,
+    LO      = 0x9c,
+    GE      = 0xa0,
+    HS      = 0xa4,
+    GT      = 0xa8,
+    HI      = 0xac,
+    EQ      = 0xb0,
+    NE      = 0xb4,
 
-// These versions use the lower 4 bits of the opcode as a param (0-15)
-    PUSHKS1 = 0xb0, // lower 4 bits is value from -8 to 7, push 1 byte
-    PUSHKS2 = 0xc0, // lower 4 bits is value from -8 to 7, push 2 bytes
-    PUSHKS4 = 0xd0, // lower 4 bits is value from -8 to 7, push 4 bytes
-    DROPS   = 0xe0, // lower 4 bits is bytes to drop from 1 to 16
-    ENTERS  = 0xf0,
+// Available opcodes: b8 - bf
+
+// These versions use the lower 4 bits of the opcode as a param
+    PUSHKS1 = 0xc0, // lower 4 bits is value from -8 to 7, push 1 byte
+    PUSHKS2 = 0xd0, // lower 4 bits is value from -8 to 7, push 2 bytes
+    PUSHKS4 = 0xe0, // lower 4 bits is value from -8 to 7, push 4 bytes
+    
+// These versions use the lower 3 bits of the opcode as a param    
+    DROPS   = 0xf0, // lower 3 bits is bytes to drop from 1 to 8
+    ENTERS  = 0xf8, // lower 3 bits is bytes of locals to make room for from 0 to 7
 };
 
 static inline Op castOp(Type from, Type to)

@@ -133,7 +133,7 @@ class InterpreterBase
     bool isNextOpcodeSetFrame() const
     {
         uint8_t op = getUInt8ROM(_pc);
-        return (Op(op & 0xfe) == Op::ENTER) || (Op(op & 0xf0) == Op::ENTERS);
+        return (Op(op & 0xfe) == Op::ENTER) || (Op(op & 0xf8) == Op::ENTERS);
     }
     
     void callNative(uint16_t);

@@ -421,7 +421,7 @@ CodeGenStackVM::emitCodeModule(const ASTPtr& node, bool isLHS)
 static void emitDrop(std::vector<uint8_t>& code, uint16_t argSize)
 {
     if (argSize) {
-        if (argSize <= 16) {
+        if (argSize <= 8) {
             code.push_back(uint8_t(Op::DROPS) | (argSize - 1));
         } else {
             code.push_back((argSize > 256) ? uint8_t(Op::DROP2) : uint8_t(Op::DROP1));
@@ -495,7 +495,7 @@ void
 CodeGenStackVM::emitCodeEnter(const ASTPtr& node, bool isLHS)
 {
     uint16_t localSize = std::static_pointer_cast<EnterNode>(node)->localSize();
-    if (localSize < 15) {
+    if (localSize <= 7) {
         code().push_back(uint8_t(Op::ENTERS) | localSize);
     } else {
         bool isLong = localSize > 255;

@@ -234,13 +234,17 @@ InterpreterBase::execute(ExecMode mode)
             operand = opInt & 0x01;
             opcode = Op(opInt & 0xfe);
             opSize = OpSize(operand);
-        } else if (opInt < FoutBitOperandStart) {
+        } else if (opInt < FourBitOperandStart) {
             operand = opInt & 0x03;
             opcode = Op(opInt & 0xfc);
             opSize = OpSize(operand);
-        } else {
+        } else if (opInt < ThreeBitOperandStart) {
             operand = opInt & 0x0f;
             opcode = Op(opInt & 0xf0);
+            opSize = OpSize(operand);
+        } else {
+            operand = opInt & 0x07;
+            opcode = Op(opInt & 0xf8);
         }
         
         int32_t left, right;

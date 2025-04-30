@@ -138,12 +138,15 @@ Decompiler::statement()
     } else if (opInt < TwoBitOperandStart) {
         size = opInt & 0x01;
         opcode = Op(opInt & 0xfe);
-    } else if (opInt < FoutBitOperandStart) {
+    } else if (opInt < FourBitOperandStart) {
         size = opInt & 0x03;
         opcode = Op(opInt & 0xfc);
-    } else {
+    } else if (opInt < ThreeBitOperandStart) {
         size = opInt & 0x0f;
         opcode = Op(opInt & 0xf0);
+    } else {
+        size = opInt & 0x07;
+        opcode = Op(opInt & 0xf8);
     }
     
     switch (opcode) {
