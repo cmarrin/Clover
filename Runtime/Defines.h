@@ -27,7 +27,7 @@
 //      1 - 32 bit addresses and integers, no float support
 //      2 - 32 bit addresses and integers, 32 bit float support
 
-#define PROFILE_LEVEL 2
+#define PROFILE_LEVEL 1
 
 #if PROFILE_LEVEL == 0
 #define ADDR32 0

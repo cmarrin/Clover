@@ -158,11 +158,8 @@ public:
         const char*     str;
     } TokenType;
 
-  	Scanner(std::istream* stream = nullptr, Annotations* annotations = nullptr)
-  	 : _stream(stream)
-     , _lineno(1)
-     , _charno(1)
-     , _annotations(annotations)
+  	Scanner(Annotations* annotations = nullptr)
+  	 : _annotations(annotations)
   	{
     }
   	
@@ -230,9 +227,9 @@ private:
   	mutable uint8_t _lastChar;
    mutable bool _haveLastChar = false;   
   	std::string _tokenString;
-  	std::istream* _stream;
-    mutable uint32_t _lineno;
-    mutable uint32_t _charno;
+  	std::istream* _stream = nullptr;
+    mutable uint32_t _lineno = 1;
+    mutable uint32_t _charno = 1;
 
     Token _currentToken = Token::None;
     Scanner::TokenType _currentTokenValue;

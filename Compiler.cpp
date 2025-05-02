@@ -12,6 +12,7 @@
 #include <map>
 #include <vector>
 #include <cmath>
+#include <sstream>
 
 #include "AST.h"
 #include "CodeGen6809.h"
@@ -19,16 +20,44 @@
 #include "NativeColor.h"
 #include "NativeCore.h"
 #include "OpInfo.h"
+#include "simplecpp.h"
 
 using namespace clvr;
 
-Compiler::Compiler(OutputFormat fmt, std::istream* stream, Annotations* annotations) : _scanner(stream, annotations)
+Compiler::Compiler(OutputFormat fmt, std::istream* stream, uint32_t maxExecutableSize, const std::vector<Module*>& modules, Annotations* annotations)
+    :
+      _scanner(annotations)
 {
     if (fmt == OutputFormat::ASM6809) {
         _codeGen = new CodeGen6809(annotations);
     } else {
         _codeGen = new CodeGenStackVM(annotations);
     }
+    
+    // Add defines for profile levels
+    simplecpp::DUI dui;
+    
+#if SUPPORT_INT32
+    dui.defines.push_back("SUPPORT_INT32");
+#endif
+    
+#if SUPPORT_FLOAT
+    dui.defines.push_back("SUPPORT_FLOAT");
+#endif
+
+    std::vector<std::string> files;
+    simplecpp::TokenList *rawtokens = new simplecpp::TokenList(*stream, files);
+    rawtokens->removeComments();
+    simplecpp::TokenList outputTokens(files);
+    std::map<std::string, simplecpp::TokenList*> filedata;
+    simplecpp::preprocess(outputTokens, *rawtokens, files, filedata, dui);
+    simplecpp::cleanup(filedata);
+    delete rawtokens;
+    
+    std::stringstream preprocessedStream(outputTokens.stringify());
+    _scanner.setStream(&preprocessedStream);
+
+    compile(maxExecutableSize, modules);
 }
 
 bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& modules)

@@ -44,6 +44,7 @@ static void showError(clvr::Error error, clvr::Token token, const std::string& s
         case clvr::Error::ExpectedFunction: err = "expected function name"; break;
         case clvr::Error::ExpectedStructType: err = "expected Struct type"; break;
         case clvr::Error::ExpectedVar: err = "expected var"; break;
+        case clvr::Error::ExpectedConstExpr: err = "expected constant expr"; break;
         case clvr::Error::AssignmentNotAllowedHere: err = "assignment not allowed here"; break;
         case clvr::Error::InvalidParamCount: err = "invalid param count"; break;
         case clvr::Error::UndefinedIdentifier: err = "undefined identifier"; break;
@@ -163,9 +164,8 @@ int main(int argc, char * const argv[])
         clvr::randomSeed(uint32_t(clock()));
 
         clvr::Compiler::OutputFormat fmt = asm6809 ? clvr::Compiler::OutputFormat::ASM6809 : clvr::Compiler::OutputFormat::StackVM;
-        clvr::Compiler compiler(fmt, &stream, &annotations);
+        clvr::Compiler compiler(fmt, &stream, MaxExecutableSize, { }, &annotations);
 
-        compiler.compile(MaxExecutableSize, { });
         if (compiler.error() != clvr::Error::None) {
             showError(compiler.error(), compiler.expectedToken(), compiler.expectedString(), compiler.lineno(), compiler.charno());
             std::cout << "          Executable size=" << std::to_string(compiler.code().size()) << "\n";

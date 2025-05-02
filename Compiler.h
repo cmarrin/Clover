@@ -277,9 +277,7 @@ class Compiler {
 public:
     enum class OutputFormat { StackVM, ASM6809 };
     
-  	Compiler(OutputFormat, std::istream* stream, Annotations* annotations);
-
-    bool compile(uint32_t maxExecutableSize, const std::vector<Module*>&);
+  	Compiler(OutputFormat, std::istream* stream, uint32_t maxExecutableSize, const std::vector<Module*>&, Annotations*);
 
     std::vector<uint8_t>& code() { return _codeGen->code(); }
     const std::vector<uint8_t>& constants() const { return _constants; }
@@ -322,6 +320,8 @@ public:
     void setAnnotation(int32_t index, int32_t addr) { _scanner.setAnnotation(index, addr); }
 
 protected:
+    bool compile(uint32_t maxExecutableSize, const std::vector<Module*>&);
+
     bool statement(const ASTPtr& parent);
     bool type(Type&);
   

@@ -26,6 +26,8 @@
 		49C9E7CD2C95111C00E58516 /* clvr-interp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 49C164A92C0297FB00981AD1 /* clvr-interp */; };
 		49C9E7EE2C97154100E58516 /* CodeGen6809.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */; };
 		49C9E7EF2C97154200E58516 /* CodeGen6809.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */; };
+		49CB1FCA2DC3F3E100485FC7 /* simplecpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49CB1FC92DC3F3E100485FC7 /* simplecpp.cpp */; };
+		49CB1FCB2DC3F3E100485FC7 /* simplecpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49CB1FC92DC3F3E100485FC7 /* simplecpp.cpp */; };
 		49D70D2B2C95E86B000A325C /* Clover.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49D70D292C95E855000A325C /* Clover.cpp */; };
 		49D70D2C2C95E8B4000A325C /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */; };
 		49D70D2D2C95E8B8000A325C /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
@@ -128,6 +130,8 @@
 		49C9E7E22C95129300E58516 /* Clover */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Clover; sourceTree = BUILT_PRODUCTS_DIR; };
 		49C9E7EC2C9714CA00E58516 /* CodeGen6809.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGen6809.h; path = ../CodeGen6809.h; sourceTree = "<group>"; };
 		49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CodeGen6809.cpp; path = ../CodeGen6809.cpp; sourceTree = "<group>"; };
+		49CB1FC82DC3F3E100485FC7 /* simplecpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = simplecpp.h; path = ../simplecpp/simplecpp.h; sourceTree = SOURCE_ROOT; };
+		49CB1FC92DC3F3E100485FC7 /* simplecpp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = simplecpp.cpp; path = ../simplecpp/simplecpp.cpp; sourceTree = SOURCE_ROOT; };
 		49D70D292C95E855000A325C /* Clover.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Clover.cpp; sourceTree = "<group>"; };
 		49D77B6A2CD44EDE00F5273B /* maze.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = maze.clvr; path = ../examples/maze.clvr; sourceTree = SOURCE_ROOT; };
 		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
@@ -226,6 +230,7 @@
 				4941A10F2BBA290B00CE3C9E /* Scanner.h */,
 				49C164BC2C0545D100981AD1 /* Struct.h */,
 				49C164B32C03E90400981AD1 /* Symbol.h */,
+				49CB1FC72DC3F3AA00485FC7 /* simplecpp */,
 				499B10CB2CA333AC0060AF63 /* Format */,
 				4941A0F12BB6F59900CE3C9E /* mac */,
 				49E9ACCA2C715C420074BD25 /* PostLightController */,
@@ -284,6 +289,17 @@
 				499B10CD2CA333C80060AF63 /* Format.h */,
 			);
 			name = Format;
+			path = ../Format;
+			sourceTree = "<group>";
+		};
+		49CB1FC72DC3F3AA00485FC7 /* simplecpp */ = {
+			isa = PBXGroup;
+			children = (
+				49CB1FC82DC3F3E100485FC7 /* simplecpp.h */,
+				49CB1FC92DC3F3E100485FC7 /* simplecpp.cpp */,
+			);
+			name = simplecpp;
+			path = ../simplecpp;
 			sourceTree = "<group>";
 		};
 		49E2F2972C8F461F007E0F0A /* modules */ = {
@@ -413,6 +429,7 @@
 				499B10CE2CA333C80060AF63 /* Format.cpp in Sources */,
 				49C9E7BB2C94F99700E58516 /* NativeCore.cpp in Sources */,
 				4914A4852C2E0F92003DDADA /* Function.cpp in Sources */,
+				49CB1FCA2DC3F3E100485FC7 /* simplecpp.cpp in Sources */,
 				49FAA0832C8BCF6C0060F8AA /* CodeGenStackVM.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
 				49C9E7B42C94F87500E58516 /* clvr.cpp in Sources */,
@@ -445,6 +462,7 @@
 				49D70D322C95E8C8000A325C /* NativeColor.cpp in Sources */,
 				49C9E7EE2C97154100E58516 /* CodeGen6809.cpp in Sources */,
 				499B10D02CA333D10060AF63 /* Format.cpp in Sources */,
+				49CB1FCB2DC3F3E100485FC7 /* simplecpp.cpp in Sources */,
 				49D70D352C95E8D5000A325C /* Scanner.cpp in Sources */,
 				49D70D332C95E8CC000A325C /* NativeCore.cpp in Sources */,
 				49D70D2C2C95E8B4000A325C /* CodeGenStackVM.cpp in Sources */,

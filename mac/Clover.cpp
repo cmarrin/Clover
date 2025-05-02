@@ -177,9 +177,8 @@ int main(int argc, char * const argv[])
         
         clvr::randomSeed(uint32_t(clock()));
 
-        clvr::Compiler compiler(clvr::Compiler::OutputFormat::StackVM, &stream, &annotations);
+        clvr::Compiler compiler(clvr::Compiler::OutputFormat::StackVM, &stream, MaxExecutableSize, { }, &annotations);
 
-        compiler.compile(MaxExecutableSize, { });
         if (compiler.error() != clvr::Error::None) {
             showError(compiler.error(), compiler.expectedToken(), compiler.expectedString(), compiler.lineno(), compiler.charno());
             std::cout << "          Executable size=" << std::to_string(compiler.code().size()) << "\n";
