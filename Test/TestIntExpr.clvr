@@ -14,7 +14,10 @@ struct Test
 
 const uint8_t TestSizeDef = 12;
 const int16_t TestIntConst = 0xfc;
+
+#ifdef SUPPORT_FLOAT
 const float TestFloatConst = 3.5;
+#endif
 
 const int8_t testIntTable[ ] = { 1, 2, 3, 7 };
 
@@ -33,14 +36,19 @@ function showIntResults(uint8_t testNo, int32_t exp, int32_t act)
     }
 }
 
+#ifdef SUPPORT_FLOAT
 float testFloatGlobal;
+#endif
 
 function int16_t main()
 {
     errors = 0;
     
     testIntGlobal = 42;
+
+#ifdef SUPPORT_FLOAT
     testFloatGlobal = 6.5;
+#endif
 
     core.printf("\nTest Int Exprs\n");
 
@@ -98,11 +106,13 @@ function int16_t main()
     showIntResults(26, 2984, int16_t(testIntTable[1]) + int16_t(TestSizeDef) * TestIntConst - testIntGlobal);
     showIntResults(27, 2940, int16_t(testIntTable[1] + TestSizeDef) * (TestIntConst - testIntGlobal));
 
+#ifdef SUPPORT_FLOAT
     core.printf("\n  Int cast\n");
     float a = -2.5;
     showIntResults(28, -2, int32_t(a));
     showIntResults(29, 3, uint8_t(TestFloatConst));
     showIntResults(30, 6, uint16_t(testFloatGlobal));
+#endif
 
     core.printf("\nDone.%40s%s\n\n", " ", errors ? "FAILED" : "Passed");
     return errors;
