@@ -159,8 +159,7 @@ public:
     } TokenType;
 
   	Scanner(std::istream* stream = nullptr, Annotations* annotations = nullptr)
-  	 : _lastChar(0xff)
-  	 , _stream(stream)
+  	 : _stream(stream)
      , _lineno(1)
      , _charno(1)
      , _annotations(annotations)
@@ -215,8 +214,9 @@ private:
     
 	void putback(uint8_t c) const
 	{
-  		assert(_lastChar == C_EOF && c != C_EOF);
+  		assert(!_haveLastChar);
   		_lastChar = c;
+        _haveLastChar = true;
 	}
 
   	Token scanString(TokenType& tokenValue, char terminal);
@@ -228,6 +228,7 @@ private:
   	bool scanFloat(int32_t& mantissa, int32_t& exp);
     
   	mutable uint8_t _lastChar;
+   mutable bool _haveLastChar = false;   
   	std::string _tokenString;
   	std::istream* _stream;
     mutable uint32_t _lineno;

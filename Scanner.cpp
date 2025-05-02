@@ -352,9 +352,9 @@ Token Scanner::scanSpecial()
 
 uint8_t Scanner::get() const
 {
-    if (_lastChar != C_EOF) {
+    if (_haveLastChar) {
         uint8_t c = _lastChar;
-        _lastChar = C_EOF;
+        _haveLastChar = false;
         return c;
     }
     int result = _stream->get();
