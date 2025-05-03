@@ -998,7 +998,7 @@ Compiler::loopStatement(const ASTPtr& parent)
                 sym = std::make_shared<Symbol>(id, t, false, typeToBytes(t, false), 1);
                 expect(sym != nullptr, Error::DuplicateIdentifier);
         
-                currentFunction()->addLocal(sym);
+                expect(currentFunction()->addLocal(sym), Error::DuplicateIdentifier);
             } else {
                 sym = findSymbol(id);
                 expect(sym != nullptr, Error::ExpectedVar);
