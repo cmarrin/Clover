@@ -308,7 +308,8 @@ static constexpr uint8_t ThreeBitOperandStart = 0xf0;
 
 enum class Op: uint8_t {
     NOP     = 0x00,
-    PUSHS   = 0x01,
+    PUSHS   = 0x01, // next byte is string size, followed by the string bytes, followed by a null terminator.
+                    // size includes the null terminator. String size is limited to 254 characters.
     PUSHK11 = 0x02, // 1 byte operand, push 1 byte
     PUSHK12 = 0x03, // 1 byte operand, push 2 bytes
     PUSHK14 = 0x04, // 1 byte operand, push 4 bytes
