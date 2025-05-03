@@ -2,157 +2,143 @@
 
 struct Maze
 {
+    // Adapted from maze generator in C by Joe Wingbermuehle 19990805
 
-
-
-
-
-
-
-/* Maze generator in C.
- * Joe Wingbermuehle
- * 19990805
- */
-
-/* Display the maze. */
 function ShowMaze(uint8_t* maze, uint16_t width, uint16_t height)
 {
-   int16_t x;
-   int16_t y;
+    int16_t x;
+    int16_t y;
    
-   for (y = 0; y < height; y++) {
-      for(x = 0; x < width; x++) {
-         switch(maze[y * width + x]) {
-         case 1:  core.printf("[]");
-         case 2:  core.printf("<>");
-         default: core.printf("  ");
-         }
-      }
-      core.printf("\n");
-   }
+    for (y = 0; y < height; y++) {
+        for(x = 0; x < width; x++) {
+            switch(maze[y * width + x]) {
+                case 1:  core.printf("[]");
+                case 2:  core.printf("<>");
+                default: core.printf("  ");
+            }
+        }
+        core.printf("\n");
+    }
 }
 
-/*  Carve the maze starting at x, y. */
-function CarveMaze(uint8_t* maze, uint16_t width, uint16_t height, int16_t x, int16_t y) {
+function CarveMaze(uint8_t* maze, uint16_t width, uint16_t height, int16_t x, int16_t y)
+{
+    int16_t x1;
+    int16_t y1;
+    int16_t x2;
+    int16_t y2;
+    int16_t dx;
+    int16_t dy;
+    int16_t dir;
+    int16_t count;
 
-   int16_t x1;
-   int16_t y1;
-   int16_t x2;
-   int16_t y2;
-   int16_t dx;
-   int16_t dy;
-   int16_t dir;
-   int16_t count;
-
-   dir = core.irand(0, 3);
-   count = 0;
-   while(count < 4) {
-      dx = 0; dy = 0;
-      switch(dir) {
-      case 0:  dx = 1;
-      case 1:  dy = 1;
-      case 2:  dx = -1;
-      default: dy = -1;
-      }
-      x1 = x + dx;
-      y1 = y + dy;
-      x2 = x1 + dx;
-      y2 = y1 + dy;
-      if(   x2 > 0 && x2 < width && y2 > 0 && y2 < height
-         && maze[y1 * width + x1] == 1 && maze[y2 * width + x2] == 1) {
-         maze[y1 * width + x1] = 0;
-         maze[y2 * width + x2] = 0;
-         x = x2; y = y2;
-         dir = core.irand(0, 3);
-         count = 0;
-      } else {
-         dir = (dir + 1);
-         if (dir > 3) {
-            dir = 0;
-         }
-         count += 1;
-      }
-   }
-
-}
-
-/* Generate maze in matrix maze with size width, height. */
-function GenerateMaze(uint8_t* maze, uint16_t width, uint16_t height) {
-
-   uint16_t x;
-   uint16_t y;
-
-   /* Initialize the maze. */
-   for(x = 0; x < width * height; x++) {
-      maze[x] = 1;
-   }
-   maze[1 * width + 1] = 0;
-
-   /* Carve the maze. */
-   for(y = 1; y < height; y += 2) {
-      for(x = 1; x < width; x += 2) {
-         CarveMaze(maze, width, height, x, y);
-      }
-   }
-
-   /* Set up the entry and exit. */
-   maze[0 * width + 1] = 0;
-   maze[(height - 1) * width + (width - 2)] = 0;
-
-}
-
-/* Solve the maze. */
-function SolveMaze(uint8_t* maze, uint16_t width, uint16_t height) {
-
-   int16_t dir;
-   int16_t count;
-   int16_t x;
-   int16_t y;
-   int16_t dx;
-   int16_t dy;
-   bool forward;
-
-   /* Remove the entry and exit. */
-   maze[0 * width + 1] = 1;
-   maze[(height - 1) * width + (width - 2)] = 1;
-
-   forward = true;
-   dir = 0;
-   count = 0;
-   x = 1;
-   y = 1;
-   while(x != width - 2 || y != height - 2) {
-      dx = 0; dy = 0;
-      switch(dir) {
-      case 0:  dx = 1;
-      case 1:  dy = 1;
-      case 2:  dx = -1;
-      default: dy = -1;
-      }
-      if(   (forward  && maze[(y + dy) * width + (x + dx)] == 0)
-         || (!forward && maze[(y + dy) * width + (x + dx)] == 2)) {
-         maze[y * width + x] = forward ? 2 : 3;
-         x += dx;
-         y += dy;
-         forward = true;
-         count = 0;
-         dir = 0;
-      } else {
-         dir = (dir + 1);
-         if (dir > 3) {
-            dir = 0;
-         }
-         count += 1;
-         if(count > 3) {
-            forward = false;
+    dir = core.irand(0, 3);
+    count = 0;
+    
+    while (count < 4) {
+        dx = 0;
+        dy = 0;
+        
+        switch(dir) {
+            case 0:  dx = 1;
+            case 1:  dy = 1;
+            case 2:  dx = -1;
+            default: dy = -1;
+        }
+        
+        x1 = x + dx;
+        y1 = y + dy;
+        x2 = x1 + dx;
+        y2 = y1 + dy;
+        
+        if(x2 > 0 && x2 < width && y2 > 0 && y2 < height
+                && maze[y1 * width + x1] == 1 && maze[y2 * width + x2] == 1) {
+            maze[y1 * width + x1] = 0;
+            maze[y2 * width + x2] = 0;
+            x = x2; y = y2;
+            dir = core.irand(0, 3);
             count = 0;
-         }
-      }
-   }
+        } else {
+            dir = (dir + 1) % 4;
+            count += 1;
+        }
+    }
+}
 
-   /* Replace the entry and exit. */
-   maze[(height - 2) * width + (width - 2)] = 2;
-   maze[(height - 1) * width + (width - 2)] = 2;
+function GenerateMaze(uint8_t* maze, uint16_t width, uint16_t height)
+{
+    uint16_t x;
+    uint16_t y;
+
+    /* Initialize the maze. */
+    for (x = 0; x < width * height; x++) {
+        maze[x] = 1;
+    }
+    maze[1 * width + 1] = 0;
+
+    /* Carve the maze. */
+    for(y = 1; y < height; y += 2) {
+        for(x = 1; x < width; x += 2) {
+            CarveMaze(maze, width, height, x, y);
+        }
+    }
+
+    /* Set up the entry and exit. */
+    maze[0 * width + 1] = 0;
+    maze[(height - 1) * width + (width - 2)] = 0;
+}
+
+function SolveMaze(uint8_t* maze, uint16_t width, uint16_t height)
+{
+    int16_t dir;
+    int16_t count;
+    int16_t x;
+    int16_t y;
+    int16_t dx;
+    int16_t dy;
+    bool forward;
+
+    /* Remove the entry and exit. */
+    maze[0 * width + 1] = 1;
+    maze[(height - 1) * width + (width - 2)] = 1;
+
+    forward = true;
+    dir = 0;
+    count = 0;
+    x = 1;
+    y = 1;
+    while(x != width - 2 || y != height - 2) {
+        dx = 0;
+        dy = 0;
+        
+        switch(dir) {
+            case 0:  dx = 1;
+            case 1:  dy = 1;
+            case 2:  dx = -1;
+            default: dy = -1;
+        }
+        
+        if((forward  && maze[(y + dy) * width + (x + dx)] == 0)
+                || (!forward && maze[(y + dy) * width + (x + dx)] == 2)) {
+            maze[y * width + x] = forward ? 2 : 3;
+            x += dx;
+            y += dy;
+            forward = true;
+            count = 0;
+            dir = 0;
+        } else {
+            dir = (dir + 1) % 4;
+            count += 1;
+            if(count > 3) {
+                forward = false;
+                count = 0;
+            }
+        }
+    }
+
+    /* Replace the entry and exit. */
+    maze[(height - 2) * width + (width - 2)] = 2;
+    maze[(height - 1) * width + (width - 2)] = 2;
 }
 
 const int16_t width = 23;
@@ -162,14 +148,15 @@ uint8_t maze[width * height];
 
 function int16_t main()
 {
-   core.printf("Maze by Joe Wingbermuehle 19990805\n");
+    core.printf("Generating %d x %d maze\n", width, height);
 
-   /* Generate and display the maze. */
-   GenerateMaze(maze, width, height);
-   ShowMaze(maze, width, height);
+    core.printf("\nUnsolved Maze:\n");
+    GenerateMaze(maze, width, height);
+    ShowMaze(maze, width, height);
 
-   SolveMaze(maze, width, height);
-   ShowMaze(maze, width, height);
+    core.printf("\nSolved Maze:\n");
+    SolveMaze(maze, width, height);
+    ShowMaze(maze, width, height);
 }
 
 
