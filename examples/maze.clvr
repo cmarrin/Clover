@@ -6,11 +6,8 @@ struct Maze
 
 function ShowMaze(uint8_t* maze, uint16_t width, uint16_t height)
 {
-    int16_t x;
-    int16_t y;
-   
-    for (y = 0; y < height; y++) {
-        for(x = 0; x < width; x++) {
+    for (int16_t y = 0; y < height; y++) {
+        for(int16_t x = 0; x < width; x++) {
             switch(maze[y * width + x]) {
                 case 1:  core.printf("[]");
                 case 2:  core.printf("<>");
@@ -23,21 +20,12 @@ function ShowMaze(uint8_t* maze, uint16_t width, uint16_t height)
 
 function CarveMaze(uint8_t* maze, uint16_t width, uint16_t height, int16_t x, int16_t y)
 {
-    int16_t x1;
-    int16_t y1;
-    int16_t x2;
-    int16_t y2;
-    int16_t dx;
-    int16_t dy;
-    int16_t dir;
-    int16_t count;
-
-    dir = core.irand(0, 3);
-    count = 0;
+    int16_t dir = core.irand(0, 3);
+    int16_t count = 0;
     
     while (count < 4) {
-        dx = 0;
-        dy = 0;
+        int16_t dx = 0;
+        int16_t dy = 0;
         
         switch(dir) {
             case 0:  dx = 1;
@@ -46,10 +34,10 @@ function CarveMaze(uint8_t* maze, uint16_t width, uint16_t height, int16_t x, in
             default: dy = -1;
         }
         
-        x1 = x + dx;
-        y1 = y + dy;
-        x2 = x1 + dx;
-        y2 = y1 + dy;
+        int16_t x1 = x + dx;
+        int16_t y1 = y + dy;
+        int16_t x2 = x1 + dx;
+        int16_t y2 = y1 + dy;
         
         if(x2 > 0 && x2 < width && y2 > 0 && y2 < height
                 && maze[y1 * width + x1] == 1 && maze[y2 * width + x2] == 1) {
@@ -68,16 +56,15 @@ function CarveMaze(uint8_t* maze, uint16_t width, uint16_t height, int16_t x, in
 function GenerateMaze(uint8_t* maze, uint16_t width, uint16_t height)
 {
     uint16_t x;
-    uint16_t y;
-
-    /* Initialize the maze. */
+    
+    // Initialize the maze
     for (x = 0; x < width * height; x++) {
         maze[x] = 1;
     }
     maze[1 * width + 1] = 0;
 
     /* Carve the maze. */
-    for(y = 1; y < height; y += 2) {
+    for (uint16_t y = 1; y < height; y += 2) {
         for(x = 1; x < width; x += 2) {
             CarveMaze(maze, width, height, x, y);
         }
@@ -157,6 +144,8 @@ function int16_t main()
     core.printf("\nSolved Maze:\n");
     SolveMaze(maze, width, height);
     ShowMaze(maze, width, height);
+    
+    return 0;
 }
 
 
