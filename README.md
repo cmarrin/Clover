@@ -112,171 +112,171 @@ Future support for closures: function object which contain runtime state. A clos
 
 A function prototype has a list of all upvalues it contains. Each entry has a stack index, relative to the stack frame containing the upvalue and a frame number, relative to the enclosing function (direct parent is zero, its parent is one, etc.). When a closure is created from its function prototype, an UpValue object is created for each upvalue
 
-## BNF for Clover
-
- program:
-    { import } struct ;
-
-import:
-    'import' <id> [ 'as' <id> ] ;
+    ## BNF for Clover
     
-struct:
-    'struct' <id> '{' { structEntry ';' } '}' ;
+     program:
+        { import } struct ;
     
-structEntry:
-    struct | varStatement | function | ctor | enum  ;
-
-varStatement:
-    [ 'const' ] type [ '*' ] var ';' ;
-
-var:
-    <id> [ '[' <integer> ']' ] [ '=' initializer ] ;
+    import:
+        'import' <id> [ 'as' <id> ] ;
+        
+    struct:
+        'struct' <id> '{' { structEntry ';' } '}' ;
+        
+    structEntry:
+        struct | varStatement | function | ctor | enum  ;
     
-initializer:
-    arithmeticExpression | '{' [ initializer { ',' initializer } ] '}'
-
-function:
-    'function' [ <type> ] <id> '(' formalParameterList ')' compoundStatement ;
-
-ctor:
-    <id> '(' ')' compoundStatement ;
-
-enum:
-    'enum' <id> '{' [enumEntry ] { ',' enumEntry } '}' ;
-
-enumEntry:
-    <id> [ '=' <integer> ] ;
-
-// <id> is a struct or enum name
-type:
-      'float'
-    | 'hfloat'
-    | 'int8_t'
-    | 'uint8_t'
-    | 'int16_t'
-    | 'uint16_t'
-    | 'int32_t'
-    | 'uint32_t'
-    | <id>
-    ;
+    varStatement:
+        [ 'const' ] type [ '*' ] var ';' ;
     
-statement:
-      compoundStatement
-    | ifStatement
-    | switchStatement
-    | forStatement
-    | whileStatement
-    | loopStatement
-    | returnStatement
-    | jumpStatement
-    | varStatement
-    | expressionStatement
-    ;
-  
-compoundStatement:
-    '{' { statement } '}' ;
-
-ifStatement:
-    'if' '(' arithmeticExpression ')' statement ['else' statement ] ;
-
-switchStatement:
-    'switch' '(' arithmeticExpression ')' '{' { caseClause } '}' ;
-
-caseClause:
-    ('case' value | 'default) ':' statement ;
-
-forStatement:
-    'for' '(' [ [ <type> ] identifier '=' arithmeticExpression ] ';'
-            [ arithmeticExpression ] ';' [ arithmeticExpression ] ')' statement ;
+    var:
+        <id> [ '[' <integer> ']' ] [ '=' initializer ] ;
+        
+    initializer:
+        arithmeticExpression | '{' [ initializer { ',' initializer } ] '}'
     
-whileStatement:
-    'while' '(' arithmeticExpression ')' statement ;
-
-loopStatement:
-    'loop' statement ;
-
-returnStatement:
-      'return' [ arithmeticExpression ] ';' ;
+    function:
+        'function' [ <type> ] <id> '(' formalParameterList ')' compoundStatement ;
+    
+    ctor:
+        <id> '(' ')' compoundStatement ;
+    
+    enum:
+        'enum' <id> '{' [enumEntry ] { ',' enumEntry } '}' ;
+    
+    enumEntry:
+        <id> [ '=' <integer> ] ;
+    
+    // <id> is a struct or enum name
+    type:
+          'float'
+        | 'hfloat'
+        | 'int8_t'
+        | 'uint8_t'
+        | 'int16_t'
+        | 'uint16_t'
+        | 'int32_t'
+        | 'uint32_t'
+        | <id>
+        ;
+        
+    statement:
+          compoundStatement
+        | ifStatement
+        | switchStatement
+        | forStatement
+        | whileStatement
+        | loopStatement
+        | returnStatement
+        | jumpStatement
+        | varStatement
+        | expressionStatement
+        ;
       
-jumpStatement:
-      'break' ';'
-    | 'continue' ';'
-    ;
-
-expressionStatement:
-    [ arithmeticExpression ] ';' ;
+    compoundStatement:
+        '{' { statement } '}' ;
     
-arithmeticExpression:
-      conditionalExpression
-    | unaryExpression operator arithmeticExpression
-
-conditionalExpression:
-      unaryExpression
-    | conditionalExpression '?' expression : expression
-    ;
+    ifStatement:
+        'if' '(' arithmeticExpression ')' statement ['else' statement ] ;
     
-unaryExpression:
-      postfixExpression
-    | '-' unaryExpression
-    | '~' unaryExpression
-    | '!' unaryExpression
-    | '++' unaryExpression
-    | '--' unaryExpression
-    | '&' unaryExpression
-    ;
-
-postfixExpression:
-      primaryExpression
-    | postfixExpression '(' argumentList ')'
-    | postfixExpression '[' arithmeticExpression ']'
-    | postfixExpression '.' identifier
-    | postfixExpression '++'
-    | postfixExpression '--'
-    ;
-
-primaryExpression:
-      '(' arithmeticExpression ')'
-    | <id>
-    | <float>
-    | <integer>
-    ;
+    switchStatement:
+        'switch' '(' arithmeticExpression ')' '{' { caseClause } '}' ;
     
-formalParameterList:
-      (* empty *)
-    | type ['*'] identifier { ',' type identifier }
-    ;
-
-argumentList:
-        (* empty *)
-      | arithmeticExpression { ',' arithmeticExpression }
-      ;
-
-value:
+    caseClause:
+        ('case' value | 'default) ':' statement ;
     
-operator: (* operator   precedence   association *)
-               '='     (*   1          Right    *)
-    |          '+='    (*   1          Right    *)
-    |          '-='    (*   1          Right    *)
-    |          '*='    (*   1          Right    *)
-    |          '/='    (*   1          Right    *)
-    |          '%='    (*   1          Right    *)
-    |          '&='    (*   1          Right    *)
-    |          '|='    (*   1          Right    *)
-    |          '^='    (*   1          Right    *)
-    |          '||'    (*   2          Left     *)
-    |          '&&'    (*   3          Left     *)
-    |          '|'     (*   4          Left     *)
-    |          '^'     (*   5          Left     *)
-    |          '&'     (*   6          Left     *)
-    |          '=='    (*   7          Left     *)
-    |          '!='    (*   7          Left     *)
-    |          '<'     (*   8          Left     *)
-    |          '>'     (*   8          Left     *)
-    |          '>='    (*   8          Left     *)
-    |          '<='    (*   8          Left     *)
-    |          '+'     (*   10         Left     *)
-    |          '-'     (*   10         Left     *)
-    |          '*'     (*   11         Left     *)
-    |          '/'     (*   11         Left     *)
-    |          '%'     (*   11         Left     *)
-    ;
+    forStatement:
+        'for' '(' [ [ <type> ] identifier '=' arithmeticExpression ] ';'
+                [ arithmeticExpression ] ';' [ arithmeticExpression ] ')' statement ;
+        
+    whileStatement:
+        'while' '(' arithmeticExpression ')' statement ;
+    
+    loopStatement:
+        'loop' statement ;
+    
+    returnStatement:
+          'return' [ arithmeticExpression ] ';' ;
+          
+    jumpStatement:
+          'break' ';'
+        | 'continue' ';'
+        ;
+    
+    expressionStatement:
+        [ arithmeticExpression ] ';' ;
+        
+    arithmeticExpression:
+          conditionalExpression
+        | unaryExpression operator arithmeticExpression
+    
+    conditionalExpression:
+          unaryExpression
+        | conditionalExpression '?' expression : expression
+        ;
+        
+    unaryExpression:
+          postfixExpression
+        | '-' unaryExpression
+        | '~' unaryExpression
+        | '!' unaryExpression
+        | '++' unaryExpression
+        | '--' unaryExpression
+        | '&' unaryExpression
+        ;
+    
+    postfixExpression:
+          primaryExpression
+        | postfixExpression '(' argumentList ')'
+        | postfixExpression '[' arithmeticExpression ']'
+        | postfixExpression '.' identifier
+        | postfixExpression '++'
+        | postfixExpression '--'
+        ;
+    
+    primaryExpression:
+          '(' arithmeticExpression ')'
+        | <id>
+        | <float>
+        | <integer>
+        ;
+        
+    formalParameterList:
+          (* empty *)
+        | type ['*'] identifier { ',' type identifier }
+        ;
+    
+    argumentList:
+            (* empty *)
+          | arithmeticExpression { ',' arithmeticExpression }
+          ;
+    
+    value:
+        
+    operator: (* operator   precedence   association *)
+                   '='     (*   1          Right    *)
+        |          '+='    (*   1          Right    *)
+        |          '-='    (*   1          Right    *)
+        |          '*='    (*   1          Right    *)
+        |          '/='    (*   1          Right    *)
+        |          '%='    (*   1          Right    *)
+        |          '&='    (*   1          Right    *)
+        |          '|='    (*   1          Right    *)
+        |          '^='    (*   1          Right    *)
+        |          '||'    (*   2          Left     *)
+        |          '&&'    (*   3          Left     *)
+        |          '|'     (*   4          Left     *)
+        |          '^'     (*   5          Left     *)
+        |          '&'     (*   6          Left     *)
+        |          '=='    (*   7          Left     *)
+        |          '!='    (*   7          Left     *)
+        |          '<'     (*   8          Left     *)
+        |          '>'     (*   8          Left     *)
+        |          '>='    (*   8          Left     *)
+        |          '<='    (*   8          Left     *)
+        |          '+'     (*   10         Left     *)
+        |          '-'     (*   10         Left     *)
+        |          '*'     (*   11         Left     *)
+        |          '/'     (*   11         Left     *)
+        |          '%'     (*   11         Left     *)
+        ;
