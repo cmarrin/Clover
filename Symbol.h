@@ -14,6 +14,7 @@
 #include <string>
 
 #include "Defines.h"
+#include "Function.h"
 
 namespace clvr {
 
@@ -22,8 +23,6 @@ namespace clvr {
 // have the size in bytes of that variable and its offset in bytes. For functions
 // this is the byte offset from the start of the frame base pointer. For structs
 // it is the byte offset from the start of the struct instance.
-
-class Function;
 
 class Symbol
 {

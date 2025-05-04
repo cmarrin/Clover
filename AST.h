@@ -15,6 +15,7 @@
 #include <assert.h>
 
 #include "Defines.h"
+#include "Function.h"
 #include "Module.h"
 #include "Symbol.h"
 
