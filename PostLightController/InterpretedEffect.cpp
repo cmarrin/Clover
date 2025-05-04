@@ -13,7 +13,7 @@ bool
 InterpretedEffect::init(uint8_t cmd, const uint8_t* buf, uint32_t size)
 {
     _interp.instantiate();
-    if (_interp.error() != MyInterpreter::Error::None) {
+    if (_interp.error() != clvr::Memory::Error::None) {
         return false;
     }
 
@@ -24,13 +24,13 @@ InterpretedEffect::init(uint8_t cmd, const uint8_t* buf, uint32_t size)
     _interp.construct();
     _interp.dropArgs(size + 1);
     
-    if (_interp.error() != MyInterpreter::Error::None) {
+    if (_interp.error() != clvr::Memory::Error::None) {
         return false;
     }
     
     _interp.interp(MyInterpreter::ExecMode::Start);
 
-	if (_interp.error() != MyInterpreter::Error::None) {
+	if (_interp.error() != clvr::Memory::Error::None) {
 		return false;
 	}
 
@@ -47,5 +47,5 @@ InterpretedEffect::loop()
     _interp.addArg('*', clvr::Type::UInt8);
     uint32_t result = _interp.interp(MyInterpreter::ExecMode::Start);
     _interp.dropArgs(1);
-    return (_interp.error() != MyInterpreter::Error::None) ? -1 : result;
+    return (_interp.error() != clvr::Memory::Error::None) ? -1 : result;
 }

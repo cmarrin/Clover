@@ -39,7 +39,7 @@ public:
 		_pixels.show();
     }
 
-    void showError(PostLightEffects::Error error)
+    void showError(Memory::Error error)
     {
         String errorMsg("!!!");
         
@@ -145,7 +145,7 @@ public:
         // Init
         init();
         
-        if (error() == PostLightEffects::Error::None) {
+        if (error() == Memory::Error::None) {
             // Pass in 5 args, a uint8_t command, speed, value, saturation and hue.
             // Push them backwards
             addArg(3, clvr::Type::UInt8); // speed (0-7)
@@ -158,7 +158,7 @@ public:
             dropArgs(5);
         }
         
-        if (error() != PostLightEffects::Error::None) {
+        if (error() != Memory::Error::None) {
             showError(error());
         }
     }
@@ -166,7 +166,7 @@ public:
 int iii = 0;
 	void loop()
 	{
-        if (error() != PostLightEffects::Error::None || iii >= 300) {
+        if (error() != Memory::Error::None || iii >= 300) {
             _pixels.clear();
             _pixels.show();
             return;
@@ -176,7 +176,7 @@ int iii = 0;
         
         addArg('*', clvr::Type::UInt8);
         uint32_t result = interp(PostLightEffects::ExecMode::Start);
-        if (error() != PostLightEffects::Error::None) {
+        if (error() != Memory::Error::None) {
             showError(error());
         } else {
             delay(result);

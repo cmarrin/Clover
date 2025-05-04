@@ -45,60 +45,60 @@ public:
 	Test() { }
 	~Test() { }
  
-    void showError(MyInterpreter::Error error)
+    void showError(clvr::Memory::Error error)
     {
         String errorMsg("!!!");
         
         switch(error) {
-            case MyInterpreter::Error::None:
+            case clvr::Memory::Error::None:
             errorMsg = F("???");
             break;
-            case MyInterpreter::Error::InvalidSignature:
+            case clvr::Memory::Error::InvalidSignature:
             errorMsg = F("bad signature");
             break;
-            case MyInterpreter::Error::NoEntryPoint:
+            case clvr::Memory::Error::NoEntryPoint:
             errorMsg = F("no entry point");
             break;
-            case MyInterpreter::Error::UnexpectedOpInIf:
+            case clvr::Memory::Error::UnexpectedOpInIf:
             errorMsg = F("bad op in if");
             break;
-            case MyInterpreter::Error::InvalidOp:
+            case clvr::Memory::Error::InvalidOp:
             errorMsg = F("inv op");
             break;
-            case MyInterpreter::Error::OnlyMemAddressesAllowed:
+            case clvr::Memory::Error::OnlyMemAddressesAllowed:
             errorMsg = F("mem addrs only");
             break;
-            case MyInterpreter::Error::AddressOutOfRange:
+            case clvr::Memory::Error::AddressOutOfRange:
             errorMsg = F("addr out of rng");
             break;
-            case MyInterpreter::Error::ExpectedSetFrame:
+            case clvr::Memory::Error::ExpectedSetFrame:
             errorMsg = F("SetFrame needed");
             break;
-            case MyInterpreter::Error::InvalidModuleOp:
+            case clvr::Memory::Error::InvalidModuleOp:
             errorMsg = F("inv mod op");
             break;
-            case MyInterpreter::Error::InvalidNativeFunction:
+            case clvr::Memory::Error::InvalidNativeFunction:
             errorMsg = F("inv native func");
             break;
-            case MyInterpreter::Error::NotEnoughArgs:
+            case clvr::Memory::Error::NotEnoughArgs:
             errorMsg = F("not enough args");
             break;
-            case MyInterpreter::Error::WrongNumberOfArgs:
+            case clvr::Memory::Error::WrongNumberOfArgs:
             errorMsg = F("wrong arg cnt");
             break;
-            case MyInterpreter::Error::StackOverrun:
+            case clvr::Memory::Error::StackOverrun:
             errorMsg = F("can't call, stack full");
             break;
-            case MyInterpreter::Error::StackUnderrun:
+            case clvr::Memory::Error::StackUnderrun:
             errorMsg = F("stack underrun");
             break;
-            case MyInterpreter::Error::StackOutOfRange:
+            case clvr::Memory::Error::StackOutOfRange:
             errorMsg = F("stack out of range");
             break;
-            case MyInterpreter::Error::ImmedNotAllowedHere:
+            case clvr::Memory::Error::ImmedNotAllowedHere:
             errorMsg = F("immed not allowed here");
             break;
-            case MyInterpreter::Error::InternalError:
+            case clvr::Memory::Error::InternalError:
             errorMsg = F("internal err");
             break;
         }
@@ -140,7 +140,7 @@ public:
         
         interp.init();
         
-        if (interp.error() == MyInterpreter::Error::None) {
+        if (interp.error() == clvr::Memory::Error::None) {
             // Pass in 2 args, a uint8_t command and a uint16_t number.
             // Push them backwards
             interp.addArg(2, clvr::Type::UInt16);
@@ -151,7 +151,7 @@ public:
             }
         }
         
-        if (interp.error() != MyInterpreter::Error::None) {
+        if (interp.error() != clvr::Memory::Error::None) {
             showError(interp.error());
         }
     }

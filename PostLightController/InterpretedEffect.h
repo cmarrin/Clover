@@ -45,7 +45,7 @@ public:
 	bool init(uint8_t cmd, const uint8_t* buf, uint32_t size);
 	int32_t loop();
 	
-	MyInterpreter::Error error() const { return _interp.error(); }
+	clvr::Memory::Error error() const { return _interp.error(); }
 
     uint8_t* stackBase() { return &(_interp.memMgr()->stack().getAbs(0)); }
 private:
