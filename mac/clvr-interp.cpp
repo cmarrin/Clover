@@ -86,7 +86,7 @@ int main(int argc, char * const argv[])
         MyInterpreter interp;
         interp.instantiate();
         
-        if (interp.error() == clvr::InterpreterBase::Error::None) {
+        if (interp.error() == clvr::Memory::Error::None) {
             uint32_t result = 0;
             
             if (looping) {
@@ -113,11 +113,11 @@ int main(int argc, char * const argv[])
                 interp.construct();
                 interp.dropArgs(14);
         
-                if (interp.error() == MyInterpreter::Error::None) {
+                if (interp.error() == clvr::Memory::Error::None) {
                     for (int i = 0; i < 100; ++i) {
                         std::cout << "Pass " << i << "\n";
                         result = interp.interp(MyInterpreter::ExecMode::Start);
-                        if (interp.error() != MyInterpreter::Error::None) {
+                        if (interp.error() != clvr::Memory::Error::None) {
                             break;
                         }
                     }
@@ -136,34 +136,34 @@ int main(int argc, char * const argv[])
                 errors += result;
             }
             
-            if (interp.error() == MyInterpreter::Error::None) {
+            if (interp.error() == clvr::Memory::Error::None) {
                 std::cout << "Complete\n\n";
             }
         }
         
-        if (interp.error() != clvr::InterpreterBase::Error::None) {
+        if (interp.error() != clvr::Memory::Error::None) {
             const char* err = "unknown";
             switch(interp.error()) {
-                case clvr::InterpreterBase::Error::None: err = "no error"; break;
-                case clvr::InterpreterBase::Error::InternalError: err = "internal error"; break;
-                case clvr::InterpreterBase::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
-                case clvr::InterpreterBase::Error::InvalidOp: err = "invalid opcode"; break;
-                case clvr::InterpreterBase::Error::InvalidNativeFunction: err = "invalid native function"; break;
-                case clvr::InterpreterBase::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
-                case clvr::InterpreterBase::Error::StackOverrun: err = "can't call, stack full"; break;
-                case clvr::InterpreterBase::Error::StackUnderrun: err = "stack underrun"; break;
-                case clvr::InterpreterBase::Error::StackOutOfRange: err = "stack access out of range"; break;
-                case clvr::InterpreterBase::Error::AddressOutOfRange: err = "address out of range"; break;
-                case clvr::InterpreterBase::Error::InvalidModuleOp: err = "invalid operation in module"; break;
-                case clvr::InterpreterBase::Error::ExpectedSetFrame: err = "expected SetFrame as first function op"; break;
-                case clvr::InterpreterBase::Error::NotEnoughArgs: err = "not enough args on stack"; break;
-                case clvr::InterpreterBase::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
-                case clvr::InterpreterBase::Error::InvalidSignature: err = "invalid signature"; break;
-                case clvr::InterpreterBase::Error::InvalidVersion: err = "invalid version"; break;
-                case clvr::InterpreterBase::Error::WrongAddressSize: err = "wrong address size"; break;
-                case clvr::InterpreterBase::Error::NoEntryPoint: err = "invalid entry point in executable"; break;
-                case clvr::InterpreterBase::Error::NotInstantiated: err = "Need to call instantiate, then construct"; break;
-                case clvr::InterpreterBase::Error::ImmedNotAllowedHere: err = "immediate not allowed here"; break;
+                case clvr::Memory::Error::None: err = "no error"; break;
+                case clvr::Memory::Error::InternalError: err = "internal error"; break;
+                case clvr::Memory::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
+                case clvr::Memory::Error::InvalidOp: err = "invalid opcode"; break;
+                case clvr::Memory::Error::InvalidNativeFunction: err = "invalid native function"; break;
+                case clvr::Memory::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
+                case clvr::Memory::Error::StackOverrun: err = "can't call, stack full"; break;
+                case clvr::Memory::Error::StackUnderrun: err = "stack underrun"; break;
+                case clvr::Memory::Error::StackOutOfRange: err = "stack access out of range"; break;
+                case clvr::Memory::Error::AddressOutOfRange: err = "address out of range"; break;
+                case clvr::Memory::Error::InvalidModuleOp: err = "invalid operation in module"; break;
+                case clvr::Memory::Error::ExpectedSetFrame: err = "expected SetFrame as first function op"; break;
+                case clvr::Memory::Error::NotEnoughArgs: err = "not enough args on stack"; break;
+                case clvr::Memory::Error::WrongNumberOfArgs: err = "wrong number of args"; break;
+                case clvr::Memory::Error::InvalidSignature: err = "invalid signature"; break;
+                case clvr::Memory::Error::InvalidVersion: err = "invalid version"; break;
+                case clvr::Memory::Error::WrongAddressSize: err = "wrong address size"; break;
+                case clvr::Memory::Error::NoEntryPoint: err = "invalid entry point in executable"; break;
+                case clvr::Memory::Error::NotInstantiated: err = "Need to call instantiate, then construct"; break;
+                case clvr::Memory::Error::ImmedNotAllowedHere: err = "immediate not allowed here"; break;
             }
             std::cout << "Interpreter failed: " << err;
             
