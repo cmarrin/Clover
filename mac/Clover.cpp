@@ -27,10 +27,10 @@ static constexpr uint32_t StackSize = 2048;
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
   public:
-    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
-    {
-        fmt::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
-    }
+//    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
+//    {
+//        fmt::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
+//    }
 };
 
 static void showError(clvr::Error error, clvr::Token token, const std::string& str, uint32_t lineno, uint32_t charno)

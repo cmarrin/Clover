@@ -33,11 +33,11 @@ class PostLightEffects : public clvr::Interpreter<StackSize>
 public:
     PostLightEffects() : _pixels(NumPixels, LEDPin, NEO_GRB + NEO_KHZ800) { }
 
-    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
-    {
-        _pixels.setPixelColor(i, Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(uint16_t(h) * 256, s, v)));
-		_pixels.show();
-    }
+//    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
+//    {
+//        _pixels.setPixelColor(i, Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(uint16_t(h) * 256, s, v)));
+//		_pixels.show();
+//    }
 
     void showError(Memory::Error error)
     {

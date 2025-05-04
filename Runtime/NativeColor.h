@@ -14,39 +14,43 @@
 #pragma once
 
 #include "Defines.h"
-
-#if COMPILE == 1
+#include "Interpreter.h"
 #include "Module.h"
-#endif
 
 #include <stdint.h>
 
 namespace clvr {
 
-class InterpreterBase;
-
 class NativeColor
-#if COMPILE == 1
-    : public Module
-#endif
 {
 public:
     enum class Id {
         SetLight      = 0,
     };
     
-    NativeColor()
-#if COMPILE == 1
-        : Module("clr")
-#endif
-    { }
-
-#if COMPILE == 1
     static ModulePtr createModule();
-#endif
-#if RUNTIME == 1
-    static void callNative(uint16_t id, InterpreterBase* interp);
-#endif
+    
+    static void callNative(uint16_t id, InterpreterBase* interp)
+    {
+        switch (Id(id)) {
+            case Id::SetLight: {
+                // First arg is byte index of light to set. Next is a ptr to a struct of
+                // h, s, v byte values (0-255)
+                uint8_t i = interp->memMgr()->getArg(0, 1);
+                AddrNativeType addr = interp->memMgr()->getArg(1, AddrSize);
+                uint8_t h = interp->memMgr()->getAbs(addr, 1);
+                uint8_t s = interp->memMgr()->getAbs(addr + 1, 1);
+                uint8_t v = interp->memMgr()->getAbs(addr + 2, 1);
+                
+                (void) i;
+                (void) h;
+                (void) s;
+                (void) v;
+                //setLight(i, h, s, v);
+                break;
+            }
+        }
+    }
 };
 
 }

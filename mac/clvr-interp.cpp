@@ -10,8 +10,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include "Compiler.h"
-#include "Decompiler.h"
 #include "Defines.h"
 #include "Interpreter.h"
 
@@ -23,10 +21,10 @@ static constexpr uint32_t StackSize = 2048;
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
   public:
-    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
-    {
-        clvr::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
-    }
+//    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
+//    {
+//        clvr::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
+//    }
 };
 
 // clvr-interp [-tl] <clvx file>...
