@@ -436,8 +436,8 @@ enum class Op: uint8_t {
     BRT     = 0x52, // Branch if TOS is true, branch is always forward
     FBRA    = 0x54, // Branch is always forward
     RBRA    = 0x56, // Branch is always reverse
-    NCALL   = 0x58,
-    ENTER   = 0x5a,
+    NCALL   = 0x58, // Native call. Lower BitsPerFunctionId bits is native Id, upper bits are module id
+    ENTER   = 0x5a, // Enter function. param is number of bytes to reserve on the stack
 
 // Bits 1:0 is the width of the data: 00 - 1 byte, 01 - 2 bytes, 10 - 4 bytes, 11 float
 
