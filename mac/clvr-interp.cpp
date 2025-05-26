@@ -12,19 +12,33 @@
 
 #include "Defines.h"
 #include "Interpreter.h"
+#include "NativeColor.h"
 
 // Base pointer of executable code (see Defines.h)
 uint8_t* clvr::ROMBase = nullptr;
 
 static constexpr uint32_t StackSize = 2048;
 
+static void callNativeColor(uint16_t id, clvr::InterpreterBase* interp)
+{
+    switch (clvr::NativeColor::Id(id)) {
+        case clvr::NativeColor::Id::SetLight: {
+            // First arg is byte index of light to set. Next is a ptr to a struct of
+            // h, s, v byte values (0-255)
+            uint8_t i = interp->memMgr()->getArg(0, 1);
+            clvr::AddrNativeType addr = interp->memMgr()->getArg(1, clvr::AddrSize);
+            uint8_t h = interp->memMgr()->getAbs(addr, 1);
+            uint8_t s = interp->memMgr()->getAbs(addr + 1, 1);
+            uint8_t v = interp->memMgr()->getAbs(addr + 2, 1);
+            fmt::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
+            break;
+        }
+    }
+}
+
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
   public:
-//    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
-//    {
-//        clvr::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
-//    }
 };
 
 // clvr-interp [-tl] <clvx file>...
@@ -83,6 +97,7 @@ int main(int argc, char * const argv[])
             
         MyInterpreter interp;
         interp.instantiate();
+        interp.addModule(callNativeColor);
         
         if (interp.error() == clvr::Memory::Error::None) {
             uint32_t result = 0;
@@ -90,26 +105,18 @@ int main(int argc, char * const argv[])
             if (looping) {
                 std::cout << "Running looping test on '" << it << "'\n";
             
-                // Pass in 5 args, a uint8_t command, speed, value, saturation and hue.
+                // Pass in a uint8_t command, value, saturation, hue, speed and range.
                 // Push them backwards
-                interp.addArg(2, clvr::Type::UInt8); // speed (0-7)
-                interp.addArg(200, clvr::Type::UInt8); // value
-                interp.addArg(224, clvr::Type::UInt8); // saturation
-                interp.addArg(200, clvr::Type::UInt8); // hue
-                interp.addArg(200, clvr::Type::UInt8); // value
-                interp.addArg(224, clvr::Type::UInt8); // saturation
-                interp.addArg(150, clvr::Type::UInt8); // hue
-                interp.addArg(200, clvr::Type::UInt8); // value
-                interp.addArg(224, clvr::Type::UInt8); // saturation
-                interp.addArg(100, clvr::Type::UInt8); // hue
-                interp.addArg(200, clvr::Type::UInt8); // value
-                interp.addArg(224, clvr::Type::UInt8); // saturation
+                interp.addArg(4, clvr::Type::UInt8); // range (0-7)
+                interp.addArg(6, clvr::Type::UInt8); // speed (0-15)
+                interp.addArg(120, clvr::Type::UInt8); // value
+                interp.addArg(150, clvr::Type::UInt8); // saturation
                 interp.addArg(50, clvr::Type::UInt8); // hue
-                interp.addArg('m', clvr::Type::UInt8); // cmd
+                interp.addArg('r', clvr::Type::UInt8); // cmd
                 
                 std::cout << "\nInit\n";
                 interp.construct();
-                interp.dropArgs(14);
+                interp.dropArgs(6);
         
                 if (interp.error() == clvr::Memory::Error::None) {
                     for (int i = 0; i < 100; ++i) {

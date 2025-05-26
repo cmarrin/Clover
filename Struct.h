@@ -21,10 +21,12 @@ namespace clvr {
 class Struct : public Module
 {
 public:
-    Struct(const std::string& name, Type type)
-        : Module(name)
-        , _type(type)
-    { }
+    Struct(const char* name, Type type)
+        : Module()
+        ,_type(type)
+    {
+        setName(name);
+    }
     
     Type localType(uint16_t i) const { return (i >= _locals.size()) ? Type::None : _locals[i]->type(); }
     uint16_t numLocals() const { return _locals.size(); }
@@ -38,7 +40,7 @@ public:
     
     StructPtr addStruct(const std::string& name, Type type)
     {
-        _structs.push_back(std::make_shared<Struct>(name, type));
+        _structs.push_back(std::make_shared<Struct>(name.c_str(), type));
         return _structs.back();
     }
 

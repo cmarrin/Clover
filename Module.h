@@ -13,27 +13,23 @@
 
 namespace clvr {
 
-#ifndef ARDUINO
 class Module
 {
   public:
-    Module(const std::string& name)
-        : _name(name)
-    { }
+    Module() { }
+    ~Module();
     
-    const std::string& name() const { return _name; }
+    void setName(const char* name);
+    const char* name() const { return _name; }
     const FunctionList& functions() const;
     FunctionPtr addFunction(const std::string& structName, const std::string& name, Type returnType);
-    void addNativeFunction(const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals);
     FunctionPtr findFunction(const std::string& s);
+    void addFunctions(FunctionList);
 
   private:
-    std::string _name;
+    char* _name = nullptr;
     FunctionList _functions;
 };
 
 using ModulePtr = std::shared_ptr<Module>;
-#else
-using ModulePtr = void*;
-#endif
 }

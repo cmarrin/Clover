@@ -31,10 +31,7 @@ InterpreterBase::instantiate()
     memset(_modules, 0, sizeof(CallNative) * ModuleCountMax);
     
     // Install core
-    _modules[0] = NativeCore::callNative;
-    
-    // FIXME: For now install NativeColor
-    _modules[1] = NativeColor::callNative;
+    addModule(NativeCore::callNative);
     
     // Check signature
     if (getUInt8ROM(0) != 'l' || getUInt8ROM(1) != 'u' || getUInt8ROM(2) != 'c' || getUInt8ROM(3) != 'd') {

@@ -14,6 +14,27 @@
 
 using namespace clvr;
 
+Module::~Module()
+{
+    setName(nullptr);
+}
+
+void
+Module::setName(const char* name)
+{
+    // We don't store as a std::string so we don't need it on Arduino
+    if (_name) {
+        delete [ ] _name;
+        _name = nullptr;
+    }
+    if (!name) {
+        return;
+    }
+    
+    _name = new char[strlen(name) + 1];
+    strcpy(_name, name);
+}
+
 FunctionPtr
 Module::findFunction(const std::string& s)
 {
@@ -40,7 +61,7 @@ Module::addFunction(const std::string& structName, const std::string& name, Type
 }
 
 void
-Module::addNativeFunction(const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals)
+Module::addFunctions(FunctionList list)
 {
-    _functions.push_back(std::make_shared<Function>(name, nativeId, returnType, locals));
+    _functions.insert(_functions.end(), list.begin(), list.end());
 }

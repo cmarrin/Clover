@@ -14,6 +14,7 @@
 #include "Decompiler.h"
 #include "Defines.h"
 #include "Interpreter.h"
+#include "NativeColor.h"
 
 static constexpr uint32_t NumPasses = 10;
 static constexpr uint8_t Command = 'r';
@@ -24,13 +25,26 @@ uint8_t* clvr::ROMBase = nullptr;
 static constexpr uint32_t MaxExecutableSize = 65536;
 static constexpr uint32_t StackSize = 2048;
 
+static void callNativeColor(uint16_t id, clvr::InterpreterBase* interp)
+{
+    switch (clvr::NativeColor::Id(id)) {
+        case clvr::NativeColor::Id::SetLight: {
+            // First arg is byte index of light to set. Next is a ptr to a struct of
+            // h, s, v byte values (0-255)
+            uint8_t i = interp->memMgr()->getArg(0, 1);
+            clvr::AddrNativeType addr = interp->memMgr()->getArg(1, clvr::AddrSize);
+            uint8_t h = interp->memMgr()->getAbs(addr, 1);
+            uint8_t s = interp->memMgr()->getAbs(addr + 1, 1);
+            uint8_t v = interp->memMgr()->getAbs(addr + 2, 1);
+            fmt::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
+            break;
+        }
+    }
+}
+
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
   public:
-//    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
-//    {
-//        fmt::printf("setLight(%d, 0x%02x, 0x%02x, 0x%02x)\n", i, h, s, v);
-//    }
 };
 
 static void showError(clvr::Error error, clvr::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
@@ -275,6 +289,7 @@ int main(int argc, char * const argv[])
             
             MyInterpreter interp;
             interp.instantiate();
+            interp.addModule(callNativeColor);
             
             if (interp.error() == clvr::Memory::Error::None) {
                 uint32_t result = 0;

@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		4914A4852C2E0F92003DDADA /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4842C2E0F92003DDADA /* Function.cpp */; };
 		49279C2A2C1903BE00294992 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
+		493775B82DE3606E0027279F /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 493775B72DE360610027279F /* NativeCoreRuntime.cpp */; };
+		493775B92DE3606E0027279F /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 493775B72DE360610027279F /* NativeCoreRuntime.cpp */; };
+		493775BA2DE360860027279F /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 493775B72DE360610027279F /* NativeCoreRuntime.cpp */; };
 		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
 		4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
 		4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* Compiler.cpp */; };
@@ -91,6 +94,7 @@
 		4914A49A2C4DD665003DDADA /* TestFunction.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.clvr; path = ../Test/TestFunction.clvr; sourceTree = "<group>"; };
 		491886F42C5EDAE70053F2C0 /* Clover.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Clover.h; path = ../Runtime/Clover.h; sourceTree = "<group>"; };
 		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
+		493775B72DE360610027279F /* NativeCoreRuntime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCoreRuntime.cpp; path = ../Runtime/NativeCoreRuntime.cpp; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* clvr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = clvr; sourceTree = BUILT_PRODUCTS_DIR; };
 		4941A1042BBA28F000CE3C9E /* Defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Defines.h; path = ../Runtime/Defines.h; sourceTree = "<group>"; };
 		4941A1052BBA28F000CE3C9E /* Interpreter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Interpreter.cpp; path = ../Runtime/Interpreter.cpp; sourceTree = "<group>"; };
@@ -115,7 +119,7 @@
 		49C164A92C0297FB00981AD1 /* clvr-interp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "clvr-interp"; sourceTree = BUILT_PRODUCTS_DIR; };
 		49C164B22C03E84700981AD1 /* Function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Function.h; path = ../Function.h; sourceTree = "<group>"; };
 		49C164B32C03E90400981AD1 /* Symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Symbol.h; path = ../Symbol.h; sourceTree = "<group>"; };
-		49C164B42C0409D700981AD1 /* Module.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Module.h; path = ../Runtime/Module.h; sourceTree = "<group>"; };
+		49C164B42C0409D700981AD1 /* Module.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Module.h; path = ../Module.h; sourceTree = "<group>"; };
 		49C164B52C04463000981AD1 /* OpInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OpInfo.h; path = ../OpInfo.h; sourceTree = "<group>"; };
 		49C164B82C04EC6400981AD1 /* AST.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AST.cpp; path = ../AST.cpp; sourceTree = "<group>"; };
 		49C164B92C04EC6400981AD1 /* AST.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AST.h; path = ../AST.h; sourceTree = "<group>"; };
@@ -226,6 +230,7 @@
 				49C469C52C6A769E00588838 /* NativeColor.cpp */,
 				49C469C62C6A769E00588838 /* NativeColor.h */,
 				49C469C82C6A83B100588838 /* NativeCore.cpp */,
+				493775B72DE360610027279F /* NativeCoreRuntime.cpp */,
 				49C469C72C6A83B100588838 /* NativeCore.h */,
 				49C164B52C04463000981AD1 /* OpInfo.h */,
 				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
@@ -432,6 +437,7 @@
 				49C9E7BB2C94F99700E58516 /* NativeCore.cpp in Sources */,
 				4914A4852C2E0F92003DDADA /* Function.cpp in Sources */,
 				49CB1FCA2DC3F3E100485FC7 /* simplecpp.cpp in Sources */,
+				493775B82DE3606E0027279F /* NativeCoreRuntime.cpp in Sources */,
 				49CB1FCD2DC6E32F00485FC7 /* Module.cpp in Sources */,
 				49FAA0832C8BCF6C0060F8AA /* CodeGenStackVM.cpp in Sources */,
 				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
@@ -446,6 +452,7 @@
 			files = (
 				49C9E7BC2C94FB4200E58516 /* clvr-interp.cpp in Sources */,
 				499B10CF2CA333D00060AF63 /* Format.cpp in Sources */,
+				493775BA2DE360860027279F /* NativeCoreRuntime.cpp in Sources */,
 				49C9E7B62C94F92900E58516 /* Interpreter.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -456,6 +463,7 @@
 			files = (
 				49D70D2F2C95E8BE000A325C /* Decompiler.cpp in Sources */,
 				49D70D302C95E8C1000A325C /* Function.cpp in Sources */,
+				493775B92DE3606E0027279F /* NativeCoreRuntime.cpp in Sources */,
 				49D70D2E2C95E8BB000A325C /* Compiler.cpp in Sources */,
 				49CB1FCE2DC6E32F00485FC7 /* Module.cpp in Sources */,
 				49D70D2D2C95E8B8000A325C /* AST.cpp in Sources */,

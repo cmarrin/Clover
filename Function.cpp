@@ -123,3 +123,8 @@ Function::arg(uint32_t index) const
     return _locals[index];
 }
 
+void
+Function::addNativeFunction(FunctionList& list, const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals)
+{
+    list.push_back(std::make_shared<Function>(name, nativeId, returnType, locals));
+}

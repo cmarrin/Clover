@@ -703,6 +703,8 @@ class Enum;
 using EnumPtr = std::shared_ptr<Enum>;
 using EnumList = std::vector<EnumPtr>;
 
+#else
+using FunctionList = void*;
 #endif
 
 }

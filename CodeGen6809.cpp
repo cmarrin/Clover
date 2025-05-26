@@ -35,7 +35,7 @@ CodeGen6809::emitPreamble(const Compiler* compiler)
     
     // Call top-level ctor, if any
     if (compiler->topLevelStruct()->hasCtor()) {
-        std::string ctorName = compiler->topLevelStruct()->name() + "_ctor";
+        std::string ctorName = std::string(compiler->topLevelStruct()->name()) + "_ctor";
         
         // Push a dummy self pointer
         format("    LEAS -2,S\n");
@@ -48,7 +48,7 @@ CodeGen6809::emitPreamble(const Compiler* compiler)
     }
     
     // Now call main
-    std::string mainName = compiler->topLevelStruct()->name() + "_main";
+    std::string mainName = std::string(compiler->topLevelStruct()->name()) + "_main";
     
     // Push a dummy self pointer
     format("    LEAS -2,S\n");

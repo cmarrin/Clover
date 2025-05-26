@@ -107,6 +107,13 @@ class InterpreterBase
     // on the stack. But the constructor is not called.
     void instantiate();
     
+    // Call this after instantiate for each added module. The module runtime
+    // method must match the module definitions in the compiler
+    void addModule(CallNative func)
+    {
+        _modules[_nextModule++] = func;
+    }
+    
     // After instantiate is called the top-level struct instance is ready to be
     // constructed. The caller first pushes args for the constructor and then
     // calls the construct method.
@@ -253,6 +260,7 @@ class InterpreterBase
 
     Memory _memMgr;
     CallNative _modules[ModuleCountMax];
+    uint8_t _nextModule = 0;
     
     uint32_t _returnValue;
     

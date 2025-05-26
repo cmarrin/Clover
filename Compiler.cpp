@@ -63,11 +63,15 @@ Compiler::Compiler(OutputFormat fmt, std::istream* stream, uint32_t maxExecutabl
 bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& modules)
 {    
     // Add built-in native modules
-    ModulePtr coreModule = NativeCore::createModule();
+    ModulePtr coreModule = std::make_shared<Module>();
+    coreModule->setName("core");
+    coreModule->addFunctions(NativeCore::create());
     _modules.push_back(coreModule);
     
     // FIXME: Modules other than core should be loaded somehow by 'import'
-    ModulePtr colorModule = NativeColor::createModule();
+    ModulePtr colorModule = std::make_shared<Module>();
+    colorModule->setName("clr");
+    colorModule->addFunctions(NativeColor::create());
     _modules.push_back(colorModule);
     
     program();
@@ -214,7 +218,7 @@ Compiler::strucT()
         _structTypes.push_back(_structStack.back());
     } else {
         // This is the top level struct
-        _topLevelStruct = std::make_shared<Struct>(id, structType);
+        _topLevelStruct = std::make_shared<Struct>(id.c_str(), structType);
         _structStack.push_back(_topLevelStruct);
         _structTypes.push_back(_structStack.back());
     }

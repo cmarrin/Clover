@@ -15,7 +15,6 @@
 
 #include "Defines.h"
 #include "Interpreter.h"
-#include "Module.h"
 
 #include <stdint.h>
 
@@ -28,29 +27,9 @@ public:
         SetLight      = 0,
     };
     
-    static ModulePtr createModule();
+    static const FunctionList create();
     
-    static void callNative(uint16_t id, InterpreterBase* interp)
-    {
-        switch (Id(id)) {
-            case Id::SetLight: {
-                // First arg is byte index of light to set. Next is a ptr to a struct of
-                // h, s, v byte values (0-255)
-                uint8_t i = interp->memMgr()->getArg(0, 1);
-                AddrNativeType addr = interp->memMgr()->getArg(1, AddrSize);
-                uint8_t h = interp->memMgr()->getAbs(addr, 1);
-                uint8_t s = interp->memMgr()->getAbs(addr + 1, 1);
-                uint8_t v = interp->memMgr()->getAbs(addr + 2, 1);
-                
-                (void) i;
-                (void) h;
-                (void) s;
-                (void) v;
-                //setLight(i, h, s, v);
-                break;
-            }
-        }
-    }
+    static void callNative(uint16_t id, InterpreterBase*);
 };
 
 }

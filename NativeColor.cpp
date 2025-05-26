@@ -15,10 +15,11 @@
 
 using namespace clvr;
 
-ModulePtr
-NativeColor::createModule()
+const FunctionList
+NativeColor::create()
 {
-    ModulePtr module = std::make_shared<Module>("clr");
-    module->addNativeFunction("setLight", uint16_t(Id::SetLight), Type::None, {{ "i", Type::UInt8, false, 1, 1 }, { "c", Type::None, true, 1, 1 }});
-    return module;
+    FunctionList list;
+    
+    Function::addNativeFunction(list, "setLight", uint16_t(Id::SetLight), Type::None, {{ "i", Type::UInt8, false, 1, 1 }, { "c", Type::None, true, 1, 1 }});
+    return list;
 }

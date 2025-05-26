@@ -26,12 +26,7 @@ public:
         : _pixels(pixels)
     { }
 
-//    virtual void setLight(uint8_t i, uint8_t h, uint8_t s, uint8_t v) override
-//    {
-//        uint32_t adargb = Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(uint16_t(h) * 256, s, v));
-//        _pixels->setPixelColor(i, adargb);
-//		_pixels->show();
-//    }
+    static void  callNativeColor(uint16_t id, clvr::InterpreterBase*);
 
 private:
 	Adafruit_NeoPixel* _pixels;

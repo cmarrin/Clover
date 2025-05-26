@@ -70,6 +70,8 @@ public:
     SymbolPtr arg(uint32_t index) const;
     uint32_t argCount() const { return _argCount; }
     
+    static void addNativeFunction(FunctionList& list, const char* name, uint16_t nativeId, Type returnType, const SymbolList& locals);
+
 private:
     std::string _structName;
     std::string _name;
