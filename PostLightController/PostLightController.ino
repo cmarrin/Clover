@@ -107,8 +107,8 @@ public:
 	    _pixels.begin(); // This initializes the NeoPixel library.
 	    _pixels.setBrightness(255);
 		
-		Serial.println(F("Post Light Controller v0.4"));
-	
+        fmt::printf("Post Light Controller v0.4\n");
+      
 		showStatus(StatusColor::Green, 3, 2);
 		
 		_timeSinceLastChar = millis();
