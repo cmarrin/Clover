@@ -29,6 +29,7 @@ InterpreterBase::instantiate()
     
     // Init module list
     memset(_modules, 0, sizeof(CallNative) * ModuleCountMax);
+    _nextModule = 0;
     
     // Install core
     addModule(NativeCore::callNative);
