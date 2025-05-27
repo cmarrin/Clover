@@ -73,7 +73,7 @@ Hue is an angle on the color wheel. A 0-360 degree value is obtained with hue / 
 
 constexpr int LEDPin = 6;
 constexpr int NumPixels = 8;
-constexpr int MaxPayloadSize = 1024;
+constexpr int MaxPayloadSize = 1017; // 1024 - 7 (the size of the header + footer)
 constexpr int CommandSizeBefore = 5;
 constexpr int CommandSizeAfter = 2;
 constexpr char StartChar = '(';
