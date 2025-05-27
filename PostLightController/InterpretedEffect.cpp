@@ -69,8 +69,6 @@ InterpretedEffect::init(uint8_t cmd, const uint8_t* buf, uint32_t size)
 int32_t
 InterpretedEffect::loop()
 {
-    _interp.addArg('*', clvr::Type::UInt8);
     uint32_t result = _interp.interp(MyInterpreter::ExecMode::Start);
-    _interp.dropArgs(1);
     return (_interp.error() != clvr::Memory::Error::None) ? -1 : result;
 }
