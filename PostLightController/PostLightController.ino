@@ -321,17 +321,23 @@ public:
 								if (!_interpretedEffect.init(_cmd, _buf + CommandSizeBefore, _payloadSize)) {
 									String errorMsg;
 									switch(_interpretedEffect.error()) {
-                                        default:
-                                        errorMsg = F("???");
-                                        break;
                                         case clvr::Memory::Error::None:
                                         errorMsg = F("---");
                                         break;
                                         case clvr::Memory::Error::InvalidSignature:
                                         errorMsg = F("bad signature");
                                         break;
+                                        case clvr::Memory::Error::InvalidVersion:
+                                        errorMsg = F("bad  version");
+                                        break;
+                                        case clvr::Memory::Error::WrongAddressSize:
+                                        errorMsg = F("wrong addr size");
+                                        break;
                                         case clvr::Memory::Error::NoEntryPoint:
                                         errorMsg = F("no entry point");
+                                        break;
+                                        case clvr::Memory::Error::NotInstantiated:
+                                        errorMsg = F("not instantiated");
                                         break;
                                         case clvr::Memory::Error::UnexpectedOpInIf:
                                         errorMsg = F("bad op in if");
