@@ -24,7 +24,7 @@
 
 using namespace clvr;
 
-Compiler::Compiler(OutputFormat fmt, std::istream* stream, uint32_t maxExecutableSize, const std::vector<Module*>& modules, Annotations* annotations)
+Compiler::Compiler(OutputFormat fmt, Annotations* annotations)
     :
       _scanner(annotations)
 {
@@ -33,7 +33,10 @@ Compiler::Compiler(OutputFormat fmt, std::istream* stream, uint32_t maxExecutabl
     } else {
         _codeGen = new CodeGenStackVM(annotations);
     }
-    
+}
+
+bool Compiler::compile(std::istream* stream, const std::vector<Module*>& modules)
+{
     // Add defines for profile levels
     simplecpp::DUI dui;
     
@@ -45,6 +48,7 @@ Compiler::Compiler(OutputFormat fmt, std::istream* stream, uint32_t maxExecutabl
     dui.defines.push_back("SUPPORT_FLOAT");
 #endif
 
+    // Preprocess
     std::vector<std::string> files;
     simplecpp::TokenList *rawtokens = new simplecpp::TokenList(*stream, files);
     rawtokens->removeComments();
@@ -57,11 +61,6 @@ Compiler::Compiler(OutputFormat fmt, std::istream* stream, uint32_t maxExecutabl
     std::stringstream preprocessedStream(outputTokens.stringify());
     _scanner.setStream(&preprocessedStream);
 
-    compile(maxExecutableSize, modules);
-}
-
-bool Compiler::compile(uint32_t maxExecutableSize, const std::vector<Module*>& modules)
-{    
     // Add built-in native modules
     ModulePtr coreModule = std::make_shared<Module>();
     coreModule->setName("core");

@@ -164,7 +164,8 @@ int main(int argc, char * const argv[])
         clvr::randomSeed(uint32_t(clock()));
 
         clvr::Compiler::OutputFormat fmt = asm6809 ? clvr::Compiler::OutputFormat::ASM6809 : clvr::Compiler::OutputFormat::StackVM;
-        clvr::Compiler compiler(fmt, &stream, MaxExecutableSize, { }, &annotations);
+        clvr::Compiler compiler(fmt, &annotations);
+        compiler.compile(&stream, { });
 
         if (compiler.error() != clvr::Error::None) {
             showError(compiler.error(), compiler.expectedToken(), compiler.expectedString(), compiler.lineno(), compiler.charno());
