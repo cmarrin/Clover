@@ -22,7 +22,6 @@ static constexpr uint8_t Command = 'r';
 // Base pointer of executable code (see Defines.h)
 uint8_t* clvr::ROMBase = nullptr;
 
-static constexpr uint32_t MaxExecutableSize = 65536;
 static constexpr uint32_t StackSize = 2048;
 
 static void callNativeColor(uint16_t id, clvr::InterpreterBase* interp)

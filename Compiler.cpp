@@ -17,7 +17,6 @@
 #include "AST.h"
 #include "CodeGen6809.h"
 #include "CodeGenStackVM.h"
-#include "NativeColor.h"
 #include "NativeCore.h"
 #include "OpInfo.h"
 #include "simplecpp.h"
@@ -66,13 +65,7 @@ bool Compiler::compile(std::istream* stream, const std::vector<Module*>& modules
     coreModule->setName("core");
     coreModule->addFunctions(NativeCore::create());
     _modules.push_back(coreModule);
-    
-    // FIXME: Modules other than core should be loaded somehow by 'import'
-    ModulePtr colorModule = std::make_shared<Module>();
-    colorModule->setName("clr");
-    colorModule->addFunctions(NativeColor::create());
-    _modules.push_back(colorModule);
-    
+        
     program();
     
     if (_error != Error::None) {

@@ -17,8 +17,6 @@
 // Base pointer of executable code (see Defines.h)
 uint8_t* clvr::ROMBase = nullptr;
 
-static constexpr uint32_t MaxExecutableSize = 65536;
-
 static void showError(clvr::Error error, clvr::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
 {
     const char* err = "unknown";
