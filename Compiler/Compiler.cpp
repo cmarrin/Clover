@@ -32,6 +32,12 @@ Compiler::Compiler(OutputFormat fmt, Annotations* annotations)
     } else {
         _codeGen = new CodeGenStackVM(annotations);
     }
+
+    // Add built-in native modules
+    ModulePtr coreModule = std::make_shared<Module>();
+    coreModule->setName("core");
+    coreModule->addFunctions(NativeCore::create());
+    _modules.push_back(coreModule);
 }
 
 bool Compiler::compile(std::istream* stream, const std::vector<Module*>& modules)
@@ -60,12 +66,6 @@ bool Compiler::compile(std::istream* stream, const std::vector<Module*>& modules
     std::stringstream preprocessedStream(outputTokens.stringify());
     _scanner.setStream(&preprocessedStream);
 
-    // Add built-in native modules
-    ModulePtr coreModule = std::make_shared<Module>();
-    coreModule->setName("core");
-    coreModule->addFunctions(NativeCore::create());
-    _modules.push_back(coreModule);
-        
     program();
     
     if (_error != Error::None) {
