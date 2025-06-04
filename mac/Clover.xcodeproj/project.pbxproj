@@ -7,41 +7,40 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4914A4852C2E0F92003DDADA /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4842C2E0F92003DDADA /* Function.cpp */; };
-		49279C2A2C1903BE00294992 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
-		493775B82DE3606E0027279F /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 493775B72DE360610027279F /* NativeCoreRuntime.cpp */; };
-		493775B92DE3606E0027279F /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 493775B72DE360610027279F /* NativeCoreRuntime.cpp */; };
-		493775BA2DE360860027279F /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 493775B72DE360610027279F /* NativeCoreRuntime.cpp */; };
-		4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
-		4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
-		4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* Compiler.cpp */; };
-		499B10CE2CA333C80060AF63 /* Format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 499B10CC2CA333C80060AF63 /* Format.cpp */; };
-		499B10CF2CA333D00060AF63 /* Format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 499B10CC2CA333C80060AF63 /* Format.cpp */; };
-		499B10D02CA333D10060AF63 /* Format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 499B10CC2CA333C80060AF63 /* Format.cpp */; };
+		498F24F32DF0942700DFB022 /* simplecpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F24E12DF0942700DFB022 /* simplecpp.cpp */; };
+		498F24FB2DF0942700DFB022 /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23BD2DF0942700DFB022 /* Scanner.cpp */; };
+		498F25072DF0942700DFB022 /* NativeCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23B92DF0942700DFB022 /* NativeCore.cpp */; };
+		498F251E2DF0942700DFB022 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23A72DF0942700DFB022 /* AST.cpp */; };
+		498F25232DF0942700DFB022 /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23C42DF0942700DFB022 /* Interpreter.cpp */; };
+		498F252B2DF0942700DFB022 /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23AD2DF0942700DFB022 /* CodeGenStackVM.cpp */; };
+		498F25432DF0942700DFB022 /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23C82DF0942700DFB022 /* NativeCoreRuntime.cpp */; };
+		498F25572DF0942700DFB022 /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23B42DF0942700DFB022 /* Function.cpp */; };
+		498F25672DF0942700DFB022 /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23AF2DF0942700DFB022 /* Compiler.cpp */; };
+		498F25842DF0942700DFB022 /* CodeGen6809.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23AA2DF0942700DFB022 /* CodeGen6809.cpp */; };
+		498F25A62DF0942700DFB022 /* Module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23B72DF0942700DFB022 /* Module.cpp */; };
+		498F25B42DF0942700DFB022 /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23B12DF0942700DFB022 /* Decompiler.cpp */; };
+		498F25DF2DF0942700DFB022 /* simplecpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F24E12DF0942700DFB022 /* simplecpp.cpp */; };
+		498F25E72DF0942700DFB022 /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23BD2DF0942700DFB022 /* Scanner.cpp */; };
+		498F25F32DF0942700DFB022 /* NativeCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23B92DF0942700DFB022 /* NativeCore.cpp */; };
+		498F260A2DF0942700DFB022 /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23A72DF0942700DFB022 /* AST.cpp */; };
+		498F260F2DF0942700DFB022 /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23C42DF0942700DFB022 /* Interpreter.cpp */; };
+		498F26172DF0942700DFB022 /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23AD2DF0942700DFB022 /* CodeGenStackVM.cpp */; };
+		498F262F2DF0942700DFB022 /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23C82DF0942700DFB022 /* NativeCoreRuntime.cpp */; };
+		498F26432DF0942700DFB022 /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23B42DF0942700DFB022 /* Function.cpp */; };
+		498F26532DF0942700DFB022 /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23AF2DF0942700DFB022 /* Compiler.cpp */; };
+		498F26702DF0942700DFB022 /* CodeGen6809.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23AA2DF0942700DFB022 /* CodeGen6809.cpp */; };
+		498F26922DF0942700DFB022 /* Module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23B72DF0942700DFB022 /* Module.cpp */; };
+		498F26A02DF0942700DFB022 /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23B12DF0942700DFB022 /* Decompiler.cpp */; };
+		498F26FD2DF0942700DFB022 /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23C42DF0942700DFB022 /* Interpreter.cpp */; };
+		498F271D2DF0942700DFB022 /* NativeCoreRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F23C82DF0942700DFB022 /* NativeCoreRuntime.cpp */; };
+		498F27D92DF0981500DFB022 /* Format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F27D52DF0981500DFB022 /* Format.cpp */; };
+		498F27DA2DF0981500DFB022 /* Format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F27D52DF0981500DFB022 /* Format.cpp */; };
+		498F27DB2DF0981500DFB022 /* Format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 498F27D52DF0981500DFB022 /* Format.cpp */; };
 		49C9E7B42C94F87500E58516 /* clvr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7B22C94F87500E58516 /* clvr.cpp */; };
-		49C9E7B62C94F92900E58516 /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* Interpreter.cpp */; };
-		49C9E7BA2C94F99400E58516 /* NativeColor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C52C6A769E00588838 /* NativeColor.cpp */; };
-		49C9E7BB2C94F99700E58516 /* NativeCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C82C6A83B100588838 /* NativeCore.cpp */; };
 		49C9E7BC2C94FB4200E58516 /* clvr-interp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7B32C94F87500E58516 /* clvr-interp.cpp */; };
 		49C9E7BD2C95089D00E58516 /* clvr in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4941A0EF2BB6F59900CE3C9E /* clvr */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		49C9E7CD2C95111C00E58516 /* clvr-interp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 49C164A92C0297FB00981AD1 /* clvr-interp */; };
-		49C9E7EE2C97154100E58516 /* CodeGen6809.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */; };
-		49C9E7EF2C97154200E58516 /* CodeGen6809.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */; };
-		49CB1FCA2DC3F3E100485FC7 /* simplecpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49CB1FC92DC3F3E100485FC7 /* simplecpp.cpp */; };
-		49CB1FCB2DC3F3E100485FC7 /* simplecpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49CB1FC92DC3F3E100485FC7 /* simplecpp.cpp */; };
-		49CB1FCD2DC6E32F00485FC7 /* Module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49CB1FCC2DC6E00600485FC7 /* Module.cpp */; };
-		49CB1FCE2DC6E32F00485FC7 /* Module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49CB1FCC2DC6E00600485FC7 /* Module.cpp */; };
 		49D70D2B2C95E86B000A325C /* Clover.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49D70D292C95E855000A325C /* Clover.cpp */; };
-		49D70D2C2C95E8B4000A325C /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */; };
-		49D70D2D2C95E8B8000A325C /* AST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C164B82C04EC6400981AD1 /* AST.cpp */; };
-		49D70D2E2C95E8BB000A325C /* Compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10D2BBA290B00CE3C9E /* Compiler.cpp */; };
-		49D70D2F2C95E8BE000A325C /* Decompiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1092BBA290B00CE3C9E /* Decompiler.cpp */; };
-		49D70D302C95E8C1000A325C /* Function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4914A4842C2E0F92003DDADA /* Function.cpp */; };
-		49D70D312C95E8C4000A325C /* Interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A1052BBA28F000CE3C9E /* Interpreter.cpp */; };
-		49D70D322C95E8C8000A325C /* NativeColor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C52C6A769E00588838 /* NativeColor.cpp */; };
-		49D70D332C95E8CC000A325C /* NativeCore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C469C82C6A83B100588838 /* NativeCore.cpp */; };
-		49D70D352C95E8D5000A325C /* Scanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4941A10A2BBA290B00CE3C9E /* Scanner.cpp */; };
-		49FAA0832C8BCF6C0060F8AA /* CodeGenStackVM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -77,8 +76,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4914A4842C2E0F92003DDADA /* Function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Function.cpp; path = ../Function.cpp; sourceTree = "<group>"; };
-		4914A4872C3B624D003DDADA /* Memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Memory.h; path = ../Runtime/Memory.h; sourceTree = "<group>"; };
 		4914A48D2C4DD665003DDADA /* TestCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestCore.h; path = ../Test/TestCore.h; sourceTree = "<group>"; };
 		4914A48E2C4DD665003DDADA /* TestPtrStruct.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestPtrStruct.clvr; path = ../Test/TestPtrStruct.clvr; sourceTree = "<group>"; };
 		4914A48F2C4DD665003DDADA /* TestIf.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestIf.clvr; path = ../Test/TestIf.clvr; sourceTree = "<group>"; };
@@ -92,51 +89,58 @@
 		4914A4982C4DD665003DDADA /* TestFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFunction.h; path = ../Test/TestFunction.h; sourceTree = "<group>"; };
 		4914A4992C4DD665003DDADA /* TestIf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestIf.h; path = ../Test/TestIf.h; sourceTree = "<group>"; };
 		4914A49A2C4DD665003DDADA /* TestFunction.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.clvr; path = ../Test/TestFunction.clvr; sourceTree = "<group>"; };
-		491886F42C5EDAE70053F2C0 /* Clover.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Clover.h; path = ../Runtime/Clover.h; sourceTree = "<group>"; };
 		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
-		493775B72DE360610027279F /* NativeCoreRuntime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCoreRuntime.cpp; path = ../Runtime/NativeCoreRuntime.cpp; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* clvr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = clvr; sourceTree = BUILT_PRODUCTS_DIR; };
-		4941A1042BBA28F000CE3C9E /* Defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Defines.h; path = ../Runtime/Defines.h; sourceTree = "<group>"; };
-		4941A1052BBA28F000CE3C9E /* Interpreter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Interpreter.cpp; path = ../Runtime/Interpreter.cpp; sourceTree = "<group>"; };
-		4941A1062BBA28F000CE3C9E /* Interpreter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Interpreter.h; path = ../Runtime/Interpreter.h; sourceTree = "<group>"; };
-		4941A1092BBA290B00CE3C9E /* Decompiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Decompiler.cpp; path = ../Decompiler.cpp; sourceTree = "<group>"; };
-		4941A10A2BBA290B00CE3C9E /* Scanner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Scanner.cpp; path = ../Scanner.cpp; sourceTree = "<group>"; };
-		4941A10D2BBA290B00CE3C9E /* Compiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Compiler.cpp; path = ../Compiler.cpp; sourceTree = "<group>"; };
-		4941A10E2BBA290B00CE3C9E /* Decompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Decompiler.h; path = ../Decompiler.h; sourceTree = "<group>"; };
-		4941A10F2BBA290B00CE3C9E /* Scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Scanner.h; path = ../Scanner.h; sourceTree = "<group>"; };
-		4941A1102BBA290B00CE3C9E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Compiler.h; path = ../Compiler.h; sourceTree = "<group>"; };
+		498F23A62DF0942700DFB022 /* AST.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AST.h; sourceTree = "<group>"; };
+		498F23A72DF0942700DFB022 /* AST.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AST.cpp; sourceTree = "<group>"; };
+		498F23A82DF0942700DFB022 /* CodeGen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CodeGen.h; sourceTree = "<group>"; };
+		498F23A92DF0942700DFB022 /* CodeGen6809.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CodeGen6809.h; sourceTree = "<group>"; };
+		498F23AA2DF0942700DFB022 /* CodeGen6809.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CodeGen6809.cpp; sourceTree = "<group>"; };
+		498F23AC2DF0942700DFB022 /* CodeGenStackVM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CodeGenStackVM.h; sourceTree = "<group>"; };
+		498F23AD2DF0942700DFB022 /* CodeGenStackVM.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CodeGenStackVM.cpp; sourceTree = "<group>"; };
+		498F23AE2DF0942700DFB022 /* Compiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Compiler.h; sourceTree = "<group>"; };
+		498F23AF2DF0942700DFB022 /* Compiler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Compiler.cpp; sourceTree = "<group>"; };
+		498F23B02DF0942700DFB022 /* Decompiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Decompiler.h; sourceTree = "<group>"; };
+		498F23B12DF0942700DFB022 /* Decompiler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Decompiler.cpp; sourceTree = "<group>"; };
+		498F23B22DF0942700DFB022 /* Enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Enum.h; sourceTree = "<group>"; };
+		498F23B32DF0942700DFB022 /* Function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Function.h; sourceTree = "<group>"; };
+		498F23B42DF0942700DFB022 /* Function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Function.cpp; sourceTree = "<group>"; };
+		498F23B52DF0942700DFB022 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		498F23B62DF0942700DFB022 /* Module.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Module.h; sourceTree = "<group>"; };
+		498F23B72DF0942700DFB022 /* Module.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Module.cpp; sourceTree = "<group>"; };
+		498F23B92DF0942700DFB022 /* NativeCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NativeCore.cpp; sourceTree = "<group>"; };
+		498F23BA2DF0942700DFB022 /* OpInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpInfo.h; sourceTree = "<group>"; };
+		498F23BB2DF0942700DFB022 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		498F23BC2DF0942700DFB022 /* Scanner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Scanner.h; sourceTree = "<group>"; };
+		498F23BD2DF0942700DFB022 /* Scanner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Scanner.cpp; sourceTree = "<group>"; };
+		498F23BE2DF0942700DFB022 /* Struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Struct.h; sourceTree = "<group>"; };
+		498F23BF2DF0942700DFB022 /* Symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Symbol.h; sourceTree = "<group>"; };
+		498F23C12DF0942700DFB022 /* Clover.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Clover.h; sourceTree = "<group>"; };
+		498F23C22DF0942700DFB022 /* Defines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Defines.h; sourceTree = "<group>"; };
+		498F23C32DF0942700DFB022 /* Interpreter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Interpreter.h; sourceTree = "<group>"; };
+		498F23C42DF0942700DFB022 /* Interpreter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Interpreter.cpp; sourceTree = "<group>"; };
+		498F23C52DF0942700DFB022 /* Memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Memory.h; sourceTree = "<group>"; };
+		498F23C72DF0942700DFB022 /* NativeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NativeCore.h; sourceTree = "<group>"; };
+		498F23C82DF0942700DFB022 /* NativeCoreRuntime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NativeCoreRuntime.cpp; sourceTree = "<group>"; };
+		498F24E02DF0942700DFB022 /* simplecpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = simplecpp.h; sourceTree = "<group>"; };
+		498F24E12DF0942700DFB022 /* simplecpp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = simplecpp.cpp; sourceTree = "<group>"; };
+		498F27D42DF0981500DFB022 /* Format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Format.h; sourceTree = "<group>"; };
+		498F27D52DF0981500DFB022 /* Format.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Format.cpp; sourceTree = "<group>"; };
+		498F27D62DF0981500DFB022 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		498F27D72DF0981500DFB022 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		4993A6F32CAB6DA90060CCD4 /* TestIntExpr09.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr09.clvr; path = ../Test/TestIntExpr09.clvr; sourceTree = "<group>"; };
 		499B10C62C9B0B9D0060AF63 /* CodeGenNotes.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CodeGenNotes.txt; path = ../CodeGenNotes.txt; sourceTree = "<group>"; };
 		499B10C72C9B9A0B0060AF63 /* simple.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; name = simple.asm; path = ../examples/simple.asm; sourceTree = "<group>"; };
-		499B10CC2CA333C80060AF63 /* Format.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Format.cpp; path = ../Format/Format.cpp; sourceTree = "<group>"; };
-		499B10CD2CA333C80060AF63 /* Format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Format.h; path = ../Format/Format.h; sourceTree = "<group>"; };
 		49A85D832C7A21B700E8F5F3 /* TestSwitchEnum.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestSwitchEnum.clvr; path = ../Test/TestSwitchEnum.clvr; sourceTree = "<group>"; };
 		49A85D842C7A220500E8F5F3 /* TestFloatExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestFloatExpr.clvr; path = ../Test/TestFloatExpr.clvr; sourceTree = "<group>"; };
 		49A85D852C7A220500E8F5F3 /* TestIntExpr.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = TestIntExpr.clvr; path = ../Test/TestIntExpr.clvr; sourceTree = "<group>"; };
 		49AC18C72DBFF3E40089658D /* maze.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = maze.c; path = ../examples/maze.c; sourceTree = SOURCE_ROOT; };
-		49AD783D2C77D53500ABC078 /* Enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Enum.h; path = ../Enum.h; sourceTree = "<group>"; };
 		49C164A42C025CD500981AD1 /* simple.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = simple.clvr; path = ../examples/simple.clvr; sourceTree = "<group>"; };
 		49C164A92C0297FB00981AD1 /* clvr-interp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "clvr-interp"; sourceTree = BUILT_PRODUCTS_DIR; };
-		49C164B22C03E84700981AD1 /* Function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Function.h; path = ../Function.h; sourceTree = "<group>"; };
-		49C164B32C03E90400981AD1 /* Symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Symbol.h; path = ../Symbol.h; sourceTree = "<group>"; };
-		49C164B42C0409D700981AD1 /* Module.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Module.h; path = ../Module.h; sourceTree = "<group>"; };
-		49C164B52C04463000981AD1 /* OpInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OpInfo.h; path = ../OpInfo.h; sourceTree = "<group>"; };
-		49C164B82C04EC6400981AD1 /* AST.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AST.cpp; path = ../AST.cpp; sourceTree = "<group>"; };
-		49C164B92C04EC6400981AD1 /* AST.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AST.h; path = ../AST.h; sourceTree = "<group>"; };
-		49C164BC2C0545D100981AD1 /* Struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Struct.h; path = ../Struct.h; sourceTree = "<group>"; };
-		49C469C52C6A769E00588838 /* NativeColor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeColor.cpp; path = ../NativeColor.cpp; sourceTree = "<group>"; };
-		49C469C62C6A769E00588838 /* NativeColor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeColor.h; path = ../Runtime/NativeColor.h; sourceTree = "<group>"; };
-		49C469C72C6A83B100588838 /* NativeCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NativeCore.h; path = ../Runtime/NativeCore.h; sourceTree = "<group>"; };
-		49C469C82C6A83B100588838 /* NativeCore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NativeCore.cpp; path = ../NativeCore.cpp; sourceTree = "<group>"; };
 		49C5B3292CCBF4D900B6911E /* BOSS9.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = BOSS9.clvr; path = ../examples/BOSS9.clvr; sourceTree = "<group>"; };
 		49C9E7B22C94F87500E58516 /* clvr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clvr.cpp; sourceTree = "<group>"; };
 		49C9E7B32C94F87500E58516 /* clvr-interp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "clvr-interp.cpp"; sourceTree = "<group>"; };
 		49C9E7E22C95129300E58516 /* Clover */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Clover; sourceTree = BUILT_PRODUCTS_DIR; };
-		49C9E7EC2C9714CA00E58516 /* CodeGen6809.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGen6809.h; path = ../CodeGen6809.h; sourceTree = "<group>"; };
-		49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CodeGen6809.cpp; path = ../CodeGen6809.cpp; sourceTree = "<group>"; };
-		49CB1FC82DC3F3E100485FC7 /* simplecpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = simplecpp.h; path = ../simplecpp/simplecpp.h; sourceTree = SOURCE_ROOT; };
-		49CB1FC92DC3F3E100485FC7 /* simplecpp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = simplecpp.cpp; path = ../simplecpp/simplecpp.cpp; sourceTree = SOURCE_ROOT; };
-		49CB1FCC2DC6E00600485FC7 /* Module.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Module.cpp; path = ../Module.cpp; sourceTree = "<group>"; };
 		49D70D292C95E855000A325C /* Clover.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Clover.cpp; sourceTree = "<group>"; };
 		49D77B6A2CD44EDE00F5273B /* maze.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = maze.clvr; path = ../examples/maze.clvr; sourceTree = SOURCE_ROOT; };
 		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
@@ -147,9 +151,6 @@
 		49E9ACD02C715F990074BD25 /* Flash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Flash.h; path = ../PostLightController/Flash.h; sourceTree = "<group>"; };
 		49E9ACD12C715F990074BD25 /* InterpretedEffect.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InterpretedEffect.cpp; path = ../PostLightController/InterpretedEffect.cpp; sourceTree = "<group>"; };
 		49F0B2522CAC406D009991A8 /* TestIntExpr09.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; name = TestIntExpr09.asm; path = ../Test/TestIntExpr09.asm; sourceTree = "<group>"; };
-		49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CodeGenStackVM.cpp; path = ../CodeGenStackVM.cpp; sourceTree = "<group>"; };
-		49FAA0812C8BCF550060F8AA /* CodeGen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGen.h; path = ../CodeGen.h; sourceTree = "<group>"; };
-		49FAA0822C8BCF550060F8AA /* CodeGenStackVM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CodeGenStackVM.h; path = ../CodeGenStackVM.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -206,39 +207,9 @@
 			isa = PBXGroup;
 			children = (
 				499B10C52C9B0B880060AF63 /* doc */,
-				49FAA0812C8BCF550060F8AA /* CodeGen.h */,
-				49C9E7ED2C9714CA00E58516 /* CodeGen6809.cpp */,
-				49C9E7EC2C9714CA00E58516 /* CodeGen6809.h */,
-				49FAA0802C8BCF550060F8AA /* CodeGenStackVM.cpp */,
-				49FAA0822C8BCF550060F8AA /* CodeGenStackVM.h */,
-				49C164B82C04EC6400981AD1 /* AST.cpp */,
-				49C164B92C04EC6400981AD1 /* AST.h */,
-				4941A10D2BBA290B00CE3C9E /* Compiler.cpp */,
-				4941A1102BBA290B00CE3C9E /* Compiler.h */,
-				4941A1092BBA290B00CE3C9E /* Decompiler.cpp */,
-				4941A10E2BBA290B00CE3C9E /* Decompiler.h */,
-				4941A1042BBA28F000CE3C9E /* Defines.h */,
-				49AD783D2C77D53500ABC078 /* Enum.h */,
-				4914A4842C2E0F92003DDADA /* Function.cpp */,
-				49C164B22C03E84700981AD1 /* Function.h */,
-				4941A1052BBA28F000CE3C9E /* Interpreter.cpp */,
-				4941A1062BBA28F000CE3C9E /* Interpreter.h */,
-				491886F42C5EDAE70053F2C0 /* Clover.h */,
-				4914A4872C3B624D003DDADA /* Memory.h */,
-				49CB1FCC2DC6E00600485FC7 /* Module.cpp */,
-				49C164B42C0409D700981AD1 /* Module.h */,
-				49C469C52C6A769E00588838 /* NativeColor.cpp */,
-				49C469C62C6A769E00588838 /* NativeColor.h */,
-				49C469C82C6A83B100588838 /* NativeCore.cpp */,
-				493775B72DE360610027279F /* NativeCoreRuntime.cpp */,
-				49C469C72C6A83B100588838 /* NativeCore.h */,
-				49C164B52C04463000981AD1 /* OpInfo.h */,
-				4941A10A2BBA290B00CE3C9E /* Scanner.cpp */,
-				4941A10F2BBA290B00CE3C9E /* Scanner.h */,
-				49C164BC2C0545D100981AD1 /* Struct.h */,
-				49C164B32C03E90400981AD1 /* Symbol.h */,
-				49CB1FC72DC3F3AA00485FC7 /* simplecpp */,
-				499B10CB2CA333AC0060AF63 /* Format */,
+				498F23C02DF0942700DFB022 /* Compiler */,
+				498F23C92DF0942700DFB022 /* Runtime */,
+				498F27D82DF0981500DFB022 /* Format */,
 				4941A0F12BB6F59900CE3C9E /* mac */,
 				49E9ACCA2C715C420074BD25 /* PostLightController */,
 				4914A48C2C4DD63C003DDADA /* Test */,
@@ -281,32 +252,82 @@
 			name = examples;
 			sourceTree = "<group>";
 		};
+		498F23C02DF0942700DFB022 /* Compiler */ = {
+			isa = PBXGroup;
+			children = (
+				498F23A62DF0942700DFB022 /* AST.h */,
+				498F23A72DF0942700DFB022 /* AST.cpp */,
+				498F23A82DF0942700DFB022 /* CodeGen.h */,
+				498F23A92DF0942700DFB022 /* CodeGen6809.h */,
+				498F23AA2DF0942700DFB022 /* CodeGen6809.cpp */,
+				498F23AC2DF0942700DFB022 /* CodeGenStackVM.h */,
+				498F23AD2DF0942700DFB022 /* CodeGenStackVM.cpp */,
+				498F23AE2DF0942700DFB022 /* Compiler.h */,
+				498F23AF2DF0942700DFB022 /* Compiler.cpp */,
+				498F23B02DF0942700DFB022 /* Decompiler.h */,
+				498F23B12DF0942700DFB022 /* Decompiler.cpp */,
+				498F23B22DF0942700DFB022 /* Enum.h */,
+				498F23B32DF0942700DFB022 /* Function.h */,
+				498F23B42DF0942700DFB022 /* Function.cpp */,
+				498F23B52DF0942700DFB022 /* LICENSE */,
+				498F23B62DF0942700DFB022 /* Module.h */,
+				498F23B72DF0942700DFB022 /* Module.cpp */,
+				498F23B92DF0942700DFB022 /* NativeCore.cpp */,
+				498F23BA2DF0942700DFB022 /* OpInfo.h */,
+				498F23BB2DF0942700DFB022 /* README.md */,
+				498F23BC2DF0942700DFB022 /* Scanner.h */,
+				498F23BD2DF0942700DFB022 /* Scanner.cpp */,
+				498F23BE2DF0942700DFB022 /* Struct.h */,
+				498F23BF2DF0942700DFB022 /* Symbol.h */,
+				498F24E32DF0942700DFB022 /* simplecpp */,
+			);
+			name = Compiler;
+			path = ../Compiler;
+			sourceTree = SOURCE_ROOT;
+		};
+		498F23C92DF0942700DFB022 /* Runtime */ = {
+			isa = PBXGroup;
+			children = (
+				498F23C12DF0942700DFB022 /* Clover.h */,
+				498F23C22DF0942700DFB022 /* Defines.h */,
+				498F23C32DF0942700DFB022 /* Interpreter.h */,
+				498F23C42DF0942700DFB022 /* Interpreter.cpp */,
+				498F23C52DF0942700DFB022 /* Memory.h */,
+				498F23C72DF0942700DFB022 /* NativeCore.h */,
+				498F23C82DF0942700DFB022 /* NativeCoreRuntime.cpp */,
+			);
+			name = Runtime;
+			path = ../Runtime;
+			sourceTree = SOURCE_ROOT;
+		};
+		498F24E32DF0942700DFB022 /* simplecpp */ = {
+			isa = PBXGroup;
+			children = (
+				498F24E02DF0942700DFB022 /* simplecpp.h */,
+				498F24E12DF0942700DFB022 /* simplecpp.cpp */,
+			);
+			name = simplecpp;
+			path = ../simplecpp;
+			sourceTree = SOURCE_ROOT;
+		};
+		498F27D82DF0981500DFB022 /* Format */ = {
+			isa = PBXGroup;
+			children = (
+				498F27D42DF0981500DFB022 /* Format.h */,
+				498F27D52DF0981500DFB022 /* Format.cpp */,
+				498F27D62DF0981500DFB022 /* LICENSE */,
+				498F27D72DF0981500DFB022 /* README.md */,
+			);
+			name = Format;
+			path = /Users/cmarrin/Projects/git/Format;
+			sourceTree = "<absolute>";
+		};
 		499B10C52C9B0B880060AF63 /* doc */ = {
 			isa = PBXGroup;
 			children = (
 				499B10C62C9B0B9D0060AF63 /* CodeGenNotes.txt */,
 			);
 			name = doc;
-			sourceTree = "<group>";
-		};
-		499B10CB2CA333AC0060AF63 /* Format */ = {
-			isa = PBXGroup;
-			children = (
-				499B10CC2CA333C80060AF63 /* Format.cpp */,
-				499B10CD2CA333C80060AF63 /* Format.h */,
-			);
-			name = Format;
-			path = ../Format;
-			sourceTree = "<group>";
-		};
-		49CB1FC72DC3F3AA00485FC7 /* simplecpp */ = {
-			isa = PBXGroup;
-			children = (
-				49CB1FC82DC3F3E100485FC7 /* simplecpp.h */,
-				49CB1FC92DC3F3E100485FC7 /* simplecpp.cpp */,
-			);
-			name = simplecpp;
-			path = ../simplecpp;
 			sourceTree = "<group>";
 		};
 		49E2F2972C8F461F007E0F0A /* modules */ = {
@@ -429,20 +450,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				49C9E7EF2C97154200E58516 /* CodeGen6809.cpp in Sources */,
-				49279C2A2C1903BE00294992 /* AST.cpp in Sources */,
-				4941A1152BBA290B00CE3C9E /* Compiler.cpp in Sources */,
-				49C9E7BA2C94F99400E58516 /* NativeColor.cpp in Sources */,
-				499B10CE2CA333C80060AF63 /* Format.cpp in Sources */,
-				49C9E7BB2C94F99700E58516 /* NativeCore.cpp in Sources */,
-				4914A4852C2E0F92003DDADA /* Function.cpp in Sources */,
-				49CB1FCA2DC3F3E100485FC7 /* simplecpp.cpp in Sources */,
-				493775B82DE3606E0027279F /* NativeCoreRuntime.cpp in Sources */,
-				49CB1FCD2DC6E32F00485FC7 /* Module.cpp in Sources */,
-				49FAA0832C8BCF6C0060F8AA /* CodeGenStackVM.cpp in Sources */,
-				4941A1132BBA290B00CE3C9E /* Scanner.cpp in Sources */,
 				49C9E7B42C94F87500E58516 /* clvr.cpp in Sources */,
-				4941A1122BBA290B00CE3C9E /* Decompiler.cpp in Sources */,
+				498F24F32DF0942700DFB022 /* simplecpp.cpp in Sources */,
+				498F27DB2DF0981500DFB022 /* Format.cpp in Sources */,
+				498F24FB2DF0942700DFB022 /* Scanner.cpp in Sources */,
+				498F25072DF0942700DFB022 /* NativeCore.cpp in Sources */,
+				498F251E2DF0942700DFB022 /* AST.cpp in Sources */,
+				498F25232DF0942700DFB022 /* Interpreter.cpp in Sources */,
+				498F252B2DF0942700DFB022 /* CodeGenStackVM.cpp in Sources */,
+				498F25432DF0942700DFB022 /* NativeCoreRuntime.cpp in Sources */,
+				498F25572DF0942700DFB022 /* Function.cpp in Sources */,
+				498F25672DF0942700DFB022 /* Compiler.cpp in Sources */,
+				498F25842DF0942700DFB022 /* CodeGen6809.cpp in Sources */,
+				498F25A62DF0942700DFB022 /* Module.cpp in Sources */,
+				498F25B42DF0942700DFB022 /* Decompiler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -450,10 +471,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				498F27D92DF0981500DFB022 /* Format.cpp in Sources */,
 				49C9E7BC2C94FB4200E58516 /* clvr-interp.cpp in Sources */,
-				499B10CF2CA333D00060AF63 /* Format.cpp in Sources */,
-				493775BA2DE360860027279F /* NativeCoreRuntime.cpp in Sources */,
-				49C9E7B62C94F92900E58516 /* Interpreter.cpp in Sources */,
+				498F26FD2DF0942700DFB022 /* Interpreter.cpp in Sources */,
+				498F271D2DF0942700DFB022 /* NativeCoreRuntime.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -461,21 +482,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				49D70D2F2C95E8BE000A325C /* Decompiler.cpp in Sources */,
-				49D70D302C95E8C1000A325C /* Function.cpp in Sources */,
-				493775B92DE3606E0027279F /* NativeCoreRuntime.cpp in Sources */,
-				49D70D2E2C95E8BB000A325C /* Compiler.cpp in Sources */,
-				49CB1FCE2DC6E32F00485FC7 /* Module.cpp in Sources */,
-				49D70D2D2C95E8B8000A325C /* AST.cpp in Sources */,
 				49D70D2B2C95E86B000A325C /* Clover.cpp in Sources */,
-				49D70D312C95E8C4000A325C /* Interpreter.cpp in Sources */,
-				49D70D322C95E8C8000A325C /* NativeColor.cpp in Sources */,
-				49C9E7EE2C97154100E58516 /* CodeGen6809.cpp in Sources */,
-				499B10D02CA333D10060AF63 /* Format.cpp in Sources */,
-				49CB1FCB2DC3F3E100485FC7 /* simplecpp.cpp in Sources */,
-				49D70D352C95E8D5000A325C /* Scanner.cpp in Sources */,
-				49D70D332C95E8CC000A325C /* NativeCore.cpp in Sources */,
-				49D70D2C2C95E8B4000A325C /* CodeGenStackVM.cpp in Sources */,
+				498F25DF2DF0942700DFB022 /* simplecpp.cpp in Sources */,
+				498F27DA2DF0981500DFB022 /* Format.cpp in Sources */,
+				498F25E72DF0942700DFB022 /* Scanner.cpp in Sources */,
+				498F25F32DF0942700DFB022 /* NativeCore.cpp in Sources */,
+				498F260A2DF0942700DFB022 /* AST.cpp in Sources */,
+				498F260F2DF0942700DFB022 /* Interpreter.cpp in Sources */,
+				498F26172DF0942700DFB022 /* CodeGenStackVM.cpp in Sources */,
+				498F262F2DF0942700DFB022 /* NativeCoreRuntime.cpp in Sources */,
+				498F26432DF0942700DFB022 /* Function.cpp in Sources */,
+				498F26532DF0942700DFB022 /* Compiler.cpp in Sources */,
+				498F26702DF0942700DFB022 /* CodeGen6809.cpp in Sources */,
+				498F26922DF0942700DFB022 /* Module.cpp in Sources */,
+				498F26A02DF0942700DFB022 /* Decompiler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
