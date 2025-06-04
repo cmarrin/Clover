@@ -1,6 +1,3 @@
-[submodule "Format"]
-	path = Format
-	url = /Users/cmarrin/Projects/git/Clover/Format
 [submodule "simplecpp"]
 	path = simplecpp
 	url = git@github.com:cmarrin/simplecpp.git
