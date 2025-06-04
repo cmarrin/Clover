@@ -25,7 +25,6 @@ static constexpr uint32_t StackSize = 2048;
 
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
-  public:
 };
 
 static void showError(clvr::Error error, clvr::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
@@ -108,8 +107,7 @@ static void showError(clvr::Error error, clvr::Token token, const std::string& s
 //      -l      execute resulting binary as a looping test
 //
 // Multiple input files accepted. Output file(s) are placed in the same dir as input
-// files with extension .arlx or .h. If segmented (-s), filename has 2 digit suffix
-// added before the .arlx.
+// files with extension .arlx or .h.
 
 // Include file format
 //
@@ -140,7 +138,6 @@ int main(int argc, char * const argv[])
         }
     }
     
-    // If headerFile is true, segmented is ignored.
     if (optind >= argc) {
         std::cout << "No input file given\n";
         return 0;

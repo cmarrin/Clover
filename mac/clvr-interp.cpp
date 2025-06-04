@@ -21,7 +21,6 @@ static constexpr uint32_t StackSize = 2048;
 
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
-  public:
 };
 
 // clvr-interp [-tl] <clvx file>...
