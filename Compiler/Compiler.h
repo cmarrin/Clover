@@ -322,6 +322,8 @@ public:
     
     void setAnnotation(int32_t index, int32_t addr) { _scanner.setAnnotation(index, addr); }
 
+    void addModule(const ModulePtr& module) { _modules.push_back(module); }
+    
 protected:
     bool statement(const ASTPtr& parent);
     bool type(Type&);
