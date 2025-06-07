@@ -7,7 +7,6 @@
     found in the LICENSE file.
 -------------------------------------------------------------------------*/
 
-#include <Clover.h>
 #include <EEPROM.h>
 #include "TestCore.h"
 #include "TestExpr.h"
