@@ -89,7 +89,6 @@
 		4914A4982C4DD665003DDADA /* TestFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestFunction.h; path = ../Test/TestFunction.h; sourceTree = "<group>"; };
 		4914A4992C4DD665003DDADA /* TestIf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestIf.h; path = ../Test/TestIf.h; sourceTree = "<group>"; };
 		4914A49A2C4DD665003DDADA /* TestFunction.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = TestFunction.clvr; path = ../Test/TestFunction.clvr; sourceTree = "<group>"; };
-		492BB6312C6E58C20022D290 /* PostLightEffects.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = PostLightEffects.ino; path = ../PostLightEffects/PostLightEffects.ino; sourceTree = "<group>"; };
 		4941A0EF2BB6F59900CE3C9E /* clvr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = clvr; sourceTree = BUILT_PRODUCTS_DIR; };
 		498F23A62DF0942700DFB022 /* AST.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AST.h; sourceTree = "<group>"; };
 		498F23A72DF0942700DFB022 /* AST.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AST.cpp; sourceTree = "<group>"; };
@@ -143,13 +142,7 @@
 		49C9E7E22C95129300E58516 /* Clover */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Clover; sourceTree = BUILT_PRODUCTS_DIR; };
 		49D70D292C95E855000A325C /* Clover.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Clover.cpp; sourceTree = "<group>"; };
 		49D77B6A2CD44EDE00F5273B /* maze.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; name = maze.clvr; path = ../examples/maze.clvr; sourceTree = SOURCE_ROOT; };
-		49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; name = PostLightEffects.clvr; path = ../PostLightController/PostLightEffects.clvr; sourceTree = "<group>"; };
 		49E2F2982C8F4652007E0F0A /* Float16.clvr */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; name = Float16.clvr; path = ../modules/Float16.clvr; sourceTree = "<group>"; };
-		49E9ACCB2C715C580074BD25 /* PostLightController.ino */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostLightController.ino; path = ../PostLightController/PostLightController.ino; sourceTree = "<group>"; };
-		49E9ACCD2C715F990074BD25 /* Flash.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Flash.cpp; path = ../PostLightController/Flash.cpp; sourceTree = "<group>"; };
-		49E9ACCF2C715F990074BD25 /* InterpretedEffect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = InterpretedEffect.h; path = ../PostLightController/InterpretedEffect.h; sourceTree = "<group>"; };
-		49E9ACD02C715F990074BD25 /* Flash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Flash.h; path = ../PostLightController/Flash.h; sourceTree = "<group>"; };
-		49E9ACD12C715F990074BD25 /* InterpretedEffect.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InterpretedEffect.cpp; path = ../PostLightController/InterpretedEffect.cpp; sourceTree = "<group>"; };
 		49F0B2522CAC406D009991A8 /* TestIntExpr09.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; name = TestIntExpr09.asm; path = ../Test/TestIntExpr09.asm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -211,7 +204,6 @@
 				498F23C92DF0942700DFB022 /* Runtime */,
 				498F27D82DF0981500DFB022 /* Format */,
 				4941A0F12BB6F59900CE3C9E /* mac */,
-				49E9ACCA2C715C420074BD25 /* PostLightController */,
 				4914A48C2C4DD63C003DDADA /* Test */,
 				4941A1002BBA1CF300CE3C9E /* examples */,
 				49E2F2972C8F461F007E0F0A /* modules */,
@@ -246,7 +238,6 @@
 				49D77B6A2CD44EDE00F5273B /* maze.clvr */,
 				49C5B3292CCBF4D900B6911E /* BOSS9.clvr */,
 				499B10C72C9B9A0B0060AF63 /* simple.asm */,
-				492BB6312C6E58C20022D290 /* PostLightEffects.ino */,
 				49C164A42C025CD500981AD1 /* simple.clvr */,
 			);
 			name = examples;
@@ -336,19 +327,6 @@
 				49E2F2982C8F4652007E0F0A /* Float16.clvr */,
 			);
 			name = modules;
-			sourceTree = "<group>";
-		};
-		49E9ACCA2C715C420074BD25 /* PostLightController */ = {
-			isa = PBXGroup;
-			children = (
-				49E2F2962C8F4612007E0F0A /* PostLightEffects.clvr */,
-				49E9ACCB2C715C580074BD25 /* PostLightController.ino */,
-				49E9ACCD2C715F990074BD25 /* Flash.cpp */,
-				49E9ACD02C715F990074BD25 /* Flash.h */,
-				49E9ACD12C715F990074BD25 /* InterpretedEffect.cpp */,
-				49E9ACCF2C715F990074BD25 /* InterpretedEffect.h */,
-			);
-			name = PostLightController;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
