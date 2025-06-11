@@ -229,6 +229,7 @@ class Memory
             case Index::A: return _u + (AddrSize * 3) + offset;
             case Index::L: return _u - offset - 1;
         }
+        return 0;
     }
     
     const AddrNativeType& self() const { return _y; }
