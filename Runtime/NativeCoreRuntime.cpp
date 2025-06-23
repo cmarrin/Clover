@@ -94,9 +94,8 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp, void*)
             interp->setReturnValue(interp->topLevelArgs()->arg(4));
             break;
         case Id::UserCall: {
-            VarArg va(interp->memMgr(), 0, Type::UInt16, false);
             uint16_t id = interp->memMgr()->getArg(0, 2);
-            interp->userCall(id, va);
+            interp->userCall(id);
             break;
         }
     }

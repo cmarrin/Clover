@@ -146,7 +146,7 @@ class InterpreterBase
     // User function. This makes a call into the user function table corresponding to the 
     // passed id. Values are by agreement between the Clover code and the runtime which
     // installs the user functions
-    void userCall(uint16_t id, clvr::VarArg& args);
+    void userCall(uint16_t id);
 
   protected:
     bool isNextOpcodeSetFrame() const

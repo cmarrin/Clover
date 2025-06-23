@@ -142,7 +142,7 @@ InterpreterBase::callNative(uint16_t id)
 }
 
 void
-InterpreterBase::userCall(uint16_t id, clvr::VarArg& args)
+InterpreterBase::userCall(uint16_t id)
 {
     if (id >= UserFunctionCountMax || _userFunctions[id].func == nullptr) {
         _error = Memory::Error::InvalidUserFunction;
