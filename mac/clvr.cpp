@@ -108,7 +108,7 @@ static void showError(clvr::Error error, clvr::Token token, const std::string& s
 
 int main(int argc, char * const argv[])
 {
-    std::cout << "Clover Compiler v0.1\n\n";
+    std::cout << "Clover Compiler v0.2\n\n";
     
     int c;
     bool asm6809 = false;
@@ -134,7 +134,7 @@ int main(int argc, char * const argv[])
     
     if (optind >= argc) {
         std::cout << "No input file given\n";
-        return -1;
+        return 0;
     }
     
     std::vector<std::string> inputFiles;
