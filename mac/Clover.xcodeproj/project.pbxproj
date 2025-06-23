@@ -114,7 +114,6 @@
 		498F23BD2DF0942700DFB022 /* Scanner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Scanner.cpp; sourceTree = "<group>"; };
 		498F23BE2DF0942700DFB022 /* Struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Struct.h; sourceTree = "<group>"; };
 		498F23BF2DF0942700DFB022 /* Symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Symbol.h; sourceTree = "<group>"; };
-		498F23C12DF0942700DFB022 /* Clover.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Clover.h; sourceTree = "<group>"; };
 		498F23C22DF0942700DFB022 /* Defines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Defines.h; sourceTree = "<group>"; };
 		498F23C32DF0942700DFB022 /* Interpreter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Interpreter.h; sourceTree = "<group>"; };
 		498F23C42DF0942700DFB022 /* Interpreter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Interpreter.cpp; sourceTree = "<group>"; };
@@ -279,7 +278,6 @@
 		498F23C92DF0942700DFB022 /* Runtime */ = {
 			isa = PBXGroup;
 			children = (
-				498F23C12DF0942700DFB022 /* Clover.h */,
 				498F23C22DF0942700DFB022 /* Defines.h */,
 				498F23C32DF0942700DFB022 /* Interpreter.h */,
 				498F23C42DF0942700DFB022 /* Interpreter.cpp */,
