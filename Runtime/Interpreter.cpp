@@ -23,12 +23,14 @@ InterpreterBase::instantiate()
 {
     _error = Memory::Error::None;
     _state = State::BeforeInstantiate;
-    
+
     // Reset everything
     
     // Init module list
-    memset(_modules, 0, sizeof(CallNative) * ModuleCountMax);
+    memset(_modules, 0, sizeof(_modules));
     _nextModule = 0;
+    
+    memset(_userFunctions, 0, sizeof(_userFunctions));
     
     // Install core
     addModule(NativeCore::callNative);
@@ -127,16 +129,26 @@ InterpreterBase::callNative(uint16_t id)
 
     uint8_t moduleId = id >> BitsPerFunctionId;
     uint8_t functionId = id & FunctionIdMask;
-    if (moduleId < ModuleCountMax) {
+    if (moduleId < ModuleCountMax && _modules[moduleId] != nullptr) {
         CallNative call = _modules[moduleId];
         if (call) {
-            call(functionId, this);
+            call(functionId, this, nullptr);
         }
     }
     
     // Restore the frame and pop the dummy return address
     _memMgr.restoreFrame();
     _memMgr.stack().pop(AddrOpSize);
+}
+
+void
+InterpreterBase::userCall(uint16_t id, clvr::VarArg& args)
+{
+    if (id >= UserFunctionCountMax || _userFunctions[id].func == nullptr) {
+        _error = Memory::Error::InvalidUserFunction;
+    } else {
+        _userFunctions[id].func(id, this, _userFunctions[id].data);
+    }
 }
 
 void

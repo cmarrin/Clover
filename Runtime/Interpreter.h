@@ -114,6 +114,17 @@ class InterpreterBase
         _modules[_nextModule++] = func;
     }
     
+    // Call this after instantiate for each added user function. The user
+    // function id must match the value in the Clover program
+    bool addUserFunction(uint16_t id, CallNative func, void* data)
+    {
+        if (id >= UserFunctionCountMax) {
+            return false;
+        }
+        _userFunctions[id] = { func, data };
+        return true;
+    }
+    
     // After instantiate is called the top-level struct instance is ready to be
     // constructed. The caller first pushes args for the constructor and then
     // calls the construct method.
@@ -131,7 +142,12 @@ class InterpreterBase
     Memory* memMgr() { return &_memMgr; }
     VarArg* topLevelArgs() { return &_topLevelArgs; }
     void setReturnValue(uint32_t v) { _returnValue = v; }
-    
+        
+    // User function. This makes a call into the user function table corresponding to the 
+    // passed id. Values are by agreement between the Clover code and the runtime which
+    // installs the user functions
+    void userCall(uint16_t id, clvr::VarArg& args);
+
   protected:
     bool isNextOpcodeSetFrame() const
     {
@@ -262,6 +278,9 @@ class InterpreterBase
     CallNative _modules[ModuleCountMax];
     uint8_t _nextModule = 0;
     
+    struct UserFunctionEntry { CallNative func; void* data; };
+    UserFunctionEntry _userFunctions[UserFunctionCountMax];
+    
     uint32_t _returnValue;
     
     VarArg _topLevelArgs;
@@ -270,6 +289,8 @@ class InterpreterBase
     
     enum class State { BeforeInstantiate, Instantiated, Constructed };
     State _state = State::BeforeInstantiate;
+    
+    
 };
 
 template <uint32_t memSize> class Interpreter : public InterpreterBase

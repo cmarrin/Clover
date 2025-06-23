@@ -32,7 +32,7 @@ class Memory
         AddressOutOfRange,
         ExpectedSetFrame,
         InvalidModuleOp,
-        InvalidNativeFunction,
+        InvalidUserFunction,
         NotEnoughArgs,
         WrongNumberOfArgs,
         StackOverrun,

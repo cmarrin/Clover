@@ -135,7 +135,7 @@ int main(int argc, char * const argv[])
                 case clvr::Memory::Error::InternalError: err = "internal error"; break;
                 case clvr::Memory::Error::UnexpectedOpInIf: err = "unexpected op in if (internal error)"; break;
                 case clvr::Memory::Error::InvalidOp: err = "invalid opcode"; break;
-                case clvr::Memory::Error::InvalidNativeFunction: err = "invalid native function"; break;
+                case clvr::Memory::Error::InvalidUserFunction: err = "invalid native function"; break;
                 case clvr::Memory::Error::OnlyMemAddressesAllowed: err = "only Mem addresses allowed"; break;
                 case clvr::Memory::Error::StackOverrun: err = "can't call, stack full"; break;
                 case clvr::Memory::Error::StackUnderrun: err = "stack underrun"; break;

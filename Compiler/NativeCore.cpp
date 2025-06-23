@@ -37,6 +37,7 @@ NativeCore::create()
     Function::addNativeFunction(list, "argint16", uint16_t(Id::ArgInt16), Type::Int16, { });
     Function::addNativeFunction(list, "argint32", uint16_t(Id::ArgInt32), Type::Int32, { });
     Function::addNativeFunction(list, "argFloat", uint16_t(Id::ArgFloat), Type::Float, { });
+    Function::addNativeFunction(list, "userCall", uint16_t(Id::UserCall), Type::None, {{ "id", Type::UInt16, false, 2, 1 }});
     
     return list;
 }

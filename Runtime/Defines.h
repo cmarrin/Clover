@@ -676,11 +676,13 @@ class VarArg;
 
 class InterpreterBase;
 
-using CallNative = void (*)(uint16_t id, InterpreterBase*);
+using CallNative = void (*)(uint16_t id, InterpreterBase*, void*);
 
-static constexpr uint8_t ModuleCountMax     = 10;
-static constexpr uint8_t BitsPerFunctionId  = 5;
-static constexpr uint8_t FunctionIdMask     = (1 << BitsPerFunctionId) - 1;
+static constexpr uint8_t UserFunctionCountMax   = 10;
+
+static constexpr uint8_t ModuleCountMax         = 10;
+static constexpr uint8_t BitsPerFunctionId      = 5;
+static constexpr uint8_t FunctionIdMask         = (1 << BitsPerFunctionId) - 1;
 
 #ifndef ARDUINO
 class ASTNode;

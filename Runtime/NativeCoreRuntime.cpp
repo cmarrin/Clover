@@ -14,7 +14,7 @@
 using namespace clvr;
 
 void
-NativeCore::callNative(uint16_t id, InterpreterBase* interp)
+NativeCore::callNative(uint16_t id, InterpreterBase* interp, void*)
 {
     switch (Id(id)) {
         default: break;
@@ -93,5 +93,11 @@ NativeCore::callNative(uint16_t id, InterpreterBase* interp)
         case Id::ArgFloat:
             interp->setReturnValue(interp->topLevelArgs()->arg(4));
             break;
+        case Id::UserCall: {
+            VarArg va(interp->memMgr(), 0, Type::UInt16, false);
+            uint16_t id = interp->memMgr()->getArg(0, 2);
+            interp->userCall(id, va);
+            break;
+        }
     }
 }

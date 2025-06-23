@@ -51,11 +51,12 @@ class NativeCore
         ArgInt16        = 9,
         ArgInt32        = 10,
         ArgFloat        = 11,
+        UserCall        = 12,
     };
     
     static const FunctionList create();
     
-    static void callNative(uint16_t id, InterpreterBase*);
+    static void callNative(uint16_t id, InterpreterBase*, void*);
 };
 
 }

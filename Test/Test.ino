@@ -76,8 +76,8 @@ public:
             case clvr::Memory::Error::InvalidModuleOp:
             errorMsg = F("inv mod op");
             break;
-            case clvr::Memory::Error::InvalidNativeFunction:
-            errorMsg = F("inv native func");
+            case clvr::Memory::Error::InvalidUserFunction:
+            errorMsg = F("inv user func");
             break;
             case clvr::Memory::Error::NotEnoughArgs:
             errorMsg = F("not enough args");
