@@ -47,6 +47,23 @@
 #define SUPPORT_INT32 1
 #endif
 
+#ifndef ARDUINO
+static inline void randomSeed(uint32_t s) { srand(s); }
+static inline int32_t random(int32_t min, int32_t max)
+{
+    // min and max are misnomers. We're really just returning a random
+    // value between the two passed value. They can be in any order.
+    if (min >= max) {
+        int32_t t = min;
+        min = max;
+        max = t;
+    }
+    
+    int r = rand() % (max - min + 1);
+    return r + min;
+}
+#endif
+
 namespace clvr {
 
 #ifdef ARDUINO
@@ -60,21 +77,6 @@ namespace clvr {
     static inline uint8_t rom(uint16_t addr) { return ROMBase[addr]; }
 
     static inline void putChar(uint8_t c) { ::putchar(c); }
-
-    static inline void randomSeed(uint32_t s) { srand(s); }
-    static inline int32_t random(int32_t min, int32_t max)
-    {
-        // min and max are misnomers. We're really just returning a random
-        // value between the two passed value. They can be in any order.
-        if (min >= max) {
-            int32_t t = min;
-            min = max;
-            max = t;
-        }
-        
-        int r = rand() % (max - min + 1);
-        return r + min;
-    }
 #endif
 
 static inline float intToFloat(uint32_t i)
