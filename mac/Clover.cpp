@@ -18,13 +18,19 @@
 static constexpr uint32_t NumPasses = 10;
 static constexpr uint8_t Command = 'r';
 
-// Base pointer of executable code (see Defines.h)
-uint8_t* clvr::ROMBase = nullptr;
-
 static constexpr uint32_t StackSize = 2048;
+
+static uint8_t* executable = nullptr;
+
+static uint8_t getCodeByte(void* data, uint16_t addr)
+{
+    return executable[addr];
+}
 
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
+  public:
+    MyInterpreter() : clvr::Interpreter<StackSize>(::getCodeByte, nullptr) { }
 };
 
 static void showError(clvr::Error error, clvr::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
@@ -167,7 +173,7 @@ int main(int argc, char * const argv[])
         
         std::cout << "Compiling '" << it << "'\n";
         
-        clvr::randomSeed(uint32_t(clock()));
+        randomSeed(uint32_t(clock()));
 
         clvr::Compiler compiler(clvr::Compiler::OutputFormat::StackVM, &annotations);
         compiler.compile(&stream, { });
@@ -263,9 +269,8 @@ int main(int argc, char * const argv[])
 
         // Execute if needed
         if (looping || singlePass) {
-            // Setup executable pointer
-            clvr::ROMBase = &(compiler.code()[0]);
-            
+            executable = &(compiler.code()[0]);
+
             MyInterpreter interp;
             interp.instantiate();
             

@@ -12,15 +12,21 @@
 
 #include "Defines.h"
 #include "Interpreter.h"
-#include "NativeColor.h"
 
 // Base pointer of executable code (see Defines.h)
-uint8_t* clvr::ROMBase = nullptr;
+uint8_t* exec = nullptr;
 
 static constexpr uint32_t StackSize = 2048;
 
+static uint8_t getCodeByte(void* data, uint16_t addr)
+{
+    return exec[addr];
+}
+
 class MyInterpreter : public clvr::Interpreter<StackSize>
 {
+  public:
+    MyInterpreter() : clvr::Interpreter<StackSize>(::getCodeByte, nullptr) { }
 };
 
 // clvr-interp [-tl] <clvx file>...
@@ -33,7 +39,7 @@ int main(int argc, char * const argv[])
 {
     std::cout << "Clover Interpreter v0.1\n\n";
     
-    clvr::randomSeed(uint32_t(clock()));
+    randomSeed(uint32_t(clock()));
 
     int c;
     bool looping = false;
@@ -75,11 +81,10 @@ int main(int argc, char * const argv[])
         }
 
         // Execute
-        clvr::ROMBase = &(executable[0]);
+        exec = &(executable[0]);
             
         MyInterpreter interp;
         interp.instantiate();
-        interp.addModule(callNativeColor);
         
         if (interp.error() == clvr::Memory::Error::None) {
             uint32_t result = 0;

@@ -14,9 +14,6 @@
 #include "Decompiler.h"
 #include "Defines.h"
 
-// Base pointer of executable code (see Defines.h)
-uint8_t* clvr::ROMBase = nullptr;
-
 static void showError(clvr::Error error, clvr::Token token, const std::string& str, uint32_t lineno, uint32_t charno)
 {
     const char* err = "unknown";
@@ -159,7 +156,7 @@ int main(int argc, char * const argv[])
         
         std::cout << "Compiling '" << it << "'\n";
         
-        clvr::randomSeed(uint32_t(clock()));
+        randomSeed(uint32_t(clock()));
 
         clvr::Compiler::OutputFormat fmt = asm6809 ? clvr::Compiler::OutputFormat::ASM6809 : clvr::Compiler::OutputFormat::StackVM;
         clvr::Compiler compiler(fmt, &annotations);

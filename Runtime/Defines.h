@@ -66,16 +66,15 @@ static inline int32_t random(int32_t min, int32_t max)
 
 namespace clvr {
 
-#ifdef ARDUINO
-    #define RUNTIME 1
+#if defined(ARDUINO) && !defined(ESP8266) && !defined(ESP32)
     static inline uint8_t rom(uint16_t addr) { return EEPROM.read(addr); }
-    
+#else
+    static inline uint8_t rom(uint16_t addr) { return 0; }
+#endif
+
+#ifdef ARDUINO
     static inline void putChar(uint8_t c) { Serial.print(char(c)); }
 #else
-    extern uint8_t* ROMBase;
-
-    static inline uint8_t rom(uint16_t addr) { return ROMBase[addr]; }
-
     static inline void putChar(uint8_t c) { ::putchar(c); }
 #endif
 
