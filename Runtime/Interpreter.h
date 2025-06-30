@@ -100,7 +100,7 @@ format(AddrNativeType s, uint16_t n, clvr::AddrNativeType fmt, clvr::VarArg& arg
 class InterpreterBase
 {
   public:
-    InterpreterBase(uint8_t* mem, uint32_t memSize);
+    InterpreterBase(uint8_t* mem, uint32_t memSize, GetCodeByteCB cb, void* data);
 
     // This method is the first called. It sets up the stack and registers
     // then loads the executable and finally allocates the top level struct
@@ -177,7 +177,7 @@ class InterpreterBase
     // Addr is in bytes
     uint8_t getUInt8ROM(uint16_t addr) const
     {
-        return rom(addr);
+        return _memMgr.getCodeByte(addr);
     }
     
     uint32_t getUOpnd(OpSize opSize)
@@ -296,7 +296,7 @@ class InterpreterBase
 template <uint32_t memSize> class Interpreter : public InterpreterBase
 {
 public:
-    Interpreter() : InterpreterBase(_mem, memSize) { }
+    Interpreter(GetCodeByteCB cb, void* data) : InterpreterBase(_mem, memSize, cb, data) { }
     
     uint32_t interp(ExecMode mode)
     {

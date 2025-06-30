@@ -74,11 +74,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -a PostLightController/PostLightEffects.clvr"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestCore.clvr"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-d -t -h Test/TestIntExpr.clvr"

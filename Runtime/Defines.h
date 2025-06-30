@@ -27,7 +27,7 @@
 //      1 - 32 bit addresses and integers, no float support
 //      2 - 32 bit addresses and integers, 32 bit float support
 
-#define PROFILE_LEVEL 0
+#define PROFILE_LEVEL 2
 
 #if PROFILE_LEVEL == 0
 #define ADDR32 0
@@ -65,12 +65,6 @@ static inline int32_t random(int32_t min, int32_t max)
 #endif
 
 namespace clvr {
-
-#if defined(ARDUINO) && !defined(ESP8266) && !defined(ESP32)
-    static inline uint8_t rom(uint16_t addr) { return EEPROM.read(addr); }
-#else
-    static inline uint8_t rom(uint16_t addr) { return 0; }
-#endif
 
 #ifdef ARDUINO
     static inline void putChar(uint8_t c) { Serial.print(char(c)); }

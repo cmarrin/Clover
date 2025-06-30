@@ -55,11 +55,11 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-l PostLightController/PostLightEffects.clvx"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "examples/simple.clvx"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

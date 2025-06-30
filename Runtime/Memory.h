@@ -15,6 +15,8 @@
 
 namespace clvr {
 
+using GetCodeByteCB = uint8_t (*)(void* data, uint16_t addr);
+
 // Stack grows down from the top. Heap grows up from the bottom
 class Memory
 {
@@ -150,7 +152,12 @@ class Memory
         mutable Error _error = Error::None;
     };
 
-    Memory(uint8_t* mem, uint32_t memSize) : _stack(mem, memSize) { }
+    Memory(uint8_t* mem, uint32_t memSize, GetCodeByteCB cb, void* data)
+        : _stack(mem, memSize)
+        , _getCodeByteCB(cb)
+        , _getCodeByteData(data)
+    {
+    }
     
     Error error() const { return _stack.error(); }
     const Stack& stack() const { return _stack; }
@@ -174,10 +181,10 @@ class Memory
             // This is a constant
             addr -= stack().size();
             switch (size) {
-                case 4: v |= uint32_t(rom(addr++)) << 24;
-                                  v |= uint32_t(rom(addr++)) << 16;
-                case 2: v |= uint32_t(rom(addr++)) << 8;
-                case 1: v |= uint32_t(rom(addr++));
+                case 4: v |= uint32_t(getCodeByte(addr++)) << 24;
+                                  v |= uint32_t(getCodeByte(addr++)) << 16;
+                case 2: v |= uint32_t(getCodeByte(addr++)) << 8;
+                case 1: v |= uint32_t(getCodeByte(addr++));
             }
         } else {
             switch (size) {
@@ -235,11 +242,16 @@ class Memory
     const AddrNativeType& self() const { return _y; }
     AddrNativeType& self() { return _y; }
     
+    uint8_t getCodeByte(uint16_t addr) const { return _getCodeByteCB(_getCodeByteData, addr); }
+    
   private:
     Stack _stack;
     AddrNativeType _u = 0;
     AddrNativeType _x = 0;
     AddrNativeType _y = 0;
+    
+    GetCodeByteCB _getCodeByteCB;
+    void* _getCodeByteData;
 };
 
 // Stack grows down. On a function call U points to previous U pushed onto the stack.

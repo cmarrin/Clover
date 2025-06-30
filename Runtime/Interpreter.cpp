@@ -13,8 +13,8 @@
 
 using namespace clvr;
 
-InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize)
-    : _memMgr(mem, memSize)
+InterpreterBase::InterpreterBase(uint8_t* mem, uint32_t memSize, GetCodeByteCB cb, void* data)
+    : _memMgr(mem, memSize, cb, data)
     , _topLevelArgs(&_memMgr)
 { }
 
