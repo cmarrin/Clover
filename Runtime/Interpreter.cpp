@@ -603,6 +603,7 @@ InterpreterBase::execute(ExecMode mode)
             case Op::DROP2   : left = getUOpnd(OpSize::i16); _memMgr.stack().drop(left); break;
 
             case Op::ENTER   : operand = getUOpnd(opSize);
+                             [[fallthrough]];
             case Op::ENTERS  : _memMgr.setFrame(operand); break;
             
             case Op::NCALL   : callNative(getUOpnd(opSize)); break;

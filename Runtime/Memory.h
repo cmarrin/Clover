@@ -79,7 +79,9 @@ class Memory
                 case OpSize::flt  :
                 case OpSize::i32: v |= int32_t(pop()) << 24;
                                   v |= int32_t(pop()) << 16;
+                                  [[fallthrough]];
                 case OpSize::i16: v |= int32_t(pop()) << 8;
+                                  [[fallthrough]];
                 case OpSize::i8 : v |= int32_t(pop());
             }
             
@@ -168,8 +170,11 @@ class Memory
             case OpSize::flt:
             case OpSize::i32: _stack.getAbs(addr++) = uint8_t(v >> 24);
                               _stack.getAbs(addr++) = uint8_t(v >> 16);
+                              [[fallthrough]];
             case OpSize::i16: _stack.getAbs(addr++) = uint8_t(v >> 8);
+                              [[fallthrough]];
             case OpSize::i8 : _stack.getAbs(addr++) = uint8_t(v);
+                              break;
         }
     }
     
@@ -182,16 +187,22 @@ class Memory
             addr -= stack().size();
             switch (size) {
                 case 4: v |= uint32_t(getCodeByte(addr++)) << 24;
-                                  v |= uint32_t(getCodeByte(addr++)) << 16;
+                        v |= uint32_t(getCodeByte(addr++)) << 16;
+                        [[fallthrough]];
                 case 2: v |= uint32_t(getCodeByte(addr++)) << 8;
+                        [[fallthrough]];
                 case 1: v |= uint32_t(getCodeByte(addr++));
+                        break;
             }
         } else {
             switch (size) {
                 case 4: v |= uint32_t(_stack.getAbs(addr++)) << 24;
-                                  v |= uint32_t(_stack.getAbs(addr++)) << 16;
+                        v |= uint32_t(_stack.getAbs(addr++)) << 16;
+                        [[fallthrough]];
                 case 2: v |= uint32_t(_stack.getAbs(addr++)) << 8;
+                        [[fallthrough]];
                 case 1: v |= uint32_t(_stack.getAbs(addr++));
+                        break;
             }
         }
         

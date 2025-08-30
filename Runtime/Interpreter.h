@@ -167,7 +167,9 @@ class InterpreterBase
         switch (size) {
             case 4: v = getUInt8ROM(addr++);
                     v = (v << 8) | getUInt8ROM(addr++);
+                    [[fallthrough]];
             case 2: v = (v << 8) | getUInt8ROM(addr++);
+                    [[fallthrough]];
             case 1: v = (v << 8) | getUInt8ROM(addr++);
                 break;
         }
@@ -188,7 +190,9 @@ class InterpreterBase
             case OpSize::i32:
             case OpSize::flt: v = getUInt8ROM(_pc++);
                               v = (v << 8) | getUInt8ROM(_pc++);
+                              [[fallthrough]];
             case OpSize::i16: v = (v << 8) | getUInt8ROM(_pc++);
+                              [[fallthrough]];
             case OpSize::i8 : v = (v << 8) | getUInt8ROM(_pc++);
                 break;
         }
