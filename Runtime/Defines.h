@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#ifdef ARDUINO
+#if defined ARDUINO
 #include <Arduino.h>
 #include <EEPROM.h>
 #else
@@ -66,7 +66,7 @@ static inline int32_t random(int32_t min, int32_t max)
 
 namespace clvr {
 
-#ifdef ARDUINO
+#if defined ARDUINO
     static inline void putChar(uint8_t c) { Serial.print(char(c)); }
 #else
     static inline void putChar(uint8_t c) { ::putchar(c); }
