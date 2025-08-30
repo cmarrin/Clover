@@ -538,7 +538,7 @@ InterpreterBase::execute(ExecMode mode)
             case Op::BRT:
                 right = getUOpnd(opSize);
                 left = _memMgr.stack().pop(OpSize::i8);
-                if (opcode == Op::BRT ^ left == 0) {
+                if ((opcode == Op::BRT) ^ (left == 0)) {
                     _pc += right;
                 }
                 break;
