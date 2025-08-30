@@ -136,10 +136,6 @@ class Memory
         
         bool ensureCount(uint8_t n) const
         {
-            if (_sp < 0) {
-                _error = Error::InternalError;
-                return false;
-            }
             if (_sp + n > _size) {
                 _error = Error::StackUnderrun;
                 return false;
